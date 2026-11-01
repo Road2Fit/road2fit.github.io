@@ -291,7 +291,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               onClick={() => (g.idx === items.length - 1 ? setG(prev => ({ ...prev, phase: 'summary' })) : goto(g.idx + 1))}
               className={`flex-1 py-3 rounded-xl font-black text-sm text-white ${doneCount >= d.reps.length ? 'bg-pink-600 hover:bg-pink-500' : 'bg-slate-700'}`}
             >
-              {g.idx === items.length - 1 ? 'Terminer ▶ Résumé' : `Exercice suivant (${doneCount}/${d.reps.length})`}
+              {g.idx === items.length - 1 ? 'Voir le résumé' : `Exercice suivant (${doneCount}/${d.reps.length})`}
             </button>
           </div>
         </div>

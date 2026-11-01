@@ -16,7 +16,7 @@ describe('profil de travail', () => {
     expect(pageText(h)).toContain('Le coach garde son réglage d’origine');
     expect(pageText(h)).not.toContain('Profil Puissance');
     const select = section(h).querySelector('select');
-    expect([...select.options].map(o => o.textContent)).toEqual(['Automatique (comme avant)', '🚀 Puissance', '💪 Hypertrophie', '🔁 Endurance de force']);
+    expect([...select.options].map(o => o.textContent)).toEqual(['Automatique (comme avant)', 'Puissance', 'Hypertrophie', 'Endurance de force']);
     await setInput(h, select, 'puissance');
     expect(saved(h).coach.workProfile).toBe('puissance');
     const t = pageText(h);

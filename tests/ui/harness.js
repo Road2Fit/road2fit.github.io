@@ -19,7 +19,7 @@ export async function buildApp() {
     const r = await esbuild.build({
       entryPoints: [path.join(ROOT, 'src/main.jsx')],
       outfile: path.join(ROOT, 'tests/ui/.sortie.js'),
-      bundle: true, format: 'iife', write: false, jsx: 'automatic', logLevel: 'error',
+      bundle: true, format: 'iife', write: false, jsx: 'automatic', jsxImportSource: 'art-jsx', alias: { 'art-jsx/jsx-runtime': path.join(ROOT, 'src/jsx/jsx-runtime.js') }, logLevel: 'error',
       loader: { '.js': 'jsx', '.css': 'empty' },
       define: { 'process.env.NODE_ENV': '"production"', 'import.meta.env.PROD': 'false' },
     });

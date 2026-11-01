@@ -1,5 +1,8 @@
 // Icônes en couleur de l'appli, dessinées à la main (mêmes formes sur tous les téléphones, contrairement aux emojis).
 // <Art name="flame" /> se place devant un texte ; <Art name="flame" size={28} bare /> seule, sans marge.
+import { setEmojiRenderer } from '../jsx/jsx-runtime';
+import { MORE } from './ArtMore';
+
 const S = { fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' };
 
 const ICONS = {
@@ -49,10 +52,18 @@ const ICONS = {
   text: <><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="#60a5fa" /><path d="M7.5 17 12 7l4.5 10M9 14h6" {...S} stroke="#fff" strokeWidth="2.2" /></>,
   compass: <><circle cx="12" cy="12" r="10" fill="#f59e0b" /><circle cx="12" cy="12" r="7.5" fill="#f8fafc" /><path d="m16 8-5.5 2.500L8 16l5.5-2.500Z" fill="#ef4444" /></>,
   dna: <path d="M7 2.500c0 7 10 12 10 19M17 2.500c0 7-10 12-10 19M8.5 6h7M8.5 18h7M10 9h4M10 15h4" {...S} stroke="#a78bfa" strokeWidth="2" />,
+  ...{},
   reset: <path d="M4.5 9A8.5 8.5 0 1 1 3.5 13M4 3.500V9h5.5" {...S} stroke="#f87171" strokeWidth="2.6" />,
 };
 
+Object.assign(ICONS, MORE);
+
 export const ART_NAMES = Object.keys(ICONS);
+
+// Logo à la place d'un emoji : même taille que le texte autour
+let emojiKey = 0;
+const EM = '1.15em';
+setEmojiRenderer(name => { emojiKey += 1; return <svg key={`e${emojiKey}`} viewBox="0 0 24 24" width={EM} height={EM} aria-hidden="true" className="inline-block align-[-0.2em] shrink-0">{ICONS[name]}</svg>; });
 
 export function Art({ name, size = 18, bare = false, className = '' }) {
   const icon = ICONS[name];

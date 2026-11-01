@@ -135,7 +135,7 @@ describe('changer d’exercice : tous les exercices du muscle', () => {
     await advance(h, 300);
     const chip = [...h.doc.querySelectorAll('button')].filter(b => /Lombaires/.test(b.textContent) && b.className.includes('rounded-full') && !b.className.includes('Niv'))
       .find(b => b.closest('[data-testid]') === null || true);
-    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim() === '🧱 Lombaires'));
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim() === 'Lombaires'));
     for (const c of lombaires) expect(byTest(h, `pick-${c.id}`), c.id).toBeTruthy();
     // un exercice en kg alors que Tractions se mesure en répétitions : proposé comme nouvel exercice
     const kg = lombaires.find(c => c.unit === 'kg');

@@ -40,7 +40,7 @@ describe('échauffement avant les séries de travail', () => {
     const nb = faites().length;
     while (faites().length) await click(h, faites()[0]);
 
-    await clickText(h, 'Terminer ▶ Résumé');
+    await clickText(h, 'Voir le résumé');
     await clickText(h, 'Enregistrer la séance');
     await clickText(h, 'Super, merci coach');
     const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');

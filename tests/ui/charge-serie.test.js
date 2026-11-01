@@ -44,7 +44,7 @@ describe('charge modifiable entre deux séries', () => {
     expect(labels[2]).toBe(`${String(heavier).replace('.', ',')} kg`);
     while (faites().length) await click(h, faites()[0]);
 
-    await clickText(h, 'Terminer ▶ Résumé');
+    await clickText(h, 'Voir le résumé');
     expect(pageText(h)).toMatch(/→/); // le résumé montre 15 → 17,5 kg
     await clickText(h, 'Enregistrer la séance');
     await clickText(h, 'Super, merci coach');

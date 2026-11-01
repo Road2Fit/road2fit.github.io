@@ -36,7 +36,7 @@ describe('ressenti par exercice', () => {
         expect(pageText(h)).toContain('9/10 : Presque au maximum');
       }
       if (i === 1) { feltButton(h, 4).dispatchEvent(new h.w.MouseEvent('click', { bubbles: true })); await advance(h); }
-      const [suite] = [...findByText(h, 'Terminer ▶ Résumé'), ...findByText(h, 'Exercice suivant')];
+      const [suite] = [...findByText(h, 'Voir le résumé'), ...findByText(h, 'Exercice suivant')];
       if (!suite) break;
       await clickText(h, suite.textContent.trim().slice(0, 30));
     }

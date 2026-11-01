@@ -68,7 +68,7 @@ describe('application', () => {
         b.dispatchEvent(new h.w.MouseEvent('click', { bubbles: true }));
         await advance(h);
       }
-      const [suite] = [...findByText(h, 'Terminer ▶ Résumé'), ...findByText(h, 'Exercice suivant')];
+      const [suite] = [...findByText(h, 'Voir le résumé'), ...findByText(h, 'Exercice suivant')];
       if (!suite) break;
       await clickText(h, suite.textContent.trim().slice(0, 30));
     }

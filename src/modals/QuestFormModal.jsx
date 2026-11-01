@@ -41,7 +41,7 @@ export function QuestFormModal({
                 <form onSubmit={handleSaveQuestForm} className="space-y-4">
                   {/* En modification, on vient presque toujours pour l'objectif : nom, muscle, mesure et échange d'exercice sont repliés */}
                   <details open={!editingQuestId} className="space-y-4" data-testid="form-identity">
-                  {editingQuestId && <summary className="text-sm font-bold text-slate-300 py-1">Exercice : nom, muscle, mesure, changer d’exercice</summary>}
+                  <summary className={editingQuestId ? "text-sm font-bold text-slate-300 py-1" : "hidden"}>Exercice : nom, muscle, mesure, changer d’exercice</summary>
                   <div className="space-y-4 pt-1">
                   {editingQuestId && (
                     <div className="space-y-2">

@@ -43,7 +43,7 @@ export function SessionRecap({ recap, onClose }) {
           <button onClick={() => {
             const d = recap.date || getTodayISODate();
             const has = hasPhotos.some(p => p.date === d);
-            if (!has && !window.confirm('📸 Tu n’as pas encore pris ta photo de fin de séance. Fermer quand même ?')) return;
+            if (!has && !window.confirm('Tu n’as pas encore pris ta photo de fin de séance. Fermer quand même ?')) return;
             onClose();
           }} className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm">Super, merci coach</button>
         </div>
