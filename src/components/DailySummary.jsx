@@ -11,8 +11,8 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30">
-              <Flame className="w-3.5 h-3.5 text-orange-400" /> Bilan Énergétique & Séance du Jour
+            <span className="inline-flex items-center gap-1.5 text-sm font-black text-white">
+              <Flame className="w-3.5 h-3.5 text-orange-400" /> Calories du jour
             </span>
             <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1">
               <Calendar className="w-3.5 h-3.5 text-pink-400" />
@@ -25,14 +25,13 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </div>
           </div>
           <p className="hidden sm:block text-xs text-slate-400">
-            Cumul automatique des calories brûlées (Musculation & Course) {pick('par Rondoudou ', '')}le{' '}
-            <span className="text-slate-200 font-semibold">{selectedDate}</span>. Cliquez sur 🗑️ à droite d'une séance pour la supprimer en cas d'erreur.
+            Calories brûlées ce jour-là{pick(' par Rondoudou', '')}. La poubelle à droite d’une séance la supprime en cas d’erreur.
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
-            <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">
+            <span className="text-xs font-bold uppercase text-slate-400 block">
               🏋️ Musculation
             </span>
             <span className="text-sm sm:text-base font-black text-pink-300">
@@ -40,7 +39,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </span>
           </div>
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
-            <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">
+            <span className="text-xs font-bold uppercase text-slate-400 block">
               🏃 Course / Cardio
             </span>
             <span className="text-sm sm:text-base font-black text-emerald-300">
@@ -48,7 +47,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
             </span>
           </div>
           <div className="bg-gradient-to-br from-orange-500/20 to-rose-500/20 border border-orange-500/40 rounded-xl px-3 py-2 text-center">
-            <span className="text-[0.7rem] font-bold uppercase text-orange-300 block">
+            <span className="text-xs font-bold uppercase text-orange-300 block">
               🔥 Total Jour
             </span>
             <span className="text-sm sm:text-base font-black text-orange-300">
@@ -92,7 +91,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
                     )}
                   </span>
                 )}
-                <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold text-[0.75rem]">
+                <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold text-xs">
                   🔥 {act.calories || 0} kcal
                 </span>
                 <button

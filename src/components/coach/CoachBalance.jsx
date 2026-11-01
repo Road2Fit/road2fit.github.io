@@ -35,7 +35,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
                 {optimized && <div className="absolute top-0 h-full w-px bg-white/50" style={{ left: `${Math.min(100, (r.band.good / scale) * 100)}%` }} title="Cible" />}
               </div>
               {optimized && (r.missing > 0 || r.status === 'high') && (
-                <p className="text-[0.7rem] text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5">
                   {r.status === 'high'
                     ? 'Au-delà du volume utile : les séries en plus rapportent peu et fatiguent. Tu peux en retirer ou les mettre ailleurs.'
                     : `Il te manque environ ${r.missing} série${r.missing > 1 ? 's' : ''} par semaine pour atteindre la cible.`}
@@ -47,7 +47,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
         })}
       </div>
       {optimized ? (
-        <div className="text-[0.75rem] text-slate-500 space-y-1">
+        <div className="text-xs text-slate-500 space-y-1">
           <p>
             Repères adaptés à ton objectif{profileLabel ? ` (${profileLabel})` : ''}{balance.beginner ? ' et à ton niveau (débutant : moins de 12 semaines de suivi)' : ''}. Un exercice à deux muscles compte une série pour le principal et une demi-série pour l’autre.
           </p>
@@ -62,7 +62,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
           )}
         </div>
       ) : (
-        <p className="text-[0.75rem] text-slate-500">
+        <p className="text-xs text-slate-500">
           Repères : au moins 2 séances par semaine par groupe (Schoenfeld 2016) et environ 10 séries/semaine pour gagner du muscle (Schoenfeld 2017). Pendant une perte de poids, 6 séries ou plus suffisent généralement pour conserver sa masse musculaire (Spiering 2021).
         </p>
       )}

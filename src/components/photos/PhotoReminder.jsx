@@ -15,7 +15,7 @@ export function PhotoReminder({ gameState, onGo }) {
       <span className="text-2xl">📸</span>
       <div className="flex-1">
         <p className="text-xs font-black text-white">Séance faite aujourd’hui : pense à ta photo souvenir !</p>
-        <button onClick={onGo} className="text-[0.75rem] font-bold text-pink-300 underline">Ouvrir mes souvenirs</button>
+        <button onClick={onGo} className="text-xs font-bold text-pink-300 underline">Ouvrir mes souvenirs</button>
       </div>
       <button onClick={() => { try { localStorage.setItem('rondoufit_photo_snooze', today); } catch (e) {} setHidden(true); }} className="text-slate-400 hover:text-white text-sm" title="Plus tard">✕</button>
     </div>

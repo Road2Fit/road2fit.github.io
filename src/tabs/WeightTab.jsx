@@ -12,10 +12,10 @@ export function WeightTab({
           <div>
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <Scale className="w-5 h-5 text-pink-400" />
-              <span>Nouvelle Pesée</span>
+              <span>Nouvelle pesée</span>
             </h3>
             <p className="text-xs text-slate-400">
-              Suivez l’évolution de votre poids dans le temps (+25 EXP par pesée).
+              Suis l’évolution de ton poids (+25 EXP par pesée).
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function WeightTab({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+              <label className="block text-xs font-bold text-slate-400 mb-1">
                 Date de la pesée
               </label>
               <input
@@ -70,8 +70,8 @@ export function WeightTab({
             </div>
 
             <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3">
-              <label className="block text-[0.75rem] font-bold text-pink-300 mb-1">
-                🎯 Poids Cible (kg)
+              <label className="block text-xs font-bold text-pink-300 mb-1">
+                🎯 Poids cible (kg)
               </label>
               <input
                 type="number"
@@ -102,7 +102,7 @@ export function WeightTab({
             type="submit"
             className="w-full py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg"
           >
-            Enregistrer la Pesée (+25 EXP)
+            Enregistrer la pesée (+25 EXP)
           </button>
         </form>
       </div>
@@ -110,7 +110,7 @@ export function WeightTab({
       <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-            <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">
+            <span className="text-xs font-bold uppercase text-slate-400 block">
               Départ
             </span>
             <span className="text-base font-black text-slate-200">
@@ -118,7 +118,7 @@ export function WeightTab({
             </span>
           </div>
           <div className="bg-pink-950/30 border border-pink-500/40 rounded-xl p-3">
-            <span className="text-[0.7rem] font-bold uppercase text-pink-300 block">
+            <span className="text-xs font-bold uppercase text-pink-300 block">
               Actuel
             </span>
             <span className="text-base font-black text-white">
@@ -126,7 +126,7 @@ export function WeightTab({
             </span>
           </div>
           <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-3">
-            <span className="text-[0.7rem] font-bold uppercase text-emerald-300 block">
+            <span className="text-xs font-bold uppercase text-emerald-300 block">
               Objectif Cible
             </span>
             <span className="text-base font-black text-emerald-300">
@@ -200,7 +200,7 @@ export function WeightTab({
                   x={width - padX}
                   y={targetY - 6}
                   textAnchor="end"
-                  className="fill-emerald-400 text-[0.7rem] font-bold"
+                  className="fill-emerald-400 text-xs font-bold"
                 >
                   Cible : {targetW} kg
                 </text>
@@ -229,7 +229,7 @@ export function WeightTab({
                       x={getX(idx)}
                       y={getY(w.weightKg) - 10}
                       textAnchor="middle"
-                      className="fill-white text-[0.7rem] font-bold"
+                      className="fill-white text-xs font-bold"
                     >
                       {w.weightKg} kg
                     </text>
@@ -244,9 +244,9 @@ export function WeightTab({
                   </g>
                 ))}
               </svg>
-              <p className="text-[0.75rem] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 <span className="text-sky-300 font-bold">- - -</span> Tendance (moyenne glissante sur 7 pesées).{' '}
-                {eta === null && 'Ajoutez au moins 3 pesées pour obtenir une estimation.'}
+                {eta === null && 'Ajoute au moins 3 pesées pour obtenir une estimation.'}
                 {eta && eta.done && '🎉 Objectif de poids atteint !'}
                 {eta && eta.stalled && 'Poids stable ou en hausse : pas d’estimation possible pour l’instant.'}
                 {eta && eta.days && `Au rythme actuel (${eta.perWeek} kg/sem.), objectif estimé vers le ${eta.date} (~${eta.days} j).`}

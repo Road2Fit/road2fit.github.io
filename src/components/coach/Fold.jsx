@@ -13,7 +13,7 @@ export function Fold({ children, defaultOpen = false, subtitle, title }) {
       >
         <span>
           <span className="block font-black text-white text-sm">{title}</span>
-          {subtitle && !open && <span className="block text-[0.75rem] text-slate-400 mt-0.5">{subtitle}</span>}
+          {subtitle && !open && <span className="block text-xs text-slate-400 mt-0.5">{subtitle}</span>}
         </span>
         <span className="text-slate-300 text-lg">{open ? '▾' : '▸'}</span>
       </button>

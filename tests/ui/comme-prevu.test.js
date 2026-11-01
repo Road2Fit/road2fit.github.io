@@ -21,12 +21,12 @@ describe('Noter séance : comme prévu par le coach', () => {
     const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
     open.push(h);
     const t = computeExerciseTarget(bench, { today: '2026-10-21' });
-    await clickText(h, 'Noter Séance');
+    await clickText(h, 'Noter la séance');
     await clickText(h, 'Remplir comme prévu par le coach');
     expect(pageText(h)).toContain('Proposition du coach reprise');
     const charge = h.doc.querySelector('.fixed.inset-0 input[step="0.5"], .fixed.inset-0 input[type="number"]');
     expect(Number(charge.value)).toBe(t.load);
-    await clickText(h, 'Valider la Séance');
+    await clickText(h, 'Valider la séance');
     const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');
     expect(e.value).toBe(t.load);
     expect(e.setDetails).toEqual(t.targetReps);

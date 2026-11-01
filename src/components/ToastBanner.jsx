@@ -2,13 +2,13 @@ import { X } from '../icons';
 
 export function ToastBanner({ dismissToast, toast }) {
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-md bg-slate-900/95 border-2 border-pink-400/80 shadow-2xl shadow-pink-500/20 rounded-2xl p-4 flex items-center gap-3.5 animate-bounce">
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+    <div className="fixed top-3 inset-x-3 sm:inset-x-auto sm:right-5 sm:top-5 sm:max-w-md z-[70] bg-slate-900/95 border border-pink-400/70 shadow-2xl rounded-2xl p-3 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-2xl shrink-0 shadow-inner">
         <span className={toast.badge === '🏅' ? 'inline-block animate-bounce' : ''}>{toast.badge}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="font-extrabold text-pink-300 text-sm uppercase tracking-wider truncate">
+        <div className="flex flex-wrap items-center gap-x-2">
+          <p className="font-extrabold text-pink-300 text-sm">
             {toast.title}
           </p>
           {toast.xpGain > 0 && (
@@ -21,7 +21,8 @@ export function ToastBanner({ dismissToast, toast }) {
       </div>
       <button
         onClick={dismissToast}
-        className="text-slate-400 hover:text-white p-1"
+        aria-label="Fermer"
+        className="text-slate-400 hover:text-white p-2 shrink-0"
       >
         <X className="w-4 h-4" />
       </button>

@@ -66,7 +66,7 @@ const PRELUDE = `
  * Les erreurs de la page sont collectées dans `h.errors`.
  */
 // Par défaut l'appli de test s'ouvre sur le lien PRIVÉ (?rondoudou = édition Rondoudou, comme avant). `__classic` dans `storage` = lien public (version classique Road2Fit).
-export async function launch({ storage: storage0 = {}, fetchImpl, empty = false } = {}) {
+export async function launch({ storage: storage0 = {}, fetchImpl, empty = false, openCoach = false } = {}) {
   const { __classic, ...rest } = storage0;
   let storage = rest;
   const START_URL = __classic ? 'https://road2fit.github.io/' : 'https://road2fit.github.io/?rondoudou';
@@ -99,7 +99,11 @@ export async function launch({ storage: storage0 = {}, fetchImpl, empty = false 
   w.eval(PRELUDE);
   w.eval(code);
   await sleep(120);
-  return { dom, w, doc: w.document, errors, close: () => w.close() };
+  // L'appli s'ouvre sur le Coach ; la plupart des parcours partent de la page Exercices
+  const h = { dom, w, doc: w.document, errors, close: () => w.close() };
+  const tab = w.document.querySelector('[data-tab="quests"]');
+  if (tab && !openCoach) { await clickEl(h, tab); }
+  return h;
 }
 
 export const rootHtml = h => h.doc.getElementById('root').innerHTML;

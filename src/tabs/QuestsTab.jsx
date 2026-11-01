@@ -5,7 +5,7 @@ import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { cleanText, pick } from '../edition';
-import { arenaLabel } from '../data/muscles';
+import { arenaLabel, hasArena } from '../data/muscles';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
@@ -14,10 +14,10 @@ export function QuestsTab({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1" role="group" aria-label="Filtrer par muscle">
         <button
           onClick={() => setQuestFilter('all')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+          className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
             questFilter === 'all'
               ? 'bg-pink-600 text-white'
               : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
@@ -25,19 +25,17 @@ export function QuestsTab({
         >
           {pick('Toutes les Arènes', 'Tous les groupes')} ({gameState.quests.length})
         </button>
-        {ARENA_GROUPS.map(g => (
+        {ARENA_GROUPS.filter(g => questFilter === g.id || gameState.quests.some(q => hasArena(q, g.id))).map(g => (
           <button
             key={g.id}
             onClick={() => setQuestFilter(g.id)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
               questFilter === g.id
                 ? 'bg-pink-600 text-white'
                 : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
             }`}
           >
-            <span>{g.icon}</span>
-            <span>{g.label}</span>
-            <span className={`px-1.5 rounded-full text-[0.7rem] font-black ${questFilter === g.id ? 'bg-white/20' : 'bg-slate-800 text-pink-300'}`}>Niv. {(arenaLevels.find(a => a.id === g.id) || {}).groupLevel || 1}</span>
+            {g.label}
           </button>
         ))}
       </div>
@@ -53,7 +51,7 @@ export function QuestsTab({
           >
             <Plus className="w-4 h-4" /> Ajouter mon premier exercice
           </button>
-          <p className="text-[0.75rem] text-slate-500">Astuce : le bouton « + » en bas à droite permet aussi de dicter une séance ou d’ajouter une course.</p>
+          <p className="text-xs text-slate-500">Astuce : le bouton « + » en bas à droite permet aussi de dicter une séance ou d’ajouter une course.</p>
         </div>
       ) : filteredQuests.length === 0 ? (
         <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
@@ -64,11 +62,11 @@ export function QuestsTab({
             onClick={openCreateQuestModal}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Ajouter un Exercice / Objectif
+            <Plus className="w-4 h-4" /> Ajouter un exercice
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
           {filteredQuests.map(quest => {
             const evalState = evaluateQuestProgress(quest);
             const lastEntry =
@@ -90,65 +88,66 @@ export function QuestsTab({
             return (
               <div
                 key={quest.id}
-                className={`rounded-2xl border transition-all p-5 flex flex-col justify-between relative overflow-hidden ${
-                  evalState.isBossDefeated
-                    ? 'bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/30 border-amber-400/70 shadow-lg shadow-amber-500/10'
-                    : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 shadow-lg'
-                }`}
+                className={`rounded-2xl border p-4 ${evalState.isBossDefeated ? 'bg-slate-900 border-amber-400/70' : 'bg-slate-900/90 border-slate-800'}`}
               >
-                <div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl shrink-0">
-                        {quest.icon}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[0.7rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40">
-                            Niv. {questLevel} • {arenaLabel(quest)}
-                          </span>
-
-                          {quest.type === 'strength' && (
-                            <span className="text-[0.7rem] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-                              {goalMode === 'weight_only'
-                                ? `🏋️ Objectif Poids : ${quest.goalValue} kg`
-                                : goalMode === 'reps_only'
-                                ? `${isTimedQuest(quest) ? '⏱ Objectif Durée' : '🔁 Objectif Reps'} : ${goalReps} ${repUnit(quest)}`
-                                : goalMode === 'free_mode'
-                                ? `🕊️ Entraînement Libre`
-                                : `🛡️ Objectif : ${goalSets} × ${goalReps} ${repUnit(quest)}`}
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 className="text-lg font-extrabold text-white mt-1">
-                          {quest.name}
-                        </h3>
-                        {quest.type === 'strength' && (
-                          <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1 px-2.5 py-1 rounded-lg bg-sky-900/50 hover:bg-sky-800/60 border border-sky-500/40 text-[0.75rem] font-bold text-sky-200">🎬 Mouvement</button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => openEditQuestModal(quest)}
-                        title="Ajuster l'objectif"
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1 border border-slate-700/70 transition"
-                      >
-                        <Sliders className="w-3.5 h-3.5" />
-                        <span>Ajuster</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteQuest(quest.id)}
-                        title="Supprimer cet exercice"
-                        className="p-1.5 rounded-lg bg-slate-800/50 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xl shrink-0">{quest.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-extrabold text-white leading-snug">{quest.name}</h3>
+                    <p className="text-sm text-slate-300">
+                      {quest.type === 'strength'
+                        ? goalMode === 'weight_only' ? `Objectif ${quest.goalValue} kg`
+                          : goalMode === 'reps_only' ? `Objectif ${goalReps} ${repUnit(quest)}`
+                          : goalMode === 'free_mode' ? 'Entraînement libre'
+                          : `Objectif ${goalSets} × ${goalReps} ${repUnit(quest)}`
+                        : goalMode === 'free_mode' ? 'Entraînement libre' : `Objectif ${quest.goalValue} ${quest.unit}`}
+                      {quest.unit === 'kg' && goalMode !== 'weight_only' ? ` · ${quest.currentValue} kg` : ''}
+                      {quest.unit === 'reps' && Number(quest.currentAssistanceKg) > 0 ? ` · aide ${quest.currentAssistanceKg} kg` : ''}
+                    </p>
+                    <p className="text-xs text-slate-500">Niv. {questLevel} · {arenaLabel(quest)}</p>
                   </div>
+                </div>
 
+                <div className="mt-3">
+                  <div className="flex justify-between items-center text-xs font-bold mb-1">
+                    <span className="text-slate-400">Vers le niveau {questLevel + 1}</span>
+                    <span className={evalState.isBossDefeated ? 'text-amber-300' : 'text-pink-300'}>{evalState.percent} %</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-500 ${evalState.isBossDefeated ? 'bg-amber-400' : quest.type === 'cardio' ? 'bg-emerald-500' : 'bg-pink-500'}`} style={{ width: `${evalState.percent}%` }} />
+                  </div>
+                </div>
+
+                {evalState.isBossDefeated && (
+                  <button type="button" onClick={() => openLevelUpModal(quest)} className="mt-3 w-full py-2.5 px-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 bg-amber-400 text-slate-950">
+                    <Crown className="w-4 h-4" />
+                    <span>Objectif atteint ! Passer au niveau {questLevel + 1}</span>
+                  </button>
+                )}
+
+                <div className="mt-3 flex items-center gap-2">
+                  <button onClick={() => openLogModal(quest)} className="flex-1 px-3.5 py-2.5 rounded-xl font-bold text-sm bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center gap-1.5 transition">
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Noter la séance</span>
+                  </button>
+                  {quest.type === 'strength' && (
+                    <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200">Geste</button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedChartQuestId(quest.id);
+                      setActiveTab('charts');
+                    }}
+                    title="Voir la courbe de progression"
+                    aria-label="Voir la courbe de progression"
+                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <details className="mt-2 group">
+                  <summary className="text-xs font-bold text-slate-400 py-1.5">Détails et réglages</summary>
                   {quest.type === 'strength' ? (
                     <div className="mt-4 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -179,12 +178,12 @@ export function QuestsTab({
                         </div>
 
                         {isTimedQuest(quest) ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                             ⏱ Chronométré • Cible {quest.goalValue || goalReps} s
                           </span>
                         ) : quest.unit === 'reps' ? (
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold border ${
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${
                               (Number(quest.currentAssistanceKg) || 0) > 0
                                 ? 'bg-violet-500/20 text-violet-300 border-violet-500/40'
                                 : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -199,7 +198,7 @@ export function QuestsTab({
                               : '🦅 Strict • 0 kg d’aide'}
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[0.75rem] font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                             🏋️ {quest.currentValue} kg / Cible {quest.goalValue} kg
                           </span>
                         )}
@@ -221,7 +220,7 @@ export function QuestsTab({
                                     : 'bg-slate-900 border-slate-800 text-slate-400'
                                 }`}
                               >
-                                <span className="text-[0.75rem] uppercase tracking-wider">
+                                <span className="text-xs uppercase tracking-wider">
                                   Série {idx + 1}
                                 </span>
                                 <span className="flex items-center gap-1 font-black">
@@ -229,7 +228,7 @@ export function QuestsTab({
                                   {isValidated ? (
                                     <span title={pick('Pokéball validée', 'Série validée')}>{pick('🔴', '✅')}</span>
                                   ) : (
-                                    <span className="text-[0.7rem] text-amber-400">⚪</span>
+                                    <span className="text-xs text-amber-400">⚪</span>
                                   )}
                                 </span>
                               </div>
@@ -240,7 +239,7 @@ export function QuestsTab({
 
                       <div className="grid grid-cols-3 gap-2 pt-1 text-center text-xs">
                         <div className="bg-slate-900/90 rounded-lg p-2 border border-slate-800/80">
-                          <span className="text-[0.7rem] uppercase text-slate-400 block">
+                          <span className="text-xs uppercase text-slate-400 block">
                             Départ (Niv.{questLevel})
                           </span>
                           <span className="font-bold text-slate-200">
@@ -249,7 +248,7 @@ export function QuestsTab({
                               : `${quest.startValue} ${repUnit(quest)}`}
                           </span>
                           {quest.unit === 'reps' && !isTimedQuest(quest) && (
-                            <span className="block text-[0.7rem] text-violet-300">
+                            <span className="block text-xs text-violet-300">
                               {Number(quest.startAssistanceKg) > 0
                                 ? `Aide ${quest.startAssistanceKg}kg`
                                 : 'Strict 0kg'}
@@ -258,7 +257,7 @@ export function QuestsTab({
                         </div>
 
                         <div className="bg-pink-950/30 rounded-lg p-2 border border-pink-500/30">
-                          <span className="text-[0.7rem] uppercase text-pink-300 block">
+                          <span className="text-xs uppercase text-pink-300 block">
                             Actuel
                           </span>
                           <span className="font-extrabold text-white">
@@ -266,7 +265,7 @@ export function QuestsTab({
                               ? `${quest.currentValue} kg`
                               : `${formatSetsBreakdown(currentSetsArray)} ${repUnit(quest)}`}
                           </span>
-                          <span className="block text-[0.7rem] text-pink-300">
+                          <span className="block text-xs text-pink-300">
                             {quest.unit === 'kg'
                               ? `Barre à ${quest.currentValue} kg`
                               : isTimedQuest(quest) ? 'Chronométré'
@@ -277,7 +276,7 @@ export function QuestsTab({
                         </div>
 
                         <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-500/30">
-                          <span className="text-[0.7rem] uppercase text-amber-300 block">
+                          <span className="text-xs uppercase text-amber-300 block">
                             Objectif Niv.{questLevel + 1}
                           </span>
                           <span className="font-extrabold text-amber-300">
@@ -287,7 +286,7 @@ export function QuestsTab({
                               ? `${goalReps} ${repUnit(quest)}`
                               : `${goalSets} × ${goalReps} ${repUnit(quest)}`}
                           </span>
-                          <span className="block text-[0.7rem] text-amber-200/80">
+                          <span className="block text-xs text-amber-200/80">
                             {quest.unit === 'kg'
                               ? `à ${quest.goalValue} kg`
                               : isTimedQuest(quest) ? 'par série'
@@ -302,7 +301,7 @@ export function QuestsTab({
                     <div className="mt-4 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="grid grid-cols-3 gap-2 text-center text-xs">
                         <div className="bg-slate-900 rounded-lg p-2 border border-slate-800">
-                          <span className="text-[0.7rem] uppercase text-slate-400 block">
+                          <span className="text-xs uppercase text-slate-400 block">
                             Départ (Niv.{questLevel})
                           </span>
                           <span className="font-bold text-slate-200">
@@ -310,7 +309,7 @@ export function QuestsTab({
                           </span>
                         </div>
                         <div className="bg-emerald-950/40 rounded-lg p-2 border border-emerald-500/30">
-                          <span className="text-[0.7rem] uppercase text-emerald-300 block">
+                          <span className="text-xs uppercase text-emerald-300 block">
                             Record Actuel
                           </span>
                           <span className="font-extrabold text-white">
@@ -318,7 +317,7 @@ export function QuestsTab({
                           </span>
                         </div>
                        <div className="bg-amber-950/30 rounded-lg p-2 border border-amber-500/30">
-                          <span className="text-[0.7rem] uppercase text-amber-300 block">
+                          <span className="text-xs uppercase text-amber-300 block">
                             {goalMode === 'free_mode' ? 'Objectif' : `Objectif Niv.${questLevel + 1}`}
                           </span>
                           <span className="font-extrabold text-amber-300">
@@ -341,88 +340,26 @@ export function QuestsTab({
                     </div>
                   )}
 
-                  <div className="mt-4">
-                    <div className="flex justify-between items-center text-xs font-bold mb-1">
-                      <span className="text-slate-400">
-                        Progression vers le Niveau {questLevel + 1}
-                      </span>
-                      <span
-                        className={
-                          evalState.isBossDefeated ? 'text-amber-300' : 'text-pink-300'
-                        }
-                      >
-                        {evalState.percent}%
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          evalState.isBossDefeated
-                            ? 'bg-gradient-to-r from-amber-400 to-orange-500'
-                            : quest.type === 'cardio'
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                            : 'bg-gradient-to-r from-pink-500 to-purple-500'
-                        }`}
-                        style={{ width: `${evalState.percent}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => openLevelUpModal(quest)}
-                      className={`w-full py-2 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition ${
-                        evalState.isBossDefeated
-                          ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 text-slate-950 shadow-lg shadow-amber-500/20 animate-pulse'
-                          : 'bg-slate-800/70 hover:bg-slate-800 text-amber-300 border border-amber-500/30'
-                      }`}
-                    >
-                      <Crown className="w-4 h-4" />
-                      <span>
-                        {evalState.isBossDefeated
-                          ? `🎵 Objectif Atteint ! Passer au Niv. ${questLevel + 1} & Fixer le suivant`
-                          : `Valider cet objectif & Passer au Niv. ${questLevel + 1}`}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                  <div className="text-xs text-slate-400 truncate">
-                    {lastEntry ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-300 font-bold border border-orange-500/30">
-                          🔥 {lastEntry.calories || 45} kcal
-                        </span>
-                        <span className="truncate">{cleanText(lastEntry.note)}</span>
-                      </span>
-                    ) : (
-                      <span>Aucune séance notée</span>
+                  
+                  <p className="mt-3 text-xs text-slate-400">
+                    {lastEntry ? <>Dernière séance : {lastEntry.calories || 45} kcal{lastEntry.note ? ` · ${cleanText(lastEntry.note)}` : ''}</> : 'Aucune séance notée'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {!evalState.isBossDefeated && (
+                      <button type="button" onClick={() => openLevelUpModal(quest)} className="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300">
+                        <Crown className="w-4 h-4" />
+                        <span>Valider l’objectif et passer au niveau {questLevel + 1}</span>
+                      </button>
                     )}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        setSelectedChartQuestId(quest.id);
-                        setActiveTab('charts');
-                      }}
-                      title="Voir la courbe de progression"
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                    >
-                      <TrendingUp className="w-4 h-4" />
+                    <button onClick={() => openEditQuestModal(quest)} title="Ajuster l'objectif" className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition">
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>Ajuster</span>
                     </button>
-
-                    <button
-                      onClick={() => openLogModal(quest)}
-                      className="px-3.5 py-2 rounded-xl font-bold text-xs bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-md shadow-pink-600/20 flex items-center gap-1.5 transition"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Noter Séance</span>
+                    <button onClick={() => handleDeleteQuest(quest.id)} title="Supprimer cet exercice" aria-label="Supprimer cet exercice" className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 transition">
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
+                </details>
               </div>
             );
           })}

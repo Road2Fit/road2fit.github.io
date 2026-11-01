@@ -22,10 +22,10 @@ export function CoachObjectives({ gameState, onAddExercise, questRows }) {
               <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1.5">
                 <div className="h-full bg-pink-500" style={{ width: `${r.progress}%` }} />
               </div>
-              <p className="text-[0.75rem] text-slate-300 mt-1.5">Prochaine cible : <b>{next}</b></p>
-              <p className="text-[0.75rem] text-slate-400">Objectif final : {eta}</p>
+              <p className="text-xs text-slate-300 mt-1.5">Prochaine cible : <b>{next}</b></p>
+              <p className="text-xs text-slate-400">Objectif final : {eta}</p>
               {r.plateau && (
-                <div className="mt-2 text-[0.75rem] bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 text-amber-100 space-y-1">
+                <div className="mt-2 text-xs bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 text-amber-100 space-y-1">
                   <p>⚠️ <b>Stagnation</b> sur les 3 dernières séances. Idées : une semaine allégée, une variante de l’exercice, et un contrôle du sommeil et des protéines.</p>
                   {sugg.map(c => (
                     <button key={c.id} onClick={() => onAddExercise(c.id)} className="mr-1 mt-1 px-2 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">+ {c.name}</button>

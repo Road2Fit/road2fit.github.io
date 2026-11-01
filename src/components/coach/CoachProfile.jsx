@@ -6,7 +6,7 @@ const selectClass = 'bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5
 function ProfileCard({ id }) {
   const P = PROFILES[id];
   if (!P) {
-    return <p className="text-[0.75rem] text-slate-400">Le coach garde son réglage d’origine : il adapte les répétitions à l’objectif de chaque exercice.</p>;
+    return <p className="text-xs text-slate-400">Le coach garde son réglage d’origine : il adapte les répétitions à l’objectif de chaque exercice.</p>;
   }
   return (
     <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
@@ -20,7 +20,7 @@ function ProfileCard({ id }) {
           ['Repos', P.restText],
         ].map(([k, v]) => (
           <div key={k} className="bg-slate-900 border border-slate-800 rounded-lg p-1.5">
-            <p className="text-[0.7rem] text-slate-400">{k}</p>
+            <p className="text-xs text-slate-400">{k}</p>
             <p className="text-xs font-black text-pink-300">{v}</p>
           </div>
         ))}
@@ -75,7 +75,7 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
             <button disabled={seq.length <= 1} onClick={() => setSeq(seq.slice(0, -1))} className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 font-bold disabled:opacity-40">− Retirer le dernier</button>
             <button onClick={() => updateCoach({ cycleProfiles: [], workProfile: active.id || 'auto' })} className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 font-bold">Même profil tout le temps</button>
           </div>
-          <p className="text-[0.75rem] text-slate-500">Après le dernier cycle de la liste, on recommence au premier. La semaine allégée de fin de cycle garde le profil du cycle.</p>
+          <p className="text-xs text-slate-500">Après le dernier cycle de la liste, on recommence au premier. La semaine allégée de fin de cycle garde le profil du cycle.</p>
         </div>
       )}
 
@@ -91,10 +91,10 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
         </button>
       )}
       {!w0.cycle && (
-        <p className="text-[0.75rem] text-slate-500">Astuce : active un cycle d’entraînement ci-dessous pour pouvoir choisir un profil différent à chaque cycle.</p>
+        <p className="text-xs text-slate-500">Astuce : active un cycle d’entraînement ci-dessous pour pouvoir choisir un profil différent à chaque cycle.</p>
       )}
 
-      <details className="text-[0.75rem] text-slate-400">
+      <details className="text-xs text-slate-400">
         <summary className="cursor-pointer font-bold text-slate-300">📚 Ce que dit la recherche</summary>
         <ul className="mt-2 space-y-1.5 list-disc pl-5">
           <li><b>Repères classiques</b> (ACSM 2009, NSCA) : force = 1 à 6 répétitions à 85 % du max ou plus, repos de 2 à 5 minutes ; hypertrophie = 6 à 12 répétitions à 67-85 %, repos plus courts ; endurance de force = 12 répétitions ou plus à 67 % ou moins (ACSM : 40-60 %), repos de 90 secondes ou moins. Pour progresser, l’ACSM conseille d’augmenter la charge de 2 à 10 % quand on dépasse l’objectif de 1 à 2 répétitions.</li>

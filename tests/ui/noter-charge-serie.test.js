@@ -23,9 +23,9 @@ const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 async function ouvrir(nomExercice) {
   const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
   open.push(h);
-  // le bouton « Noter Séance » de la carte de cet exercice
-  const carte = [...h.doc.querySelectorAll('div.rounded-2xl')].filter(d => d.textContent.includes(nomExercice) && [...d.querySelectorAll('button')].some(b => b.textContent.includes('Noter Séance'))).pop();
-  await clickEl(h, [...carte.querySelectorAll('button')].find(b => b.textContent.includes('Noter Séance')));
+  // le bouton « Noter la séance » de la carte de cet exercice
+  const carte = [...h.doc.querySelectorAll('div.rounded-2xl')].filter(d => d.textContent.includes(nomExercice) && [...d.querySelectorAll('button')].some(b => b.textContent.includes('Noter la séance'))).pop();
+  await clickEl(h, [...carte.querySelectorAll('button')].find(b => b.textContent.includes('Noter la séance')));
   return h;
 }
 const modal = h => h.doc.querySelector('.fixed.inset-0.z-50');
@@ -43,7 +43,7 @@ describe('Noter séance : charge par série', () => {
     expect(champs.every(c => c.value === '15')).toBe(true); // valeur de base partout au départ
     await setInput(h, champs[2], '17.5');
     await setInput(h, champs[3], '17.5');
-    await clickText(h, 'Valider la Séance');
+    await clickText(h, 'Valider la séance');
     const e = saved(h).quests[0].history.find(x => x.date !== '2026-10-17');
     expect(e.setLoads).toEqual([15, 15, 17.5, 17.5]);
     expect(e.value).toBe(17.5); // la plus lourde = record
@@ -67,7 +67,7 @@ describe('Noter séance : charge par série', () => {
     await setInput(h, champsSerie(h)[3], '20');
     await clickEl(h, caseCharge(h));
     expect(champsSerie(h)).toHaveLength(0);
-    await clickText(h, 'Valider la Séance');
+    await clickText(h, 'Valider la séance');
     const e = saved(h).quests[0].history.find(x => x.date !== '2026-10-17');
     expect(e.setLoads).toBeUndefined();
     expect(e.value).toBe(15);
@@ -82,7 +82,7 @@ describe('Noter séance : charge par série', () => {
     expect(champs).toHaveLength(3);
     await setInput(h, champs[1], '7.5');
     await setInput(h, champs[2], '7.5');
-    await clickText(h, 'Valider la Séance');
+    await clickText(h, 'Valider la séance');
     const e = saved(h).quests[1].history.find(x => x.date !== '2026-10-17');
     expect(e.setAssists).toEqual([10, 7.5, 7.5]);
     expect(e.assistanceKg).toBe(7.5);

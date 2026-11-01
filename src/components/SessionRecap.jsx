@@ -20,13 +20,13 @@ export function SessionRecap({ recap, onClose }) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-center text-xs">
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-              <p className="text-[0.7rem] uppercase font-bold text-slate-400">Records battus</p>
+              <p className="text-xs uppercase font-bold text-slate-400">Records battus</p>
               <p className="text-lg font-black text-amber-300">{recap.prs} 🏅</p>
             </div>
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-              <p className="text-[0.7rem] uppercase font-bold text-slate-400">Tonnage (charges)</p>
+              <p className="text-xs uppercase font-bold text-slate-400">Tonnage (charges)</p>
               <p className="text-lg font-black text-white">{recap.tonnage} kg</p>
-              {diff !== null && <p className={`text-[0.75rem] font-bold ${diff >= 0 ? 'text-emerald-300' : 'text-amber-300'}`}>{diff >= 0 ? '+' : ''}{diff} % vs dernière fois</p>}
+              {diff !== null && <p className={`text-xs font-bold ${diff >= 0 ? 'text-emerald-300' : 'text-amber-300'}`}>{diff >= 0 ? '+' : ''}{diff} % vs dernière fois</p>}
             </div>
           </div>
           <div className="space-y-2">

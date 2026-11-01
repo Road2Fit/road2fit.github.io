@@ -1,6 +1,6 @@
 // Séance guidée : ressenti (1 à 10) noté exercice par exercice, enregistré dans l'historique.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -17,7 +17,7 @@ const feltButton = (h, n) => [...h.doc.querySelectorAll('button')].find(b => b.t
 describe('ressenti par exercice', () => {
   it('chaque exercice garde son propre ressenti, les autres reprennent le ressenti global', async () => {
     const h = await start();
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
 

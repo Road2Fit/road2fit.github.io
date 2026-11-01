@@ -12,6 +12,6 @@ for (const n of names) {
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
-  theme: { extend: { colors: accent } },
+  theme: { extend: { colors: accent, fontSize: { xs: ['0.8125rem', { lineHeight: '1.15rem' }] } } }, // « xs » = 13 px : le plus petit texte courant
   plugins: [],
 };

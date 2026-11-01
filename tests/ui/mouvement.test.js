@@ -74,11 +74,11 @@ describe('voir le mouvement', () => {
 
   it('disponible dans Noter séance, le Coach et la séance guidée', async () => {
     const h = await start();
-    await clickText(h, 'Noter Séance');
+    await clickText(h, 'Noter la séance');
     expect(boutons(h).length).toBeGreaterThan(0);
     await clickText(h, 'Annuler').catch(() => {});
     const h2 = await start();
-    await clickText(h2, '🧠 Coach');
+    await clickEl(h2, h2.doc.querySelector('[data-tab="coach"]'));
     expect(boutons(h2).length).toBeGreaterThan(0);
     const [lancer] = [...findByText(h2, 'Lancer la séance guidée'), ...findByText(h2, 'Lancer cette séance guidée maintenant')];
     await clickText(h2, lancer.textContent.trim().slice(0, 30));

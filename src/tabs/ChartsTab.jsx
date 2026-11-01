@@ -4,25 +4,12 @@ import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest } from '../lib/qu
 export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelectedChartQuestId }) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        {gameState.quests.map(q => (
-          <button
-            key={q.id}
-            onClick={() => setSelectedChartQuestId(q.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition ${
-              activeChartQuest?.id === q.id
-                ? 'bg-pink-600 border-pink-400 text-white shadow-lg shadow-pink-600/20'
-                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-            }`}
-          >
-            <span>{q.icon}</span>
-            <span>{q.name}</span>
-            <span className="px-1.5 py-0.5 rounded bg-slate-950/60 text-[0.7rem] text-pink-200">
-              Niv.{q.level || 1}
-            </span>
-          </button>
-        ))}
-      </div>
+      <label className="block">
+        <span className="block text-xs font-bold text-slate-400 mb-1">Exercice</span>
+        <select value={activeChartQuest ? activeChartQuest.id : ''} onChange={e => setSelectedChartQuestId(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm font-bold text-white">
+          {gameState.quests.map(q => <option key={q.id} value={q.id}>{q.name} (niv. {q.level || 1})</option>)}
+        </select>
+      </label>
 
       {activeChartQuest && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
@@ -30,7 +17,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
             <div>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
                 <span>{activeChartQuest.icon}</span>
-                <span>Courbe d’évolution : {activeChartQuest.name}</span>
+                <span>{activeChartQuest.name}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
                 Niveau actuel : Niv. {activeChartQuest.level || 1}
@@ -96,7 +83,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                     x={width - padX}
                     y={goalY - 6}
                     textAnchor="end"
-                    className="fill-amber-400 text-[0.7rem] font-bold"
+                    className="fill-amber-400 text-[13px] font-bold"
                   >
                     Objectif : {goalVal} {activeChartQuest.unit}
                   </text>
@@ -133,7 +120,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                           x={cx}
                           y={cy - 12}
                           textAnchor="middle"
-                          className="fill-white text-[0.7rem] font-bold"
+                          className="fill-white text-[13px] font-bold"
                         >
                           {activeChartQuest.type === 'strength'
                             ? `${
@@ -148,7 +135,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                             x={cx}
                             y={cy + 16}
                             textAnchor="middle"
-                            className="fill-violet-300 text-[9px] font-semibold"
+                            className="fill-violet-300 text-[12px] font-semibold"
                           >
                             {(Number(h.assistanceKg) || 0) > 0
                               ? `Aide ${h.assistanceKg}kg`
@@ -159,7 +146,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                           x={cx}
                           y={height - 8}
                           textAnchor="middle"
-                          className="fill-slate-400 text-[9px]"
+                          className="fill-slate-400 text-[12px]"
                         >
                           {h.date?.slice(5)} • 🔥{h.calories || 45}kcal
                         </text>

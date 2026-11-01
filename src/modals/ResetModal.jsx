@@ -13,7 +13,7 @@ export function ResetModal({ handleResetAll, setConfirmResetOpen }) {
               Alerte du Professeur Chen : Réinitialiser ?
             </h3>
             <p className="text-xs text-slate-400">
-              Attention, cette action effacera votre progression actuelle.
+              Attention, cette action effacera ta progression actuelle.
             </p>
           </div>
         </div>

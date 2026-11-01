@@ -22,7 +22,7 @@ export function CrashScreen({ message }) {
         <p className="text-4xl">😵</p>
         <h1 className="text-lg font-black text-white">Oups, un écran a planté</h1>
         <p className="text-sm text-slate-300">Tes données sont intactes sur cet appareil. Recharge l’application ; si le problème revient, exporte tes données avant tout.</p>
-        {message && <p className="text-[0.75rem] text-slate-500 break-words">{message}</p>}
+        {message && <p className="text-xs text-slate-500 break-words">{message}</p>}
         <div className="flex flex-col gap-2">
           <button onClick={() => window.location.reload()} className="py-3 rounded-xl bg-pink-600 text-white font-black">Recharger</button>
           <button onClick={exportRawSave} className="py-3 rounded-xl bg-slate-800 text-slate-100 font-bold">💾 Exporter mes données</button>

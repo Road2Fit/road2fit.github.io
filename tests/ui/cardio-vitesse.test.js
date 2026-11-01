@@ -1,4 +1,4 @@
-// « + Activité annexe » : saisie vitesse + durée et pente en %.
+// « Activité (course, sport…) » : saisie vitesse + durée et pente en %.
 import { afterEach, describe, expect, it } from 'vitest';
 import { clickText, launch, pageText, setInput } from './harness';
 
@@ -13,7 +13,7 @@ describe('course / marche : vitesse + durée, pente en %', () => {
   it('4 km/h pendant 40 min à 10 % : distance, dénivelé et note déduits', async () => {
     const h = await launch();
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     await clickText(h, 'Vitesse + durée');
     await clickText(h, 'Pente en %');
     expect(modal(h).textContent).not.toContain('Distance (km)');
@@ -35,7 +35,7 @@ describe('course / marche : vitesse + durée, pente en %', () => {
   it('saisie classique toujours disponible (distance + dénivelé en m)', async () => {
     const h = await launch();
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     expect(modal(h).textContent).toContain('Distance (km)');
     expect(modal(h).textContent).toContain('Dénivelé D+ (m)');
     await clickText(h, 'Ajouter au Bilan du Jour');

@@ -3,7 +3,7 @@ import { cardioHasElevation } from '../lib/calories';
 import { isTimedQuest, repUnit } from '../lib/quests';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white text-center';
-const label = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
+const label = 'block text-xs font-bold text-slate-400 mb-1';
 
 /** Formulaire de correction d'une séance déjà enregistrée (onglet Journal). */
 export function EntryEditor({ entry, onCancel, onSave, quest }) {
@@ -64,7 +64,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
             <div className="flex flex-wrap items-center gap-2">
               {sets.map((r, i) => (
                 <div key={i} className="w-16">
-                  <span className="block text-center text-[0.7rem] text-slate-500">S{i + 1} ({unit})</span>
+                  <span className="block text-center text-xs text-slate-500">S{i + 1} ({unit})</span>
                   <input type="number" min="0" value={r} onChange={e => setRep(i, e.target.value)} className={field} />
                   {loads && (
                     <input type="number" step="0.5" min="0" title="Charge de cette série (kg)" value={loads[i] ?? loads[loads.length - 1]} onChange={e => setLoads(l => sets.map((_, j) => (j === i ? e.target.value : l[j] ?? l[l.length - 1])))} className={`${field} mt-1 text-amber-300`} />
@@ -112,7 +112,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
         <input type="text" value={note} onChange={e => setNote(e.target.value)} className={`${field} text-left`} />
       </div>
 
-      <p className="text-[0.7rem] text-slate-500">
+      <p className="text-xs text-slate-500">
         Les calories et le résumé sont recalculés, et le coach repart de ces valeurs pour la prochaine séance. L’EXP déjà gagnée ne change pas.
       </p>
       <div className="flex gap-2">

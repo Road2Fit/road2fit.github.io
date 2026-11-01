@@ -14,22 +14,22 @@ export function LogSessionModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
-      <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
+      <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{logModalQuest.icon}</span>
             <div>
               <h3 className="text-lg font-black text-white">
-                Noter Séance : {logModalQuest.name}
+                {logModalQuest.name}
               </h3>
               <p className="text-xs text-pink-300 font-semibold">
-                Niveau {logModalQuest.level || 1}
+                Noter la séance · niveau {logModalQuest.level || 1}
               </p>
             </div>
           </div>
           <button
             onClick={() => setLogModalQuest(null)}
-            className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+            aria-label="Fermer" className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -59,9 +59,9 @@ export function LogSessionModal({
         )}
 
         <form onSubmit={handleSaveSession} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-              <label className="block text-[0.75rem] font-bold uppercase text-slate-400 mb-1">
+          <div className="flex items-center justify-between gap-3 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+            <div>
+              <label className="sr-only">
                 Date de la séance
               </label>
               <input
@@ -71,14 +71,7 @@ export function LogSessionModal({
                 className="w-full bg-transparent text-sm font-bold text-white focus:outline-none"
               />
             </div>
-            <div className="bg-orange-950/30 border border-orange-500/40 rounded-xl p-3 flex flex-col justify-center">
-              <span className="text-[0.75rem] font-bold uppercase text-orange-300">
-                🔥 Dépense Estimée
-              </span>
-              <span className="text-lg font-black text-orange-300">
-                ~ {liveModalCalories} kcal
-              </span>
-            </div>
+            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">≈ {liveModalCalories} kcal</span>
           </div>
 
           {logModalQuest.type === 'strength' ? (
@@ -93,7 +86,7 @@ export function LogSessionModal({
                     <button
                       type="button"
                       onClick={() => setLogValue(v => Math.max(0, Number(v) - 2.5))}
-                      className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold"
+                      className="shrink-0 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold"
                     >
                       -2.5
                     </button>
@@ -102,12 +95,12 @@ export function LogSessionModal({
                       step="0.5"
                       value={logValue}
                       onChange={e => setLogValue(e.target.value)}
-                      className="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-2 text-center text-lg font-black text-white"
+                      className="flex-1 min-w-0 w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center text-lg font-black text-white"
                     />
                     <button
                       type="button"
                       onClick={() => setLogValue(v => Number(v) + 2.5)}
-                      className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold"
+                      className="shrink-0 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold"
                     >
                       +2.5
                     </button>
@@ -123,9 +116,9 @@ export function LogSessionModal({
 
               {logModalQuest.unit === 'reps' && !isTimedQuest(logModalQuest) && (
                 <div className="bg-slate-950 border border-violet-500/40 rounded-xl p-3.5 space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-violet-200">
-                      🪢 Aide / Élastique (Délestage en kg)
+                      Aide élastique (kg)
                     </span>
                     <div className="flex gap-1.5">
                       <button
@@ -154,7 +147,7 @@ export function LogSessionModal({
                             : 'bg-slate-800 text-slate-400'
                         }`}
                       >
-                        Avec Aide (kg)
+                        Avec aide
                       </button>
                     </div>
                   </div>
@@ -167,9 +160,9 @@ export function LogSessionModal({
                           onClick={() =>
                             setLogAssistanceKg(k => Math.max(0.5, Number(k) - 2.5))
                           }
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs"
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs"
                         >
-                          -2.5 kg
+                          -2.5
                         </button>
                         <input
                           type="number"
@@ -177,16 +170,16 @@ export function LogSessionModal({
                           min="0"
                           value={logAssistanceKg}
                           onChange={e => setLogAssistanceKg(e.target.value)}
-                          className="flex-1 bg-slate-900 border border-violet-500/40 rounded-lg py-1.5 text-center font-black text-violet-200 text-sm"
+                          className="flex-1 min-w-0 w-full bg-slate-900 border border-violet-500/40 rounded-lg py-1.5 text-center font-black text-violet-200 text-sm"
                         />
                         <button
                           type="button"
                           onClick={() =>
                             setLogAssistanceKg(k => Number(k) + 2.5)
                           }
-                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs"
+                          className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold text-xs"
                         >
-                          +2.5 kg
+                          +2.5
                         </button>
                       </div>
                       <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
@@ -196,13 +189,15 @@ export function LogSessionModal({
                         </span>
                       </label>
 
-                      <div className="flex flex-wrap gap-1.5">
+                      <details className="text-xs text-slate-400">
+                        <summary className="font-bold text-slate-300">Repères par élastique</summary>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
                         {ELASTIC_PRESETS.filter(p => p.kg > 0).map(preset => (
                           <button
                             key={preset.kg}
                             type="button"
                             onClick={() => setLogAssistanceKg(preset.kg)}
-                            className={`px-2 py-1 rounded-md text-[0.75rem] font-bold border ${
+                            className={`px-2 py-1 rounded-md text-xs font-bold border ${
                               Number(logAssistanceKg) === preset.kg
                                 ? 'bg-violet-600 border-violet-400 text-white'
                                 : 'bg-slate-900 border-slate-800 text-slate-300'
@@ -211,7 +206,8 @@ export function LogSessionModal({
                             {preset.label}
                           </button>
                         ))}
-                      </div>
+                        </div>
+                      </details>
                     </div>
                   )}
                 </div>
@@ -229,7 +225,7 @@ export function LogSessionModal({
                     <button
                       type="button"
                       onClick={() => setLogEntryMode('per_set')}
-                      className={`px-2.5 py-1 rounded-md text-[0.75rem] font-bold ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold ${
                         logEntryMode === 'per_set'
                           ? 'bg-pink-600 text-white'
                           : 'text-slate-400'
@@ -240,7 +236,7 @@ export function LogSessionModal({
                     <button
                       type="button"
                       onClick={() => setLogEntryMode('uniform')}
-                      className={`px-2.5 py-1 rounded-md text-[0.75rem] font-bold ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold ${
                         logEntryMode === 'uniform'
                           ? 'bg-pink-600 text-white'
                           : 'text-slate-400'
@@ -262,7 +258,7 @@ export function LogSessionModal({
                             logModalQuest.goalReps || logModalQuest.goalValue || 6
                           )
                         }
-                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-[0.75rem] font-extrabold transition"
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-extrabold transition"
                       >
                         ✓ Tout remplir à l’objectif ({logModalQuest.goalSets || 3} ×{' '}
                         {logModalQuest.goalReps || logModalQuest.goalValue || 6} {repUnit(logModalQuest)})
@@ -307,11 +303,11 @@ export function LogSessionModal({
                                 Série {idx + 1}
                               </span>
                               {isSetOk ? (
-                                <span className="text-[0.75rem] font-bold text-emerald-400">
+                                <span className="text-xs font-bold text-emerald-400">
                                   🔴 Validée ({repCount}/{targetR})
                                 </span>
                               ) : (
-                                <span className="text-[0.75rem] text-slate-400">
+                                <span className="text-xs text-slate-400">
                                   Cible : {targetR} {repUnit(logModalQuest)}
                                 </span>
                               )}
@@ -329,7 +325,7 @@ export function LogSessionModal({
                                     onChange={e => handleSetOverride(idx, e.target.value)}
                                     className={`w-16 bg-slate-950 border rounded-lg py-1 text-center font-black text-sm ${logModalQuest.unit === 'kg' ? 'border-amber-500/50 text-amber-300' : 'border-violet-500/50 text-violet-300'}`}
                                   />
-                                  <span className="text-[0.7rem] text-slate-500 font-bold">kg</span>
+                                  <span className="text-xs text-slate-500 font-bold">kg</span>
                                 </span>
                               )}
                               <button
@@ -365,7 +361,7 @@ export function LogSessionModal({
                 ) : (
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
                         Nombre de séries
                       </label>
                       <input
@@ -380,7 +376,7 @@ export function LogSessionModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
                         {isTimedQuest(logModalQuest) ? 'Secondes par série' : 'Répétitions par série'}
                       </label>
                       <input
@@ -404,7 +400,7 @@ export function LogSessionModal({
               <div className="grid grid-cols-3 gap-3">
                 {!(logModalQuest.unit === 'km' && logCardioInput.inputMode === 'speed') && (
                 <div>
-                  <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                  <label className="block text-xs font-bold text-slate-400 mb-1">
                     {logModalQuest.unit === 'km' ? 'Distance (km)' : 'Durée (min)'}
                   </label>
                   <input
@@ -418,7 +414,7 @@ export function LogSessionModal({
                 )}
                 {logModalQuest.unit === 'km' && (
                   <div>
-                    <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                    <label className="block text-xs font-bold text-slate-400 mb-1">
                       Temps (min)
                     </label>
                     <input
@@ -431,7 +427,7 @@ export function LogSessionModal({
                 )}
                 {cardioHasElevation(logModalQuest.cardioMode) && logCardioInput.slopeMode !== 'percent' && (
                 <div>
-                  <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                  <label className="block text-xs font-bold text-slate-400 mb-1">
                     Dénivelé D+ (m)
                   </label>
                   <input
@@ -448,25 +444,25 @@ export function LogSessionModal({
 
           <input
             type="text"
-            placeholder="Note de séance (optionnel : sensations, forme du jour...)"
+            placeholder="Note (facultatif)"
             value={logNote}
             onChange={e => setLogNote(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white"
           />
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="sticky bottom-0 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 px-5 sm:px-6 py-3 bg-slate-900 border-t border-slate-800 rounded-b-2xl flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setLogModalQuest(null)}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300"
+              className="px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-300"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
+              className="flex-1 sm:flex-none px-5 py-3 rounded-xl text-sm font-black bg-pink-600 text-white"
             >
-              Valider la Séance (+EXP & Kcal)
+              Valider la séance
             </button>
           </div>
         </form>

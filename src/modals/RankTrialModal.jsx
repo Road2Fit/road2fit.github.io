@@ -36,11 +36,11 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
         </ul>
 
         {levelInfo.locked ? (
-          <p className="text-[0.75rem] text-amber-300">
+          <p className="text-xs text-amber-300">
             🔒 Ton niveau est bloqué en attendant. L’EXP que tu gagnes continue de s’accumuler : {levelInfo.reserve} EXP en réserve, qui seront comptés dès l’épreuve réussie.
           </p>
         ) : (
-          <p className="text-[0.75rem] text-slate-500">
+          <p className="text-xs text-slate-500">
             Tu peux réussir l’épreuve à l’avance : le rang s’ouvrira dès que tu auras assez d’EXP.
           </p>
         )}

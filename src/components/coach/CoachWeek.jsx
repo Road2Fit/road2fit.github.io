@@ -8,7 +8,7 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today 
       <h3 className="font-black text-white">📅 Ma semaine</h3>
       {ov.weeks.map(w => (
         <div key={w.weekStart}>
-          <p className="text-[0.75rem] text-slate-400 mb-1.5">
+          <p className="text-xs text-slate-400 mb-1.5">
             Semaine du {w.weekStart.slice(8, 10)}/{w.weekStart.slice(5, 7)}
             {w.matchInWeek ? ' · match' : ''}
             {w.shortfall > 0 ? ` · ${w.shortfall} séance(s) à reporter (pas assez de jours libres espacés de 48 h)` : ''}
@@ -30,7 +30,7 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today 
               }
               return (
                 <div key={d.iso} className={`rounded-lg border p-1.5 text-center ${m[2]} ${d.iso === today ? 'ring-2 ring-pink-400' : ''}`}>
-                  <p className="text-[0.7rem] font-bold text-slate-400">{dayShort[d.dow]} {d.iso.slice(8, 10)}</p>
+                  <p className="text-xs font-bold text-slate-400">{dayShort[d.dow]} {d.iso.slice(8, 10)}</p>
                   <p className="text-base leading-tight">{m[0]}</p>
                   <p className="text-[9px] font-bold text-slate-200 leading-tight">{m[1]}</p>
                   {d.status === 'planned' && !d.legsOk && !d.type && <p className="text-[8px] text-sky-300 leading-tight">sans jambes</p>}
@@ -41,7 +41,7 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today 
           </div>
         </div>
       ))}
-      <p className="text-[0.75rem] text-slate-500">
+      <p className="text-xs text-slate-500">
         Les séances sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes la veille d’un jour {sport.de}, ni à moins de 48 h ou le lendemain d’un match.
       </p>
     </section>

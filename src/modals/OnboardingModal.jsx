@@ -9,7 +9,7 @@ import { AccountForm } from '../components/AccountForm';
 // Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
 // Tout est modifiable ensuite (onglet Coach, Exercices, Mes maxima, ⚙️).
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white placeholder:text-slate-600';
-const label = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
+const label = 'block text-xs font-bold text-slate-400 mb-1';
 const chip = on => `px-3 py-2 rounded-xl border text-sm font-bold ${on ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`;
 const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Jeu'], [5, 'Ven'], [6, 'Sam'], [0, 'Dim']];
 const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
@@ -56,8 +56,8 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
     <div className="fixed inset-0 z-[90] bg-slate-950 overflow-y-auto" role="dialog" aria-label="Assistant d’accueil" data-testid="onboarding">
       <div className="min-h-full max-w-lg mx-auto p-4 pt-8 pb-24 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[0.75rem] font-black uppercase tracking-wider text-sky-300">Étape {step + 1} / {STEPS.length} · {STEPS[step]}</p>
-          {step < STEPS.length - 1 && <button type="button" onClick={skip} className="text-[0.75rem] font-bold text-slate-500 underline">Passer l’assistant</button>}
+          <p className="text-xs font-black uppercase tracking-wider text-sky-300">Étape {step + 1} / {STEPS.length} · {STEPS[step]}</p>
+          {step < STEPS.length - 1 && <button type="button" onClick={skip} className="text-xs font-bold text-slate-500 underline">Passer l’assistant</button>}
         </div>
         <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-sky-500 transition-all" style={{ width: `${((step + 1) / STEPS.length) * 100}%` }} /></div>
 
@@ -66,7 +66,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             <h2 className="text-2xl font-black text-white">Bienvenue 👋</h2>
             <p className="text-sm text-slate-300">Cette appli suit ta musculation : un coach qui prépare tes séances, un journal, tes records et ta progression. Quelques questions (3 minutes) pour tout régler à ton niveau. Tu peux passer ou modifier chaque réponse plus tard.</p>
             <div><label className={label} htmlFor="ob-name">Ton prénom</label><input id="ob-name" value={a.name} onChange={e => patch({ name: e.target.value })} className={field} placeholder="Léa" autoComplete="given-name" /></div>
-            <p className="text-[0.75rem] text-slate-500">Tes données restent sur ton téléphone (et dans ta sauvegarde personnelle à l’étape 7). Personne d’autre n’y a accès. Les conseils du coach sont des repères généraux, pas un avis médical.</p>
+            <p className="text-xs text-slate-500">Tes données restent sur ton téléphone (et dans ta sauvegarde personnelle à l’étape 7). Personne d’autre n’y a accès. Les conseils du coach sont des repères généraux, pas un avis médical.</p>
           </section>
         )}
 
@@ -91,10 +91,10 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             <div className="space-y-2 pt-1" data-testid="muscle-mode-choice">
               <h3 className="text-base font-black text-white pt-2">Comment suivre tes muscles ?</h3>
               <button type="button" onClick={() => patch({ muscleMode: 'simple' })} aria-pressed={a.muscleMode === 'simple'} data-testid="mode-simple" className={`${chip(a.muscleMode === 'simple')} w-full text-left`}>
-                🟢 Simplifié <span className="block text-[0.75rem] font-semibold opacity-90">5 grands groupes : pectoraux, dos, jambes, épaules &amp; bras, abdominaux. Facile à suivre, idéal pour débuter.</span>
+                🟢 Simplifié <span className="block text-xs font-semibold opacity-90">5 grands groupes : pectoraux, dos, jambes, épaules &amp; bras, abdominaux. Facile à suivre, idéal pour débuter.</span>
               </button>
               <button type="button" onClick={() => patch({ muscleMode: 'optimized' })} aria-pressed={a.muscleMode === 'optimized'} data-testid="mode-optimized" className={`${chip(a.muscleMode === 'optimized')} w-full text-left`}>
-                🎯 Optimisé <span className="block text-[0.75rem] font-semibold opacity-90">14 muscles suivis séparément (biceps, triceps, avant-bras, quadriceps, ischios, fessiers, mollets…). Le coach répartit le travail pour que tout le corps soit couvert. Modifiable à tout moment dans ⚙️.</span>
+                🎯 Optimisé <span className="block text-xs font-semibold opacity-90">14 muscles suivis séparément (biceps, triceps, avant-bras, quadriceps, ischios, fessiers, mollets…). Le coach répartit le travail pour que tout le corps soit couvert. Modifiable à tout moment dans ⚙️.</span>
               </button>
             </div>
             <div className="space-y-2">{GOALS.map(g => <button key={g.id} type="button" data-testid={`goal-${g.id}`} onClick={() => patch({ goal: g.id })} aria-pressed={a.goal === g.id} className={`${chip(a.goal === g.id)} w-full text-left`}>{g.icon} {g.label}</button>)}</div>
@@ -164,7 +164,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             </div>
             {a.sport && <p className="text-xs text-slate-300">Jours habituels de {sportInfo(a.sport).label} :</p>}
             {a.sport && <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.sportDays.includes(d)} onClick={() => toggleDay('sportDays', d)} testid={`sportday-${d}`}>{n}</Toggle>)}</div>}
-            <p className="text-[0.75rem] text-slate-500">Tes autres activités (vélo, natation, randonnée…) s’ajoutent ensuite avec le bouton « + » → « Activité annexe ».</p>
+            <p className="text-xs text-slate-500">Tes autres activités (vélo, natation, randonnée…) s’ajoutent ensuite avec le bouton « + » → « Activité annexe ».</p>
           </section>
         )}
 
@@ -173,7 +173,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
             <p className="text-sm text-slate-300">Crée un compte (e-mail + mot de passe) : tes données sont alors <strong>sauvegardées automatiquement</strong> dans ton espace personnel, et tu les retrouves en te reconnectant sur n’importe quel téléphone.</p>
             <AccountForm sync={sync} />
-            <p className="text-[0.75rem] text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
+            <p className="text-xs text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
           </section>
         )}
 

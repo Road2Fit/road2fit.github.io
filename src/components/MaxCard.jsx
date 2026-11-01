@@ -56,12 +56,12 @@ function RecordForm({ result, onClear, onSave }) {
         {current && <span className="ml-2 text-emerald-300">{current} <span className="text-slate-500 font-semibold">(le {fmtDate(manual.date)})</span></span>}
       </p>
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-[0.75rem] text-slate-400 space-y-1">
+        <label className="text-xs text-slate-400 space-y-1">
           <span className="block max-w-[230px]">{labels[0]}</span>
           <input type="number" step="0.5" min="0" value={a} onChange={e => setA(e.target.value)} className={input} placeholder={current ? 'modifier' : ''} />
         </label>
         {kind === 'cardio' && (
-          <label className="text-[0.75rem] text-slate-400 space-y-1">
+          <label className="text-xs text-slate-400 space-y-1">
             <span className="block">{labels[1]}</span>
             <input type="number" step="0.1" min="0" value={b} onChange={e => setB(e.target.value)} className={input} />
           </label>
@@ -86,7 +86,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
     <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-extrabold text-white">{quest.icon} {quest.name}</h4>
-        {conf && <span className={`px-2 py-0.5 rounded-full border text-[0.7rem] font-bold ${conf[1]}`}>{conf[0]}</span>}
+        {conf && <span className={`px-2 py-0.5 rounded-full border text-xs font-bold ${conf[1]}`}>{conf[0]}</span>}
       </div>
 
       {(kind === 'load' || kind === 'assisted' || kind === 'bodyweight') && !result.empty && (
@@ -109,13 +109,13 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
               <span className="text-xs font-semibold text-slate-400">pour 1 répétition</span>
             </p>
           )}
-          <p className="text-[0.75rem] text-slate-400">
+          <p className="text-xs text-slate-400">
             Fourchette des équations : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
             D’après {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
             {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${result.basis.rir} rép en réserve)` : ''}.
           </p>
-          {!result.fromRecent && <p className="text-[0.75rem] text-amber-300">⚠️ Aucune séance depuis plus de 90 jours : estimation d’après ta meilleure séance ancienne.</p>}
-          {result.basis.reps > 10 && <p className="text-[0.75rem] text-amber-300">⚠️ Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
+          {!result.fromRecent && <p className="text-xs text-amber-300">⚠️ Aucune séance depuis plus de 90 jours : estimation d’après ta meilleure séance ancienne.</p>}
+          {result.basis.reps > 10 && <p className="text-xs text-amber-300">⚠️ Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
         </div>
       )}
 
@@ -135,13 +135,13 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {result.predictions.map(p => (
               <div key={p.km} className="bg-slate-950 border border-slate-800 rounded-xl p-2 text-center">
-                <p className="text-[0.7rem] text-slate-400">{p.km === 21.1 ? 'Semi' : p.km === 42.2 ? 'Marathon' : `${p.km} km`}</p>
+                <p className="text-xs text-slate-400">{p.km === 21.1 ? 'Semi' : p.km === 42.2 ? 'Marathon' : `${p.km} km`}</p>
                 <p className="text-xs font-black text-pink-300">{formatDuration(p.min)}</p>
-                <p className="text-[0.7rem] text-slate-500">{formatDuration(p.min / p.km).replace(/^0 min /, '')}/km</p>
+                <p className="text-xs text-slate-500">{formatDuration(p.min / p.km).replace(/^0 min /, '')}/km</p>
               </div>
             ))}
           </div>
-          <p className="text-[0.7rem] text-slate-500">Prédiction de Riegel : fiable surtout pour des distances proches de celle de la base.</p>
+          <p className="text-xs text-slate-500">Prédiction de Riegel : fiable surtout pour des distances proches de celle de la base.</p>
         </div>
       )}
 
@@ -155,7 +155,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
       )}
 
       {manual && kind === 'load' && !result.empty && (
-        <p className="text-[0.75rem] text-slate-400">
+        <p className="text-xs text-slate-400">
           {Math.abs(manual.kg - result.estimate) / manual.kg < 0.03
             ? '🎯 Ton record réel confirme l’estimation.'
             : manual.kg > result.estimate
@@ -172,12 +172,12 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {workingLoads(reference, step).map(l => (
               <div key={l.pct} className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center">
-                <p className="text-[0.7rem] text-slate-400">{l.pct} % · ≈ {l.reps} rép</p>
+                <p className="text-xs text-slate-400">{l.pct} % · ≈ {l.reps} rép</p>
                 <p className="text-xs font-black text-white">{fmt(l.kg)} kg</p>
               </div>
             ))}
           </div>
-          <p className="text-[0.7rem] text-slate-500 mt-2">Repères NSCA : le nombre de répétitions possibles varie d’une personne et d’un exercice à l’autre (±2).</p>
+          <p className="text-xs text-slate-500 mt-2">Repères NSCA : le nombre de répétitions possibles varie d’une personne et d’un exercice à l’autre (±2).</p>
         </details>
       )}
     </div>

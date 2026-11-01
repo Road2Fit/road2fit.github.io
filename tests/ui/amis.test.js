@@ -130,7 +130,7 @@ describe('édition neutre pour les amis', () => {
     const h = await launch({ empty: true, storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify(save) } });
     open.push(h);
     await advance(h, 300);
-    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Ouvrir le Coach')));
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await advance(h, 300);
     await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach')));
     await advance(h, 300);

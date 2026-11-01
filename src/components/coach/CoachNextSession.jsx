@@ -52,7 +52,7 @@ export function CoachNextSession({
               </button>
             )}
           </div>
-          <p className="text-[0.75rem] text-slate-500">
+          <p className="text-xs text-slate-500">
             Si tu es cuit (mauvaise nuit, jambes lourdes), la séance que tu lances aujourd’hui est allégée : −10 % de charge et une série de moins. Cette réponse ne vaut que pour aujourd’hui.{tiredToday ? ' ✅ Pris en compte pour la séance guidée du jour.' : ''}
           </p>
         </div>
@@ -155,7 +155,7 @@ export function CoachNextSession({
                       <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
                     </div>
                     <div className="shrink-0 flex items-center gap-1">
-                      <span className={`px-2 py-0.5 rounded-full border text-[0.7rem] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
+                      <span className={`px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
                       <button onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} title="Remplacer cet exercice" className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">🔄</button>
                       {plan && (
                         <>
@@ -166,13 +166,13 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
-                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-[0.75rem] font-bold text-sky-300 underline-offset-2">🎬 Voir le mouvement</button>
-                  <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-[0.75rem] font-bold text-sky-300">
+                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2">🎬 Voir le mouvement</button>
+                  <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>
-                  {openEx[e.questId] && <p className="text-[0.75rem] text-slate-400 mt-1">{e.reason}</p>}
+                  {openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
                   {openEx[e.questId] && (
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[0.75rem]">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-slate-500 font-bold">Tu décides :</span>
                     <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
                       {e.kind === 'load' ? '🔽 Plus léger' : e.kind === 'assisted' ? '➕ Plus d’aide' : '🔽 1 rép de moins'}
@@ -191,24 +191,24 @@ export function CoachNextSession({
                     const opt = coachSwapOptions(gameState, e.questId, shownSession.exercises.map(x => x.questId));
                     return (
                       <div className="mt-2 bg-slate-900 border border-slate-700 rounded-lg p-2 space-y-1.5">
-                        <p className="text-[0.75rem] font-bold text-slate-300">Remplacer par (même groupe : {opt.arena}) :</p>
+                        <p className="text-xs font-bold text-slate-300">Remplacer par (même groupe : {opt.arena}) :</p>
                         <div className="flex flex-wrap gap-1.5">
                           {opt.own.map(q => (
-                            <button key={q.id} onClick={() => doSwap(e.questId, q.id)} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-[0.75rem] font-bold text-slate-100">{q.icon} {q.name}</button>
+                            <button key={q.id} onClick={() => doSwap(e.questId, q.id)} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-100">{q.icon} {q.name}</button>
                           ))}
                           {opt.catalog.map(c => (
-                            <button key={c.id} onClick={() => { const id = onAddExercise(c.id); doSwap(e.questId, id); }} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 text-[0.75rem] font-bold text-slate-300">+ créer « {c.name} »</button>
+                            <button key={c.id} onClick={() => { const id = onAddExercise(c.id); doSwap(e.questId, id); }} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-dashed border-slate-600 text-xs font-bold text-slate-300">+ créer « {c.name} »</button>
                           ))}
-                          {!opt.own.length && !opt.catalog.length && <span className="text-[0.75rem] text-slate-500">Aucun équivalent disponible.</span>}
+                          {!opt.own.length && !opt.catalog.length && <span className="text-xs text-slate-500">Aucun équivalent disponible.</span>}
                         </div>
-                        <p className="text-[0.7rem] text-slate-500">Le remplacement transforme la séance en séance personnalisée (tu peux revenir à la proposition du coach).</p>
+                        <p className="text-xs text-slate-500">Le remplacement transforme la séance en séance personnalisée (tu peux revenir à la proposition du coach).</p>
                       </div>
                     );
                   })()}
                   {e.change === 'goal' && (
                     <button
                       onClick={() => { const q = gameState.quests.find(x => x.id === e.questId); if (q) onOpenLevelUp(q); }}
-                      className="mt-2 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[0.75rem] font-black"
+                      className="mt-2 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-xs font-black"
                     >
                       Valider le niveau suivant
                     </button>
@@ -223,12 +223,12 @@ export function CoachNextSession({
               <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
               <div className="flex flex-wrap gap-1.5">
                 {shownSession.fillSuggestions.map(c => (
-                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[0.75rem] font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
+                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
                 ))}
               </div>
             </div>
           )}
-          <p className="text-[0.75rem] text-slate-500">
+          <p className="text-xs text-slate-500">
             Repos conseillé : 2 min 30 sur les exercices principaux, 1 min 30 sur les exercices d’appoint (ACSM 2009).
           </p>
         </>
@@ -245,10 +245,10 @@ export function CoachNextSession({
             </div>
             <div>
               <p className="font-black text-white text-sm">Avis du coach : {rating.label}</p>
-              <p className="text-[0.75rem] text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
+              <p className="text-xs text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
             </div>
           </div>
-          <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-[0.75rem] font-bold text-sky-300">
+          <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-xs font-bold text-sky-300">
             {showRating ? '▾ Masquer le détail' : `▸ Voir le détail (${rating.items.length})`}
           </button>
           {showRating && (
@@ -263,7 +263,7 @@ export function CoachNextSession({
             ))}
           </div>
           )}
-          {showRating && <p className="text-[0.7rem] text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>}
+          {showRating && <p className="text-xs text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>}
         </div>
       )}
 
@@ -276,12 +276,12 @@ export function CoachNextSession({
             ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
           </button>
           {shownDate !== today && (
-            <p className="text-[0.75rem] text-slate-500">
+            <p className="text-xs text-slate-500">
               Prévue le {coachDayLabel(shownDate)}.{plan ? '' : ` Si tu la fais aujourd’hui, le coach adapte les exercices à la journée${todayInfo.legsOk ? '' : ` (pas de jambes : ${todayInfo.legsWhy})`}.`}
             </p>
           )}
           {todayInfo.blocked && (
-            <p className="text-[0.75rem] text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : todayInfo.sport.label} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
+            <p className="text-xs text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : todayInfo.sport.label} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
           )}
         </div>
       )}

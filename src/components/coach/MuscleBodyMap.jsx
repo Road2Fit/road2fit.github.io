@@ -50,7 +50,7 @@ export function MuscleBodyMap({ rows, mini = false }) {
         {!mini && <text x="55" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Face</text>}
         {!mini && <text x="165" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Dos</text>}
       </svg>
-      {!mini && <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[0.7rem] text-slate-400">
+      {!mini && <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-slate-400">
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.good }} />dans la cible</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.mid }} />un peu juste</span>
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.low }} />insuffisant</span>

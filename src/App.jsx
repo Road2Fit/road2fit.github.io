@@ -63,7 +63,7 @@ export function App() {
   const [recovery, setRecovery] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
-  const [activeTab, setActiveTab] = useState('quests');
+  const [activeTab, setActiveTab] = useState('coach'); // l'appli s'ouvre sur le Coach : c'est lui qui dit quoi faire aujourd'hui
   const friends = useFriends({ gameState, user: sync.user, active: activeTab === 'friends' });
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
   // pour ne pas avoir à descendre à la main.
@@ -208,13 +208,17 @@ export function App() {
 
       {/* CONTENU PRINCIPAL */}
       <main className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 space-y-4 sm:space-y-6 pb-8">
+{/* La carte du jour est dans le Coach ; ailleurs, seulement pour reprendre une séance en cours */}
+{(activeTab === 'coach' || guided) && (
 <CoachBanner
   gameState={gameState}
   guidedActive={!!guided}
+  onCoachTab={activeTab === 'coach'}
   onOpenCoach={() => goToTab('coach')}
   onResumeGuided={() => setGuidedOpen(true)}
   onStartGuided={startGuided}
 />
+)}
 {recap && <SessionRecap recap={recap} onClose={() => setRecap(null)} />}
 {guided && guidedOpen && (
 <GuidedSession
@@ -226,9 +230,6 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
 />
 )}
 <RestTimer guidedOpen={!!(guided && guidedOpen)} soundEnabled={gameState.soundEnabled} />
-        {/* BANNIÈRE BILAN ÉNERGÉTIQUE & SÉANCE DU JOUR (AVEC SUPPRESSION D'UNE SÉANCE) */}
-        <DailySummary dailySummary={dailySummary} handleDeleteSessionEntry={handleDeleteSessionEntry} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
-
         {/* BARRE D'ONGLETS PRINCIPALE */}
         <div ref={tabsRef} className="scroll-mt-3 space-y-3">
           <TabBar activeTab={activeTab} gameState={gameState} setActiveTab={setActiveTab} />
@@ -269,6 +270,9 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         )}
 
         {/* ONGLET 2 : 📅 JOURNAL DES SÉANCES */}
+        {activeTab === 'journal' && (
+          <DailySummary dailySummary={dailySummary} handleDeleteSessionEntry={handleDeleteSessionEntry} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+        )}
         {activeTab === 'journal' && (
           <JournalTab activeJournalDayObj={activeJournalDayObj} dailyJournalList={dailyJournalList} handleDeleteSessionEntry={handleDeleteSessionEntry} handleEditSessionEntry={handleEditSessionEntry} setSelectedJournalDay={setSelectedJournalDay} />
         )}

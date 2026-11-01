@@ -1,6 +1,6 @@
 // Séance guidée : la charge change entre deux séries, l'historique et le journal la gardent.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -20,7 +20,7 @@ describe('charge modifiable entre deux séries', () => {
   it('2 séries à 15 kg puis 2 séries plus lourdes : chaque série garde sa charge', async () => {
     const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
     open.push(h);
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     expect(pageText(h)).toContain('Développé Couché Barre');
@@ -57,7 +57,7 @@ describe('charge modifiable entre deux séries', () => {
     expect(h.errors).toEqual([]);
 
     // le journal affiche les charges
-    await clickText(h, '📅 Journal');
+    await clickText(h, 'Journal');
     expect(pageText(h)).toContain('Charges :');
   }, TIMEOUT);
 });

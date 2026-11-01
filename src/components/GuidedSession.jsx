@@ -106,8 +106,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
           {items.map((x, i) => {
             const dn = g.data[x.questId].done.filter(Boolean).length;
             return (
-              <button key={x.questId} onClick={() => goto(i)} title={x.name}
-                className={`flex-1 h-2 rounded-full ${g.phase === 'run' && i === g.idx ? 'bg-pink-500' : dn > 0 ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+              <button key={x.questId} onClick={() => goto(i)} title={x.name} aria-label={x.name}
+                className={`tap-free flex-1 h-2 rounded-full ${g.phase === 'run' && i === g.idx ? 'bg-pink-500' : dn > 0 ? 'bg-emerald-500' : 'bg-slate-700'}`} />
             );
           })}
         </div>
@@ -127,48 +127,55 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-xl font-black text-white">{it.icon} {it.name}</h2>
-                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-[0.75rem] font-bold text-sky-200">🎬 Mouvement</button>
-                <button type="button" onClick={() => { const v = !mini; setMini(v); try { localStorage.setItem(MINI_KEY, v ? 'on' : 'off'); } catch (e) { /* rien */ } }} aria-pressed={mini} className="mb-1 ml-1.5 px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-[0.75rem] font-bold text-slate-300">{mini ? 'Masquer l’aperçu' : 'Aperçu animé'}</button>
-                {mini && <div className="w-44 mb-1"><Suspense fallback={null}><MiniMovement catalogId={(g.items[g.idx] || {}).catalogId} name={it.name} /></Suspense></div>}
-                <p className="text-xs text-slate-400">{it.arena} · repos {Math.floor(it.restSec / 60)} min{it.restSec % 60 ? ` ${it.restSec % 60}` : ''}</p>
+                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-xs font-bold text-sky-200">🎬 Mouvement</button>
+                                <p className="text-xs text-slate-400">{it.arena} · repos {Math.floor(it.restSec / 60)} min{it.restSec % 60 ? ` ${it.restSec % 60}` : ''}</p>
               </div>
-              {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-[0.7rem] font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
+              {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
             </div>
-            <p className="text-[0.75rem] text-slate-400">{it.reason}</p>
+            <details className="text-xs text-slate-400">
+              <summary className="font-bold text-slate-300">Aperçu animé et conseil du coach</summary>
+              <div className="mt-2 space-y-2">
+                <button type="button" onClick={() => { const v = !mini; setMini(v); try { localStorage.setItem(MINI_KEY, v ? 'on' : 'off'); } catch (e) { /* rien */ } }} aria-pressed={mini} className="px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-xs font-bold text-slate-300">{mini ? 'Masquer l’aperçu' : 'Aperçu animé'}</button>
+                {mini && <Suspense fallback={null}><MiniMovement catalogId={(g.items[g.idx] || {}).catalogId} name={it.name} /></Suspense>}
+                <p>{it.reason}</p>
+              </div>
+            </details>
             
             {it.kind === 'load' && (
-              <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
-                <span className="text-sm font-bold text-slate-300">Charge<span className="block text-[0.7rem] font-semibold text-slate-500">change-la entre deux séries : elle vaut pour les séries restantes</span></span>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
                 <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-slate-300 mr-auto">Charge</span>
                   <button onClick={() => setLoad(Math.max(0, Math.round((d.load - step) * 100) / 100))} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
-                  <input type="number" step="0.5" value={d.load} onChange={e => setLoad(Number(e.target.value) || 0)} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
+                  <input type="number" step="0.5" value={d.load} onChange={e => setLoad(Number(e.target.value) || 0)} className="w-20 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
                   <button onClick={() => setLoad(Math.round((d.load + step) * 100) / 100)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
+                <p className="text-xs text-slate-500">Changée entre deux séries, elle vaut pour les séries restantes.</p>
               </div>
             )}
             {it.kind === 'assisted' && (
-              <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl p-3">
-                <span className="text-sm font-bold text-slate-300">Aide élastique<span className="block text-[0.7rem] font-semibold text-slate-500">change-la entre deux séries : elle vaut pour les séries restantes</span></span>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
                 <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-slate-300 mr-auto">Aide élastique</span>
                   <button onClick={() => setAssist(Math.max(0, d.assist - 2.5))} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
                   <input type="number" step="2.5" value={d.assist} onChange={e => setAssist(Math.max(0, Number(e.target.value) || 0))} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
                   <button onClick={() => setAssist(d.assist + 2.5)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
+                <p className="text-xs text-slate-500">Changée entre deux séries, elle vaut pour les séries restantes.</p>
               </div>
             )}
 
             {warmRows.length > 0 && (
-              <div className="space-y-2" data-testid="warmup">
-                <p className="text-[0.75rem] font-black uppercase tracking-wider text-amber-400">🔥 Échauffement · {warmRows.length === 1 ? '1 série' : `${warmRows.length} séries`} avant les séries de travail</p>
+              <details className="space-y-2" data-testid="warmup">
+                <summary className="text-sm font-bold text-amber-300">Échauffement · {warmRows.length === 1 ? '1 série' : `${warmRows.length} séries`} avant les séries de travail ({warmRows.filter((_, k) => d.wdone && d.wdone[k]).length}/{warmRows.length})</summary>
                 {warmRows.map((w, i) => {
                   const wd = !!(d.wdone && d.wdone[i]);
                   return (
                     <div key={i} className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 ${wd ? 'bg-amber-950/30 border-amber-500/50' : 'bg-slate-950 border-amber-500/20'}`}>
                       <div>
                         <p className="text-sm font-black text-amber-100">Échauffement {warmRows.length > 1 ? i + 1 : ''}</p>
-                        <p className="text-[0.75rem] text-amber-200/80">{w.label}{it.timed ? ' s' : ''} · pas compté dans la séance</p>
+                        <p className="text-xs text-amber-200/80">{w.label}{it.timed ? ' s' : ''} · pas compté dans la séance</p>
                       </div>
                       <button onClick={() => toggleWarm(i, w)} className={`px-3 py-2 rounded-lg text-sm font-black ${wd ? 'bg-amber-600 text-white' : 'bg-slate-800 text-amber-200'}`}>
                         {wd ? '✔ Fait' : 'Fait'}
@@ -176,32 +183,32 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     </div>
                   );
                 })}
-              </div>
+              </details>
             )}
 
             <div className="space-y-2">
               {d.reps.map((r, i) => (
-                <div key={i} className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 ${d.done[i] ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-950 border-slate-800'}`}>
-                  <div>
+                <div key={i} className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2.5 ${d.done[i] ? 'bg-emerald-950/30 border-emerald-500/50' : i === d.done.findIndex(x => !x) ? 'bg-slate-950 border-pink-400/70' : 'bg-slate-950 border-slate-800'}`}>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-white">Série {i + 1}</p>
-                    <p className="text-[0.7rem] text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
-                    {it.kind === 'load' && <p className="text-[0.7rem] font-bold text-amber-300">{coachFmt(loadsOf(d)[i])} kg</p>}
-                    {it.kind === 'assisted' && <p className="text-[0.7rem] font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}
+                    <p className="text-xs text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
+                    {it.kind === 'load' && <p className="text-xs font-bold text-amber-300">{coachFmt(loadsOf(d)[i])} kg</p>}
+                    {it.kind === 'assisted' && <p className="text-xs font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="order-last w-full flex items-center gap-1.5">
                     {i > 0 && !d.done[i] && (
-                      <button onClick={() => setReps(i, d.reps[i - 1])} title="Mêmes répétitions que la série précédente" aria-label="Comme la série précédente" className="w-9 h-11 rounded-lg bg-slate-800 text-sky-300 text-base font-black">=</button>
+                      <button onClick={() => setReps(i, d.reps[i - 1])} title="Mêmes répétitions que la série précédente" aria-label="Comme la série précédente" className="shrink-0 w-11 h-11 rounded-lg bg-slate-800 text-sky-300 text-base font-black">=</button>
                     )}
-                    <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
-                    <input type="number" value={r} onChange={e => setReps(i, Number(e.target.value) || 0)} className="w-14 text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-lg font-black text-white" />
-                    <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
+                    <button onClick={() => setReps(i, (Number(r) || 0) - (it.timed ? 5 : 1))} className="shrink-0 w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
+                    <input type="number" value={r} onChange={e => setReps(i, Number(e.target.value) || 0)} className="flex-1 min-w-0 w-full text-center bg-slate-950 border border-slate-700 rounded-lg py-1.5 text-lg font-black text-white" />
+                    <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="shrink-0 w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                     {it.timed && (
                       <button onClick={() => toggleSw(i)} className={`px-2 h-9 rounded-lg text-xs font-black ${sw && sw.i === i ? 'bg-rose-600 text-white' : 'bg-cyan-700 text-white'}`}>
                         {sw && sw.i === i ? `■ ${Math.max(0, Math.round((now - sw.start) / 1000))} s` : '⏱ Chrono'}
                       </button>
                     )}
                   </div>
-                  <button onClick={() => toggleSet(i)} className={`px-3 py-2 rounded-lg text-sm font-black ${d.done[i] ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'}`}>
+                  <button onClick={() => toggleSet(i)} className={`px-5 py-2.5 rounded-xl text-sm font-black ${d.done[i] ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'}`}>
                     {d.done[i] ? '✔ Faite' : 'Faite'}
                   </button>
                 </div>
@@ -210,7 +217,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                 <button onClick={addSet} className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">+ Série</button>
                 <button onClick={removeSet} className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">− Série</button>
               </div>
-              <p className="text-[0.75rem] text-slate-500">« Faite » lance automatiquement le chrono de repos (bouton en bas à droite).</p>
+              <p className="text-xs text-slate-500">« Faite » lance automatiquement le chrono de repos (bouton en bas à droite).</p>
             </div>
 
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
@@ -229,7 +236,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   </button>
                 ))}
               </div>
-              <p className="text-[0.75rem] text-slate-400">
+              <p className="text-xs text-slate-400">
                 {d.rpe ? `${d.rpe}/10 : ${FELT[d.rpe]}. Le coach s’en servira pour adapter la prochaine séance.` : 'Pas noté : le ressenti global de la séance sera utilisé. Plus tu notes, plus le coach est précis.'}
               </p>
             </div>
@@ -246,7 +253,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                 <div key={x.questId} className="flex items-center justify-between gap-2 text-sm bg-slate-950 border border-slate-800 rounded-xl p-2.5">
                   <span className="font-bold text-white truncate">
                     {x.icon} {x.name}
-                    {dd.rpe ? <span className="ml-2 px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[0.7rem] font-bold">ressenti {dd.rpe}/10</span> : null}
+                    {dd.rpe ? <span className="ml-2 px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-xs font-bold">ressenti {dd.rpe}/10</span> : null}
                   </span>
                   <span className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
                     {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${fmtLoads(loadsOf(dd).filter((_, i) => dd.done[i]))}` : x.kind === 'assisted' ? ` · aide ${fmtLoads(assistsOf(dd).filter((_, i) => dd.done[i]))}` : ''}` : 'passé'}
@@ -264,7 +271,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   </button>
                 ))}
               </div>
-              <p className="text-[0.75rem] text-slate-500 mt-1">Le coach s’en sert, exercice par exercice : si c’était très dur il consolide au lieu d’augmenter, si c’était facile il augmente davantage.</p>
+              <p className="text-xs text-slate-500 mt-1">Le coach s’en sert, exercice par exercice : si c’était très dur il consolide au lieu d’augmenter, si c’était facile il augmente davantage.</p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => goto(items.length - 1)} className="flex-1 py-3 rounded-xl bg-slate-800 text-slate-200 font-bold text-sm">Retour</button>
@@ -281,9 +288,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             <button onClick={() => goto(g.idx + 1)} className="px-4 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">Passer</button>
             <button
               onClick={() => (g.idx === items.length - 1 ? setG(prev => ({ ...prev, phase: 'summary' })) : goto(g.idx + 1))}
-              className="flex-1 py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm"
+              className={`flex-1 py-3 rounded-xl font-black text-sm text-white ${doneCount >= d.reps.length ? 'bg-pink-600 hover:bg-pink-500' : 'bg-slate-700'}`}
             >
-              {g.idx === items.length - 1 ? 'Terminer ▶ Résumé' : `Exercice suivant ▶ (${doneCount}/${d.reps.length} séries)`}
+              {g.idx === items.length - 1 ? 'Terminer ▶ Résumé' : `Exercice suivant (${doneCount}/${d.reps.length})`}
             </button>
           </div>
         </div>

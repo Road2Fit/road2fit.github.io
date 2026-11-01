@@ -23,7 +23,7 @@ export function CoachWeeklyGoals({ onClaimWeekly, weeklyGoals }) {
           </div>
         ))}
       </div>
-      <p className="text-[0.75rem] text-slate-500">Les trois objectifs atteints dans la semaine rapportent {weeklyGoals.xp} XP bonus (une fois par semaine).</p>
+      <p className="text-xs text-slate-500">Les trois objectifs atteints dans la semaine rapportent {weeklyGoals.xp} XP bonus (une fois par semaine).</p>
     </section>
   );
 }

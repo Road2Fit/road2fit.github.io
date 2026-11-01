@@ -19,13 +19,13 @@ export function QuestFormModal({
   const [swapOpen, setSwapOpen] = useState(false);
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
-              <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
+              <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Target className="w-5 h-5 text-pink-400" />
                     <span>
                       {editingQuestId
-                        ? 'Ajuster votre Objectif'
+                        ? 'Ajuster l’objectif'
                         : 'Nouvel Exercice & Objectif'}
                     </span>
                   </h3>
@@ -44,13 +44,13 @@ export function QuestFormModal({
                         <span>🔄 Changer d’exercice (garde tout l’historique)</span>
                         <span>{swapOpen ? '▾' : '▸'}</span>
                       </button>
-                      {formSwapNote && <p className="text-[0.75rem] text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">✅ {formSwapNote}</p>}
+                      {formSwapNote && <p className="text-xs text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">✅ {formSwapNote}</p>}
                       {swapOpen && (
                         <div className="space-y-1.5">
-                          <p className="text-[0.75rem] text-slate-400">Tous les exercices du muscle choisi sont listés. Avec un exercice qui se mesure pareil (charge en kg avec charge en kg, etc.), ta charge, ton objectif et tes séances sont conservés. Les autres sont marqués « Autre unité ».</p>
+                          <p className="text-xs text-slate-400">Tous les exercices du muscle choisi sont listés. Avec un exercice qui se mesure pareil (charge en kg avec charge en kg, etc.), ta charge, ton objectif et tes séances sont conservés. Les autres sont marqués « Autre unité ».</p>
                           <ExercisePicker value={formCatalogId} onSelect={handleReplaceExercise} accept={c => c.type === formType} compat={isSwapCompatible} onSelectOther={c => setSwapOther(c)} allowCustom={false} />
                           {swapOther && (
-                            <div className="text-[0.75rem] text-amber-200 bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 space-y-1.5" data-testid="swap-other">
+                            <div className="text-xs text-amber-200 bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 space-y-1.5" data-testid="swap-other">
                               <p>« {swapOther.name} » se mesure en {unitLabel(swapOther)}, alors que cet exercice se mesure en {formTimed ? 'durée' : formUnit === 'kg' ? 'charge en kg' : 'répétitions'} : l’historique ne peut pas être gardé. Je peux l’ajouter comme <b>nouvel exercice</b> (tu pourras supprimer l’ancien ensuite).</p>
                               <div className="flex gap-2">
                                 <button type="button" data-testid="swap-other-create" onClick={() => { const id = swapOther.id; setSwapOther(null); openCreateQuestModal(); handleSelectCatalogExercise(id); }} className="px-3 py-1.5 rounded-lg bg-pink-600 text-white font-black">Ajouter « {swapOther.name} »</button>
@@ -70,7 +70,7 @@ export function QuestFormModal({
                       </label>
                       <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
                       {formSuggestion && (
-                        <p className="mt-2 text-[0.75rem] text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">💡 {formSuggestion}</p>
+                        <p className="mt-2 text-xs text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">💡 {formSuggestion}</p>
                       )}
                     </div>
                   )}
@@ -136,11 +136,11 @@ export function QuestFormModal({
                           <button key={m.id} type="button" disabled={!canChangeMeasure && measure !== m.id} data-testid={`measure-${m.id}`} onClick={() => changeMeasure(m.id)}
                             className={`p-2 rounded-xl border text-left transition ${measure === m.id ? 'bg-indigo-600 border-indigo-400 text-white shadow' : 'bg-slate-950 border-slate-800 text-slate-300'} ${!canChangeMeasure && measure !== m.id ? 'opacity-40' : 'hover:border-slate-600'}`}>
                             <div className="text-xs font-black">{m.title}</div>
-                            <div className="text-[0.7rem] opacity-80 mt-0.5">{m.desc}</div>
+                            <div className="text-xs opacity-80 mt-0.5">{m.desc}</div>
                           </button>
                         ))}
                       </div>
-                      {!canChangeMeasure && <p className="text-[0.7rem] text-slate-500">Cet exercice a déjà des séances enregistrées : sa mesure ne peut plus changer. Pour une autre mesure, ajoute-le comme nouvel exercice.</p>}
+                      {!canChangeMeasure && <p className="text-xs text-slate-500">Cet exercice a déjà des séances enregistrées : sa mesure ne peut plus changer. Pour une autre mesure, ajoute-le comme nouvel exercice.</p>}
                     </div>
                   )}
 
@@ -186,7 +186,7 @@ export function QuestFormModal({
                             }`}
                           >
                             <div className="text-xs font-black">{mode.title}</div>
-                            <div className="text-[0.7rem] opacity-80 mt-0.5">{mode.desc}</div>
+                            <div className="text-xs opacity-80 mt-0.5">{mode.desc}</div>
                           </button>
                         ))}
                       </div>
@@ -221,7 +221,7 @@ export function QuestFormModal({
 
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">
+                              <label className="block text-xs font-bold text-slate-300 mb-1">
                                 Nombre de séries cibles
                               </label>
                               <input
@@ -234,7 +234,7 @@ export function QuestFormModal({
                               />
                             </div>
                             <div>
-                              <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">
+                              <label className="block text-xs font-bold text-slate-300 mb-1">
                                 {formTimed ? 'Secondes par série' : 'Répétitions par série'}
                               </label>
                               <input
@@ -255,7 +255,7 @@ export function QuestFormModal({
 
                       {formGoalMode === 'reps_only' && (
                         <div className="pt-2">
-                          <label className="block text-[0.75rem] font-bold text-pink-200 mb-1">
+                          <label className="block text-xs font-bold text-pink-200 mb-1">
                             {formTimed ? 'Durée à atteindre (secondes)' : 'Objectif de répétitions à atteindre'}
                           </label>
                           <input
@@ -280,10 +280,10 @@ export function QuestFormModal({
                         const adv = timedAdvice(formCustomName);
                         return (
                           <div className="space-y-2">
-                            <p className="text-[0.75rem] text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
+                            <p className="text-xs text-cyan-100">💡 {adv.tip} Le coach ajoutera environ 5 secondes par séance jusqu’à ton objectif.</p>
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[0.75rem] font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
+                                <label className="block text-xs font-bold text-slate-300 mb-1">Durée de départ (secondes, 1re série)</label>
                                 <input type="number" min="1" max="600" value={formStartValue}
                                   onChange={e => { setFormStartValue(e.target.value); if (!editingQuestId) setFormCurrentValue(e.target.value); }}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
@@ -311,21 +311,21 @@ export function QuestFormModal({
                     <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[0.75rem] font-bold text-violet-300 mb-1">
+                          <label className="block text-xs font-bold text-violet-300 mb-1">
                             🪢 Charge de départ (kg)
                           </label>
                           <SignedKgInput testId="signed-start" assist={formStartAssistanceKg} onAssist={setFormStartAssistanceKg}
                             className="w-full bg-slate-900 border border-violet-500/30 rounded-xl py-2 text-center font-bold text-violet-200" />
                         </div>
                         <div>
-                          <label className="block text-[0.75rem] font-bold text-emerald-300 mb-1">
+                          <label className="block text-xs font-bold text-emerald-300 mb-1">
                             🦅 Charge objectif (kg)
                           </label>
                           <SignedKgInput testId="signed-goal" assist={formGoalAssistanceKg} onAssist={setFormGoalAssistanceKg}
                             className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl py-2 text-center font-bold text-emerald-300" />
                         </div>
                       </div>
-                      <p className="text-[0.7rem] text-slate-400" data-testid="signed-hint">
+                      <p className="text-xs text-slate-400" data-testid="signed-hint">
                         <b>−10</b> = 10 kg d’aide élastique · <b>0</b> = poids du corps seul. Plus le nombre se rapproche de 0, plus tu es autonome. Pour ajouter du poids (lest), choisis « Charge en kg ».
                       </p>
                     </div>
@@ -334,7 +334,7 @@ export function QuestFormModal({
                   {formType === 'strength' && (formUnit === 'kg' || formGoalMode === 'weight_only') && (
                     <div className="grid grid-cols-2 gap-3 bg-slate-950 border border-slate-800 rounded-xl p-4">
                       <div>
-                        <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">
+                        <label className="block text-xs font-bold text-slate-400 mb-1">
                           Charge de départ (kg)
                         </label>
                         <input
@@ -349,7 +349,7 @@ export function QuestFormModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-[0.75rem] font-bold text-amber-300 mb-1">
+                        <label className="block text-xs font-bold text-amber-300 mb-1">
                           Charge Objectif (kg)
                         </label>
                         <input
@@ -372,11 +372,11 @@ export function QuestFormModal({
                       {formGoalMode !== 'free_mode' && (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Départ ({formUnit})</label>
+                            <label className="block text-xs font-bold text-slate-400 mb-1">Départ ({formUnit})</label>
                             <input type="number" step="0.5" value={formStartValue} onChange={e => { setFormStartValue(e.target.value); setFormCurrentValue(e.target.value); }} className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center font-bold text-white" />
                           </div>
                           <div>
-                            <label className="block text-[0.75rem] font-bold text-emerald-300 mb-1">Objectif ({formUnit})</label>
+                            <label className="block text-xs font-bold text-emerald-300 mb-1">Objectif ({formUnit})</label>
                             <input type="number" step="0.5" value={formGoalValue} onChange={e => setFormGoalValue(e.target.value)} className="w-full bg-slate-900 border border-emerald-500/40 rounded-xl py-2 text-center font-black text-emerald-300" />
                           </div>
                         </div>
@@ -396,7 +396,7 @@ export function QuestFormModal({
                       type="submit"
                       className="px-5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg"
                     >
-                      {editingQuestId ? 'Enregistrer l’Objectif' : 'Créer la Quête'}
+                      {editingQuestId ? 'Enregistrer l’objectif' : 'Créer la Quête'}
                     </button>
                   </div>
                 </form>

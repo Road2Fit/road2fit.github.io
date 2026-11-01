@@ -1,4 +1,5 @@
 import { cleanText } from '../edition';
+import { formatDayFr } from '../lib/dates';
 import { cardioHasElevation } from '../lib/calories';
 import { useState } from 'react';
 import { EntryEditor } from '../components/EntryEditor';
@@ -14,7 +15,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-4 space-y-3">
         <h3 className="text-sm font-black uppercase tracking-wider text-pink-300 flex items-center gap-2">
-          <Calendar className="w-4 h-4" /> Jours d’Entraînement ({dailyJournalList.length})
+          <Calendar className="w-4 h-4" /> Jours d’entraînement ({dailyJournalList.length})
         </h3>
 
         {dailyJournalList.length === 0 ? (
@@ -38,14 +39,14 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-black text-white flex items-center gap-2">
-                      📅 {dayObj.date}
+                      {formatDayFr(dayObj.date)}
                     </span>
                     <span className="px-2 py-0.5 rounded-lg bg-orange-500/20 text-orange-300 text-xs font-extrabold border border-orange-500/30">
                       🔥 {dayObj.totalKcal} kcal
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 text-[0.75rem]">
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">
                       {dayObj.items.length} exercice(s)
                     </span>
@@ -76,7 +77,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                   Rapport Détaillé de la Journée
                 </span>
                 <h3 className="text-xl font-black text-white mt-0.5">
-                  Séance du {activeJournalDayObj.date}
+                  Séance du {formatDayFr(activeJournalDayObj.date)}
                 </h3>
               </div>
 
@@ -106,11 +107,11 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                           <h4 className="font-extrabold text-white text-base">
                             {quest.name}
                           </h4>
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-[0.7rem] font-bold text-slate-300">
+                          <span className="px-2 py-0.5 rounded bg-slate-800 text-xs font-bold text-slate-300">
                             {arenaLabel(quest)}
                           </span>
                           {comparison.goalBeaten && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-[0.7rem] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-xs font-black">
                               ⭐ OBJECTIF BATTU !
                             </span>
                           )}
@@ -196,11 +197,11 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     }`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-extrabold uppercase tracking-wider text-[0.75rem] text-slate-300">
+                      <span className="font-extrabold uppercase tracking-wider text-xs text-slate-300">
                         🔍 Comparaison avec la séance précédente
                       </span>
                       {!comparison.isFirst && (
-                        <span className="text-[0.75rem] font-bold text-slate-300">
+                        <span className="text-xs font-bold text-slate-300">
                           {comparison.prevSummary} <span className="text-pink-400">➔</span>{' '}
                           <strong className="text-white">{comparison.currSummary}</strong>
                         </span>
@@ -212,13 +213,13 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                         comparison.badges.map((b, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[0.75rem]"
+                            className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-xs"
                           >
                             {b}
                           </span>
                         ))
                       ) : (
-                        <span className="text-slate-400 text-[0.75rem]">
+                        <span className="text-slate-400 text-xs">
                           Maintien des acquis (même charge / volume que la séance précédente).
                         </span>
                       )}

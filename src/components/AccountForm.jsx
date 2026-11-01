@@ -3,7 +3,7 @@ import * as supabase from '../sync/supabase';
 import { SUPABASE } from '../config';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white placeholder:text-slate-600';
-const label = 'block text-[0.75rem] font-bold text-slate-400 mb-1';
+const label = 'block text-xs font-bold text-slate-400 mb-1';
 const btn = 'px-4 py-2.5 rounded-xl text-sm font-black disabled:bg-slate-800 disabled:text-slate-600';
 
 /**
@@ -30,7 +30,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
       <div className="space-y-3" data-testid="account-connected">
         <p className="text-sm text-slate-300">Connecté : <strong className="text-white" data-testid="account-email">{sync.user.email}</strong></p>
         <p className={`text-sm font-bold ${sync.status === 'synced' ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="account-status">{status}</p>
-        <p className="text-[0.75rem] text-slate-500">Tes données sont copiées automatiquement dans ton espace personnel : change de téléphone, reconnecte-toi avec le même e-mail et tout revient. Tes photos souvenirs sont sauvegardées aussi.</p>
+        <p className="text-xs text-slate-500">Tes données sont copiées automatiquement dans ton espace personnel : change de téléphone, reconnecte-toi avec le même e-mail et tout revient. Tes photos souvenirs sont sauvegardées aussi.</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy} onClick={() => run(async () => { await sync.signOut(); setMsg({ ok: true, text: 'Déconnecté. Tes données restent sur ce téléphone.' }); })} className={`${btn} bg-slate-800 border border-slate-600 text-white`} data-testid="account-signout">Me déconnecter</button>
           {onDone && <button type="button" onClick={onDone} className={`${btn} bg-sky-600 text-white`}>OK</button>}
@@ -90,7 +90,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
       <div><label className={label} htmlFor="acc-pw">Mot de passe {signup && <span className="font-normal text-slate-500">(6 caractères minimum, mieux : une phrase)</span>}</label><input id="acc-pw" type="password" autoComplete={signup ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} className={field} data-testid="acc-password" /></div>
       {signup && <div><label className={label} htmlFor="acc-invite">Code d’invitation (donné par Gabin)</label><input id="acc-invite" value={invite} onChange={e => setInvite(e.target.value)} autoCapitalize="none" autoCorrect="off" className={field} data-testid="acc-invite" /></div>}
       <button type="submit" disabled={busy || !validEmail || tooShort || (signup && !invite.trim())} data-testid="acc-submit" className={`${btn} bg-sky-600 text-white w-full`}>{busy ? '…' : signup ? 'Créer mon compte' : 'Me connecter'}</button>
-      {!signup && <button type="button" onClick={() => { setMode('forgot'); setMsg(null); }} className="text-[0.75rem] font-bold text-sky-300 underline">Mot de passe oublié ?</button>}
+      {!signup && <button type="button" onClick={() => { setMode('forgot'); setMsg(null); }} className="text-xs font-bold text-sky-300 underline">Mot de passe oublié ?</button>}
       {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`} data-testid="acc-msg">{msg.text}</p>}
       {sync.needsLogin && <p className="text-sm font-bold text-amber-300">Ta session a expiré : reconnecte-toi.</p>}
     </form>
@@ -121,10 +121,10 @@ function Versions({ sync }) {
   };
   return (
     <div className="border-t border-slate-800 pt-3 space-y-2" data-testid="versions">
-      <button type="button" onClick={() => { const o = !open; setOpen(o); if (o && !list) load(); }} className="text-[0.75rem] font-bold text-sky-300 underline" data-testid="versions-toggle">{open ? 'Masquer les versions précédentes' : 'Versions précédentes de ma sauvegarde'}</button>
+      <button type="button" onClick={() => { const o = !open; setOpen(o); if (o && !list) load(); }} className="text-xs font-bold text-sky-300 underline" data-testid="versions-toggle">{open ? 'Masquer les versions précédentes' : 'Versions précédentes de ma sauvegarde'}</button>
       {open && (
         <div className="space-y-1.5">
-          <p className="text-[0.75rem] text-slate-500">Le serveur garde automatiquement une copie de ta sauvegarde (une toutes les 8 h environ, les 21 dernières) et personne ne peut les supprimer depuis l’appli. Utile si des données ont été effacées par erreur : restaurer une version remplace tes données actuelles (une copie de sécurité est gardée sur cet appareil).</p>
+          <p className="text-xs text-slate-500">Le serveur garde automatiquement une copie de ta sauvegarde (une toutes les 8 h environ, les 21 dernières) et personne ne peut les supprimer depuis l’appli. Utile si des données ont été effacées par erreur : restaurer une version remplace tes données actuelles (une copie de sécurité est gardée sur cet appareil).</p>
           {busy && <p className="text-xs text-slate-400">Chargement…</p>}
           {list && list.length === 0 && <p className="text-xs text-slate-400">Aucune version précédente pour l’instant (la première apparaît après ta prochaine modification).</p>}
           {(list || []).map(v => (

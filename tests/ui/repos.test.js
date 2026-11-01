@@ -1,6 +1,6 @@
 // Séance guidée : rappel de la série suivante sur le minuteur de repos, bouton « = ».
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -13,7 +13,7 @@ describe('séance guidée : repos et saisie rapide', () => {
     open.push(h);
     const events = [];
     h.w.addEventListener('rondoufit-rest', e => events.push(e.detail));
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     const faites = () => [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite');

@@ -1,6 +1,6 @@
 // Séance guidée : chaque exercice commence par 1 à 2 séries d'échauffement, jamais enregistrées.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -20,7 +20,7 @@ describe('échauffement avant les séries de travail', () => {
   it('s’affiche, se coche sans compter dans la séance et n’est pas enregistré', async () => {
     const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
     open.push(h);
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
 
@@ -53,7 +53,7 @@ describe('échauffement avant les séries de travail', () => {
   it('la séance guidée montre une petite animation du mouvement, masquable', async () => {
     const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
     open.push(h);
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     await advance(h, 300);

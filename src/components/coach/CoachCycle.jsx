@@ -21,7 +21,7 @@ export function CoachCycle({ updateCoach, w0, weekStart0 }) {
               <button key={n} onClick={() => updateCoach({ cycleWeeks: n, cycleStart: weekStart0 })} className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-black">Cycle de {n} semaines</button>
             ))}
           </div>
-          <p className="text-[0.75rem] text-slate-500">La semaine en cours devient la semaine 1.</p>
+          <p className="text-xs text-slate-500">La semaine en cours devient la semaine 1.</p>
         </div>
       )}
     </section>

@@ -5,10 +5,8 @@ export function CoachHeader({ coach, guidedActive, onResumeGuided, trainingWeeks
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-white">🧠 Coach</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Des séances calculées d’après tes objectifs et ton historique, avec des règles de progression issues de la recherche. Ce sont des repères, pas un avis médical.
-          </p>
+          <h2 className="font-black text-white">Cette semaine</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Séances calculées d’après ton historique : des repères, pas un avis médical.</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-bold">
           <span className="px-2.5 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300">

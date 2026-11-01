@@ -22,15 +22,15 @@ export function CoachVolley({ gameState, onAddExercise, sport }) {
           );
         })}
       </div>
-      <p className="text-[0.75rem] text-amber-200/90" data-testid="sport-evidence">📚 {sport.note}</p>
+      <p className="text-xs text-amber-200/90" data-testid="sport-evidence">📚 {sport.note}</p>
       {sport.sources.length > 0 && (
         <div>
-          <button type="button" onClick={() => setShowSrc(x => !x)} className="text-[0.75rem] font-bold text-pink-300 underline" data-testid="sport-sources-toggle">{showSrc ? 'Masquer les études' : `Voir les études (${sport.sources.length})`}</button>
+          <button type="button" onClick={() => setShowSrc(x => !x)} className="text-xs font-bold text-pink-300 underline" data-testid="sport-sources-toggle">{showSrc ? 'Masquer les études' : `Voir les études (${sport.sources.length})`}</button>
           {showSrc && (
             <div className="space-y-2 mt-2" data-testid="sport-sources">
-              <p className="text-[0.7rem] text-slate-500">✔ = référence retrouvée en ligne avec ses chiffres (lus dans le résumé, pas dans le texte complet) ; ◐ = référence réelle mais auteurs, revue ou chiffre à vérifier. Les études portent sur des groupes, souvent des jeunes ou des sportifs d’élite.</p>
+              <p className="text-xs text-slate-500">✔ = référence retrouvée en ligne avec ses chiffres (lus dans le résumé, pas dans le texte complet) ; ◐ = référence réelle mais auteurs, revue ou chiffre à vérifier. Les études portent sur des groupes, souvent des jeunes ou des sportifs d’élite.</p>
               {sport.sources.map((s, i) => (
-                <div key={i} className="text-[0.75rem] bg-slate-950 border border-slate-800 rounded-xl p-2.5">
+                <div key={i} className="text-xs bg-slate-950 border border-slate-800 rounded-xl p-2.5">
                   <p className="text-slate-200"><b>{s.ok ? '✔' : '◐'}</b> {s.text}</p>
                   <p className="text-slate-400 mt-0.5">→ {s.use}</p>
                   {s.url && <a href={s.url} target="_blank" rel="noreferrer" className="text-sky-300 underline">Ouvrir la source</a>}

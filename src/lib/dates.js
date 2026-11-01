@@ -21,3 +21,9 @@ export function getYesterdayISODate() {
   d.setDate(d.getDate() - 1);
   return toLocalISODate(d);
 }
+
+/** « mardi 21 octobre » à partir d'une date AAAA-MM-JJ. */
+export function formatDayFr(iso) {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+}

@@ -24,14 +24,14 @@ const start = async coach => {
   return h;
 };
 const choisir = async (h, nom) => {
-  await clickText(h, '+ Objectif / Exercice');
+  await clickText(h, 'Nouvel exercice');
   await clickEl(h, [...h.doc.querySelectorAll('.fixed.inset-0 button')].find(b => b.textContent.includes('Pokédex') || b.textContent.includes('Choisir')) || h.doc.querySelector('.fixed.inset-0 button'));
 };
 
-describe('formulaire « + Objectif / Exercice »', () => {
+describe('formulaire « Nouvel exercice »', () => {
   it('propose une charge d’après tes maxima et l’explique', async () => {
     const h = await start();
-    await clickText(h, '+ Objectif / Exercice');
+    await clickText(h, 'Nouvel exercice');
     // le sélecteur d'exercices : on cherche « Incliné Barre »
     const modal = h.doc.querySelector('.fixed.inset-0');
     const bouton = [...modal.querySelectorAll('button')].find(b => /Choisir|Pokédex|Exercice/i.test(b.textContent) && !/Annuler|Valider|Créer/i.test(b.textContent));
@@ -51,7 +51,7 @@ describe('formulaire « + Objectif / Exercice »', () => {
 describe('ajout par le coach', () => {
   it('l’exercice ajouté part d’une charge adaptée et suit le profil', async () => {
     const h = await start({ workProfile: 'puissance' });
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     // « + Presse… » / suggestions d'exercices du coach : on ajoute l'exercice d'une arène sans exercice
     const ajout = [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('+ ') && /Presse|Traction|Squat|Rowing|Développé|Curl/.test(b.textContent));
     expect(ajout, 'bouton d’ajout du coach').toBeTruthy();

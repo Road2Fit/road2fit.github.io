@@ -16,7 +16,7 @@ describe('mesure de l’exercice', () => {
     const h = await start();
     open.push(h);
     await advance(h, 300);
-    await clickText(h, '+ Objectif / Exercice');
+    await clickText(h, 'Nouvel exercice');
     await advance(h, 300);
     await clickEl(h, byTest(h, 'pick-fp_back_extension')); // lombaires
     await advance(h, 200);
@@ -35,7 +35,7 @@ describe('mesure de l’exercice', () => {
     const h = await start();
     open.push(h);
     await advance(h, 300);
-    await clickText(h, '+ Objectif / Exercice');
+    await clickText(h, 'Nouvel exercice');
     await advance(h, 300);
     await clickEl(h, byTest(h, 'pick-pullups'));
     await advance(h, 200);

@@ -7,7 +7,7 @@ import { cardioHasElevation, formatPaceAndSpeed } from '../lib/calories';
 
 const CARDIO = EXERCISE_CATALOG.filter(c => c.type === 'cardio');
 
-// « + Activité annexe » : course, marche, sports collectifs, raquette, plein air, eau, cardio.
+// « Activité (course, sport…) » : course, marche, sports collectifs, raquette, plein air, eau, cardio.
 // Distance seulement pour les activités qui se mesurent en km ; dénivelé / pente seulement pour la course et la marche.
 export function QuickCardioModal({
   handleSaveQuickCardio, liveQuickCardioCalories, quickCardioCatalogId, quickCardioDate,
@@ -73,17 +73,17 @@ export function QuickCardioModal({
           <div className={`grid gap-2.5 ${cols === 3 ? 'grid-cols-3' : cols === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
             {hasDistance && !speedMode && (
               <div>
-                <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Distance (km)</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Distance (km)</label>
                 <input type="number" step="0.1" min="0.1" value={quickCardioDistanceKm} onChange={e => setQuickCardioDistanceKm(e.target.value)} className={field} />
               </div>
             )}
             <div>
-              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Durée (min)</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Durée (min)</label>
               <input type="number" min="1" value={quickCardioDurationMin} onChange={e => setQuickCardioDurationMin(e.target.value)} className={field} />
             </div>
             {hasElevation && !percentMode && (
               <div>
-                <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Dénivelé D+ (m)</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Dénivelé D+ (m)</label>
                 <input type="number" min="0" value={quickCardioElevationM} onChange={e => setQuickCardioElevationM(e.target.value)} className={field} />
               </div>
             )}
@@ -111,11 +111,11 @@ export function QuickCardioModal({
 
           <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Date</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Date</label>
               <input type="date" value={quickCardioDate} onChange={e => setQuickCardioDate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-bold text-white" />
             </div>
             <div>
-              <label className="block text-[0.75rem] font-bold text-slate-400 mb-1">Intensité RPE ({quickCardioRpe}/10)</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Intensité RPE ({quickCardioRpe}/10)</label>
               <input type="range" min="1" max="10" value={quickCardioRpe} onChange={e => setQuickCardioRpe(Number(e.target.value))} className="w-full accent-emerald-500 mt-2" />
             </div>
           </div>

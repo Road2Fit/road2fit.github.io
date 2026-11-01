@@ -9,7 +9,7 @@ export function LevelUpModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
-      <div className="m-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 my-8">
+      <div className="m-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-2xl">
@@ -34,7 +34,7 @@ export function LevelUpModal({
 
         <form onSubmit={handleConfirmLevelUp} className="space-y-4">
           <p className="text-xs text-slate-300">
-            Choisissez maintenant votre <strong>nouvel objectif plus difficile</strong> pour viser le{' '}
+            Choisis maintenant ton <strong>nouvel objectif plus difficile</strong> pour viser le{' '}
             <strong className="text-amber-300">
               Niveau {(Number(levelUpModalQuest.level) || 1) + 2}
             </strong>{' '}

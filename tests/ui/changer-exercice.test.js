@@ -33,7 +33,7 @@ describe('changer d’exercice depuis Ajuster', () => {
     expect(boutons.some(t => t.includes('personnalisé'))).toBe(false);
     await clickEl(h, [...fenetre.querySelectorAll('button')].find(b => b.textContent.includes('Presse à Cuisses 45°')));
     expect(pageText(h)).toContain('Exercice remplacé par « Presse à Cuisses 45° (Plaques) »');
-    await clickText(h, 'Enregistrer l’Objectif');
+    await clickText(h, 'Enregistrer l’objectif');
     const q = saved(h).quests[0];
     expect(q.id).toBe('q_presse');
     expect(q.catalogId).toBe('fp_leg_press_45');

@@ -19,7 +19,7 @@ export function BilanTab({ gameState, levelInfo, records, weekData }) {
             const diff = Math.round((weekData.cur[m.k] - weekData.prev[m.k]) * 10) / 10;
             return (
               <div key={m.k} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-                <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">{m.l}</span>
+                <span className="text-xs font-bold uppercase text-slate-400 block">{m.l}</span>
                 <span className="text-xl font-black text-white">{weekData.cur[m.k]}{m.u}</span>
                 <span className={`block text-xs font-bold ${diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-rose-400' : 'text-slate-500'}`}>
                   {diff > 0 ? '▲ +' : diff < 0 ? '▼ ' : '＝ '}{diff !== 0 ? diff : 'stable'}{diff !== 0 ? m.u : ''}
@@ -32,7 +32,7 @@ export function BilanTab({ gameState, levelInfo, records, weekData }) {
 
       <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
         <h3 className="font-black text-white">🏅 Records personnels</h3>
-        {records.length === 0 && <p className="text-xs text-slate-400">Enregistrez une séance pour voir vos records apparaître.</p>}
+        {records.length === 0 && <p className="text-xs text-slate-400">Enregistre une séance pour voir vos records apparaître.</p>}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {records.map(g => (
             <div key={g.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3">

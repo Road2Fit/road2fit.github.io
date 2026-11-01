@@ -21,7 +21,7 @@ const SAVE = { xp: 100, quests, weightHistory: [{ id: 'w', date: '2026-10-01', w
 const start = async () => {
   const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
   open.push(h);
-  await clickText(h, '💯 Mes maxima');
+  await clickText(h, 'Mes maxima');
   return h;
 };
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));

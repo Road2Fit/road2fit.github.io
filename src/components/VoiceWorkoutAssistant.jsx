@@ -45,7 +45,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
-      setMicStatusMsg("💡 Astuce : Cliquez dans la zone de texte et utilisez le bouton Micro 🎤 de votre clavier (ou Windows + H sur PC) !");
+      setMicStatusMsg("💡 Astuce : touche la zone de texte et utilise le bouton Micro 🎤 de votre clavier (ou Windows + H sur PC) !");
       inputRef.current?.focus();
       return;
     }
@@ -63,7 +63,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
       rec.onstart = () => {
         setIsListening(true);
-        setMicStatusMsg('🟢 Micro actif : dictez toute votre séance d’une traite (plusieurs exercices)...');
+        setMicStatusMsg('🟢 Micro actif : dicte toute ta séance d’une traite (plusieurs exercices)...');
       };
 
       rec.onresult = (event) => {
@@ -255,7 +255,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 <div>
                   <h3 className="text-sm font-black text-white">{pick('Micro Magique de Rondoudou', 'Dictée vocale')}</h3>
                   <p className="text-xs text-slate-300">
-                    Dictez toute votre séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
+                    Dicte toute ta séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
                   </p>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 setInterimText('');
                 setSpokenText(e.target.value);
               }}
-              placeholder="Dictez toute votre séance ici (ex: J'ai fait du développer coucher 50 kg 3x8, des tracons élastique 10 kg 6 6 4, un ip trust 80 kg 4x10 et 4 km de course en 24 min)..."
+              placeholder="Dicte toute ta séance ici (ex: J'ai fait du développer coucher 50 kg 3x8, des tracons élastique 10 kg 6 6 4, un ip trust 80 kg 4x10 et 4 km de course en 24 min)..."
               className="flex-1 bg-slate-950 border border-pink-500/50 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-pink-400"
             />
             <div className="flex sm:flex-col gap-2 shrink-0">
@@ -304,7 +304,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
           </div>
 
           {/* Bouton de test avec fautes de frappe volontaires + 4 exercices en une seule phrase */}
-          <div className="flex flex-wrap items-center gap-1.5 text-[0.75rem]">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <span className="text-slate-400 font-bold">Tester une phrase complète avec fautes :</span>
             <button
               type="button"
@@ -328,7 +328,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
           {editableItems.length > 0 && (
             <div className="bg-slate-950/95 border border-emerald-500/40 rounded-xl p-3.5 space-y-3">
               <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                ✨ Synthèse de votre séance ({editableItems.length} exercice(s) détecté(s)) :
+                ✨ Synthèse de ta séance ({editableItems.length} exercice(s) détecté(s)) :
               </p>
               <div className="space-y-2">
                 {editableItems.map(item => (
@@ -339,7 +339,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                     <div className="flex items-center gap-2">
                       <span className="text-base">{item.icon}</span>
                       <strong className="text-white">{item.name}</strong>
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[0.7rem] text-slate-300 font-bold">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-300 font-bold">
                         {item.category}
                       </span>
                       <span className="text-pink-300 font-bold">{item.summary}</span>

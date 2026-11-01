@@ -1,6 +1,6 @@
 // Corriger une séance dans le journal, et aller à l'encontre de la proposition du coach.
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickText, expandCoachDetails, findByText, launch, pageText, setInput } from './harness';
+import { clickText, expandCoachDetails, findByText, launch, pageText, setInput, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -28,7 +28,7 @@ const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 describe('corriger une séance du journal', () => {
   it('corrige un 9 en 10 : séance, calories, note et exercice sont mis à jour', async () => {
     const h = await start();
-    await clickText(h, '📅 Journal');
+    await clickText(h, 'Journal');
     await clickText(h, 'Corriger');
     expect(pageText(h)).toContain('Corriger cette séance');
     const form = h.doc.querySelector('form');
@@ -47,7 +47,7 @@ describe('corriger une séance du journal', () => {
 
   it('Annuler ne change rien', async () => {
     const h = await start();
-    await clickText(h, '📅 Journal');
+    await clickText(h, 'Journal');
     await clickText(h, 'Corriger');
     await clickText(h, 'Annuler');
     expect(saved(h).quests[0].history.find(x => x.id === 'h2').setDetails).toEqual([10, 10, 9]);
@@ -58,7 +58,7 @@ describe('corriger une séance du journal', () => {
 describe('aller à l’encontre du coach', () => {
   it('le coach propose de reculer : je choisis moins d’aide, puis je reviens à sa proposition', async () => {
     const h = await start();
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await expandCoachDetails(h);
     expect(pageText(h)).toContain('aide 12,5 kg'); // la proposition du coach : l'aide remonte
     await clickText(h, 'Moins d’aide'); // 12,5 → 10
@@ -76,7 +76,7 @@ describe('aller à l’encontre du coach', () => {
 
   it('plus d’aide : le choix s’additionne à chaque clic', async () => {
     const h = await start();
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await expandCoachDetails(h);
     await clickText(h, 'Plus d’aide');
     await clickText(h, 'Plus d’aide');

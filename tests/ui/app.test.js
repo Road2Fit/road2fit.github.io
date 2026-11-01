@@ -16,12 +16,11 @@ describe('application', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('la grande carte Coach est en haut de page et ouvre le Coach', async () => {
-    const h = await start();
-    expect(pageText(h)).toContain('Mon Coach');
-    expect(pageText(h)).not.toContain('Micro Magique de Rondoudou'); // l'ancienne zone micro a disparu de la page
-    await clickText(h, 'Ouvrir le Coach');
+  it('l’appli s’ouvre sur le Coach, avec la séance du jour', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
     expect(pageText(h)).toContain('Prochaine séance');
+    expect(pageText(h)).not.toContain('Micro Magique de Rondoudou'); // l'ancienne zone micro a disparu de la page
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
@@ -42,14 +41,14 @@ describe('application', () => {
   it('ouvre chaque onglet', async () => {
     const h = await start();
     const attendus = [
-      ['🧠 Coach', 'Prochaine séance'],
-      ['📅 Journal', 'Journal'],
+      ['Coach', 'Prochaine séance'],
+      ['Journal', 'Journal'],
       ['Courbes', 'Courbe'],
-      ['⚖️ Poids', 'Poids'],
-      ['📸 Souvenirs', 'Souvenirs'],
-      ['📊 Bilan', 'Bilan'],
+      ['Poids', 'Poids'],
+      ['Souvenirs', 'Souvenirs'],
+      ['Bilan', 'Bilan'],
       ['Trophées', 'Trophées'],
-      ['🏋️ Exercices', 'Noter Séance'],
+      ['Exercices', 'Noter la séance'],
     ];
     for (const [onglet, texte] of attendus) {
       await clickText(h, onglet);
@@ -60,7 +59,7 @@ describe('application', () => {
 
   it('séance guidée du coach : toutes les séries validées puis enregistrement', async () => {
     const h = await start();
-    await clickText(h, '🧠 Coach');
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     expect(lancer, 'bouton de lancement').toBeTruthy();
     await clickText(h, lancer.textContent.trim().slice(0, 30));
@@ -83,7 +82,7 @@ describe('application', () => {
   }, TIMEOUT);
 
   it('ouvre et ferme chaque fenêtre (noter une séance, objectif, course, valider, réinitialiser)', async () => {
-    for (const texte of ['Noter Séance', '+ Objectif / Exercice', '+ Activité annexe', 'Valider cet objectif', 'Ajuster', 'Réinitialiser']) {
+    for (const texte of ['Noter la séance', 'Nouvel exercice', 'Activité (course, sport…)', 'Valider l’objectif', 'Ajuster', 'Tout réinitialiser']) {
       const h = await start();
       await clickText(h, texte);
       expect(h.doc.querySelector('.fixed.inset-0'), texte).toBeTruthy();

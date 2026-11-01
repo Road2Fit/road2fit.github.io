@@ -11,21 +11,21 @@ export function CoachWeightHealth({
       <h3 className="font-black text-white">⚖️ Poids & activité</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-          <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">Poids actuel</span>
+          <span className="text-xs font-bold uppercase text-slate-400 block">Poids actuel</span>
           <span className="text-lg font-black text-white">{coachFmt(pace.current)} kg</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-          <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">Poids cible</span>
+          <span className="text-xs font-bold uppercase text-slate-400 block">Poids cible</span>
           <input type="number" min="35" max="250" step="0.5" value={gameState.targetWeightKg}
             onChange={e => setGameState(prev => ({ ...prev, targetWeightKg: Math.max(35, Number(e.target.value) || 75) }))}
             className="w-full bg-transparent text-lg font-black text-emerald-300 outline-none" />
         </div>
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-          <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">Rythme (4 sem.)</span>
+          <span className="text-xs font-bold uppercase text-slate-400 block">Rythme (4 sem.)</span>
           <span className="text-lg font-black text-white">{pace.unknown ? '—' : `${coachFmt(pace.kgWeek)} kg/sem.`}</span>
         </div>
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-          <span className="text-[0.7rem] font-bold uppercase text-slate-400 block">Arrivée estimée</span>
+          <span className="text-xs font-bold uppercase text-slate-400 block">Arrivée estimée</span>
           <span className="text-lg font-black text-white">{pace.eta ? coachDateFR(pace.eta.date).slice(0, 5) : '—'}</span>
         </div>
       </div>
@@ -63,7 +63,7 @@ export function CoachWeightHealth({
             ) : (
               <p>Tu as atteint ou dépassé ton poids cible : pour le maintenir, vise environ <b>{nutrition.tdee} kcal/jour</b>.</p>
             )}
-            <p className="text-[0.75rem] text-slate-500">Estimation (formule de Mifflin-St Jeor, marge d’erreur d’environ 10 à 15 %) : ajuste selon l’évolution réelle de ta balance sur 2 à 3 semaines. Ce n’est pas un avis médical.</p>
+            <p className="text-xs text-slate-500">Estimation (formule de Mifflin-St Jeor, marge d’erreur d’environ 10 à 15 %) : ajuste selon l’évolution réelle de ta balance sur 2 à 3 semaines. Ce n’est pas un avis médical.</p>
           </div>
         )}
       </div>
@@ -83,7 +83,7 @@ export function CoachWeightHealth({
           <p className="text-slate-500">Repère général : adapte-le avec un professionnel de santé si besoin.</p>
         </div>
       </div>
-      <p className="text-[0.75rem] text-slate-500">
+      <p className="text-xs text-slate-500">
         Conseil cardio : en phase de perte de poids, vise 150 à 250 minutes d’endurance par semaine ; {sportInfo(coach.sport).poss} compte. Une marche inclinée ou un vélo en intensité modérée un jour sans muscu est une bonne option (ACSM 2009).
       </p>
     </section>

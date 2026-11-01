@@ -11,7 +11,7 @@ describe('sécurité et confort', () => {
   it('réinitialiser garde une copie ; « Retrouver mes données » la remet', async () => {
     const h = await launch();
     open.push(h);
-    await clickText(h, 'Réinitialiser l’aventure');
+    await clickText(h, 'Tout réinitialiser');
     await clickText(h, 'Tout effacer et repartir');
     expect(saved(h).quests).toHaveLength(0);
     expect(pageText(h)).toContain('Bienvenue');

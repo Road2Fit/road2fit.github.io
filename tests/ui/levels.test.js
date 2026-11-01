@@ -20,7 +20,7 @@ const start = async state => {
   return h;
 };
 async function ajouterCourse(h) {
-  await clickText(h, '+ Activité annexe');
+  await clickText(h, 'Activité (course, sport…)');
   await clickText(h, 'Ajouter au Bilan du Jour');
 }
 /** Laisse défiler les messages (ils s'affichent l'un après l'autre) et renvoie tout ce qui a été vu. */
@@ -79,7 +79,7 @@ describe('bonus de régularité', () => {
   it('+20 % d’EXP après deux semaines d’affilée, affiché dans l’en-tête', async () => {
     // séances les semaines du 5 et du 12 octobre (terminées) ; on est le mercredi 21
     const h = await start(save(1000, { rankTrials: [4], quests: [quest(['2026-10-06', '2026-10-13'])] }));
-    expect(pageText(h)).toContain('bonus +20 %');
+    expect(pageText(h)).toContain('+20 % d’EXP');
     const avant = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).xp;
     await ajouterCourse(h);
     const apres = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
@@ -108,7 +108,7 @@ describe('récompenses de niveau', () => {
 
   it('affiche la courbe d’EXP dans le Bilan', async () => {
     const h = await start(save(xpForLevel(5), { rankTrials: [4], xpWeeks: { '2026-10-12': 300, '2026-10-19': 500 } }));
-    await clickText(h, '📊 Bilan');
+    await clickText(h, 'Bilan');
     expect(pageText(h)).toContain('Mon EXP semaine par semaine');
     expect(pageText(h)).toContain('EXP / semaine');
     expect(pageText(h)).toContain('Prochain niveau (6)');

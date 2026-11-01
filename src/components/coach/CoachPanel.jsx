@@ -215,21 +215,6 @@ export function CoachPanel({
 
   return (
     <div className="space-y-6">
-      {/* EN-TÊTE */}
-      <CoachHeader
-        coach={coach}
-        guidedActive={guidedActive}
-        onResumeGuided={onResumeGuided}
-        trainingWeeks={trainingWeeks}
-        updateCoach={updateCoach}
-        w0={w0}
-        weekStart0={weekStart0}
-      />
-
-      {(advice.length > 0 || missedMsgs.length > 0) && (
-        <CoachAdvice advice={advice} missedMsgs={missedMsgs} />
-      )}
-
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
@@ -266,6 +251,21 @@ export function CoachPanel({
         todayInfo={todayInfo}
         updateCoach={updateCoach}
       />
+
+      {/* EN-TÊTE */}
+      <CoachHeader
+        coach={coach}
+        guidedActive={guidedActive}
+        onResumeGuided={onResumeGuided}
+        trainingWeeks={trainingWeeks}
+        updateCoach={updateCoach}
+        w0={w0}
+        weekStart0={weekStart0}
+      />
+
+      {(advice.length > 0 || missedMsgs.length > 0) && (
+        <CoachAdvice advice={advice} missedMsgs={missedMsgs} />
+      )}
 
       {/* OBJECTIFS DE LA SEMAINE */}
       <CoachWeeklyGoals onClaimWeekly={onClaimWeekly} weeklyGoals={weeklyGoals} />

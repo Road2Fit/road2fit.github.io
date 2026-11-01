@@ -86,7 +86,7 @@ describe('bilan du coach en mode optimisé', () => {
     const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
     open.push(h);
     await advance(h, 400);
-    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => /^🧠\s*Coach$/.test(b.textContent.trim())));
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await advance(h, 1000);
     await clickText(h, 'Réglages et détails du coach');
     expect(byTest(h, 'muscle-map')).toBeTruthy();

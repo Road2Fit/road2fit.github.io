@@ -10,11 +10,11 @@ export function CoachSources({ setShowSources, showSources }) {
       </button>
       {showSources && (
         <div className="space-y-2.5">
-          <p className="text-[0.75rem] text-slate-400">
+          <p className="text-xs text-slate-400">
             ✔ = source consultée en ligne pour ce coach ; ◐ = référence réelle dont j’ai vérifié le titre, mais dont le chiffre cité vient de ma mémoire et que tu peux vérifier. Les études portent sur des groupes, pas sur toi en particulier.
           </p>
           {COACH_SOURCES.map((s, i) => (
-            <div key={i} className="text-[0.75rem] bg-slate-950 border border-slate-800 rounded-xl p-2.5">
+            <div key={i} className="text-xs bg-slate-950 border border-slate-800 rounded-xl p-2.5">
               <p className="text-slate-200"><b>{s.ok ? '✔' : '◐'}</b> {s.text}</p>
               <p className="text-slate-400 mt-0.5">→ {s.use}</p>
             </div>

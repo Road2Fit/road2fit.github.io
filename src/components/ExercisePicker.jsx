@@ -47,7 +47,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={`px-2.5 py-1 rounded-full text-[0.75rem] font-bold border ${
+            className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
               filter === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'
             }`}
           >
@@ -55,7 +55,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
           </button>
         ))}
       </div>
-      <div className="text-[0.75rem] text-slate-500">{results.length} exercice(s)</div>
+      <div className="text-xs text-slate-500">{results.length} exercice(s)</div>
       <div className="max-h-56 overflow-y-auto space-y-1 pr-1 border border-slate-800 rounded-xl p-1.5 bg-slate-950">
         {results.map(c => (
           <button
@@ -68,7 +68,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
             }`}
           >
             <span className="font-semibold truncate">{c.icon} {c.name}</span>
-            <span className="shrink-0 text-[0.7rem] font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{compat && !compat(c) ? `Autre unité : ${unitLabel(c)}` : c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
+            <span className="shrink-0 text-xs font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{compat && !compat(c) ? `Autre unité : ${unitLabel(c)}` : c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
           </button>
         ))}
         {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}

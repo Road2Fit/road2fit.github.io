@@ -1,4 +1,4 @@
-// « + Activité annexe » : liste d'activités, champs adaptés (durée seule / distance / dénivelé pour course et marche).
+// « Activité (course, sport…) » : liste d'activités, champs adaptés (durée seule / distance / dénivelé pour course et marche).
 import { afterEach, describe, expect, it } from 'vitest';
 import { clickText, launch, pageText, setInput } from './harness';
 
@@ -13,7 +13,7 @@ describe('activité annexe', () => {
   it('le bouton s’appelle « Activité annexe » et la fenêtre propose les groupes d’activités', async () => {
     const h = await launch();
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     expect(modal(h).textContent).toContain('Ajouter une activité annexe');
     const groupes = [...modal(h).querySelectorAll('optgroup')].map(g => g.label);
     for (const g of ['Course & marche', 'Cardio salle & cours', 'Sports collectifs', 'Sports de raquette', 'Plein air', 'Eau & glisse']) expect(groupes).toContain(g);
@@ -24,7 +24,7 @@ describe('activité annexe', () => {
   it('football : durée seule, aucun dénivelé ni distance ; l’entrée est enregistrée avec ses calories', async () => {
     const h = await launch({ empty: true });
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     await choisir(h, 'fp_football');
     const t = modal(h).textContent;
     expect(t).toContain('Durée (min)');
@@ -47,7 +47,7 @@ describe('activité annexe', () => {
   it('vélo de route et VTT : distance, vitesse et dénivelé ; natation et vélo d’appartement : pas de dénivelé', async () => {
     const h = await launch({ empty: true });
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     await choisir(h, 'fp_road_bike');
     let t = modal(h).textContent;
     expect(t).toContain('Distance (km)');
@@ -74,7 +74,7 @@ describe('activité annexe', () => {
   it('marche inclinée (tapis, en minutes) : la distance et la pente restent saisissables et les calories sont réalistes', async () => {
     const h = await launch({ empty: true });
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     await choisir(h, 'incline_walk');
     const t = modal(h).textContent;
     expect(t).toContain('Distance (km)');
@@ -89,7 +89,7 @@ describe('activité annexe', () => {
   it('la recherche filtre la liste d’activités', async () => {
     const h = await launch({ empty: true });
     open.push(h);
-    await clickText(h, '+ Activité annexe');
+    await clickText(h, 'Activité (course, sport…)');
     await setInput(h, modal(h).querySelector('input[type="search"]'), 'volley');
     const noms = [...modal(h).querySelectorAll('option')].map(o => o.textContent);
     expect(noms.some(n => n.includes('Beach-volley'))).toBe(true);

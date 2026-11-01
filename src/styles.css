@@ -9,6 +9,13 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
 }
+/* Au doigt : boutons d'au moins 40 px de haut (tap-free = exceptions, comme les segments de progression) */
+@media (pointer: coarse) {
+  button:not(.tap-free) { min-height: 40px; }
+}
+summary { cursor: pointer; min-height: 32px; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: rgb(var(--pink-500)); border-radius: 9999px; }

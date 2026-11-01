@@ -68,7 +68,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
           </div>
         </div>
       )}
-      {running && next && <span className="px-3 py-1 rounded-full bg-slate-900/95 border border-emerald-400/50 text-[0.75rem] font-bold text-emerald-100 shadow-lg max-w-[16rem] truncate">{next}</span>}
+      {running && next && <span className="px-3 py-1 rounded-full bg-slate-900/95 border border-emerald-400/50 text-xs font-bold text-emerald-100 shadow-lg max-w-[16rem] truncate">{next}</span>}
       <button
         onClick={() => setOpen(o => !o)}
         title="Minuteur de repos"

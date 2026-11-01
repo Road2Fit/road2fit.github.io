@@ -20,7 +20,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
         </div>
 
         <div className="space-y-2">
-          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Pages</p>
+          <p className="text-xs font-black uppercase tracking-wider text-pink-300">Pages</p>
           {PLUS_TABS.map(t => (
             <button key={t.id} onClick={close(() => onGoTab(t.id))} className={`${row} ${activeTab === t.id ? 'border-pink-500/60' : ''}`}>
               <span className="text-lg">{t.icon}</span>
@@ -30,7 +30,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
         </div>
 
         <div className="space-y-2">
-          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Progression</p>
+          <p className="text-xs font-black uppercase tracking-wider text-pink-300">Progression</p>
           <button onClick={close(onOpenRewards)} className={row}>
             <span className="text-lg">🎁</span>
             <span>Récompenses</span>
@@ -43,8 +43,9 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           )}
         </div>
 
-        <div className="space-y-2">
-          <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Réglages</p>
+        <details className="space-y-2" data-testid="more-settings">
+          <summary className="text-sm font-black text-slate-200 py-2">Réglages et données</summary>
+          <div className="space-y-2 pt-1">
           <button onClick={() => setGameState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))} className={row}>
             <span className="text-lg">{gameState.soundEnabled ? '🔊' : '🔇'}</span>
             <span>Sons : {gameState.soundEnabled ? 'activés' : 'coupés'}</span>
@@ -53,7 +54,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
             <span className="text-lg">🧬</span>
             <span>
               Suivi des muscles : {gameState.muscleMode === 'optimized' ? 'optimisé (14 muscles)' : 'simplifié (5 grands groupes)'}
-              <span className="block text-[0.7rem] font-semibold text-slate-400">{gameState.muscleMode === 'optimized' ? 'Biceps, triceps, avant-bras, quadriceps, ischios, fessiers… Touche pour revenir au mode simplifié.' : 'Touche pour passer en mode optimisé : le coach suit chaque muscle séparément.'}</span>
+              <span className="block text-xs font-semibold text-slate-400">{gameState.muscleMode === 'optimized' ? 'Biceps, triceps, avant-bras, quadriceps, ischios, fessiers… Touche pour revenir au mode simplifié.' : 'Touche pour passer en mode optimisé : le coach suit chaque muscle séparément.'}</span>
             </span>
           </button>
           <button onClick={toggleBigText} className={row}>
@@ -76,20 +77,20 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
             <span className="text-lg">📥</span>
             <span>Importer une sauvegarde</span>
           </button>
-        </div>
-
-        <div className="pt-1 border-t border-slate-800 space-y-2">
+          </div>
+        <div className="pt-1 mt-2 border-t border-slate-800 space-y-2">
           {safety && (
             <button onClick={close(onRestore)} className={row}>
               <span className="text-lg">↩️</span>
-              <span>Retrouver mes données {safety.reason} <span className="block text-[0.7rem] font-semibold text-slate-400">copie du {new Date(safety.savedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span></span>
+              <span>Retrouver mes données {safety.reason} <span className="block text-xs font-semibold text-slate-400">copie du {new Date(safety.savedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span></span>
             </button>
           )}
           <button onClick={close(onReset)} className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-rose-950/30 border border-rose-900/60 text-left text-sm font-bold text-rose-200" title="Réinitialiser l'aventure à zéro">
             <span className="text-lg">♻️</span>
-            <span>Réinitialiser l’aventure</span>
+            <span>Tout réinitialiser</span>
           </button>
         </div>
+        </details>
       </div>
     </div>
   );

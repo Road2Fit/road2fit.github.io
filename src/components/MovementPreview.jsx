@@ -17,7 +17,7 @@ function Bullets({ title, items, tone = 'text-slate-300', active = -1 }) {
   if (!items || !items.length) return null;
   return (
     <section className="space-y-1">
-      <h4 className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">{title}</h4>
+      <h4 className="text-xs font-black uppercase tracking-wider text-pink-300">{title}</h4>
       <ul className={`space-y-1 text-xs ${tone} list-disc pl-4`}>
         {items.map((t, i) => <li key={i} className={i === active ? 'text-amber-200 font-bold' : ''}>{t}</li>)}
       </ul>
@@ -118,7 +118,7 @@ export function MovementPreview({ initial = null }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-black text-white">🎬 {mv ? mv.name : target.name || 'Exercice'}</h3>
-            {mv && <p className="text-[0.75rem] text-slate-400">{mv.category}{mv.equip ? ` · ${mv.equip}` : ''}</p>}
+            {mv && <p className="text-xs text-slate-400">{mv.category}{mv.equip ? ` · ${mv.equip}` : ''}</p>}
           </div>
           <button type="button" onClick={close} aria-label="Fermer" className="shrink-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
         </div>
@@ -145,7 +145,7 @@ export function MovementPreview({ initial = null }) {
                 {[['Départ', 0], ['Milieu', 0.5], ['Fin', 1]].map(([t, v]) => (
                   <div key={t} className="rounded-lg overflow-hidden border border-slate-800">
                     <Figure scene={scene} pose={poseAt(scene.keys, v)} muscleText={info ? info.m : ''} showMuscles={showMuscles} />
-                    <p className="text-center text-[0.7rem] font-bold text-slate-400 py-0.5">{t}</p>
+                    <p className="text-center text-xs font-bold text-slate-400 py-0.5">{t}</p>
                   </div>
                 ))}
               </div>
@@ -153,9 +153,9 @@ export function MovementPreview({ initial = null }) {
             {errInfo && <p className="text-xs text-rose-200 bg-rose-950/40 border border-rose-500/40 rounded-lg p-2" data-testid="mistake-text">❌ {errInfo.text}</p>}
             {canMistake && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Erreur fréquente">
-                <button type="button" onClick={() => setMistake(null)} aria-pressed={!err} className={`px-2 py-1.5 rounded-lg text-[0.75rem] font-bold border ${!err ? 'bg-emerald-700 border-emerald-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>✅ Bonne exécution</button>
+                <button type="button" onClick={() => setMistake(null)} aria-pressed={!err} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${!err ? 'bg-emerald-700 border-emerald-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>✅ Bonne exécution</button>
                 {MISTAKES.map(m => (
-                  <button key={m.key} type="button" onClick={() => { setMistake(m.key); setPlaying(true); }} aria-pressed={err === m.key} className={`px-2 py-1.5 rounded-lg text-[0.75rem] font-bold border ${err === m.key ? 'bg-rose-700 border-rose-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>❌ {m.label}</button>
+                  <button key={m.key} type="button" onClick={() => { setMistake(m.key); setPlaying(true); }} aria-pressed={err === m.key} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${err === m.key ? 'bg-rose-700 border-rose-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>❌ {m.label}</button>
                 ))}
               </div>
             )}
@@ -177,15 +177,15 @@ export function MovementPreview({ initial = null }) {
             </div>
             <div className="flex justify-end">
               {flagged[id]
-                ? <span className="text-[0.75rem] font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
-                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-[0.75rem] font-bold text-slate-300">🚩 Cette animation est fausse</button>}
+                ? <span className="text-xs font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
+                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-xs font-bold text-slate-300">🚩 Cette animation est fausse</button>}
             </div>
-            <p className="text-[0.75rem] text-slate-500">En rouge, les muscles qui travaillent : l’intensité suit l’effort. « Trajet » montre le chemin à respecter (le cercle est le départ, la flèche le sens de l’effort) et un fantôme pâle de la position visée. Fais glisser la barre pour voir chaque position.</p>
+            <p className="text-xs text-slate-500">En rouge, les muscles qui travaillent : l’intensité suit l’effort. « Trajet » montre le chemin à respecter (le cercle est le départ, la flèche le sens de l’effort) et un fantôme pâle de la position visée. Fais glisser la barre pour voir chaque position.</p>
 
             {info ? (
               <div className="space-y-3 pt-1">
                 <section className="space-y-1">
-                  <h4 className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">Muscles travaillés</h4>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-pink-300">Muscles travaillés</h4>
                   <p className="text-xs text-slate-300">{info.m}</p>
                 </section>
                 <Bullets title="Installation et matériel" items={[...(info.s || []), ...mv.equipTips]} />
@@ -203,7 +203,7 @@ export function MovementPreview({ initial = null }) {
         )}
 
         <div className="pt-1">
-          <label className="block text-[0.75rem] font-bold text-slate-400 mb-1" htmlFor="mv-select">Voir un autre exercice</label>
+          <label className="block text-xs font-bold text-slate-400 mb-1" htmlFor="mv-select">Voir un autre exercice</label>
           <select id="mv-select" value={id || ''} onChange={e => { setId(e.target.value || null); setPhase(0); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
             <option value="">Choisir…</option>
             {LIST.map(x => <option key={x.id} value={x.id}>{x.category} · {x.name}</option>)}

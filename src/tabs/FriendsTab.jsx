@@ -141,7 +141,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
           {s.sport && <span className={chip}>🏅 {cleanText(s.sport)}</span>}
           <span className={chip}>{(s.exercises || []).length} exercice(s)</span>
         </div>
-        <p className="text-[0.7rem] text-slate-500">Profil mis à jour le {new Date(friend.updated_at).toLocaleDateString('fr-FR')}.</p>
+        <p className="text-xs text-slate-500">Profil mis à jour le {new Date(friend.updated_at).toLocaleDateString('fr-FR')}.</p>
       </section>
 
       <section className={card}>
@@ -180,7 +180,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
         {Object.keys(byMuscle).length === 0 && <p className="text-sm text-slate-400">Aucun exercice pour l’instant.</p>}
         {Object.entries(byMuscle).map(([muscle, list]) => (
           <div key={muscle} className="space-y-1">
-            <p className="text-[0.75rem] font-black uppercase tracking-wider text-pink-300">{cleanText(muscle)}</p>
+            <p className="text-xs font-black uppercase tracking-wider text-pink-300">{cleanText(muscle)}</p>
             <div className="flex flex-wrap gap-1.5">{list.map((x, i) => <span key={i} className={chip}>{x.icon} {cleanText(x.name)} · niv. {x.level}</span>)}</div>
           </div>
         ))}

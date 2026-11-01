@@ -30,7 +30,7 @@ export function AccountModal({ sync, recovery, heroName = '', onRenameHero, onCl
         </div>
         {onRenameHero && (
           <form onSubmit={save} className="space-y-1.5 border-b border-slate-800 pb-4" data-testid="hero-name-form">
-            <label htmlFor="hero-name" className="block text-[0.75rem] font-bold text-slate-400">Mon prénom ou pseudo</label>
+            <label htmlFor="hero-name" className="block text-xs font-bold text-slate-400">Mon prénom ou pseudo</label>
             <div className="flex gap-2">
               <input
                 id="hero-name"
@@ -44,7 +44,7 @@ export function AccountModal({ sync, recovery, heroName = '', onRenameHero, onCl
               />
               <button type="submit" disabled={unchanged} data-testid="hero-name-save" className="px-4 py-2.5 rounded-xl text-sm font-black bg-sky-600 text-white disabled:bg-slate-800 disabled:text-slate-600">Enregistrer</button>
             </div>
-            <p className="text-[0.7rem] text-slate-500" data-testid="hero-name-hint">{saved ? '✓ Enregistré : ce nom s’affiche en haut de l’appli et chez tes amis.' : 'Ce nom s’affiche en haut de l’appli et chez les amis qui ont ton code.'}</p>
+            <p className="text-xs text-slate-500" data-testid="hero-name-hint">{saved ? '✓ Enregistré : ce nom s’affiche en haut de l’appli et chez tes amis.' : 'Ce nom s’affiche en haut de l’appli et chez les amis qui ont ton code.'}</p>
           </form>
         )}
         <AccountForm sync={sync} recovery={recovery} onDone={onClose} />
