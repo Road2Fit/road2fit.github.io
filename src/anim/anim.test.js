@@ -159,3 +159,69 @@ describe('respiration : on expire pendant l’effort', () => {
     expect(tempoU(0.18, 'pingpong', 0)).toBeCloseTo(0.5, 5);
   });
 });
+
+// Contrôles d'anatomie et de cohérence, sur toutes les vues (ajoutés après la revue critique du 01/11/2026)
+describe('animations réalistes', () => {
+  const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
+  const v = (a, b) => [b[0] - a[0], b[1] - a[1]];
+  const FRAMES = 12;
+  const framesOf = (s, solve) => Array.from({ length: FRAMES + 1 }, (_, i) => solve(poseAt(s.keys, i / FRAMES)));
+  // Tirage menton : le coude passe au-dessus de la main par rotation de l'épaule, ce n'est pas un coude à l'envers
+  const ELBOW_OK = new Set(['fp_upright_row']);
+
+  it('de profil : genoux et coudes dans le bon sens, rien sous le sol', () => {
+    const errs = [];
+    for (const e of ALL_SCENES) {
+      for (const s of [e.scene, ...e.alts.map(a => a.scene)]) {
+        if (s.view) continue;
+        const sign = s.supine ? -1 : 1;
+        framesOf(s, solvePose).forEach(j => {
+          if (cross(v(j.hip, j.knee), v(j.knee, j.ankle)) * sign < -60) errs.push(e.id + ' : genou à l’envers');
+          if (!ELBOW_OK.has(e.id) && cross(v(j.shoulder, j.elbow), v(j.elbow, j.wrist)) * sign > 150) errs.push(e.id + ' : coude à l’envers');
+          for (const k of ['hip', 'shoulder', 'knee', 'ankle', 'toe', 'wrist']) if (j[k][1] > 203) errs.push(e.id + ' : ' + k + ' sous le sol');
+        });
+      }
+    }
+    expect([...new Set(errs)]).toEqual([]);
+  });
+
+  it('de face : pas de coude en travers du buste quand la main est plus basse que l’épaule, mains non croisées', () => {
+    const errs = [];
+    for (const e of ALL_SCENES) {
+      for (const s of [e.scene, ...e.alts.map(a => a.scene)]) {
+        if (s.view !== 'front') continue;
+        framesOf(s, solveFront).forEach(f => {
+          for (const [sd, side] of [[f.R, 1], [f.L, -1]]) {
+            if (!ELBOW_OK.has(e.id) && sd.wrist[1] > sd.shoulder[1] + 2 && (sd.elbow[0] - (sd.shoulder[0] + sd.wrist[0]) / 2) * side < -1) errs.push(e.id + ' : coude vers l’intérieur');
+          }
+        });
+      }
+    }
+    expect([...new Set(errs)]).toEqual([]);
+  });
+
+  it('les vues d’un même exercice bougent dans le même sens', () => {
+    const errs = [];
+    const track = s => { const fr = framesOf(s, s.view === 'front' ? solveFront : solvePose); const J = j => (s.view === 'front' ? j.R : j); return ['wrist', 'shoulder'].map(k => J(fr[FRAMES])[k][1] - J(fr[0])[k][1]); };
+    for (const e of ALL_SCENES) {
+      if (e.scene.view === 'top') continue;
+      const m = track(e.scene);
+      for (const a of e.alts) {
+        if (a.scene.view === 'top') continue;
+        track(a.scene).forEach((d, i) => { if (Math.abs(d) > 8 && Math.abs(m[i]) > 8 && Math.sign(d) !== Math.sign(m[i])) errs.push(e.id + '#' + a.key); });
+      }
+    }
+    expect([...new Set(errs)]).toEqual([]);
+  });
+
+  it('roue abdominale : les genoux ne glissent pas ; pieds au sol immobiles', () => {
+    const errs = [];
+    for (const e of ALL_SCENES) {
+      if (e.scene.view) continue;
+      const fr = framesOf(e.scene, solvePose);
+      if (fr.every(j => j.ankle[1] > 186)) { const xs = fr.map(j => j.ankle[0]); if (Math.max(...xs) - Math.min(...xs) > 7) errs.push(e.id); }
+      if (fr.every(j => j.knee[1] > 186)) { const xs = fr.map(j => j.knee[0]); if (Math.max(...xs) - Math.min(...xs) > 7) errs.push(e.id + ' (genou)'); }
+    }
+    expect(errs).toEqual([]);
+  });
+});

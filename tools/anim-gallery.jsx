@@ -19,8 +19,9 @@ function App() {
       {list.map(s => (
         <div key={s.id} className="border border-slate-700 rounded p-1">
           <p className="text-[9px] font-bold truncate">{s.id} · {s.name}</p>
-          <div className="grid grid-cols-2 gap-1">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
             <Figure scene={s.scene} pose={poseAt(s.scene.keys, 0)} muscleText={(movementFor(s.id.split('#')[0]) || {info: {}}).info?.m || ''} />
+            <Figure scene={s.scene} pose={poseAt(s.scene.keys, 0.5)} muscleText={(movementFor(s.id.split('#')[0]) || {info: {}}).info?.m || ''} />
             <Figure scene={s.scene} pose={poseAt(s.scene.keys, 1)} muscleText={(movementFor(s.id.split('#')[0]) || {info: {}}).info?.m || ''} />
           </div>
         </div>

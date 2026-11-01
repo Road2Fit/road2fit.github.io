@@ -17,16 +17,14 @@ export const shoulderXFor = (ankle, shoulderY, chord = 134) => ankle[0] + Math.s
 
 // ---------------- Tractions (pronation / supination / assistée / suspension) ----------------
 export function pullUp({ grip = 'pro', assisted = false, hang = false }) {
-  const barY = 8;
+  // barre assez haute pour que les pieds ne touchent jamais le sol ; en montant, les épaules reculent et le buste s'incline pour que la tête passe la barre
+  const barY = -14;
   const hx = 152;
-  const mk = (shY, bend) => {
-    const sh = [hx - 4, shY];
-    const hip = hipFor(sh, -100);
-    return P(hip, -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60 });
-  };
-  const bend = grip === 'sup' ? 1 : -1;
-  const hangPose = mk(barY + 54, bend);
-  const topPose = mk(barY + 20, bend);
+  const mk = (sh, torso) => P(hipFor(sh, torso), torso, { hand: [hx, barY], handBend: 1, leg: [92, 112], toe: 60 });
+  void grip;
+  const bend = 1;
+  const hangPose = mk([hx - 2, barY + 53], -92);
+  const topPose = mk([hx - 22, barY + 12], -108);
   const eq = [line([hx - 40, barY], [hx + 40, barY], 4), line([hx - 40, barY], [hx - 40, G], 4), line([hx + 40, barY], [hx + 40, G], 4)];
   const fol = [];
   if (assisted) {
@@ -34,8 +32,8 @@ export function pullUp({ grip = 'pro', assisted = false, hang = false }) {
     fol.push({ k: 'padAt', at: 'knee', dx: 2, dy: 8, w: 24, h: 6 }, { k: 'cable', from: [245, 40], at: 'knee' });
   }
   if (hang) {
-    const slight = P(hangPose.hip, -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60, lift: 0 });
-    const active = P([hangPose.hip[0], hangPose.hip[1] - 4], -100, { hand: [hx, barY], handBend: bend, leg: [92, 106], toe: 60, lift: 4 });
+    const slight = P(hangPose.hip, -92, { hand: [hx, barY], handBend: bend, leg: [92, 112], toe: 60, lift: 0 });
+    const active = P([hangPose.hip[0], hangPose.hip[1] - 4], -92, { hand: [hx, barY], handBend: bend, leg: [92, 112], toe: 60, lift: 4 });
     return { keys: [slight, active], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: fol, hold: true };
   }
   return { keys: [hangPose, topPose], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: fol };
@@ -72,10 +70,11 @@ export function pulldown({ close = false, hammer = false, machine = false }) {
 
 // ---------------- Rowings ----------------
 export function barbellRow({ tbar = false }) {
-  const hip = [120, 112];
+  // fesses en arrière : la barre reste au-dessus du milieu du pied
+  const hip = [112, 122];
   const torso = -32;
   const sh = shoulderOf(hip, torso);
-  const c = { torso, foot: [122, ANKLE_Y], footBend: -1, handBend: 1 };
+  const c = { torso, foot: [146, ANKLE_Y], footBend: -1, handBend: 1 };
   const hang = P(hip, torso, { ...c, hand: pt(sh, 3, 53) });
   const pull = P(hip, torso, { ...c, hand: pt(sh, -4, 30) });
   const eq = tbar ? [line([150, G - 12], [212, G - 12], 3), rect(196, G - 14, 18, 14, '#475569', 2)] : [];
@@ -125,7 +124,7 @@ export function invertedRow() {
   const barY = 110;
   const ankle = [78, 190];
   const barX = shoulderXFor(ankle, 160) - 2;
-  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [barX, barY], handBend: 1 });
+  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [barX, barY], handBend: -1, toe: -50 });
   return {
     supine: true, keys: [mk(160), mk(128)], trace: 'shoulder', loop: 'pingpong',
     equip: [line([barX - 20, barY], [barX + 20, barY], 4), line([barX - 20, barY], [barX - 20, G], 4), line([barX + 20, barY], [barX + 20, G], 4)],
@@ -150,14 +149,25 @@ export function backExtension({ machine = false, floor = false }) {
       follow: [{ k: 'padAt', at: 'shoulder', dx: -14, dy: -6, w: 8, h: 26 }],
     };
   }
-  // banc à 45° : hanches sur le coussin, chevilles bloquées
-  const hip = [150, 120];
-  const leg = 210;
+  // banc à 45° : pieds EN BAS sur la plateforme, hanches en haut sur le coussin, face vers le bas ; le buste part vers le sol et remonte dans l'alignement des jambes
+  const hip = [140, 96];
+  const leg = 135;
   const ankle = [hip[0] + 84 * Math.cos(rad(leg)), hip[1] + 84 * Math.sin(rad(leg))];
-  const mk = torso => P(hip, torso, { leg: [leg, leg], toe: 20, hand: pt(shoulderOf(hip, torso), 10, 14), handBend: 1 });
+  const n = [Math.SQRT1_2, Math.SQRT1_2]; // côté du ventre
+  const mk = torso => {
+    const sh = shoulderOf(hip, torso);
+    const a = rad(torso);
+    return P(hip, torso, { leg: [leg, leg], toe: 45, hand: [sh[0] - Math.cos(a) * 14 - Math.sin(a) * 9, sh[1] - Math.sin(a) * 14 + Math.cos(a) * 9], handBend: 1 });
+  };
+  const padA = [hip[0] - 34 + n[0] * 11, hip[1] + 34 + n[1] * 11];
+  const padB = [hip[0] - 2 + n[0] * 11, hip[1] + 2 + n[1] * 11];
   return {
-    keys: [mk(80), mk(30)], trace: 'shoulder', loop: 'pingpong',
-    equip: [pad([ankle[0] - 6, ankle[1] + 10], [hip[0] + 6, hip[1] + 14], 9), line([hip[0] + 4, hip[1] + 20], [hip[0] + 4, G], 4), line([ankle[0] + 6, ankle[1] + 16], [ankle[0] + 6, G], 4), line([ankle[0] - 4, ankle[1] - 6], [ankle[0] + 14, ankle[1] - 6], 4, '#94a3b8')],
+    keys: [mk(78), mk(-45)], trace: 'shoulder', loop: 'pingpong',
+    equip: [
+      pad(padA, padB, 10), line(padA, [padA[0], G], 4),
+      { k: 'circle', c: [ankle[0] - n[0] * 9, ankle[1] - n[1] * 9], r: 5, fill: '#7b8492', stroke: '#6b7280', w: 1 }, // boudin derrière les chevilles
+      line([ankle[0] + 2, ankle[1] + 14], [ankle[0] + 24, ankle[1] + 14], 5), line([ankle[0] + 8, ankle[1] + 14], [ankle[0] + 8, G], 4), // plateforme des pieds
+    ],
     follow: [],
   };
 }
@@ -167,9 +177,9 @@ export function shrugs({ bar = false }) {
   const c = 160;
   const mk = lift => ({ c, hipY: 112, lift, hand: [c + 24, 112 - 52 - lift + 4 + 54], handBend: 1 });
   return {
-    view: 'front', box: [70, 0, 180, 137], keys: [mk(0), mk(18)], trace: 'shoulder', loop: 'pingpong',
+    view: 'front', keys: [mk(0), mk(18)], trace: 'shoulder', loop: 'pingpong',
     equip: [],
-    follow: bar ? [{ k: 'db', at: 'wrist', r: 6 }] : [{ k: 'db', at: 'wrist', r: 8 }],
+    follow: bar ? [{ k: 'hbar', at: 'wrist', ext: 16, r: 11 }] : [{ k: 'db', at: 'wrist', r: 8 }],
   };
 }
 void db; void flatBench; void line;

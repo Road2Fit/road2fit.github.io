@@ -13,8 +13,8 @@ const seatBase = (hip, backLen = 66) => [
 // tool : barbell | db | hammer | cable | incline | concentration | preacher | preacherMachine | machine
 export function curl({ tool = 'barbell' }) {
   if (tool === 'incline') {
-    const hip = [190, 144];
-    const c = { torso: 240, foot: [226, ANKLE_Y], footBend: -1 };
+    const hip = [200, 140]; // assis CONTRE le dossier, pas dedans
+    const c = { torso: 240, foot: [240, ANKLE_Y], footBend: -1 };
     return {
       keys: [P(hip, 240, { ...c, arm: [92, 92] }), P(hip, 240, { ...c, arm: [88, -50] })], trace: 'wrist', loop: 'pingpong',
       equip: inclineBench([194, 152], 60, 80, 34, 152), follow: [db('wrist', 8)],
@@ -33,7 +33,7 @@ export function curl({ tool = 'barbell' }) {
     const torso = -84;
     const sh = shoulderOf(hip, torso);
     const c = { torso, foot: [186, ANKLE_Y], footBend: -1 };
-    const keys = [P(hip, torso, { ...c, arm: [58, 62] }), P(hip, torso, { ...c, arm: [58, -125] })];
+    const keys = [P(hip, torso, { ...c, arm: [58, 62] }), P(hip, torso, { ...c, arm: [58, -82] })];
     const eq = [
       pad([hip[0] - 14, hip[1] + 6], [hip[0] + 30, hip[1] + 6], 10), line([hip[0] + 2, hip[1] + 12], [hip[0] + 2, G - 4], 4, '#334155'), rect(hip[0] - 30, G - 6, 130, 6, '#334155', 2),
       pad([sh[0] + 6, sh[1] + 8], [sh[0] + 50, sh[1] + 54], 10), line([sh[0] + 30, sh[1] + 52], [sh[0] + 30, G - 4], 5, '#334155'),
@@ -48,7 +48,7 @@ export function curl({ tool = 'barbell' }) {
     const sh = shoulderOf(hip, torso);
     const c = { torso, foot: [208, ANKLE_Y], footBend: -1 };
     return {
-      keys: [P(hip, torso, { ...c, arm: [62, 70] }), P(hip, torso, { ...c, arm: [62, -125] })], trace: 'wrist', loop: 'pingpong',
+      keys: [P(hip, torso, { ...c, arm: [62, 70] }), P(hip, torso, { ...c, arm: [62, -78] })], trace: 'wrist', loop: 'pingpong',
       equip: [...seatBase(hip, 66), pad([sh[0] + 6, sh[1] + 8], [sh[0] + 40, sh[1] + 42], 10), plates(100, 40, 18, 100, 3)],
       follow: [lever([sh[0] + 44, sh[1] + 40], 'wrist', 5), handle('wrist')],
     };
@@ -85,7 +85,7 @@ export function pushdown({ rope = true }) {
 
 export function skullCrusher() {
   const hip = [192, 139];
-  const c = { torso: 180, foot: [226, ANKLE_Y], footBend: -1 };
+  const c = { torso: 180, neck: 14, foot: [226, ANKLE_Y], footBend: -1 };
   return {
     keys: [P(hip, 180, { ...c, arm: [-84, -90] }), P(hip, 180, { ...c, arm: [-84, 160] })], trace: 'wrist', loop: 'pingpong',
     equip: flatBench(84, 214), follow: [plate('wrist', 9)],
@@ -118,7 +118,7 @@ export function tricepsMachine() {
   const sh = shoulderOf(hip, torso);
   const c = { torso, foot: [210, ANKLE_Y], footBend: -1 };
   return {
-    keys: [P(hip, torso, { ...c, arm: [74, -120] }), P(hip, torso, { ...c, arm: [74, 60] })], trace: 'wrist', loop: 'pingpong',
+    keys: [P(hip, torso, { ...c, arm: [74, -60] }), P(hip, torso, { ...c, arm: [74, 60] })], trace: 'wrist', loop: 'pingpong',
     equip: [...seatBase(hip, 66), pad([sh[0] + 6, sh[1] + 12], [sh[0] + 36, sh[1] + 36], 10), plates(96, 40, 18, 100, 4)],
     follow: [lever([sh[0] + 14, sh[1] + 46], 'wrist', 5), handle('wrist')],
   };

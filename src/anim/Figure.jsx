@@ -50,6 +50,7 @@ function Follow({ e, j, i }) {
     case 'lever': return <g key={i}><line x1={e.pivot[0]} y1={e.pivot[1]} x2={p[0]} y2={p[1]} stroke={C.pad} strokeWidth={e.w || 7} strokeLinecap="round" /><circle cx={e.pivot[0]} cy={e.pivot[1]} r="4" fill={C.frameDark} stroke={C.plate} strokeWidth="1.5" /></g>;
     case 'seg': { const a = j[e.a]; const b = j[e.b]; return <line key={i} x1={a[0] + (e.dx || 0)} y1={a[1] + (e.dy || 0)} x2={b[0] + (e.dx || 0)} y2={b[1] + (e.dy || 0)} stroke={e.c || C.pad} strokeWidth={e.w || 9} strokeLinecap="round" />; }
     case 'padAt': return <rect key={i} x={p[0] + (e.dx || 0)} y={p[1] + (e.dy || 0)} width={e.w || 20} height={e.h || 6} rx="3" fill={C.pad} />;
+    case 'tilt': { const a = (e.ang * Math.PI) / 180; const u = [Math.cos(a) * e.len / 2, Math.sin(a) * e.len / 2]; return <line key={i} x1={p[0] - u[0]} y1={p[1] - u[1]} x2={p[0] + u[0]} y2={p[1] + u[1]} stroke={C.pad} strokeWidth={e.w || 8} strokeLinecap="round" />; }
     case 'bar': return <line key={i} x1={e.a[0]} y1={e.a[1]} x2={e.b[0]} y2={e.b[1]} stroke={C.plate} strokeWidth="3" />;
     default: return null;
   }

@@ -73,6 +73,7 @@ const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 export function lerpPose(a0, b0, t) {
   const [a, b] = unify(a0, b0);
   const out = a.hip ? { hip: lerpPt(a.hip, b.hip, t) } : {};
+  if (a.flat) out.flat = true;
   for (const k of NUM_KEYS) {
     if (a[k] !== undefined || b[k] !== undefined) {
       const zero = ['neck', 'toe', 'bend', 'lift', 'twist', 'flex'].includes(k); // absent de la pose = 0 (sinon un buste penché ne se redresserait jamais)
@@ -159,10 +160,17 @@ export function solveFront(p) {
     if (p.arm && !own.hand) { // angles du bras droit ; la gauche est le miroir (0° = vers l'extérieur, 90° = vers le bas)
       const el = [shoulder[0] + side * Math.cos(rad(p.arm[0])) * SEG.uarm, shoulder[1] + Math.sin(rad(p.arm[0])) * SEG.uarm];
       a = { mid: el, end: [el[0] + side * Math.cos(rad(p.arm[1])) * SEG.farm, el[1] + Math.sin(rad(p.arm[1])) * SEG.farm] };
-    } else a = ik(shoulder, hand, SEG.uarm, SEG.farm, side * (p.handBend === undefined ? 1 : p.handBend));
+    } else {
+      a = ik(shoulder, hand, SEG.uarm, SEG.farm, side * (p.handBend === undefined ? 1 : p.handBend));
+      const line = [(shoulder[0] + a.end[0]) / 2, (shoulder[1] + a.end[1]) / 2];
+      // De face, un bras plié vers l'avant se voit raccourci : le coude reste près de la ligne épaule-main (jamais en travers du buste)
+      if (p.flat) a = { mid: line, end: a.end };
+      else if (a.end[1] > shoulder[1]) a = { mid: [line[0] + Math.max(0, Math.min(10, Math.abs(a.mid[0] - line[0]))) * side, a.mid[1]], end: a.end };
+    }
     const hip = [c + side * HIP_HALF, hy];
     const foot = own.foot ? own.foot : p.foot ? [c + side * (p.foot[0] - c), p.foot[1]] : [hip[0] + side * 2, GROUND - 6];
     let l = ik(hip, foot, SEG.thigh, SEG.shin, side * (p.footBend === undefined ? -1 : p.footBend));
+    if (l.end[1] > hip[1] + 40) { const mx = (hip[0] + l.end[0]) / 2; l = { mid: [mx + Math.min(3, Math.abs(l.mid[0] - mx)) * side, l.mid[1]], end: l.end }; } // jambe presque tendue : pas de genoux arqués
     if (own.knee || p.knee) { // assis : cuisse vers le genou, tibia vertical
       const kn = own.knee ? own.knee : [c + side * (p.knee[0] - c), p.knee[1]];
       l = { mid: kn, end: own.foot || p.foot ? foot : [kn[0], kn[1] + SEG.shin] }; // sans pied donné : tibia vertical

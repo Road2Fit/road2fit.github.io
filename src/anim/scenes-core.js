@@ -1,41 +1,43 @@
 import { plank, shoulderXFor } from './scenes-pull';
 import { ANKLE_Y, G, P, horn, txt, cable, handle, lever, line, pad, plates, pt, pulley, rect, shoulderOf } from './kit';
 
-const FLOOR_HIP = [190, 186];
+const FLOOR_HIP = [190, 191]; // posé au sol (le buste touche le sol, sans flotter)
 
 // ---------------- Crunchs et sit-ups au sol ----------------
 export function crunch({ sitUp = false, decline = false, reverse = false, legRaise = false }) {
   if (reverse) {
-    const mk = (hipY, leg) => P([190, hipY], 180, { leg, arm: [180, 180] });
-    return { keys: [mk(186, [-95, 5]), mk(172, [-112, -30])], trace: 'knee', loop: 'pingpong', equip: [], follow: [] };
+    // les épaules restent au sol : seul le bassin s'enroule
+    const mk = (hipY, torso, leg) => P([190, hipY], torso, { leg, arm: [3, 0] });
+    return { keys: [mk(191, 180, [-95, 5]), mk(176, 163, [-112, -30])], trace: 'knee', loop: 'pingpong', equip: [], follow: [] };
   }
   if (legRaise) {
-    const mk = a => P(FLOOR_HIP, 180, { leg: [a, a], toe: 30, arm: [150, 150] });
+    const mk = a => P(FLOOR_HIP, 180, { leg: [a, a], toe: a - 70, arm: [3, 0] });
     return { keys: [mk(-6), mk(-90)], trace: 'ankle', loop: 'pingpong', equip: [], follow: [] };
   }
   if (decline) {
-    const hip = [196, 126];
-    const mk = torso => P(hip, torso, { leg: [20, 30], hand: pt(shoulderOf(hip, torso), -10, -10), handBend: -1 });
+    // banc décliné : pieds EN HAUT calés sous le boudin, tête EN BAS ; le buste s'enroule depuis le banc
+    const hip = [190, 110];
+    const mk = torso => P(hip, torso, { foot: [238, 126], footBend: -1, toe: -30, hand: pt(shoulderOf(hip, torso), -10, -8), handBend: 1 });
     return {
-      keys: [mk(150), mk(212)], trace: 'shoulder', loop: 'pingpong',
-      equip: [pad([100, 90], [200, 134], 9), line([108, 96], [108, G], 3), line([188, 130], [188, G], 3), line([226, 160], [226, 150], 5, '#94a3b8')],
+      keys: [mk(158), mk(218)], trace: 'shoulder', loop: 'pingpong',
+      equip: [pad([90, 160], [212, 111], 9), line([104, 160], [104, G], 3), line([200, 120], [200, G], 3), line([200, 120], [240, 136], 3), { k: 'circle', c: [244, 136], r: 6, fill: '#7b8492', stroke: '#6b7280', w: 1 }],
       follow: [],
     };
   }
   const mk = torso => {
     const sh = shoulderOf(FLOOR_HIP, torso);
-    return P(FLOOR_HIP, torso, { foot: [222, ANKLE_Y], footBend: -1, hand: pt(sh, -12, -8), handBend: -1, neck: torso > 190 ? -10 : 0 });
+    return P(FLOOR_HIP, torso, { foot: [222, ANKLE_Y], footBend: -1, hand: pt(sh, -12, -8), handBend: 1, neck: torso > 190 ? 12 : 0 });
   };
   return { keys: [mk(180), mk(sitUp ? 264 : 206)], trace: 'shoulder', loop: 'pingpong', equip: [], follow: [] };
 }
 
 // ---------------- Suspension : relevés de jambes / genoux ----------------
 export function hangingRaise({ mode = 'legs' }) {
-  const barY = 8;
+  const barY = -14;
   const hx = 152;
-  const top = [hx - 4, barY + 54];
+  const top = [hx - 2, barY + 53];
   // l'épaule reste sous la barre (bras tendus) : la hanche se déduit du buste
-  const mk = (leg, torso) => P([top[0] - 52 * Math.cos((torso * Math.PI) / 180), top[1] - 52 * Math.sin((torso * Math.PI) / 180)], torso, { hand: [hx, barY], handBend: -1, leg, toe: 40 });
+  const mk = (leg, torso) => P([top[0] - 52 * Math.cos((torso * Math.PI) / 180), top[1] - 52 * Math.sin((torso * Math.PI) / 180)], torso, { hand: [hx, barY], handBend: 1, leg, toe: 40 });
   const eq = [line([hx - 40, barY], [hx + 40, barY], 4), line([hx - 40, barY], [hx - 40, G], 4), line([hx + 40, barY], [hx + 40, G], 4)];
   const hang = mk([96, 96], -100);
   const keys = mode === 'knees' ? [hang, mk([20, 100], -100)] : mode === 'toes' ? [hang, mk([-62, -62], -118)] : [hang, mk([-4, -4], -104)];
@@ -56,13 +58,14 @@ export function captainChair() {
 // ---------------- Roue abdominale ----------------
 export function abWheel() {
   // l'épaule est posée au-dessus de la roue (bras tendus ou presque) ; la hanche et les cuisses se déduisent du buste (genoux au sol)
-  const mk = (sh, torso, wheelX) => {
-    const hip = [sh[0] - 52 * Math.cos((torso * Math.PI) / 180), sh[1] - 52 * Math.sin((torso * Math.PI) / 180)];
-    const th = 180 - (Math.asin(Math.max(-1, Math.min(1, (192 - hip[1]) / 42))) * 180) / Math.PI;
-    return P(hip, torso, { leg: [th, 180], toe: -10, hand: [wheelX, 188], handBend: 1 });
+  // les genoux restent FIXES au sol : la cuisse pivote autour d'eux pendant que la roue part devant
+  const KNEE = [120, 192];
+  const mk = (thigh, torso, wheelX) => {
+    const hip = [KNEE[0] + 42 * Math.cos((thigh * Math.PI) / 180), KNEE[1] + 42 * Math.sin((thigh * Math.PI) / 180)];
+    return P(hip, torso, { leg: [thigh + 180, 180], toe: -10, hand: [wheelX, 188], handBend: 1 });
   };
   return {
-    keys: [mk([166, 136], -28, 168), mk([232, 164], -6, 236)], trace: 'wrist', loop: 'pingpong',
+    keys: [mk(-75, -18, 182), mk(-30, -5, 256)], trace: 'wrist', loop: 'pingpong',
     equip: [rect(60, G - 4, 220, 4, '#334155', 1)], follow: [{ k: 'db', at: 'wrist', r: 8 }],
   };
 }
@@ -157,7 +160,7 @@ export function plankHold({ side = false }) {
 }
 
 export function hollowHold() {
-  const mk = (t, l) => P([176, 187], t, { leg: [l, l], toe: 70, arm: [t - 8, t - 8] });
+  const mk = (t, l) => P([176, 191], t, { leg: [l, l], toe: l - 60, arm: [t - 8, t - 8] });
   return { keys: [mk(206, -16), mk(209, -19)], trace: false, loop: 'pingpong', equip: [], follow: [], hold: true };
 }
 void ANKLE_Y;

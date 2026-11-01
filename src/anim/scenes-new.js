@@ -41,7 +41,7 @@ export function highRow() {
   const sh = shoulderOf(hip, torso);
   const c = { torso, foot: [206, ANKLE_Y], footBend: -1, handBend: 1 };
   return {
-    keys: [P(hip, torso, { ...c, hand: pt(sh, 48, -34) }), P(hip, torso, { ...c, hand: pt(sh, 10, 14) })], trace: 'wrist', loop: 'pingpong',
+    keys: [P(hip, torso, { ...c, hand: pt(sh, 44, -32) }), P(hip, torso, { ...c, hand: pt(sh, 10, 14) })], trace: 'wrist', loop: 'pingpong',
     equip: [...seatSide(hip, 40), pad([sh[0] + 14, sh[1] - 6], [sh[0] + 14, sh[1] + 40], 10, true), ...horn(hip[0] + 62, sh[1] - 76), line([hip[0] + 62, sh[1] - 76], [hip[0] + 62, sh[1] - 80], 2)],
     follow: [lever([hip[0] + 70, sh[1] - 74], 'wrist', 7), handle('wrist')],
   };
@@ -86,7 +86,7 @@ export function standingLegCurl() {
   const sh = shoulderOf(hip, -80);
   const c = { torso: -80, farFoot: [150, ANKLE_Y], hand: pt(sh, 16, 30), handBend: 1 };
   return {
-    keys: [P(hip, -80, { ...c, leg: [92, 92], toe: 70 }), P(hip, -80, { ...c, leg: [92, 172], toe: 70 })], trace: 'ankle', loop: 'pingpong',
+    keys: [P([hip[0], hip[1] - 2], -80, { ...c, leg: [92, 92], toe: 20 }), P([hip[0], hip[1] - 2], -80, { ...c, leg: [92, 172], toe: 110 })], trace: 'ankle', loop: 'pingpong',
     equip: [pad([hip[0] + 8, sh[1] + 6], [hip[0] + 40, sh[1] + 40], 10, true), line([hip[0] + 30, sh[1] + 44], [hip[0] + 30, G], 4, '#334155'), rect(hip[0] - 40, G - 6, 120, 6, '#334155', 2), plates(236, 60, 18, 110, 3)],
     follow: [{ k: 'padAt', at: 'ankle', dx: -10, dy: -14, w: 12, h: 12 }],
   };
@@ -105,7 +105,6 @@ export function beltSquat() {
 // ---------------- Soulevé de terre machine (leviers à plaques) ----------------
 export function deadliftMachine() {
   const top = P([150, 112], -90, { foot: [150, ANKLE_Y], footBend: -1, handRel: [8, 54], handBend: 1 });
-  const sh = shoulderOf([124, 160], -48);
   const bottom = P([124, 160], -48, { foot: [150, ANKLE_Y], footBend: -1, handRel: [4, 52], handBend: 1 });
   return {
     keys: [bottom, top], trace: 'wrist', loop: 'pingpong',
@@ -120,7 +119,7 @@ export function woodchop() {
   const sh = shoulderOf(hip, -90);
   const c = { torso: -90, foot: [150, ANKLE_Y], footBend: -1, handBend: 1 };
   return {
-    keys: [P(hip, -90, { ...c, hand: pt(sh, 34, -44) }), P(hip, -90, { ...c, hand: pt(sh, -14, 52) })], trace: 'wrist', loop: 'pingpong',
+    keys: [P(hip, -90, { torso: -90, foot: c.foot, footBend: -1, arm: [-50, -50] }), P(hip, -90, { torso: -90, foot: c.foot, footBend: -1, arm: [95, 85] })], trace: 'wrist', loop: 'pingpong',
     equip: [line([262, -14], [262, G], 4), pulley([262, -14], 6), plates(268, 10, 18, 140, 3), rect(240, G - 6, 70, 6, '#334155', 2), txt([96, -6], 'tourne le buste en même temps', 8, '#94a3b8')],
     follow: [cable([262, -14], 'wrist'), handle('wrist')],
   };

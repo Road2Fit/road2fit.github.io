@@ -2,7 +2,7 @@
 // Une « famille » de mouvement regroupe plusieurs exercices ; INFO_FAMILY associe chaque exercice du catalogue à sa famille.
 // Repères généraux (NSCA, ACSM) : ce sont des conseils de technique, pas un avis médical. En cas de douleur, on arrête.
 
-const EFFORT = ['Effort : pousse / tire', 'Retour lent et contrôlé (2-3 s)'];
+const EFFORT = ['Pousse la charge', 'Descends en contrôle'];
 
 export const FAMILIES = {
   benchBarbell: {
@@ -820,7 +820,8 @@ export const FAMILIES = {
     s: ['Pose la ceinture sur les hanches et attache-la à la machine, pieds largeur des épaules sur la plateforme.', 'Mains sur les poignées devant toi, ventre gainé. Machine à plaques : charge les disques.'],
     g: ['Descends en poussant les fesses vers l’arrière, jusqu’à cuisses parallèles.', 'Pousse dans les talons pour remonter. La charge tire vers le bas depuis les hanches, pas depuis la colonne.'],
     e: ['Genoux qui rentrent.', 'Décoller les talons.', 'Verrouiller violemment les genoux.'],
-    p: ['Remonte en poussant', 'Descends en contrôle'],
+    p: ['Descends en contrôle', 'Remonte en poussant'],
+    eff: 1,
   },
   deadliftMachine: {
     m: 'Fessiers, ischio-jambiers, quadriceps, dos',

@@ -80,8 +80,8 @@ export function rearFly({ machine = false }) {
     // reverse pec deck : assis face à la machine, bras horizontaux qui s'ouvrent
     const hy = 150;
     const sy = hy - 52;
-    const closed = { c, hipY: hy, hand: [c + 10, sy + 5], handBend: 1, knee: [c + 20, hy + 6] };
-    const open = { c, hipY: hy, hand: [c + 70, sy + 5], handBend: 1, knee: [c + 20, hy + 6] };
+    const closed = { c, hipY: hy, flat: true, hand: [c + 16, sy + 8], knee: [c + 20, hy + 6] };
+    const open = { c, hipY: hy, flat: true, hand: [c + 70, sy + 6], knee: [c + 20, hy + 6] };
     return {
       view: 'front', keys: [closed, open], trace: 'wrist', loop: 'pingpong',
       equip: [pad([c - 30, hy + 10], [c + 30, hy + 10], 10), line([c, hy + 14], [c, G - 4], 4, '#334155'), rect(c - 40, G - 6, 80, 6, '#334155', 2), pad([c - 18, sy + 18], [c + 18, sy + 18], 9, true), plates(40, 60, 18, 100, 3)],

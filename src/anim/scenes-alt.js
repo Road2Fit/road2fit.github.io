@@ -31,7 +31,7 @@ export function lyingFlyFront() {
 // ---------------- Machines de poitrine (de face) ----------------
 export function pecDeckFront() {
   const hy = 150;
-  const mk = x => F(hy, { hand: [C + x, 106], handBend: 1, knee: [C + 22, hy] });
+  const mk = x => F(hy, { flat: true, hand: [C + x, 106], knee: [C + 22, hy] });
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(70), mk(12)],
     equip: [...seat(hy), pad([C - 18, 128], [C + 18, 128], 9, true), plates(40, 40, 18, 100, 3), plates(262, 40, 18, 100, 3)],
@@ -41,7 +41,7 @@ export function pecDeckFront() {
 
 export function chestMachineFront({ hammer = false }) {
   const hy = 150;
-  const mk = (x, y) => F(hy, { hand: [C + x, y], handBend: 1, knee: [C + 22, hy] });
+  const mk = (x, y) => F(hy, { flat: true, hand: [C + x, y], knee: [C + 22, hy] });
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(52, 112), mk(20, 104)],
     equip: [...seat(hy), pad([C - 18, 120], [C + 18, 120], 9, true), txt([C - 56, -6], hammer ? 'bras indépendants (iso-latéral) : trajet convergent' : 'trajet guidé, mains qui se rapprochent', 8, '#94a3b8')],
@@ -61,11 +61,11 @@ export function cableFlyFront() {
 
 // ---------------- Tractions (de dos) ----------------
 export function pullUpBack({ grip = 36, assisted = false, hang = false }) {
-  const mk = (hy, lift = 0) => F(hy, { lift, hand: [C + grip, 8], handBend: 1, knee: [C + 8, hy + 34] });
-  const keys = hang ? [mk(110, 0), mk(106, 6)] : [mk(110), mk(75)];
+  const mk = (hy, lift = 0) => F(hy, { lift, hand: [C + grip, -14], handBend: -1, knee: [C + 8, hy + 40] });
+  const keys = hang ? [mk(86, 0), mk(82, 4)] : [mk(86), mk(46)];
   return {
     view: 'front', back: true, trace: 'shoulder', loop: 'pingpong', keys, hold: hang,
-    equip: [line([C - 56, 8], [C + 56, 8], 4), line([C - 56, 8], [C - 56, G], 4), line([C + 56, 8], [C + 56, G], 4), txt([C - 30, 196], assisted ? 'contrepoids : genoux sur le support' : 'vue de dos', 8, '#94a3b8')],
+    equip: [line([C - 56, -14], [C + 56, -14], 4), line([C - 56, -14], [C - 56, G], 4), line([C + 56, -14], [C + 56, G], 4), ...(assisted ? [txt([C - 44, 196], 'contrepoids : genoux sur le support', 8, '#94a3b8')] : [])],
     follow: [],
   };
 }
@@ -216,14 +216,14 @@ export function multiHipFront() {
 }
 
 // ---------------- Soulevé de terre : vue de face (barre contre les cuisses, genoux alignés sur les pieds) ----------------
-export function deadliftFront({ sumo = false } = {}) {
+export function deadliftFront({ sumo = false, rdl = false } = {}) {
   const kx = C + (sumo ? 46 : 18); // genou : tibias verticaux (les cuisses partent vers la caméra, donc raccourcies)
   const hx = C + (sumo ? 14 : 24);
   const foot = sumo ? { foot: [kx, 194] } : {};
   const bottom = F(134, { bend: 0.8, knee: [kx, 152], hand: [hx, 168], handBend: 1, ...foot });
   const top = F(112, { knee: sumo ? [C + 28, 153] : [kx, 152], hand: [hx, 118], handBend: 1, ...foot });
   return {
-    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [bottom, top],
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: rdl ? [top, F(120, { bend: 0.75, knee: [kx, 152], hand: [hx, 150], handBend: 1 })] : [bottom, top], // roumain : on part d'en haut et on descend moins bas
     equip: [floorRect(sumo ? 150 : 110)],
     follow: [bar('wrist', { ext: 16, r: 15, dy: 0 })],
   };
@@ -234,7 +234,7 @@ export function curlFront({ alternate = false } = {}) {
   const down = [C + 24, 116];
   const up = [C + 33, 74];
   const both = (r, l) => F(112, { hand: r, handL: [2 * C - l[0], l[1]], handBend: 1 });
-  const keys = alternate ? [both(up, down), both(down, up)] : [both(down, down), both(up, up)];
+  const keys = alternate ? [both(down, up), both(up, down)] : [both(down, down), both(up, up)];
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys,
     equip: [floorRect(100)],

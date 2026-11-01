@@ -5,12 +5,12 @@ import { ANKLE_Y, G, P, horn, cable, db, flatBench, handle, inclineBench, lever,
 // ang : inclinaison du banc en degrés (0 plat, 30 incliné, -15 décliné)
 export function benchPress({ tool = 'barbell', ang = 0, closeGrip = false }) {
   const flat = ang === 0;
-  const hip = [192, flat ? 139 : ang > 0 ? 143 : 135];
+  const hip = [192, flat ? 139 : ang > 0 ? 138 : 135];
   const torso = 180 + ang;
   const sh = shoulderOf(hip, torso);
   const start = pt(sh, 4 + ang * 0.1, -17);
   const end = pt(sh, 2 + ang * 0.25, -53);
-  const common = { torso, foot: [226, ANKLE_Y], footBend: -1, handBend: 1 };
+  const common = { torso, neck: 14, foot: [226, ANKLE_Y], footBend: -1, handBend: 1 };
   const keys = [P(hip, torso, { ...common, hand: start }), P(hip, torso, { ...common, hand: end })];
   const bench = flat
     ? flatBench(84, 214)
@@ -70,9 +70,9 @@ export function pushUp({ feetUp = 0, narrow = false }) {
 export function dips({ benchDips = false, machine = false }) {
   if (benchDips) {
     // mains sur un banc derrière soi, jambes tendues devant
-    const mk = (shY, hipY) => P([122, hipY], -90, { foot: [164, ANKLE_Y], footBend: -1, hand: [108, 126], handBend: 1 });
+    const mk = hipY => P([132, hipY], -90, { foot: [176, ANKLE_Y], footBend: -1, hand: [116, 122], handBend: 1 });
     return {
-      keys: [mk(72, 124), mk(98, 150)], trace: 'shoulder', loop: 'pingpong',
+      keys: [mk(122), mk(150)], trace: 'shoulder', loop: 'pingpong',
       equip: [pad([84, 130], [126, 130], 9), line([92, 135], [92, G], 3), line([118, 135], [118, G], 3)], follow: [],
     };
   }
@@ -127,10 +127,10 @@ export function fly({ tool = 'db', ang = 0 }) {
   }
   // haltères allongé (plat ou incliné)
   const flat = ang === 0;
-  const hip = [192, flat ? 139 : 143];
+  const hip = [192, flat ? 139 : 138];
   const torso = 180 + ang;
   const sh = shoulderOf(hip, torso);
-  const c = { torso, foot: [226, ANKLE_Y], footBend: -1, handBend: 1 };
+  const c = { torso, neck: 14, foot: [226, ANKLE_Y], footBend: -1, handBend: 1 };
   const top = P(hip, torso, { ...c, hand: pt(sh, 3, -52) });
   const low = P(hip, torso, { ...c, hand: pt(sh, -6, -10) });
   return {
@@ -145,20 +145,22 @@ export function pullover({ tool = 'db' }) {
   if (tool === 'cable') {
     const hip = [150, 112];
     const c = { foot: [150, ANKLE_Y], footBend: -1, handBend: 1 };
-    const sh = shoulderOf(hip, -70);
-    const up = P(hip, -70, { ...c, torso: -70, hand: [sh[0] + 8, sh[1] - 52] });
-    const down = P(hip, -70, { ...c, torso: -70, hand: [sh[0] + 8, sh[1] + 50] });
+    // bras TENDUS tout le long : l'arc de cercle se fait avec l'épaule, le coude ne bouge pas (poulie devant soi)
+    const up = P(hip, -70, { ...c, torso: -70, arm: [-55, -55], handBend: undefined });
+    const down = P(hip, -70, { ...c, torso: -70, arm: [78, 78], handBend: undefined });
     return {
       keys: [up, down], trace: 'wrist', loop: 'pingpong',
-      equip: [line([160, 6], [160, G], 4), pulley([164, 6], 6), plates(210, 40, 18, 110, 3), rect(190, G - 6, 80, 6, '#334155', 2)],
-      follow: [cable([164, 6], 'wrist'), handle('wrist')],
+      equip: [line([232, 6], [232, G], 4), pulley([232, 6], 6), plates(244, 40, 18, 110, 3), rect(220, G - 6, 60, 6, '#334155', 2)],
+      follow: [cable([232, 6], 'wrist'), handle('wrist')],
     };
   }
   const hip = [196, 139];
   const sh = shoulderOf(hip, 180);
-  const c = { torso: 180, foot: [228, ANKLE_Y], footBend: -1, handBend: 1 };
-  const over = P(hip, 180, { ...c, hand: pt(sh, 2, -52) });
-  const back = P(hip, 180, { ...c, hand: [sh[0] - 56, sh[1] + 12] });
-  return { keys: [back, over], trace: 'wrist', loop: 'pingpong', equip: flatBench(90, 218), follow: [db('wrist', 10)] };
+  // bras presque tendus : arc de cercle de derrière la tête jusqu'au-dessus de la poitrine
+  const c = { torso: 180, neck: 14, foot: [228, ANKLE_Y], footBend: -1 };
+  void sh;
+  const over = P(hip, 180, { ...c, arm: [-88, -82] });
+  const back = P(hip, 180, { ...c, arm: [176, 182] });
+  return { keys: [back, over], trace: 'wrist', loop: 'pingpong', equip: flatBench(112, 218), follow: [db('wrist', 10)] };
 }
 void stack;
