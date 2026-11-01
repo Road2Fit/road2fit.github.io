@@ -142,13 +142,49 @@ export function uprightRowFront() {
 }
 
 // ---------------- Squat (de face : genoux dans l'axe des pieds) ----------------
-export function squatFrontView() {
+export function squatFrontView({ tool = 'barbell' } = {}) {
   // le genou reste au-dessus du pied (tibia vertical) : en bas, cuisses presque horizontales vues de face
-  const mk = (hy, bend, kx, ky) => F(hy, { bend, knee: [C + kx, ky], hand: [C + 36, hy - 52 * (1 - 0.75 * bend) + 6], handBend: 1 });
+  const handFor = (hy, bend) => {
+    const sy = hy - 52 * (1 - 0.75 * bend);
+    if (tool === 'goblet') return [C + 7, sy + 22];
+    if (tool === 'free') return [C + 26, sy + 8]; // mains aux poignées, à hauteur d'épaules
+    return [C + 36, sy + 6];
+  };
+  const mk = (hy, bend, kx, ky) => F(hy, { bend, knee: [C + kx, ky], hand: handFor(hy, bend), handBend: 1 });
   return {
     view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(112, 0, 13, 152), mk(152, 0.4, 27, 154)],
     equip: [floorRect(120), txt([C - 56, -8], 'genoux dans l’axe des pieds', 8, '#94a3b8')],
-    follow: [bar('shoulder', { dy: -5, ext: 22, r: 11 })],
+    follow: tool === 'goblet' ? [{ k: 'ball', at: 'wrist', r: 8, dx: -7, side: 'R' }] : tool === 'free' ? [] : [bar('shoulder', { dy: -5, ext: 22, r: 11 })],
+  };
+}
+
+// ---------------- Fentes (de face) : le buste descend à la verticale, le genou reste dans l'axe du pied ----------------
+export function lungeFront({ barbell = false } = {}) {
+  const mk = hy => F(hy, { knee: [C + 15, 152], hand: barbell ? [C + 36, hy - 46] : [C + 25, hy + 6], handBend: 1 });
+  return {
+    view: 'front', trace: 'shoulder', loop: 'pingpong', keys: [mk(112), mk(142)],
+    equip: [floorRect(110)],
+    follow: barbell ? [bar('shoulder', { dy: -5, ext: 22, r: 11 })] : [{ k: 'db', at: 'wrist', r: 7 }],
+  };
+}
+
+// ---------------- Extension nuque (de dos) : les coudes restent hauts, les mains descendent derrière la tête ----------------
+export function overheadExtBack({ cable = false } = {}) {
+  const mk = (x, y) => F(112, { hand: [C + x, y], handBend: -1 });
+  return {
+    view: 'front', back: true, trace: 'wrist', loop: 'pingpong', keys: [mk(12, 46), mk(9, 12)],
+    equip: cable ? [floorRect(100), { k: 'pulley', c: [C, 182], r: 6 }] : [floorRect(100)],
+    follow: cable ? [{ k: 'cable', from: [C, 182], at: 'wrist' }, { k: 'handle', at: 'wrist' }] : [{ k: 'db', at: 'wrist', r: 7 }],
+  };
+}
+
+// ---------------- Mollets debout (de dos) : les talons montent, les jambes restent tendues ----------------
+export function calfBack() {
+  const mk = (hy, fy) => F(hy, { foot: [C + 11, fy], handBend: 1, hand: [C + 25, hy + 6] });
+  return {
+    view: 'front', back: true, trace: 'ankle', loop: 'pingpong', keys: [mk(110, 192), mk(100, 182)],
+    equip: [floorRect(110)],
+    follow: [],
   };
 }
 
@@ -183,8 +219,9 @@ export function multiHipFront() {
 export function deadliftFront({ sumo = false } = {}) {
   const kx = C + (sumo ? 46 : 18); // genou : tibias verticaux (les cuisses partent vers la caméra, donc raccourcies)
   const hx = C + (sumo ? 14 : 24);
-  const bottom = F(134, { bend: 0.8, knee: [kx, 152], hand: [hx, 168], handBend: 1 });
-  const top = F(112, { knee: [kx, 152], hand: [hx, 118], handBend: 1 });
+  const foot = sumo ? { foot: [kx, 194] } : {};
+  const bottom = F(134, { bend: 0.8, knee: [kx, 152], hand: [hx, 168], handBend: 1, ...foot });
+  const top = F(112, { knee: sumo ? [C + 28, 153] : [kx, 152], hand: [hx, 118], handBend: 1, ...foot });
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys: [bottom, top],
     equip: [floorRect(sumo ? 150 : 110)],

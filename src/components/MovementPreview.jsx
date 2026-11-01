@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Figure } from '../anim/Figure';
 import { flagAnimation } from '../lib/movement';
 import { animatedList, animationIdFor, movementFor } from '../anim/resolve';
-import { firstPhaseEnd, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
+import { effortAt, firstPhaseEnd, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
 
 const CYCLE_MS = 5200;
 const MISTAKES = [
@@ -11,6 +11,7 @@ const MISTAKES = [
   { key: 'lean', label: 'Le dos lâche', text: 'Le buste se penche et le dos lâche : la charge part sur le bas du dos au lieu des muscles visés.' },
 ];
 const LIST = animatedList();
+const viewLabel = sc => (sc.view === 'top' ? 'Vue de dessus' : sc.view === 'front' ? (sc.back ? 'Vue de dos' : 'Vue de face') : 'Vue de côté');
 
 function Bullets({ title, items, tone = 'text-slate-300', active = -1 }) {
   if (!items || !items.length) return null;
@@ -32,7 +33,8 @@ export function MovementPreview({ initial = null }) {
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [phase, setPhase] = useState(0);
-  const [viewKey, setViewKey] = useState('side');
+  const [showMuscles, setShowMuscles] = useState(true);
+  const [showPath, setShowPath] = useState(false);
   const [reps, setReps] = useState(0);
   const [reduced, setReduced] = useState(false);
   const [flagged, setFlagged] = useState({});
@@ -46,7 +48,6 @@ export function MovementPreview({ initial = null }) {
       setTarget(t);
       setId(animationIdFor(t));
       setPhase(0);
-      setViewKey('side');
       setReps(0);
       setMistake(null);
       const red = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,8 +84,9 @@ export function MovementPreview({ initial = null }) {
 
   if (!target) return null;
   const close = () => setTarget(null);
-  const altView = mv && mv.alts.find(a => a.key === viewKey);
-  const scene = mv && (altView ? altView.scene : mv.scene);
+  // Toutes les vues de l'exercice sont affichées côte à côte
+  const scene = mv && mv.scene;
+  const views = mv ? [{ key: 'side', label: viewLabel(mv.scene), scene: mv.scene }, ...mv.alts] : [];
   const info = mv && mv.info;
   const canMistake = !!(scene && info && !info.hold && scene.view !== 'front');
   const err = canMistake ? mistake : null;
@@ -92,14 +94,19 @@ export function MovementPreview({ initial = null }) {
   const eff = info && info.eff ? 1 : 0;
   const baseU = scene ? (err === 'fast' ? phaseToU(phase, loop) : tempoU(phase, loop, eff)) : 0;
   const u = err === 'short' ? baseU * 0.5 : baseU;
-  let pose = scene ? poseAt(scene.keys, u) : null;
-  if (pose && err === 'lean') pose = { ...pose, torso: (pose.torso || 0) + 20 * u };
-  if (pose && err === 'fast') pose = { ...pose, torso: (pose.torso || 0) + 14 * Math.sin(phase * Math.PI * 4) };
+  const poseOf = sc => {
+    const pose = poseAt(sc.keys, u);
+    if (sc.view) return pose;
+    if (err === 'lean') return { ...pose, torso: (pose.torso || 0) + 20 * u };
+    if (err === 'fast') return { ...pose, torso: (pose.torso || 0) + 14 * Math.sin(phase * Math.PI * 4) };
+    return pose;
+  };
+  const effort = scene ? effortAt(phase, loop, eff, !!(info && info.hold)) : 0;
   const labels = info ? info.p : ['Effort', 'Retour'];
   const goingForward = loop === 'cycle' ? true : phase < firstPhaseEnd(eff);
   const phaseLabel = goingForward ? labels[0] : labels[1];
   const ghostU = loop === 'cycle' ? (baseU + 0.2) % 1 : goingForward ? 1 : 0;
-  const ghostPose = scene ? poseAt(scene.keys, ghostU) : null;
+  const showGhost = err === 'short';
   const breath = !info ? '' : info.hold ? '🌬️ Respire calmement' : loop === 'cycle' ? '🌬️ Respire en rythme' : (goingForward ? eff === 0 : eff === 1) ? '💨 Expire' : '🌬️ Inspire';
   const geste = info && info.g ? info.g : [];
   const activeGeste = playing && geste.length ? Math.min(geste.length - 1, Math.floor(phase * geste.length)) : -1;
@@ -107,7 +114,7 @@ export function MovementPreview({ initial = null }) {
 
   return (
     <div className="fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto" onClick={close}>
-      <div className="m-auto bg-slate-900 border border-sky-500/40 rounded-2xl max-w-lg w-full p-4 sm:p-5 shadow-2xl space-y-3" onClick={e => e.stopPropagation()} role="dialog" aria-label="Voir le mouvement">
+      <div className="m-auto bg-slate-900 border border-sky-500/40 rounded-2xl max-w-3xl w-full p-4 sm:p-5 shadow-2xl space-y-3" onClick={e => e.stopPropagation()} role="dialog" aria-label="Voir le mouvement">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-black text-white">🎬 {mv ? mv.name : target.name || 'Exercice'}</h3>
@@ -118,33 +125,31 @@ export function MovementPreview({ initial = null }) {
 
         {mv ? (
           <>
-            {mv.alts.length > 0 && (
-              <div className="flex gap-1.5" role="group" aria-label="Angle de vue">
-                {[{ key: 'side', label: 'Vue de profil' }, ...mv.alts].map(v => (
-                  <button key={v.key} type="button" onClick={() => { setViewKey(v.key); setPhase(0); }} aria-pressed={viewKey === v.key}
-                    className={`flex-1 px-2 py-2 rounded-xl text-xs font-bold border ${viewKey === v.key ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className={`relative rounded-xl overflow-hidden border ${errInfo ? 'border-rose-500/70' : 'border-slate-800'}`}>
-              <Figure scene={scene} pose={pose} muscleText={info ? info.m : ''} bad={!!errInfo} />
-              {ghostPose && <div className="absolute inset-0 pointer-events-none"><Figure scene={scene} pose={ghostPose} ghost /></div>}
-              {reps > 0 && <span className="absolute top-1.5 left-2 text-[0.75rem] font-black text-slate-300 bg-slate-950/70 rounded-md px-1.5 py-0.5" data-testid="rep-count">Rép. {reps}</span>}
-              {breath && <span className="absolute top-1.5 right-2 text-[0.75rem] font-black text-sky-200 bg-slate-950/70 rounded-md px-1.5 py-0.5" data-testid="breath">{breath}</span>}
+            <div className={`grid gap-2 ${views.length > 1 ? 'sm:grid-cols-2' : ''}`} data-testid="movement-views">
+              {views.map(v => (
+                <section key={v.key} className={`relative rounded-xl overflow-hidden border ${errInfo ? 'border-rose-500/70' : 'border-slate-800'}`}>
+                  <h4 className="absolute top-1.5 left-2 z-10 text-[0.65rem] font-black uppercase tracking-wider text-slate-400">{v.label}</h4>
+                  <Figure scene={v.scene} pose={poseOf(v.scene)} muscleText={info ? info.m : ''} bad={!!errInfo} effort={effort} showMuscles={showMuscles} showTrace={showPath} />
+                  {(showPath || showGhost) && <div className="absolute inset-0 pointer-events-none"><Figure scene={v.scene} pose={poseAt(v.scene.keys, ghostU)} ghost /></div>}
+                </section>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <p className="text-sm font-black text-amber-300 min-w-[9rem]" aria-live="polite">{phaseLabel}</p>
+              <p className="text-xs text-slate-400" data-testid="rep-count">Répétitions : <b className="text-white tabular-nums">{reps}</b></p>
+              {breath && <p className="text-xs font-bold text-sky-200" data-testid="breath">{breath}</p>}
+              <div className="flex-1 min-w-[6rem] h-2 bg-slate-800 rounded-full overflow-hidden" title="Position dans le mouvement"><div className="h-full bg-sky-500 rounded-full" style={{ width: `${Math.round(u * 100)}%` }} /></div>
             </div>
             {reduced && (
               <div className="grid grid-cols-3 gap-1" data-testid="still-strip">
                 {[['Départ', 0], ['Milieu', 0.5], ['Fin', 1]].map(([t, v]) => (
                   <div key={t} className="rounded-lg overflow-hidden border border-slate-800">
-                    <Figure scene={scene} pose={poseAt(scene.keys, v)} showTrace={false} muscleText={info ? info.m : ''} />
+                    <Figure scene={scene} pose={poseAt(scene.keys, v)} muscleText={info ? info.m : ''} showMuscles={showMuscles} />
                     <p className="text-center text-[0.7rem] font-bold text-slate-400 py-0.5">{t}</p>
                   </div>
                 ))}
               </div>
             )}
-            <p className="text-center text-sm font-black text-amber-300" aria-live="polite">{phaseLabel}</p>
             {errInfo && <p className="text-xs text-rose-200 bg-rose-950/40 border border-rose-500/40 rounded-lg p-2" data-testid="mistake-text">❌ {errInfo.text}</p>}
             {canMistake && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Erreur fréquente">
@@ -155,21 +160,27 @@ export function MovementPreview({ initial = null }) {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 bg-slate-950/60 border border-slate-800 rounded-xl p-2">
               <button type="button" onClick={() => setPlaying(p => !p)} className="px-3 py-2 rounded-xl bg-sky-600 text-white text-sm font-black">{playing ? '⏸ Pause' : '▶ Lecture'}</button>
-              <button type="button" onClick={() => setSpeed(s => (s === 1 ? 0.5 : 1))} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-slate-100 text-sm font-bold">🐢 {speed === 0.5 ? 'Lent ✔' : 'Lent'}</button>
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-400">Vitesse
+                <input type="range" min="0.25" max="2" step="0.05" value={speed} data-testid="speed" onChange={e => setSpeed(Number(e.target.value))} className="w-20 accent-sky-400" />
+                <span className="tabular-nums text-slate-200">{speed.toFixed(1).replace('.', ',')}×</span>
+              </label>
+              <button type="button" onClick={() => setShowMuscles(v => !v)} aria-pressed={showMuscles} data-testid="toggle-muscles" className={`px-3 py-2 rounded-xl border text-sm font-bold ${showMuscles ? 'bg-rose-700 border-rose-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-200'}`}>Muscles</button>
+              <button type="button" onClick={() => setShowPath(v => !v)} aria-pressed={showPath} data-testid="toggle-path" className={`px-3 py-2 rounded-xl border text-sm font-bold ${showPath ? 'bg-amber-600 border-amber-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-200'}`}>Trajet</button>
+              <button type="button" onClick={() => { setPhase(0); setReps(0); }} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-slate-200 text-sm font-bold">Remettre à zéro</button>
               <input
-                type="range" min="0" max="100" value={Math.round(u * 100)} aria-label="Position dans le mouvement"
+                type="range" min="0" max="100" value={Math.round(u * 100)} aria-label="Position dans le mouvement" data-testid="position"
                 onChange={e => { setPlaying(false); setPhase(phaseOfU(Number(e.target.value) / 100, scene.loop, eff)); }}
-                className="flex-1 accent-sky-400"
+                className="w-full accent-sky-400"
               />
             </div>
             <div className="flex justify-end">
-              {flagged[id + viewKey]
+              {flagged[id]
                 ? <span className="text-[0.75rem] font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
-                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: viewKey, name: mv.name }); setFlagged(f => ({ ...f, [id + viewKey]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-[0.75rem] font-bold text-slate-300">🚩 Cette animation est fausse</button>}
+                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-[0.75rem] font-bold text-slate-300">🚩 Cette animation est fausse</button>}
             </div>
-            <p className="text-[0.75rem] text-slate-500">Pointillés jaunes : trajet à respecter (le cercle est le départ, la flèche le sens de l’effort). Le fantôme pâle montre où tu vas ; les zones rouges sont les muscles qui travaillent. Fais glisser la barre pour voir chaque position.</p>
+            <p className="text-[0.75rem] text-slate-500">En rouge, les muscles qui travaillent : l’intensité suit l’effort. « Trajet » montre le chemin à respecter (le cercle est le départ, la flèche le sens de l’effort) et un fantôme pâle de la position visée. Fais glisser la barre pour voir chaque position.</p>
 
             {info ? (
               <div className="space-y-3 pt-1">
@@ -193,7 +204,7 @@ export function MovementPreview({ initial = null }) {
 
         <div className="pt-1">
           <label className="block text-[0.75rem] font-bold text-slate-400 mb-1" htmlFor="mv-select">Voir un autre exercice</label>
-          <select id="mv-select" value={id || ''} onChange={e => { setId(e.target.value || null); setPhase(0); setViewKey('side'); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
+          <select id="mv-select" value={id || ''} onChange={e => { setId(e.target.value || null); setPhase(0); }} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white">
             <option value="">Choisir…</option>
             {LIST.map(x => <option key={x.id} value={x.id}>{x.category} · {x.name}</option>)}
           </select>

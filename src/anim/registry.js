@@ -1,4 +1,4 @@
-import { cableFlyFront, chestMachineFront, dipsFront, facePullFront, lyingFlyFront, lyingPressFront, multiHipFront, overheadFront, pecDeckFront, pullUpBack, pulldownFront, pushUpFront, rowBack, seatedRowFront, squatFrontView, uprightRowFront , curlFront, deadliftFront, pallofTop, rotaryTop, shrugFront, woodchopTop } from './scenes-alt';
+import { calfBack, lungeFront, overheadExtBack, cableFlyFront, chestMachineFront, dipsFront, facePullFront, lyingFlyFront, lyingPressFront, multiHipFront, overheadFront, pecDeckFront, pullUpBack, pulldownFront, pushUpFront, rowBack, seatedRowFront, squatFrontView, uprightRowFront , curlFront, deadliftFront, pallofTop, rotaryTop, shrugFront, woodchopTop } from './scenes-alt';
 import { backExtension, barbellRow, dbRow, invertedRow, pullUp, pulldown, seatedRow, shrugs } from './scenes-pull';
 import { curl, kickback, overheadExtension, pushdown, skullCrusher, tricepsMachine, wristCurl } from './scenes-arms';
 import { externalRotation, facePull, frontRaise, lateralRaise, overheadPress, rearFly, uprightRow } from './scenes-shoulders';
@@ -187,6 +187,15 @@ alt(['deadlift', 'fp_rdl', 'fp_trapbar'], 'front', 'Vue de face', deadliftFront(
 alt('fp_sumo', 'front', 'Vue de face', deadliftFront({ sumo: true }));
 alt(['barbell_curl', 'fp_cable_curl'], 'front', 'Vue de face', curlFront({}));
 alt(['fp_db_curl', 'fp_hammer_curl'], 'front', 'Vue de face', curlFront({ alternate: true }));
+alt('fp_overhead_ext_db', 'back', 'Vue de dos', overheadExtBack({}));
+alt('fp_overhead_ext_cable', 'back', 'Vue de dos', overheadExtBack({ cable: true }));
+alt('fp_goblet', 'front', 'Vue de face', squatFrontView({ tool: 'goblet' }));
+alt(['fp_hack_squat', 'fp_belt_squat'], 'front', 'Vue de face', squatFrontView({ tool: 'free' }));
+alt(['fp_walking_lunge', 'fp_bulgarian'], 'front', 'Vue de face', lungeFront({}));
+alt('fp_barbell_lunge', 'front', 'Vue de face', lungeFront({ barbell: true }));
+alt('fp_calf_standing', 'back', 'Vue de dos', calfBack());
+alt('fp_deadlift_machine', 'front', 'Vue de face', deadliftFront({}));
+alt('fp_assisted_dip', 'front', 'Vue de face', dipsFront());
 alt('fp_rotary_torso', 'top', 'Vue de dessus', rotaryTop());
 alt('fp_woodchop', 'top', 'Vue de dessus', woodchopTop());
 alt('fp_pallof', 'top', 'Vue de dessus', pallofTop());

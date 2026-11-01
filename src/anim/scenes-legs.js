@@ -113,6 +113,7 @@ export function legCurl({ lying = false }) {
     const hip = [188, 154];
     const c = { torso: 180, hand: [128, 150], handBend: 1 };
     return {
+      supine: true,
       keys: [P(hip, 180, { ...c, leg: [0, 0], toe: 80 }), P(hip, 180, { ...c, leg: [0, -105], toe: 80 })], trace: 'ankle', loop: 'pingpong',
       equip: [pad([100, 168], [196, 168], 9), pad([196, 168], [236, 176], 9), line([112, 173], [112, G], 3), line([180, 173], [180, G], 3), plates(250, 80, 18, 100, 4)],
       follow: [{ k: 'padAt', at: 'ankle', dx: -8, dy: -14, w: 10, h: 12 }],

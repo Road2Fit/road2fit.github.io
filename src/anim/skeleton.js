@@ -75,8 +75,9 @@ export function lerpPose(a0, b0, t) {
   const out = a.hip ? { hip: lerpPt(a.hip, b.hip, t) } : {};
   for (const k of NUM_KEYS) {
     if (a[k] !== undefined || b[k] !== undefined) {
-      const va = a[k] === undefined ? (k === 'neck' || k === 'toe' ? 0 : b[k]) : a[k];
-      const vb = b[k] === undefined ? va : b[k];
+      const zero = ['neck', 'toe', 'bend', 'lift', 'twist', 'flex'].includes(k); // absent de la pose = 0 (sinon un buste penché ne se redresserait jamais)
+      const va = a[k] === undefined ? (zero ? 0 : b[k]) : a[k];
+      const vb = b[k] === undefined ? (zero ? 0 : va) : b[k];
       out[k] = lerp(va, vb, t);
     }
   }
@@ -164,7 +165,7 @@ export function solveFront(p) {
     let l = ik(hip, foot, SEG.thigh, SEG.shin, side * (p.footBend === undefined ? -1 : p.footBend));
     if (own.knee || p.knee) { // assis : cuisse vers le genou, tibia vertical
       const kn = own.knee ? own.knee : [c + side * (p.knee[0] - c), p.knee[1]];
-      l = { mid: kn, end: [kn[0], kn[1] + SEG.shin] };
+      l = { mid: kn, end: own.foot || p.foot ? foot : [kn[0], kn[1] + SEG.shin] }; // sans pied donné : tibia vertical
     }
     out[side === 1 ? 'R' : 'L'] = { shoulder, elbow: a.mid, wrist: a.end, hip, knee: l.mid, ankle: l.end };
   }
@@ -214,4 +215,16 @@ export function traceTop(keys, steps = 40) {
     L.push(t.L.wrist);
   }
   return [R, L];
+}
+
+/** Effort des muscles (0 à 1) à cet instant du cycle : fort à l'effort, modéré au retour, faible en bas. Donne l'intensité du rouge. */
+export function effortAt(phase, loop, eff = 0, hold = false) {
+  if (hold || loop === 'cycle') return 0.8;
+  const p = phase % 1;
+  const f = firstLen(eff);
+  const s = eff ? TEMPO.fast : TEMPO.slow;
+  if (p < f) return eff ? 0.5 : 0.75 + 0.25 * Math.sin((Math.PI * p) / f);
+  if (p < f + TEMPO.pause) return 0.75;
+  if (p < f + TEMPO.pause + s) { const k = (p - f - TEMPO.pause) / s; return eff ? 0.75 + 0.25 * Math.sin(Math.PI * k) : 0.55 - 0.25 * k; }
+  return 0.25;
 }

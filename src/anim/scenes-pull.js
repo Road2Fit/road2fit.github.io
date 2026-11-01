@@ -127,7 +127,7 @@ export function invertedRow() {
   const barX = shoulderXFor(ankle, 160) - 2;
   const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [barX, barY], handBend: 1 });
   return {
-    keys: [mk(160), mk(128)], trace: 'shoulder', loop: 'pingpong',
+    supine: true, keys: [mk(160), mk(128)], trace: 'shoulder', loop: 'pingpong',
     equip: [line([barX - 20, barY], [barX + 20, barY], 4), line([barX - 20, barY], [barX - 20, G], 4), line([barX + 20, barY], [barX + 20, G], 4)],
     follow: [],
   };

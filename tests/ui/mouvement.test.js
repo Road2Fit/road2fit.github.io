@@ -16,7 +16,9 @@ describe('voir le mouvement', () => {
     const d = dialog(h);
     expect(d).toBeTruthy();
     expect(d.querySelector('svg')).toBeTruthy();
-    expect(d.querySelector('polyline[stroke-dasharray]')).toBeTruthy(); // trajet moteur en pointillés
+    expect(d.querySelector('polyline[stroke-dasharray]')).toBeNull(); // le trajet est masqué par défaut…
+    await clickEl(h, d.querySelector('[data-testid="toggle-path"]'));
+    expect(dialog(h).querySelector('polyline[stroke-dasharray]')).toBeTruthy(); // …et s'affiche à la demande
     for (const t of ['Muscles travaillés', 'Installation et matériel', 'Le mouvement', 'Erreurs à éviter', 'Respiration et rythme']) expect(d.textContent, t).toContain(t);
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
@@ -31,7 +33,7 @@ describe('voir le mouvement', () => {
     expect(svgAfter).not.toBe(svgBefore); // l'image a changé
     await clickText(h, 'Pause');
     expect(pageText(h)).toContain('Lecture');
-    const slider = dialog(h).querySelector('input[type=range]');
+    const slider = dialog(h).querySelector('[data-testid="position"]');
     slider.value = '100';
     slider.dispatchEvent(new h.w.Event('input', { bubbles: true }));
     slider.dispatchEvent(new h.w.Event('change', { bubbles: true }));
@@ -39,21 +41,21 @@ describe('voir le mouvement', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('plusieurs angles de vue : profil, face ou dos selon l’exercice', async () => {
+  it('les vues sont côte à côte, et les muscles se masquent', async () => {
     const h = await start();
     h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'pullups' } }));
     await advance(h);
-    const groupe = dialog(h).querySelector('[role="group"][aria-label="Angle de vue"]');
-    expect(groupe.textContent).toContain('Vue de profil');
-    expect(groupe.textContent).toContain('Vue de dos');
-    const avant = dialog(h).querySelector('svg').innerHTML;
-    await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Vue de dos')));
-    expect(dialog(h).querySelector('svg').innerHTML).not.toBe(avant);
-    expect(dialog(h).querySelector('[aria-pressed="true"]').textContent).toContain('Vue de dos');
-    // un exercice sans autre angle n'affiche pas le sélecteur
+    const vues = () => dialog(h).querySelector('[data-testid="movement-views"]');
+    expect(vues().textContent).toContain('Vue de côté');
+    expect(vues().textContent).toContain('Vue de dos');
+    expect(vues().querySelectorAll('svg').length).toBe(2);
+    expect(vues().innerHTML).toContain('#e5484d'); // muscles en rouge
+    await clickEl(h, dialog(h).querySelector('[data-testid="toggle-muscles"]'));
+    expect(vues().innerHTML).not.toContain('#e5484d');
+    // un exercice sans autre angle n'a qu'une image
     h.w.dispatchEvent(new h.w.CustomEvent('rondoufit-movement', { detail: { catalogId: 'fp_plank' } }));
     await advance(h);
-    expect(dialog(h).querySelector('[aria-label="Angle de vue"]')).toBeNull();
+    expect(vues().querySelectorAll('svg').length).toBe(1);
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
@@ -92,11 +94,12 @@ describe('voir le mouvement', () => {
     await advance(h, 300);
     const d = dialog(h);
     expect(d.querySelector('[data-testid="breath"]').textContent).toMatch(/Expire|Inspire/);
-    expect(d.querySelectorAll('svg[aria-hidden="true"]').length).toBe(1); // fantôme
+    expect(d.querySelectorAll('svg[aria-hidden="true"]').length).toBe(0); // pas de fantôme par défaut
     const groupe = d.querySelector('[role="group"][aria-label="Erreur fréquente"]');
     expect(groupe).toBeTruthy();
     await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Amplitude trop courte')));
     expect(dialog(h).querySelector('[data-testid="mistake-text"]').textContent).toContain('fantôme');
+    expect(dialog(h).querySelectorAll('svg[aria-hidden="true"]').length).toBeGreaterThan(0);
     await clickEl(h, [...groupe.querySelectorAll('button')].find(b => b.textContent.includes('Bonne exécution')));
     expect(dialog(h).querySelector('[data-testid="mistake-text"]')).toBeNull();
     expect(h.errors).toEqual([]);
