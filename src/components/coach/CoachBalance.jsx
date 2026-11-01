@@ -16,7 +16,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   const profileLabel = { puissance: 'force', hypertrophie: 'prise de muscle', endurance: 'endurance de force' }[balance.profile];
   return (
     <section className={card}>
-      <h3 className="font-black text-white">⚖️ Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
+      <h3 className="font-black text-white">Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
       {optimized && <MuscleBodyMap rows={balance.rows} />}
       <div className="space-y-2">
         {balance.rows.map(r => {
@@ -75,7 +75,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
       )}
       {alerts.map(al => (
         <div key={al.id} className="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 space-y-1.5" data-testid={`alert-${al.id}`}>
-          <p>💡 {al.text}</p>
+          <p>{al.text}</p>
           <div className="flex flex-wrap gap-1.5">
             {al.arenas.flatMap(a => coachSuggestExercises(gameState, a, 2)).map(c => (
               <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold">

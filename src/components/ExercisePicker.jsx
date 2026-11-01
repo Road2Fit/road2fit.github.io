@@ -13,8 +13,8 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
   const [filter, setFilter] = useState('all');
   const optimized = isOptimized();
   const FILTERS = optimized
-    ? [['all', 'Tous'], ...FINE_GROUPS.map(g => [g.id, `${g.icon} ${g.id === 'Hanches' ? 'Adducteurs' : g.id.replace('Ischio-jambiers', 'Ischios')}`]), ['cardio', '🏃 Cardio']]
-    : [['all', 'Tous'], ['Dos', '🦅 Dos'], ['Pectoraux', '🛡️ Pecs'], ['Jambes', '🦵 Jambes'], ['Épaules & Bras', '💪 Épaules/Bras'], ['Abdominaux', '🍫 Abdos'], ['cardio', '🏃 Cardio']];
+    ? [['all', 'Tous'], ...FINE_GROUPS.map(g => [g.id, `${g.icon} ${g.id === 'Hanches' ? 'Adducteurs' : g.id.replace('Ischio-jambiers', 'Ischios')}`]), ['cardio', 'Cardio']]
+    : [['all', 'Tous'], ['Dos', 'Dos'], ['Pectoraux', 'Pecs'], ['Jambes', 'Jambes'], ['Épaules & Bras', 'Épaules/Bras'], ['Abdominaux', 'Abdos'], ['cardio', 'Cardio']];
   const ORDER = optimized ? [...FINE_GROUPS.map(g => g.id), 'Course & Cardio', 'Volley-ball'] : ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
   const groupOf = c => (optimized ? fineGroupOf({ ...c, catalogId: c.id }) : c.category);
   const tokens = normSearch(query).split(/\s+/).filter(Boolean);
@@ -31,7 +31,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
   return (
     <div className="space-y-2">
       <div className="text-xs text-pink-300 font-bold">
-        Sélection : {selected ? `${selected.icon} ${selected.name}` : String(value).startsWith('custom') ? '✨ Exercice personnalisé' : '—'}
+        Sélection : {selected ? `${selected.icon} ${selected.name}` : String(value).startsWith('custom') ? 'Exercice personnalisé' : '—'}
       </div>
       <input
         type="search"
@@ -73,10 +73,10 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
         ))}
         {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}
         {allowCustom && <button type="button" onClick={() => onSelect('custom_bodyweight')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
-          ✨ Autre exercice au poids du corps personnalisé…
+          Autre exercice au poids du corps personnalisé…
         </button>}
         {allowCustom && <button type="button" onClick={() => onSelect('custom_strength')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
-          ✨ Autre exercice avec charge (kg) personnalisé…
+          Autre exercice avec charge (kg) personnalisé…
         </button>}
       </div>
     </div>

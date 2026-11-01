@@ -214,7 +214,15 @@ export function CoachPanel({
   const dayShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4" data-testid="coach-panel">
+      {/* SOMMAIRE : la page est longue, on saute directement à une partie */}
+      <nav aria-label="Sommaire du Coach" className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4">
+        {[['coach-seance', 'Séance'], ['coach-semaine', 'Semaine'], ['coach-objectifs', 'Objectifs'], ['coach-equilibre', 'Équilibre'], ['coach-reglages', 'Réglages']].map(([id, label]) => (
+          <button key={id} type="button" onClick={() => { const el = document.getElementById(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="shrink-0 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white">{label}</button>
+        ))}
+      </nav>
+      <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">
+      <div id="coach-seance" className="scroll-mt-3 space-y-4">
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
@@ -252,6 +260,9 @@ export function CoachPanel({
         updateCoach={updateCoach}
       />
 
+      </div>
+      <div className="space-y-4">
+      <div id="coach-semaine" className="scroll-mt-3 space-y-4">
       {/* EN-TÊTE */}
       <CoachHeader
         coach={coach}
@@ -281,12 +292,20 @@ export function CoachPanel({
         today={today}
       />
 
+      </div>
+      <div id="coach-objectifs" className="scroll-mt-3">
       {/* OBJECTIFS */}
       <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
 
+      </div>
+      <div id="coach-equilibre" className="scroll-mt-3">
       {/* ÉQUILIBRE : grande silhouette et explications, toujours visibles */}
       <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
 
+      </div>
+      </div>
+      </div>
+      <div id="coach-reglages" className="scroll-mt-3">
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
       <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
         {/* PROFIL DE TRAVAIL */}
@@ -339,6 +358,7 @@ export function CoachPanel({
         {/* SOURCES */}
         <CoachSources setShowSources={setShowSources} showSources={showSources} />
       </Fold>
+      </div>
     </div>
   );
 }

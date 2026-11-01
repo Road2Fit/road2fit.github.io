@@ -44,11 +44,13 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
 
             const values = history.map(h => Number(h.value) || 0);
             const goalVal = Number(activeChartQuest.goalValue) || 10;
-            const minVal = Math.min(...values, Number(activeChartQuest.startValue) || 0, 0);
+            const minVal = Math.min(...values, Number(activeChartQuest.startValue) || 0) * 0.8; // pas de départ à 0 : la courbe reste lisible
             const maxVal = Math.max(...values, goalVal, 10) * 1.15;
-            const width = 760;
+            const narrow = window.innerWidth < 640;
+            const width = narrow ? 340 : 760; // sur téléphone, moins de points étiquetés et des textes à taille réelle
+            const labelStep = Math.max(1, Math.ceil(history.length / (narrow ? 3 : 8)));
             const height = 240;
-            const padX = 55;
+            const padX = narrow ? 38 : 55;
             const padY = 35;
 
             const getX = i =>
@@ -81,7 +83,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                   />
                   <text
                     x={width - padX}
-                    y={goalY - 6}
+                    y={narrow ? goalY + 16 : goalY - 6}
                     textAnchor="end"
                     className="fill-amber-400 text-[13px] font-bold"
                   >
@@ -100,6 +102,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                   {history.map((h, idx) => {
                     const cx = getX(idx);
                     const cy = getY(h.value);
+                    const showLabel = idx === history.length - 1 || (idx % labelStep === 0 && history.length - 1 - idx >= labelStep);
                     const setsArr =
                       activeChartQuest.type === 'strength'
                         ? getSetDetailsArray(
@@ -116,7 +119,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                           r="5.5"
                           className="fill-pink-500 stroke-slate-950 stroke-2"
                         />
-                        <text
+                        {showLabel && <text
                           x={cx}
                           y={cy - 12}
                           textAnchor="middle"
@@ -129,8 +132,8 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                                   : ''
                               }[${formatSetsBreakdown(setsArr)}]`
                             : `${h.value} ${activeChartQuest.unit}`}
-                        </text>
-                        {activeChartQuest.unit === 'reps' && !isTimedQuest(activeChartQuest) && (
+                        </text>}
+                        {showLabel && !narrow && activeChartQuest.unit === 'reps' && !isTimedQuest(activeChartQuest) && (
                           <text
                             x={cx}
                             y={cy + 16}
@@ -142,14 +145,14 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                               : 'Strict 0kg'}
                           </text>
                         )}
-                        <text
+                        {showLabel && <text
                           x={cx}
                           y={height - 8}
                           textAnchor="middle"
                           className="fill-slate-400 text-[12px]"
                         >
-                          {h.date?.slice(5)} • 🔥{h.calories || 45}kcal
-                        </text>
+                          {h.date ? `${h.date.slice(8, 10)}/${h.date.slice(5, 7)}` : ''}{narrow ? '' : ` · ${h.calories || 45} kcal`}
+                        </text>}
                       </g>
                     );
                   })}

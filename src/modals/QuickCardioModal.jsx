@@ -28,7 +28,7 @@ export function QuickCardioModal({
   const cols = (hasDistance && !speedMode ? 1 : 0) + 1 + (hasElevation && !percentMode ? 1 : 0);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-emerald-500/40 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
@@ -105,7 +105,7 @@ export function QuickCardioModal({
             )}
             <div className="text-right">
               <span className="text-orange-300 block font-bold">Dépense estimée</span>
-              <span className="text-base font-black text-orange-300">🔥 {liveQuickCardioCalories} kcal</span>
+              <span className="text-base font-black text-orange-300">{liveQuickCardioCalories} kcal</span>
             </div>
           </div>
 

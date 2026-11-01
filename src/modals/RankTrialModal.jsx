@@ -2,11 +2,11 @@ import { X } from '../icons';
 
 export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, trialRank }) {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-amber-400/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
-            <h3 className="text-base font-black text-white">⚔️ Épreuve de rang</h3>
+            <h3 className="text-base font-black text-white">Épreuve de rang</h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Pour devenir {trialRank.badge} <strong className="text-amber-300">{trialRank.title}</strong> (niveau {trialRank.minLevel}), il ne suffit pas d’avoir assez d’EXP : réussis ces objectifs.
             </p>
@@ -37,7 +37,7 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
 
         {levelInfo.locked ? (
           <p className="text-xs text-amber-300">
-            🔒 Ton niveau est bloqué en attendant. L’EXP que tu gagnes continue de s’accumuler : {levelInfo.reserve} EXP en réserve, qui seront comptés dès l’épreuve réussie.
+            Ton niveau est bloqué en attendant. L’EXP que tu gagnes continue de s’accumuler : {levelInfo.reserve} EXP en réserve, qui seront comptés dès l’épreuve réussie.
           </p>
         ) : (
           <p className="text-xs text-slate-500">
@@ -51,7 +51,7 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
           onClick={onValidate}
           className="w-full py-3 rounded-xl font-black text-sm bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 text-slate-950 disabled:opacity-40"
         >
-          {trialEval.done ? '⚔️ Valider l’épreuve' : 'Objectifs pas encore atteints'}
+          {trialEval.done ? 'Valider l’épreuve' : 'Objectifs pas encore atteints'}
         </button>
       </div>
     </div>

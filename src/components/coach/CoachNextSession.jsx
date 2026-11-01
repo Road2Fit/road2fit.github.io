@@ -23,12 +23,12 @@ export function CoachNextSession({
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-black text-white">🏋️ Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+        <h3 className="font-black text-white">Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
         {!plan && ov.hasExercises && (
-          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">✏️ Choisir le jour / modifier</button>
+          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">Choisir le jour / modifier</button>
         )}
         {plan && (
-          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">↩ Revenir à la proposition du coach</button>
+          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">Revenir à la proposition du coach</button>
         )}
       </div>
 
@@ -36,7 +36,7 @@ export function CoachNextSession({
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
           <p className="text-xs font-bold text-slate-300">Comment te sens-tu aujourd’hui ?</p>
           <div className="flex flex-wrap gap-1.5">
-            {[['low', '😵 Cuit'], ['ok', '🙂 Normal'], ['high', '💪 En forme']].map(([lv, lab]) => {
+            {[['low', 'Cuit'], ['ok', 'Normal'], ['high', 'En forme']].map(([lv, lab]) => {
               const on = coach.readiness && coach.readiness.date === today && coach.readiness.level === lv;
               return (
                 <button key={lv} onClick={() => updateCoach({ readiness: on ? null : { date: today, level: lv } })}
@@ -48,7 +48,7 @@ export function CoachNextSession({
             {!plan && first && (
               <button onClick={() => setShortMode(v => !v)}
                 className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                ⏱ Version courte (40 min)
+                Version courte (40 min)
               </button>
             )}
           </div>
@@ -76,7 +76,7 @@ export function CoachNextSession({
             <span className="font-bold text-slate-300">Jour de la séance :</span>
             <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
             <span className="text-slate-300 font-bold">{coachDayLabel(plan.date)}</span>
-            {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🏆 match</span>}
+            {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">match</span>}
             {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">{planDayInfo.sport.icon} {planDayInfo.sport.label}</span>}
           </div>
           <div className="space-y-2">
@@ -134,11 +134,11 @@ export function CoachNextSession({
             <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
             {(() => {
               const pf = coachProfileAt(coach, shownDate);
-              return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">🎯 {PROFILES[pf.id].label}</span> : null;
+              return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
             })()}
           </div>
           {shownSession.notes.map((n, i) => (
-            <p key={i} className="text-xs text-sky-300">ℹ️ {n}</p>
+            <p key={i} className="text-xs text-sky-300">{n}</p>
           ))}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
@@ -166,7 +166,7 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
-                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2">🎬 Voir le mouvement</button>
+                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2">Voir le mouvement</button>
                   <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>
@@ -175,14 +175,14 @@ export function CoachNextSession({
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-slate-500 font-bold">Tu décides :</span>
                     <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
-                      {e.kind === 'load' ? '🔽 Plus léger' : e.kind === 'assisted' ? '➕ Plus d’aide' : '🔽 1 rép de moins'}
+                      {e.kind === 'load' ? 'Plus léger' : e.kind === 'assisted' ? 'Plus d’aide' : '🔽 1 rép de moins'}
                     </button>
                     <button onClick={() => adjustTarget(e, 'harder')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
-                      {e.kind === 'load' ? '🔼 Plus lourd' : e.kind === 'assisted' ? '➖ Moins d’aide' : '🔼 1 rép de plus'}
+                      {e.kind === 'load' ? 'Plus lourd' : e.kind === 'assisted' ? 'Moins d’aide' : '🔼 1 rép de plus'}
                     </button>
                     {e.manual && (
                       <button onClick={() => adjustTarget(e, 'reset')} className="px-2 py-1 rounded-lg bg-violet-900/50 hover:bg-violet-800/60 border border-violet-500/40 font-bold text-violet-200">
-                        ↩ Proposition du coach
+                        Proposition du coach
                       </button>
                     )}
                   </div>
@@ -271,7 +271,7 @@ export function CoachNextSession({
         <div className="space-y-1.5">
           <button
             onClick={() => onStartGuided(sessionToStart)}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-500 hover:to-fuchsia-500 text-white font-black text-sm shadow-lg shadow-pink-600/30"
+            className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm"
           >
             ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
           </button>
@@ -281,7 +281,7 @@ export function CoachNextSession({
             </p>
           )}
           {todayInfo.blocked && (
-            <p className="text-xs text-amber-300">⚠️ Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : todayInfo.sport.label} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
+            <p className="text-xs text-amber-300">Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : todayInfo.sport.label} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
           )}
         </div>
       )}

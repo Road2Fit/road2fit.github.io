@@ -16,7 +16,7 @@ export function SessionRecap({ recap, onClose }) {
           <div className="text-center">
             <p className="text-3xl">🎉</p>
             <h2 className="text-xl font-black text-white">Bilan de la séance</h2>
-            <p className="text-xs text-slate-400">{recap.minutes} min · ≈ {recap.kcal} kcal · +{recap.xp} XP</p>
+            <p className="text-xs text-slate-400">{recap.minutes} min · ≈ {recap.kcal} kcal · +{recap.xp} EXP</p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center text-xs">
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">

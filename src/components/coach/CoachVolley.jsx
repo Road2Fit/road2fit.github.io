@@ -16,13 +16,13 @@ export function CoachVolley({ gameState, onAddExercise, sport }) {
           if (!c) return null;
           const owned = gameState.quests.some(q => q.catalogId === id);
           return owned ? (
-            <span key={id} className="px-2.5 py-1 rounded-lg bg-emerald-900/30 border border-emerald-500/40 text-emerald-300 font-bold">✅ {c.name}</span>
+            <span key={id} className="px-2.5 py-1 rounded-lg bg-emerald-900/30 border border-emerald-500/40 text-emerald-300 font-bold">{c.name}</span>
           ) : (
             <button key={id} onClick={() => onAddExercise(id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold">+ {c.name}</button>
           );
         })}
       </div>
-      <p className="text-xs text-amber-200/90" data-testid="sport-evidence">📚 {sport.note}</p>
+      <p className="text-xs text-amber-200/90" data-testid="sport-evidence">{sport.note}</p>
       {sport.sources.length > 0 && (
         <div>
           <button type="button" onClick={() => setShowSrc(x => !x)} className="text-xs font-bold text-pink-300 underline" data-testid="sport-sources-toggle">{showSrc ? 'Masquer les études' : `Voir les études (${sport.sources.length})`}</button>

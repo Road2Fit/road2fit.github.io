@@ -5,13 +5,13 @@ import { card } from './ui';
 export function CoachObjectives({ gameState, onAddExercise, questRows }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">🎯 Mes objectifs</h3>
+      <h3 className="font-black text-white">Mes objectifs</h3>
       {questRows.length === 0 && <p className="text-xs text-slate-400">Aucun exercice de musculation pour l’instant.</p>}
       <div className="grid gap-2 sm:grid-cols-2">
         {questRows.map(r => {
           const t = r.target;
           const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `aide ${coachFmt(t.assist)} kg × ${t.goalReps}` : `${t.goalReps} ${t.timed ? 's' : 'reps'}`;
-          const eta = r.eta.done ? '✅ Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : 'Estimation après 3 séances';
+          const eta = r.eta.done ? 'Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : 'Estimation après 3 séances';
           const sugg = r.plateau ? coachSuggestExercises(gameState, r.arena, 2) : [];
           return (
             <div key={r.q.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3">

@@ -29,8 +29,9 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
   }
 
   const canStart = !guidedActive && session && isToday;
+  if (onCoachTab && !guidedActive && !canStart && ov.hasExercises) return null; // rien à lancer : « Prochaine séance » juste en dessous le dit déjà
   return (
-    <section className="bg-gradient-to-r from-pink-600/25 to-indigo-600/20 border border-pink-400/40 rounded-2xl p-4 sm:p-5">
+    <section className="bg-slate-900 border border-pink-400/50 rounded-2xl p-4 sm:p-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="space-y-0.5">
           <h2 className="text-lg sm:text-xl font-black text-white">{headline}</h2>

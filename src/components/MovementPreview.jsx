@@ -107,17 +107,17 @@ export function MovementPreview({ initial = null }) {
   const phaseLabel = goingForward ? labels[0] : labels[1];
   const ghostU = loop === 'cycle' ? (baseU + 0.2) % 1 : goingForward ? 1 : 0;
   const showGhost = err === 'short';
-  const breath = !info ? '' : info.hold ? '🌬️ Respire calmement' : loop === 'cycle' ? '🌬️ Respire en rythme' : (goingForward ? eff === 0 : eff === 1) ? '💨 Expire' : '🌬️ Inspire';
+  const breath = !info ? '' : info.hold ? 'Respire calmement' : loop === 'cycle' ? 'Respire en rythme' : (goingForward ? eff === 0 : eff === 1) ? 'Expire' : 'Inspire';
   const geste = info && info.g ? info.g : [];
   const activeGeste = playing && geste.length ? Math.min(geste.length - 1, Math.floor(phase * geste.length)) : -1;
   const errInfo = MISTAKES.find(m => m.key === err);
 
   return (
-    <div className="fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-slate-950/85 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto" onClick={close}>
       <div className="m-auto bg-slate-900 border border-sky-500/40 rounded-2xl max-w-3xl w-full p-4 sm:p-5 shadow-2xl space-y-3" onClick={e => e.stopPropagation()} role="dialog" aria-label="Voir le mouvement">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-base font-black text-white">🎬 {mv ? mv.name : target.name || 'Exercice'}</h3>
+            <h3 className="text-base font-black text-white">{mv ? mv.name : target.name || 'Exercice'}</h3>
             {mv && <p className="text-xs text-slate-400">{mv.category}{mv.equip ? ` · ${mv.equip}` : ''}</p>}
           </div>
           <button type="button" onClick={close} aria-label="Fermer" className="shrink-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
@@ -150,18 +150,18 @@ export function MovementPreview({ initial = null }) {
                 ))}
               </div>
             )}
-            {errInfo && <p className="text-xs text-rose-200 bg-rose-950/40 border border-rose-500/40 rounded-lg p-2" data-testid="mistake-text">❌ {errInfo.text}</p>}
+            {errInfo && <p className="text-xs text-rose-200 bg-rose-950/40 border border-rose-500/40 rounded-lg p-2" data-testid="mistake-text">{errInfo.text}</p>}
             {canMistake && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Erreur fréquente">
-                <button type="button" onClick={() => setMistake(null)} aria-pressed={!err} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${!err ? 'bg-emerald-700 border-emerald-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>✅ Bonne exécution</button>
+                <button type="button" onClick={() => setMistake(null)} aria-pressed={!err} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${!err ? 'bg-emerald-700 border-emerald-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>Bonne exécution</button>
                 {MISTAKES.map(m => (
-                  <button key={m.key} type="button" onClick={() => { setMistake(m.key); setPlaying(true); }} aria-pressed={err === m.key} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${err === m.key ? 'bg-rose-700 border-rose-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>❌ {m.label}</button>
+                  <button key={m.key} type="button" onClick={() => { setMistake(m.key); setPlaying(true); }} aria-pressed={err === m.key} className={`px-2 py-1.5 rounded-lg text-xs font-bold border ${err === m.key ? 'bg-rose-700 border-rose-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>{m.label}</button>
                 ))}
               </div>
             )}
 
             <div className="flex flex-wrap items-center gap-2 bg-slate-950/60 border border-slate-800 rounded-xl p-2">
-              <button type="button" onClick={() => setPlaying(p => !p)} className="px-3 py-2 rounded-xl bg-sky-600 text-white text-sm font-black">{playing ? '⏸ Pause' : '▶ Lecture'}</button>
+              <button type="button" onClick={() => setPlaying(p => !p)} className="px-3 py-2 rounded-xl bg-sky-600 text-white text-sm font-black">{playing ? 'Pause' : '▶ Lecture'}</button>
               <label className="flex items-center gap-1.5 text-xs font-bold text-slate-400">Vitesse
                 <input type="range" min="0.25" max="2" step="0.05" value={speed} data-testid="speed" onChange={e => setSpeed(Number(e.target.value))} className="w-20 accent-sky-400" />
                 <span className="tabular-nums text-slate-200">{speed.toFixed(1).replace('.', ',')}×</span>
@@ -178,7 +178,7 @@ export function MovementPreview({ initial = null }) {
             <div className="flex justify-end">
               {flagged[id]
                 ? <span className="text-xs font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
-                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-xs font-bold text-slate-300">🚩 Cette animation est fausse</button>}
+                : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-xs font-bold text-slate-300">Cette animation est fausse</button>}
             </div>
             <p className="text-xs text-slate-500">En rouge, les muscles qui travaillent : l’intensité suit l’effort. « Trajet » montre le chemin à respecter (le cercle est le départ, la flèche le sens de l’effort) et un fantôme pâle de la position visée. Fais glisser la barre pour voir chaque position.</p>
 
@@ -192,7 +192,7 @@ export function MovementPreview({ initial = null }) {
                 <Bullets title="Le mouvement" items={info.g} active={activeGeste} />
                 <Bullets title="Respiration et rythme" items={info.hold ? ['Respire calmement, sans bloquer.', 'Tiens la position sans te raidir.'] : ['Expire pendant l’effort, inspire pendant le retour.', 'Descends (ou reviens) en 2 à 3 secondes, monte en 1 à 2 secondes.']} />
                 <Bullets title="Erreurs à éviter" items={info.e} tone="text-rose-200" />
-                {info.safe && <p className="text-xs text-amber-200 bg-amber-950/30 border border-amber-500/30 rounded-lg p-2">⚠️ {info.safe}</p>}
+                {info.safe && <p className="text-xs text-amber-200 bg-amber-950/30 border border-amber-500/30 rounded-lg p-2">{info.safe}</p>}
               </div>
             ) : (
               <p className="text-xs text-slate-400">Pas encore de conseils écrits pour cet exercice.</p>

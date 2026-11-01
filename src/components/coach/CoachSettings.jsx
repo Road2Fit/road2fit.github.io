@@ -12,7 +12,7 @@ export function CoachSettings({
   const sp = sportInfo(coach.sport);
   return (
     <section className={card}>
-      <h3 className="font-black text-white">⚙️ Réglages & calendrier des matchs</h3>
+      <h3 className="font-black text-white">Réglages & calendrier des matchs</h3>
       <div className="space-y-2 text-xs">
         <p className="text-slate-300 font-bold">Organisation des séances</p>
         <div className="flex flex-wrap gap-2">
@@ -40,7 +40,7 @@ export function CoachSettings({
         )}
       </div>
       <div className="space-y-2 text-xs">
-        <p className="text-slate-300 font-bold">🗓️ Mes créneaux de salle</p>
+        <p className="text-slate-300 font-bold">Mes créneaux de salle</p>
         <p className="text-xs text-slate-500">Coche les jours où tu peux aller à la salle et indique les horaires. Le coach ne propose des séances que ces jours-là et adapte leur durée au créneau. Sans aucun créneau, tous les jours sans volley ni match sont utilisables.</p>
         <div className="space-y-1.5">
           {[1, 2, 3, 4, 5, 6, 0].map(dow => {
@@ -99,7 +99,7 @@ export function CoachSettings({
         <select id="coach-sport" value={coach.sport || ''} onChange={e => updateCoach({ sport: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-bold">
           <option value="">Non précisé</option>
           {SPORTS.filter(s => s.id !== 'autre').map(s => <option key={s.id} value={s.id}>{s.icon} {s.cap}</option>)}
-          <option value="autre">🎽 Autre sport</option>
+          <option value="autre">Autre sport</option>
         </select>
         <span className="text-slate-300 font-bold mr-1">Jours :</span>
         {[1, 2, 3, 4, 5, 6, 0].map(dow => (
@@ -133,7 +133,7 @@ export function CoachSettings({
         </div>
       </div>
       <div className="space-y-2">
-        <p className="text-xs text-slate-300 font-bold">🏆 Jours de match</p>
+        <p className="text-xs text-slate-300 font-bold">Jours de match</p>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input type="date" value={matchInput} min={today} onChange={e => setMatchInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
           <button disabled={!matchInput} onClick={() => { addMatches([matchInput]); setMatchInput(''); }} className="px-3 py-1.5 rounded-lg bg-amber-500 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-black">Ajouter</button>

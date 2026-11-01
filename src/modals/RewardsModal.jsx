@@ -10,7 +10,7 @@ function Choice({ item, selected, unlocked, onPick, children }) {
       onClick={() => onPick(item.id)}
       className={`p-2.5 rounded-xl border text-left text-xs transition ${
         selected
-          ? 'bg-pink-950/40 border-pink-400 shadow-md shadow-pink-500/10'
+          ? 'bg-pink-950/40 border-pink-400'
           : unlocked
             ? 'bg-slate-950/70 border-slate-700 hover:border-slate-500'
             : 'bg-slate-950/40 border-slate-800 opacity-60'
@@ -30,7 +30,7 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
   const choose = patch => setGameState(prev => ({ ...prev, cosmetics: { ...(prev.cosmetics || {}), ...patch } }));
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>

@@ -40,11 +40,11 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
   // pendant une séance guidée : en bas à droite ; sinon seulement s'il tourne ou s'il est ouvert, à gauche pour laisser la place au bouton « + »
   if (!guidedOpen && !running && !open) return null;
   return (
-    <div className={`fixed z-[70] flex flex-col gap-2 ${guidedOpen ? 'bottom-24 right-4 items-end' : 'bottom-20 md:bottom-6 left-4 items-start'}`}>
+    <div className={`fixed flex flex-col gap-2 ${guidedOpen ? 'z-[62] bottom-[72px] inset-x-0 px-4 py-2 items-stretch bg-slate-950 border-t border-slate-800' : 'z-40 bottom-20 md:bottom-6 left-4 items-start'}`}>
       {open && (
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 space-y-2.5">
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 self-end space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase text-pink-300">⏱ Repos entre séries</span>
+            <span className="text-xs font-black uppercase text-pink-300">Repos entre séries</span>
             <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white text-sm">✕</button>
           </div>
           {running && (
@@ -68,15 +68,16 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
           </div>
         </div>
       )}
-      {running && next && <span className="px-3 py-1 rounded-full bg-slate-900/95 border border-emerald-400/50 text-xs font-bold text-emerald-100 shadow-lg max-w-[16rem] truncate">{next}</span>}
+      {running && next && !guidedOpen && <span className="px-3 py-1 rounded-full bg-slate-900/95 border border-emerald-400/50 text-xs font-bold text-emerald-100 shadow-lg max-w-[16rem] truncate">{next}</span>}
       <button
         onClick={() => setOpen(o => !o)}
         title="Minuteur de repos"
-        className={`h-12 px-4 rounded-full shadow-2xl border-2 text-sm font-black flex items-center justify-center gap-1.5 ${
-          running ? 'bg-emerald-600 border-emerald-300 text-white' : 'bg-pink-600 border-pink-300 text-white shadow-pink-600/50'
+        className={`${guidedOpen ? 'w-full max-w-2xl mx-auto py-2 rounded-xl' : 'h-12 px-4 rounded-full shadow-xl'} text-sm font-black flex items-center justify-center gap-2 ${
+          running ? 'bg-emerald-600 text-white' : guidedOpen ? 'bg-slate-800 text-slate-200' : 'bg-slate-800 text-white'
         }`}
       >
-        ⏱ {running ? <span className="tabular-nums text-base">{fmt(left)}</span> : <span>Repos</span>}
+        {running ? <span className="tabular-nums text-base">Repos {fmt(left)}</span> : <span>Repos</span>}
+        {running && next && guidedOpen && <span className="font-bold text-xs truncate">{next}</span>}
       </button>
     </div>
   );

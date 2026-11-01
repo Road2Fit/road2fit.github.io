@@ -40,7 +40,7 @@ describe('formulaire « Nouvel exercice »', () => {
     const recherche = modal.querySelector('input[type=text], input[type=search]');
     if (recherche) await setInput(h, recherche, 'Incliné Barre');
     await clickText(h, incline.name);
-    expect(pageText(h)).toContain('💡 Charge de départ');
+    expect(pageText(h)).toContain('Charge de départ');
     expect(pageText(h)).toContain('d’après tes maxima');
     expect(pageText(h)).toContain(bench.name);
     const champs = [...h.doc.querySelectorAll('.fixed.inset-0 input[type=number]')].map(i => Number(i.value));

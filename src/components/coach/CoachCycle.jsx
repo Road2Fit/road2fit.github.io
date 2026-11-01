@@ -4,7 +4,7 @@ import { card } from './ui';
 export function CoachCycle({ updateCoach, w0, weekStart0 }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">🔁 Cycle d’entraînement</h3>
+      <h3 className="font-black text-white">Cycle d’entraînement</h3>
       {w0.cycle ? (
         <div className="space-y-2 text-xs text-slate-300">
           <p>Tu es en <b>semaine {w0.cycle.n} sur {w0.cycle.len}</b> du cycle. {w0.cycle.deload ? 'C’est la semaine allégée : −10 % de charge et une série de moins.' : `La prochaine semaine allégée commence le ${coachDateFR(w0.cycle.nextDeload)}.`}</p>

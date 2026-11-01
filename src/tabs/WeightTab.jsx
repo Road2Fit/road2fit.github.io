@@ -71,7 +71,7 @@ export function WeightTab({
 
             <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3">
               <label className="block text-xs font-bold text-pink-300 mb-1">
-                🎯 Poids cible (kg)
+                Poids cible (kg)
               </label>
               <input
                 type="number"
@@ -100,7 +100,7 @@ export function WeightTab({
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white shadow-lg"
+            className="w-full py-2.5 rounded-xl font-black text-xs bg-pink-600 hover:bg-pink-500 text-white shadow-lg"
           >
             Enregistrer la pesée (+25 EXP)
           </button>
@@ -142,7 +142,7 @@ export function WeightTab({
           const targetW = Number(gameState.targetWeightKg) || 75;
           const minW = Math.min(...weights, targetW) - 2;
           const maxW = Math.max(...weights, targetW) + 2;
-          const width = 620;
+          const width = window.innerWidth < 640 ? 340 : 620;
           const height = 200;
           const padX = 45;
           const padY = 30;
@@ -237,7 +237,7 @@ export function WeightTab({
                       x={getX(idx)}
                       y={height - 6}
                       textAnchor="middle"
-                      className="fill-slate-400 text-[9px]"
+                      className="fill-slate-400 text-[12px]"
                     >
                       {w.date?.slice(5)}
                     </text>
@@ -247,7 +247,7 @@ export function WeightTab({
               <p className="text-xs text-slate-400 mt-2">
                 <span className="text-sky-300 font-bold">- - -</span> Tendance (moyenne glissante sur 7 pesées).{' '}
                 {eta === null && 'Ajoute au moins 3 pesées pour obtenir une estimation.'}
-                {eta && eta.done && '🎉 Objectif de poids atteint !'}
+                {eta && eta.done && 'Objectif de poids atteint !'}
                 {eta && eta.stalled && 'Poids stable ou en hausse : pas d’estimation possible pour l’instant.'}
                 {eta && eta.days && `Au rythme actuel (${eta.perWeek} kg/sem.), objectif estimé vers le ${eta.date} (~${eta.days} j).`}
               </p>
@@ -262,7 +262,7 @@ export function WeightTab({
               className="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-3">
-                <span className="font-bold text-slate-400">📅 {item.date}</span>
+                <span className="font-bold text-slate-400">{item.date}</span>
                 <span className="font-black text-pink-300 text-sm">
                   {item.weightKg} kg
                 </span>

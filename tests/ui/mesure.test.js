@@ -24,7 +24,7 @@ describe('mesure de l’exercice', () => {
     await clickEl(h, byTest(h, 'measure-kg'));
     expect(h.doc.body.textContent).toContain('Charge de départ (kg)');
     expect(byTest(h, 'signed-start')).toBeNull();
-    await clickText(h, 'Créer la Quête');
+    await clickText(h, 'Créer l’exercice');
     await advance(h, 300);
     const q = saved(h).quests.find(x => x.catalogId === 'fp_back_extension');
     expect(q.unit).toBe('kg');
@@ -45,7 +45,7 @@ describe('mesure de l’exercice', () => {
     expect(byTest(h, 'signed-hint').textContent).toContain('aide élastique');
     await setInput(h, byTest(h, 'signed-goal'), '5'); // du lest : pas ici, on reste à 0
     expect(byTest(h, 'signed-goal').value).toBe('0'); // ramené tout de suite à 0 (poids du corps seul)
-    await clickText(h, 'Créer la Quête');
+    await clickText(h, 'Créer l’exercice');
     await advance(h, 300);
     const q = saved(h).quests.find(x => x.catalogId === 'pullups' && x.startAssistanceKg === 12.5);
     expect(q).toBeTruthy();

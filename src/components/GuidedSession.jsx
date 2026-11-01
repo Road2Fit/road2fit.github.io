@@ -90,11 +90,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-slate-950 overflow-y-auto">
-      <div className="max-w-2xl mx-auto px-4 py-4 pb-28 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-4 pb-44 space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs text-pink-300 font-black uppercase tracking-wider">Séance guidée {g.templateId ? `· ${g.templateId}` : ''}</p>
-            <p className="text-xs text-slate-400">⏱ {fmtT(elapsed)} · {g.phase === 'summary' ? 'Résumé' : `Exercice ${g.idx + 1}/${items.length}`}</p>
+            <p className="text-xs text-slate-400">{fmtT(elapsed)} · {g.phase === 'summary' ? 'Résumé' : `Exercice ${g.idx + 1}/${items.length}`}</p>
           </div>
           <div className="flex gap-2">
             <button onClick={onMinimize} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">Réduire</button>
@@ -127,7 +127,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-xl font-black text-white">{it.icon} {it.name}</h2>
-                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-xs font-bold text-sky-200">🎬 Mouvement</button>
+                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-xs font-bold text-sky-200">Mouvement</button>
                                 <p className="text-xs text-slate-400">{it.arena} · repos {Math.floor(it.restSec / 60)} min{it.restSec % 60 ? ` ${it.restSec % 60}` : ''}</p>
               </div>
               {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
@@ -178,7 +178,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                         <p className="text-xs text-amber-200/80">{w.label}{it.timed ? ' s' : ''} · pas compté dans la séance</p>
                       </div>
                       <button onClick={() => toggleWarm(i, w)} className={`px-3 py-2 rounded-lg text-sm font-black ${wd ? 'bg-amber-600 text-white' : 'bg-slate-800 text-amber-200'}`}>
-                        {wd ? '✔ Fait' : 'Fait'}
+                        {wd ? '✓ Fait' : 'Fait'}
                       </button>
                     </div>
                   );
@@ -204,12 +204,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     <button onClick={() => setReps(i, (Number(r) || 0) + (it.timed ? 5 : 1))} className="shrink-0 w-11 h-11 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                     {it.timed && (
                       <button onClick={() => toggleSw(i)} className={`px-2 h-9 rounded-lg text-xs font-black ${sw && sw.i === i ? 'bg-rose-600 text-white' : 'bg-cyan-700 text-white'}`}>
-                        {sw && sw.i === i ? `■ ${Math.max(0, Math.round((now - sw.start) / 1000))} s` : '⏱ Chrono'}
+                        {sw && sw.i === i ? `■ ${Math.max(0, Math.round((now - sw.start) / 1000))} s` : 'Chrono'}
                       </button>
                     )}
                   </div>
                   <button onClick={() => toggleSet(i)} className={`px-5 py-2.5 rounded-xl text-sm font-black ${d.done[i] ? 'bg-emerald-600 text-white' : 'bg-pink-600 text-white'}`}>
-                    {d.done[i] ? '✔ Faite' : 'Faite'}
+                    {d.done[i] ? '✓ Faite' : 'Faite'}
                   </button>
                 </div>
               ))}
@@ -217,7 +217,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                 <button onClick={addSet} className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">+ Série</button>
                 <button onClick={removeSet} className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">− Série</button>
               </div>
-              <p className="text-xs text-slate-500">« Faite » lance automatiquement le chrono de repos (bouton en bas à droite).</p>
+              <p className="text-xs text-slate-500">« Faite » lance le repos automatiquement.</p>
             </div>
 
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
@@ -250,14 +250,14 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               const dd = g.data[x.questId];
               const reps = dd.reps.filter((r, i) => dd.done[i]);
               return (
-                <div key={x.questId} className="flex items-center justify-between gap-2 text-sm bg-slate-950 border border-slate-800 rounded-xl p-2.5">
-                  <span className="font-bold text-white truncate">
+                <div key={x.questId} className="text-sm bg-slate-950 border border-slate-800 rounded-xl p-2.5 space-y-0.5">
+                  <p className="font-bold text-white">
                     {x.icon} {x.name}
-                    {dd.rpe ? <span className="ml-2 px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-xs font-bold">ressenti {dd.rpe}/10</span> : null}
-                  </span>
-                  <span className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
+                    {dd.rpe ? <span className="ml-2 text-xs font-bold text-slate-400 whitespace-nowrap">ressenti {dd.rpe}/10</span> : null}
+                  </p>
+                  <p className={reps.length ? 'text-emerald-300 font-bold' : 'text-slate-500'}>
                     {reps.length ? `${reps.join(' - ')} ${x.timed ? 's' : 'reps'}${x.kind === 'load' ? ` · ${fmtLoads(loadsOf(dd).filter((_, i) => dd.done[i]))}` : x.kind === 'assisted' ? ` · aide ${fmtLoads(assistsOf(dd).filter((_, i) => dd.done[i]))}` : ''}` : 'passé'}
-                  </span>
+                  </p>
                 </div>
               );
             })}

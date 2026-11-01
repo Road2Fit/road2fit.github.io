@@ -99,7 +99,7 @@ export function App() {
       const d = e.detail || {};
       const at = new Date().toISOString();
       setGameState(prev => ({ ...prev, animFlags: [...(prev.animFlags || []), { id: 'af_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), animId: d.animId || '', view: d.view || 'side', name: d.name || '', at }] }));
-      triggerToast('🚩 Noté, merci ! L’animation sera revérifiée.');
+      triggerToast('Noté, merci ! L’animation sera revérifiée.');
     };
     window.addEventListener('rondoufit-animflag', h);
     return () => window.removeEventListener('rondoufit-animflag', h);

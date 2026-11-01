@@ -28,7 +28,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
   if (!friends.available) {
     return (
       <section className={card} data-testid="friends-offline">
-        <h3 className="font-black text-white">👥 Amis</h3>
+        <h3 className="font-black text-white">Amis</h3>
         <p className="text-sm text-slate-300">Pour ajouter des amis et partager ton profil, connecte-toi à ton compte : ton code d’ami est lié à ton compte.</p>
         <button type="button" onClick={onOpenAccount} className="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black">Ouvrir mon compte</button>
       </section>
@@ -38,7 +38,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
   if (!friends.enabled) {
     return (
       <section className={card} data-testid="friends-intro">
-        <h3 className="font-black text-white">👥 Amis</h3>
+        <h3 className="font-black text-white">Amis</h3>
         <p className="text-sm text-slate-300">Reçois un code à 7 caractères à donner à tes amis. Celui qui le saisit peut voir ton profil : prénom ou pseudo, rang, niveau, dernière séance, maxima et liste d’exercices.</p>
         <p className="text-xs text-slate-400">Jamais ton poids, tes photos ni tes notes. Tu peux couper le partage ou changer de code quand tu veux. Rien n’est partagé tant que tu n’as pas activé.</p>
         <button type="button" data-testid="friends-enable" onClick={friends.enable} className="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black">Activer les amis</button>
@@ -64,11 +64,11 @@ export function FriendsTab({ friends, onOpenAccount }) {
   return (
     <div className="space-y-4" data-testid="friends-tab">
       <section className={card}>
-        <h3 className="font-black text-white">👥 Mon code d’ami</h3>
+        <h3 className="font-black text-white">Mon code d’ami</h3>
         <p className="text-xs text-slate-400">Donne ce code à quelqu’un : s’il le saisit, il pourra voir ton profil (prénom ou pseudo, rang, niveau, dernière séance, maxima, exercices). Jamais ton poids, tes photos ni tes notes.</p>
         <div className="flex items-center gap-3 flex-wrap">
           <span data-testid="my-code" className="font-mono text-3xl font-black tracking-[0.3em] text-pink-300 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2">{friends.code || '·······'}</span>
-          <button type="button" onClick={copy} disabled={!friends.code} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-sm font-bold text-white">{copied ? '✓ Copié' : '📋 Copier'}</button>
+          <button type="button" onClick={copy} disabled={!friends.code} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-sm font-bold text-white">{copied ? '✓ Copié' : 'Copier'}</button>
         </div>
         <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
           <input type="checkbox" data-testid="share-toggle" checked={friends.share} onChange={e => friends.setShare(e.target.checked)} className="w-4 h-4" />
@@ -80,7 +80,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
       </section>
 
       <section className={card}>
-        <h3 className="font-black text-white">➕ Ajouter un ami</h3>
+        <h3 className="font-black text-white">Ajouter un ami</h3>
         <form onSubmit={submit} className="flex gap-2">
           <input
             data-testid="friend-input"
@@ -101,7 +101,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
 
       <section className={card}>
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-white">🤝 Mes amis ({friends.list.length})</h3>
+          <h3 className="font-black text-white">Mes amis ({friends.list.length})</h3>
           <button type="button" onClick={friends.refresh} className="text-xs underline text-slate-400">{friends.loading ? 'Mise à jour…' : 'Actualiser'}</button>
         </div>
         {friends.list.length === 0 && <p className="text-sm text-slate-400">Pas encore d’ami. Saisis le code d’un ami ci-dessus, ou donne-lui le tien.</p>}
@@ -114,7 +114,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
                   <div className="font-black text-white truncate">{nameOf(f)}{rankOf(f) && <span data-testid="friend-rank" className="ml-1.5 text-pink-300">{rankOf(f)}</span>}</div>
                   <div className="text-xs text-slate-400">{s.lastSession ? `Dernière séance : ${dateFr(s.lastSession.date)}` : 'Pas encore de séance'}</div>
                 </div>
-                <div className="flex gap-1.5 shrink-0"><span className={chip}>Niv. {s.level || 1}</span>{s.streak > 0 && <span className={chip}>🔥 {s.streak} j</span>}</div>
+                <div className="flex gap-1.5 shrink-0"><span className={chip}>Niv. {s.level || 1}</span>{s.streak > 0 && <span className={chip}>{s.streak} j</span>}</div>
               </button>
             );
           })}
@@ -135,17 +135,17 @@ function FriendProfile({ friend, onBack, onRemove }) {
         <h3 className="text-xl font-black text-white">{nameOf(friend)}{rankOf(friend) && <span data-testid="friend-profile-rank" className="ml-2 text-base text-pink-300">{rankOf(friend)}</span>}</h3>
         <div className="flex flex-wrap gap-1.5">
           <span className={chip}>Niveau {s.level || 1}</span>
-          <span className={chip}>🔥 Série : {s.streak || 0} j</span>
-          <span className={chip}>📅 {s.sessionDays || 0} jour(s) d’entraînement</span>
+          <span className={chip}>Série : {s.streak || 0} j</span>
+          <span className={chip}>{s.sessionDays || 0} jour(s) d’entraînement</span>
           <span className={chip}>Cette semaine : {s.weekDays || 0} jour(s)</span>
-          {s.sport && <span className={chip}>🏅 {cleanText(s.sport)}</span>}
+          {s.sport && <span className={chip}>{cleanText(s.sport)}</span>}
           <span className={chip}>{(s.exercises || []).length} exercice(s)</span>
         </div>
         <p className="text-xs text-slate-500">Profil mis à jour le {new Date(friend.updated_at).toLocaleDateString('fr-FR')}.</p>
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">🏋️ Dernière séance</h4>
+        <h4 className="font-black text-white">Dernière séance</h4>
         {s.lastSession ? (
           <>
             <p className="text-xs text-slate-400">{dateFr(s.lastSession.date)}</p>
@@ -162,7 +162,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">💯 Maxima</h4>
+        <h4 className="font-black text-white">Maxima</h4>
         {(s.maxima || []).length ? (
           <ul className="space-y-1.5">
             {s.maxima.map((m, i) => (
@@ -176,7 +176,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">📋 Ses exercices</h4>
+        <h4 className="font-black text-white">Ses exercices</h4>
         {Object.keys(byMuscle).length === 0 && <p className="text-sm text-slate-400">Aucun exercice pour l’instant.</p>}
         {Object.entries(byMuscle).map(([muscle, list]) => (
           <div key={muscle} className="space-y-1">

@@ -13,7 +13,7 @@ export function CoachHeader({ coach, guidedActive, onResumeGuided, trainingWeeks
             Muscu cette semaine : {coach.sessionsPerWeek - w0.remaining}/{coach.sessionsPerWeek}
           </span>
           <span className="px-2.5 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-300">
-            {w0.matchInWeek ? '🏆 Match cette semaine' : '🏐 Pas de match prévu'}
+            {w0.matchInWeek ? 'Match cette semaine' : 'Pas de match prévu'}
           </span>
           {w0.cycle && <span className="px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300">Cycle : semaine {w0.cycle.n}/{w0.cycle.len}</span>}
           {w0.deload && <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">Semaine allégée</span>}

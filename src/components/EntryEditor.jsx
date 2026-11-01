@@ -36,7 +36,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
 
   return (
     <form onSubmit={save} className="bg-slate-900 border border-pink-500/40 rounded-xl p-3.5 space-y-3">
-      <p className="text-xs font-black text-pink-300">✏️ Corriger cette séance</p>
+      <p className="text-xs font-black text-pink-300">Corriger cette séance</p>
 
       {cardio ? (
         <div className={`grid gap-2 ${isMinutes && !showElevation ? 'grid-cols-1' : isMinutes || !showElevation ? 'grid-cols-2' : 'grid-cols-3'}`}>
@@ -116,7 +116,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
         Les calories et le résumé sont recalculés, et le coach repart de ces valeurs pour la prochaine séance. L’EXP déjà gagnée ne change pas.
       </p>
       <div className="flex gap-2">
-        <button type="submit" className="px-4 py-2 rounded-xl font-black text-xs bg-gradient-to-r from-pink-600 to-purple-600 text-white">Enregistrer la correction</button>
+        <button type="submit" className="px-4 py-2 rounded-xl font-black text-xs bg-pink-600 hover:bg-pink-500 text-white">Enregistrer la correction</button>
         <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl font-bold text-xs bg-slate-800 text-slate-300 hover:text-white">Annuler</button>
       </div>
     </form>

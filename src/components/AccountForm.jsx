@@ -25,7 +25,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
   };
 
   if (sync.user) {
-    const status = sync.status === 'synced' ? '✅ Sauvegarde automatique activée.' : sync.status === 'error' ? `❌ ${sync.error || 'Synchronisation impossible.'}` : '⏳ Synchronisation en cours…';
+    const status = sync.status === 'synced' ? 'Sauvegarde automatique activée.' : sync.status === 'error' ? `${sync.error || 'Synchronisation impossible.'}` : 'Synchronisation en cours…';
     return (
       <div className="space-y-3" data-testid="account-connected">
         <p className="text-sm text-slate-300">Connecté : <strong className="text-white" data-testid="account-email">{sync.user.email}</strong></p>

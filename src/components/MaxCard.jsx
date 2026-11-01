@@ -52,7 +52,7 @@ function RecordForm({ result, onClear, onSave }) {
   return (
     <form onSubmit={submit} className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
       <p className="text-xs font-bold text-slate-300">
-        ✍️ Mon record réel
+        Mon record réel
         {current && <span className="ml-2 text-emerald-300">{current} <span className="text-slate-500 font-semibold">(le {fmtDate(manual.date)})</span></span>}
       </p>
       <div className="flex flex-wrap items-end gap-2">
@@ -114,8 +114,8 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
             D’après {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
             {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${result.basis.rir} rép en réserve)` : ''}.
           </p>
-          {!result.fromRecent && <p className="text-xs text-amber-300">⚠️ Aucune séance depuis plus de 90 jours : estimation d’après ta meilleure séance ancienne.</p>}
-          {result.basis.reps > 10 && <p className="text-xs text-amber-300">⚠️ Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
+          {!result.fromRecent && <p className="text-xs text-amber-300">Aucune séance depuis plus de 90 jours : estimation d’après ta meilleure séance ancienne.</p>}
+          {result.basis.reps > 10 && <p className="text-xs text-amber-300">Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
         </div>
       )}
 
@@ -157,10 +157,10 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
       {manual && kind === 'load' && !result.empty && (
         <p className="text-xs text-slate-400">
           {Math.abs(manual.kg - result.estimate) / manual.kg < 0.03
-            ? '🎯 Ton record réel confirme l’estimation.'
+            ? 'Ton record réel confirme l’estimation.'
             : manual.kg > result.estimate
-              ? `💪 Ton record réel dépasse l’estimation de ${Math.round(((manual.kg - result.estimate) / result.estimate) * 100)} %.`
-              : `ℹ️ L’estimation est ${Math.round(((result.estimate - manual.kg) / manual.kg) * 100)} % au-dessus de ton record réel : tu as sans doute encore de la marge.`}
+              ? `Ton record réel dépasse l’estimation de ${Math.round(((manual.kg - result.estimate) / result.estimate) * 100)} %.`
+              : `L’estimation est ${Math.round(((result.estimate - manual.kg) / manual.kg) * 100)} % au-dessus de ton record réel : tu as sans doute encore de la marge.`}
         </p>
       )}
 
@@ -168,7 +168,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
 
       {reference > 0 && (
         <details className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-          <summary className="cursor-pointer text-xs font-bold text-slate-300">📋 Charges de travail ({manual ? 'd’après ton record réel' : 'd’après l’estimation'} : {fmt(reference)} kg)</summary>
+          <summary className="cursor-pointer text-xs font-bold text-slate-300">Charges de travail ({manual ? 'd’après ton record réel' : 'd’après l’estimation'} : {fmt(reference)} kg)</summary>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {workingLoads(reference, step).map(l => (
               <div key={l.pct} className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center">

@@ -8,7 +8,7 @@ export function CoachWeightHealth({
 }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">⚖️ Poids & activité</h3>
+      <h3 className="font-black text-white">Poids & activité</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
           <span className="text-xs font-bold uppercase text-slate-400 block">Poids actuel</span>
@@ -38,14 +38,14 @@ export function CoachWeightHealth({
       </p>
       {strengthTrend && (
         <p className={`text-xs rounded-xl border p-3 ${!pace.unknown && pace.level === 'fast' && strengthTrend.pct <= -3 ? 'bg-rose-950/30 border-rose-500/40 text-rose-100' : 'bg-slate-950 border-slate-800 text-slate-300'}`}>
-          💪 Ta force estimée a varié de <b>{strengthTrend.pct > 0 ? '+' : ''}{coachFmt(strengthTrend.pct)} %</b> sur environ 4 semaines ({strengthTrend.n} exercice(s) avec charge).{' '}
+          Ta force estimée a varié de <b>{strengthTrend.pct > 0 ? '+' : ''}{coachFmt(strengthTrend.pct)} %</b> sur environ 4 semaines ({strengthTrend.n} exercice(s) avec charge).{' '}
           {!pace.unknown && pace.level === 'fast' && strengthTrend.pct <= -3 && 'Tu perds du poids vite ET de la force : c’est le signe possible d’une perte de muscle. Ralentis le déficit et vérifie tes protéines (Garthe 2011).'}
           {!pace.unknown && pace.level !== 'slow' && strengthTrend.pct >= -2 && 'Tu perds du poids en gardant ta force : c’est exactement ce qu’on cherche.'}
           {!pace.unknown && pace.level === 'slow' && strengthTrend.pct >= 2 && 'Poids stable et force en hausse : tu fais de la recomposition corporelle.'}
         </p>
       )}
       <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
-        <p className="font-bold text-slate-200">🔥 Calories (estimation)</p>
+        <p className="font-bold text-slate-200">Calories (estimation)</p>
         <div className="flex flex-wrap items-center gap-2">
           <input type="number" placeholder="Taille (cm)" value={(coach.profile || {}).heightCm} onChange={e => updateCoach({ profile: { ...(coach.profile || {}), heightCm: e.target.value } })} className="w-28 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
           <input type="number" placeholder="Âge" value={(coach.profile || {}).age} onChange={e => updateCoach({ profile: { ...(coach.profile || {}), age: e.target.value } })} className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />

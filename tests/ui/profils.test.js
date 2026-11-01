@@ -21,7 +21,7 @@ describe('profil de travail', () => {
     expect(saved(h).coach.workProfile).toBe('puissance');
     const t = pageText(h);
     expect(t).toContain('3 à 5'); // fiche du profil
-    expect(t).toContain('🎯 Puissance'); // pastille dans la prochaine séance
+    expect(t).toContain('Puissance'); // pastille dans la prochaine séance
     await expandCoachDetails(h);
     expect(pageText(h)).toContain('Profil Puissance'); // explications de chaque exercice
     expect(h.errors).toEqual([]);

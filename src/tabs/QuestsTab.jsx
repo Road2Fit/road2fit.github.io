@@ -179,7 +179,7 @@ export function QuestsTab({
 
                         {isTimedQuest(quest) ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                            ⏱ Chronométré • Cible {quest.goalValue || goalReps} s
+                            Chronométré • Cible {quest.goalValue || goalReps} s
                           </span>
                         ) : quest.unit === 'reps' ? (
                           <span
@@ -190,16 +190,16 @@ export function QuestsTab({
                             }`}
                           >
                             {(Number(quest.currentAssistanceKg) || 0) > 0
-                              ? `🪢 Aide : -${quest.currentAssistanceKg} kg (Cible : ${
+                              ? `Aide : -${quest.currentAssistanceKg} kg (Cible : ${
                                   Number(quest.goalAssistanceKg) > 0
                                     ? `-${quest.goalAssistanceKg} kg`
                                     : 'Strict 0 kg'
                                 })`
-                              : '🦅 Strict • 0 kg d’aide'}
+                              : 'Strict • 0 kg d’aide'}
                           </span>
                         ) : (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                            🏋️ {quest.currentValue} kg / Cible {quest.goalValue} kg
+                            {quest.currentValue} kg / Cible {quest.goalValue} kg
                           </span>
                         )}
                       </div>
@@ -321,20 +321,20 @@ export function QuestsTab({
                             {goalMode === 'free_mode' ? 'Objectif' : `Objectif Niv.${questLevel + 1}`}
                           </span>
                           <span className="font-extrabold text-amber-300">
-                            {goalMode === 'free_mode' ? '🕊️ Libre' : `${quest.goalValue} ${quest.unit}`}
+                            {goalMode === 'free_mode' ? 'Libre' : `${quest.goalValue} ${quest.unit}`}
                           </span>
                         </div>
                       </div>
                       {quest.unit === 'km' && quest.durationMin && (
                         <div className="flex flex-wrap items-center justify-between text-xs text-slate-300 px-1 pt-1">
                           <span>
-                            ⏱️ Allure :{' '}
+                            Allure :{' '}
                             <strong className="text-emerald-300">
                               {formatPaceAndSpeed(quest.currentValue, quest.durationMin).pace}
                             </strong>{' '}
                             ({formatPaceAndSpeed(quest.currentValue, quest.durationMin).speed})
                           </span>
-                          {cardioHasElevation(quest.cardioMode) && <span>⛰️ D+ : {quest.elevationM || 0} m</span>}
+                          {cardioHasElevation(quest.cardioMode) && <span>D+ : {quest.elevationM || 0} m</span>}
                         </div>
                       )}
                     </div>

@@ -6,7 +6,7 @@ export function SessionPhoto({ date, label, highlight }) {
   const photos = usePhotos().filter(p => p.date === date);
   const todo = highlight && photos.length === 0;
   return (
-    <div className={`rounded-xl p-3 space-y-2 ${todo ? 'bg-pink-950/60 border-2 border-pink-500 animate-pulse' : 'bg-slate-950 border border-slate-800'}`}>
+    <div className={`rounded-xl p-3 space-y-2 ${todo ? 'bg-pink-950/60 border border-pink-500' : 'bg-slate-950 border border-slate-800'}`}>
       <p className="text-xs font-extrabold text-white">{todo ? '📸 Vas-y, prends ta photo de fin de séance !' : '📸 Souvenir de la séance'}</p>
       {todo && <p className="text-xs text-pink-200">Ne l’oublie pas : c’est le souvenir de la séance du jour pour ton calendrier.</p>}
       {photos.length > 0 && (

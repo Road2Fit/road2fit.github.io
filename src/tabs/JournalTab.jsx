@@ -33,7 +33,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                   onClick={() => setSelectedJournalDay(dayObj.date)}
                   className={`w-full text-left p-3.5 rounded-2xl border transition flex flex-col gap-2 ${
                     isSelected
-                      ? 'bg-gradient-to-r from-pink-950/60 to-purple-950/50 border-pink-400 shadow-lg shadow-pink-500/10'
+                      ? 'bg-slate-800 border-pink-400'
                       : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -42,7 +42,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                       {formatDayFr(dayObj.date)}
                     </span>
                     <span className="px-2 py-0.5 rounded-lg bg-orange-500/20 text-orange-300 text-xs font-extrabold border border-orange-500/30">
-                      🔥 {dayObj.totalKcal} kcal
+                      {dayObj.totalKcal} kcal
                     </span>
                   </div>
 
@@ -52,12 +52,12 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     </span>
                     {dayObj.improvedCount > 0 && (
                       <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                        📈 Progrès sur {dayObj.improvedCount} exo(s)
+                        Progrès sur {dayObj.improvedCount} exo(s)
                       </span>
                     )}
                     {dayObj.goalsBeatenCount > 0 && (
                       <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-black border border-amber-500/40">
-                        ⭐ {dayObj.goalsBeatenCount} Objectif(s) Battu(s)
+                        {dayObj.goalsBeatenCount} Objectif(s) Battu(s)
                       </span>
                     )}
                   </div>
@@ -83,10 +83,10 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-black">
-                  🔥 {activeJournalDayObj.totalKcal} kcal brûlées
+                  {activeJournalDayObj.totalKcal} kcal brûlées
                 </span>
                 <span className="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-black">
-                  🛡️ {activeJournalDayObj.totalSets} séries ({activeJournalDayObj.totalReps} reps)
+                  {activeJournalDayObj.totalSets} séries ({activeJournalDayObj.totalReps} reps)
                 </span>
               </div>
             </div>
@@ -112,7 +112,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                           </span>
                           {comparison.goalBeaten && (
                             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-300 text-xs font-black">
-                              ⭐ OBJECTIF BATTU !
+                              OBJECTIF BATTU !
                             </span>
                           )}
                         </div>
@@ -122,7 +122,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
 
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-1 rounded-lg bg-orange-500/15 text-orange-300 font-bold text-xs">
-                        🔥 {entry.calories || 45} kcal
+                        {entry.calories || 45} kcal
                       </span>
                       <button
                         type="button"
@@ -160,16 +160,16 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       {quest.unit === 'kg' && (
                         <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-extrabold">
-                          🏋️ {isMixed(entry.setLoads) ? `Charges : ${fmtLoads(entry.setLoads)}` : `Charge : ${entry.value} kg`}
+                          {isMixed(entry.setLoads) ? `Charges : ${fmtLoads(entry.setLoads)}` : `Charge : ${entry.value} kg`}
                         </span>
                       )}
                       {quest.unit === 'reps' && !isTimedQuest(quest) && (
                         <span className="px-2.5 py-1 rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-extrabold">
                           {isMixed(entry.setAssists)
-                            ? `🪢 Aide élastique : -${fmtLoads(entry.setAssists)}`
+                            ? `Aide élastique : -${fmtLoads(entry.setAssists)}`
                             : (Number(entry.assistanceKg) || 0) > 0
-                            ? `🪢 Aide élastique : -${entry.assistanceKg} kg`
-                            : '🦅 Strict (0 kg d’aide)'}
+                            ? `Aide élastique : -${entry.assistanceKg} kg`
+                            : 'Strict (0 kg d’aide)'}
                         </span>
                       )}
                       {setsArr.map((r, sIdx) => (
@@ -183,9 +183,9 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-300 font-bold">
-                      <span>🏃 Distance/Durée : {entry.value} {quest.unit}</span>
-                      {entry.durationMin && <span>⏱️ Temps : {entry.durationMin} min</span>}
-                      {entry.elevationM !== undefined && cardioHasElevation(quest.cardioMode) && <span>⛰️ D+ : {entry.elevationM} m</span>}
+                      <span>Distance/Durée : {entry.value} {quest.unit}</span>
+                      {entry.durationMin && <span>Temps : {entry.durationMin} min</span>}
+                      {entry.elevationM !== undefined && cardioHasElevation(quest.cardioMode) && <span>D+ : {entry.elevationM} m</span>}
                     </div>
                   )}
 
@@ -198,7 +198,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-extrabold uppercase tracking-wider text-xs text-slate-300">
-                        🔍 Comparaison avec la séance précédente
+                        Comparaison avec la séance précédente
                       </span>
                       {!comparison.isFirst && (
                         <span className="text-xs font-bold text-slate-300">

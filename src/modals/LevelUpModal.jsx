@@ -8,7 +8,7 @@ export function LevelUpModal({
   setNextGoalReps, setNextGoalSets, setNextGoalValue,
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border-2 border-amber-400/80 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
@@ -17,7 +17,7 @@ export function LevelUpModal({
             </div>
             <div>
               <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                {pick('🎵 ♪ Rondoudouuuu ! ♪ Objectif Validé !', '✅ Objectif atteint !')}
+                {pick('🎵 ♪ Rondoudouuuu ! ♪ Objectif Validé !', 'Objectif atteint !')}
               </span>
               <h3 className="text-lg font-black text-white">
                 {levelUpModalQuest.name} passe au Niveau {(Number(levelUpModalQuest.level) || 1) + 1} !
@@ -45,9 +45,9 @@ export function LevelUpModal({
             <>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'weight_only', label: '🏋️ Poids (kg)' },
-                  { id: 'reps_only', label: '🔁 Répétitions' },
-                  { id: 'sets_reps', label: '🛡️ Séries × Reps' }
+                  { id: 'weight_only', label: 'Poids (kg)' },
+                  { id: 'reps_only', label: 'Répétitions' },
+                  { id: 'sets_reps', label: 'Séries × Reps' }
                 ].map(m => (
                   <button
                     key={m.id}
@@ -177,7 +177,7 @@ export function LevelUpModal({
                 {levelUpModalQuest.unit === 'reps' && !isTimedQuest(levelUpModalQuest) && (
                   <div>
                     <label className="block text-xs font-bold text-violet-300 mb-1">
-                      🪢 Aide Élastique Cible en kg (0 = Strict)
+                      Aide Élastique Cible en kg (0 = Strict)
                     </label>
                     <input
                       type="number"

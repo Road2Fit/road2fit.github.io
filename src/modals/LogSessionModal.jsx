@@ -13,7 +13,7 @@ export function LogSessionModal({
   setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
@@ -44,18 +44,20 @@ export function LogSessionModal({
             : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} ${repUnit(logModalQuest)}${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : isTimedQuest(logModalQuest) ? '' : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
           return (
             <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 py-2 text-xs text-indigo-100">
-              🕘 Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
+              Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
             </div>
           );
         })()}
 
         {logModalQuest.type === 'strength' && (
-          <button type="button" onClick={() => openMovement(logModalQuest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="w-full py-2 rounded-xl bg-sky-900/50 hover:bg-sky-800/60 border border-sky-500/40 text-sm font-bold text-sky-200">🎬 Mouvement</button>
-        )}
-        {logModalQuest.type === 'strength' && !isTimedQuest(logModalQuest) && (
-          <button type="button" onClick={applyCoachTarget} className="w-full py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-sm font-black">
-            🧠 Remplir comme prévu par le coach
-          </button>
+          <div className="flex gap-2">
+          <button type="button" onClick={() => openMovement(logModalQuest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="shrink-0 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200">Geste</button>
+          {!isTimedQuest(logModalQuest) && (
+            <button type="button" onClick={applyCoachTarget} className="flex-1 py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-bold">
+              Remplir comme prévu par le coach
+            </button>
+          )}
+          </div>
         )}
 
         <form onSubmit={handleSaveSession} className="space-y-4">
@@ -79,7 +81,7 @@ export function LogSessionModal({
               {logModalQuest.unit === 'kg' && (
                 <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
                   <label className="block text-xs font-bold text-slate-300 mb-2">
-                    🏋️ Charge utilisée (en kg) — Cible :{' '}
+                    Charge utilisée (en kg) — Cible :{' '}
                     <span className="text-amber-300">{logModalQuest.goalValue} kg</span>
                   </label>
                   <div className="flex items-center gap-3">
@@ -217,7 +219,7 @@ export function LogSessionModal({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="text-xs font-extrabold uppercase tracking-wider text-pink-300 block">
-                      🔴 {isTimedQuest(logModalQuest) ? 'Vos Séries & Durées (secondes)' : 'Vos Séries & Répétitions'}
+                      {isTimedQuest(logModalQuest) ? 'Vos Séries & Durées (secondes)' : 'Vos Séries & Répétitions'}
                     </span>
                   </div>
 
@@ -304,7 +306,7 @@ export function LogSessionModal({
                               </span>
                               {isSetOk ? (
                                 <span className="text-xs font-bold text-emerald-400">
-                                  🔴 Validée ({repCount}/{targetR})
+                                  Validée ({repCount}/{targetR})
                                 </span>
                               ) : (
                                 <span className="text-xs text-slate-400">

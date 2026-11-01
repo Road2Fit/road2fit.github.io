@@ -63,7 +63,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
       rec.onstart = () => {
         setIsListening(true);
-        setMicStatusMsg('🟢 Micro actif : dicte toute ta séance d’une traite (plusieurs exercices)...');
+        setMicStatusMsg('Micro actif : dicte toute ta séance d’une traite (plusieurs exercices)...');
       };
 
       rec.onresult = (event) => {
@@ -152,7 +152,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               rpe: 7,
               calories: item.calories,
               goalBeaten: false,
-              note: `🎤 Dictée : ${item.summary}`
+              note: `Dictée : ${item.summary}`
             }
           : {
               id: `h_voice_${Date.now()}_${Math.random()}`,
@@ -165,7 +165,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               rpe: 7,
               calories: item.calories,
               goalBeaten: false,
-              note: `🎤 Dictée : ${item.summary}`
+              note: `Dictée : ${item.summary}`
             };
 
         const existingIdx = updatedQuests.findIndex(
@@ -229,7 +229,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
     playGameSound('boss', gameState.soundEnabled);
     triggerToast(
-      `🎤 ${editableItems.length} exercice(s) validé(s) d'un coup !`,
+      `${editableItems.length} exercice(s) validé(s) d'un coup !`,
       `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}` +
         (createdNames.length ? ` • ${createdNames.length} nouvel(s) objectif(s) ajouté(s)` : '') +
         (newArenas.length ? ` • ${pick('Arène débloquée', 'Groupe musculaire ajouté')} : ${newArenas.join(', ')}` : '') +
@@ -247,7 +247,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
           <div className="m-auto bg-slate-900 border border-pink-500/40 rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                   isListening ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-500'
                 }`}
               >
-                {isListening ? '⏹️ Stop Micro' : '🎙️ Micro Direct'}
+                {isListening ? 'Stop Micro' : 'Micro Direct'}
               </button>
               {combinedText && (
                 <button
@@ -315,7 +315,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               }
               className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-pink-500/40 text-pink-300 font-semibold"
             >
-              🪄 Tester : « développer coucher 50kg 3×8 + tracons élastique 10kg 6-6-4 + ip trust 80kg 4×10 + footing 4,5km »
+              Tester : « développer coucher 50kg 3×8 + tracons élastique 10kg 6-6-4 + ip trust 80kg 4×10 + footing 4,5km »
             </button>
           </div>
 
@@ -328,7 +328,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
           {editableItems.length > 0 && (
             <div className="bg-slate-950/95 border border-emerald-500/40 rounded-xl p-3.5 space-y-3">
               <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                ✨ Synthèse de ta séance ({editableItems.length} exercice(s) détecté(s)) :
+                Synthèse de ta séance ({editableItems.length} exercice(s) détecté(s)) :
               </p>
               <div className="space-y-2">
                 {editableItems.map(item => (
@@ -365,7 +365,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 onClick={handleConfirmAllVoiceSessions}
                 className="w-full py-2.5 rounded-xl text-xs sm:text-sm font-black bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-lg transition"
               >
-                ✅ Valider toute la séance en 1 clic ({editableItems.length} exercice(s))
+                Valider toute la séance en 1 clic ({editableItems.length} exercice(s))
               </button>
             </div>
           )}

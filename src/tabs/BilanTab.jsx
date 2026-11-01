@@ -6,7 +6,7 @@ export function BilanTab({ gameState, levelInfo, records, weekData }) {
       <XpProgress gameState={gameState} levelInfo={levelInfo} />
 
       <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
-        <h3 className="font-black text-white">📊 Bilan de la semaine <span className="text-xs text-slate-400 font-semibold">(vs semaine précédente)</span></h3>
+        <h3 className="font-black text-white">Bilan de la semaine <span className="text-xs text-slate-400 font-semibold">(vs semaine précédente)</span></h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { k: 'sessions', l: 'Séances', u: '' },
@@ -31,7 +31,7 @@ export function BilanTab({ gameState, levelInfo, records, weekData }) {
       </section>
 
       <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
-        <h3 className="font-black text-white">🏅 Records personnels</h3>
+        <h3 className="font-black text-white">Records personnels</h3>
         {records.length === 0 && <p className="text-xs text-slate-400">Enregistre une séance pour voir vos records apparaître.</p>}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {records.map(g => (

@@ -1,7 +1,7 @@
 export function RankUpModal({ celebration, onClose }) {
   const { level, rank, nextRank } = celebration;
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex p-4 pt-20 pb-24 sm:py-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border-2 border-amber-400/70 rounded-3xl max-w-sm w-full p-7 shadow-2xl shadow-amber-500/20 text-center space-y-4">
         <div className={`mx-auto w-28 h-28 rounded-3xl bg-gradient-to-br ${rank.color} flex items-center justify-center text-6xl shadow-xl animate-bounce`}>
           {rank.badge}

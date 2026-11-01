@@ -57,6 +57,6 @@ describe('changer d’exercice depuis Ajuster', () => {
     expect(boutons.some(t => t.includes('Tractions Supination'))).toBe(true);
     expect(boutons.find(t => t.includes('Squat Barre'))).toContain('Autre unité'); // listé, mais il faudra l'ajouter comme nouvel exercice
     expect(boutons.some(t => t.includes('Course à pied'))).toBe(false);
-    expect(findByText(h, 'Créer la Quête')).toHaveLength(0);
+    expect(findByText(h, 'Créer la quête')).toHaveLength(0);
   }, TIMEOUT);
 });

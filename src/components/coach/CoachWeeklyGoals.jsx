@@ -4,11 +4,11 @@ export function CoachWeeklyGoals({ onClaimWeekly, weeklyGoals }) {
   return (
     <section className={card}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-black text-white">🏅 Objectifs de la semaine</h3>
+        <h3 className="font-black text-white">Objectifs de la semaine</h3>
         {weeklyGoals.allDone && !weeklyGoals.claimed && (
-          <button onClick={() => onClaimWeekly(weeklyGoals.weekStart)} className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-black">Réclamer +{weeklyGoals.xp} XP</button>
+          <button onClick={() => onClaimWeekly(weeklyGoals.weekStart)} className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-black">Réclamer +{weeklyGoals.xp} EXP</button>
         )}
-        {weeklyGoals.claimed && <span className="text-xs font-bold text-emerald-300">✅ Récompense récupérée</span>}
+        {weeklyGoals.claimed && <span className="text-xs font-bold text-emerald-300">Récompense récupérée</span>}
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
         {weeklyGoals.goals.map(g => (
@@ -23,7 +23,7 @@ export function CoachWeeklyGoals({ onClaimWeekly, weeklyGoals }) {
           </div>
         ))}
       </div>
-      <p className="text-xs text-slate-500">Les trois objectifs atteints dans la semaine rapportent {weeklyGoals.xp} XP bonus (une fois par semaine).</p>
+      <p className="text-xs text-slate-500">Les trois objectifs atteints dans la semaine rapportent {weeklyGoals.xp} EXP bonus (une fois par semaine).</p>
     </section>
   );
 }

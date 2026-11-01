@@ -33,7 +33,7 @@ describe('échauffement avant les séries de travail', () => {
     expect(lignes.length).toBeLessThanOrEqual(2);
 
     await click(h, lignes[0]);
-    expect(zone().textContent).toContain('✔ Fait');
+    expect(zone().textContent).toContain('✓ Fait');
     // les séries de travail ne sont pas touchées
     const faites = () => [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite');
     expect(faites().length).toBeGreaterThanOrEqual(2);
