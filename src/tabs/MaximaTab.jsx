@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { useMemo, useState } from 'react';
 import { coachStep } from '../coach/settings';
 import { MaxCard } from '../components/MaxCard';
@@ -38,7 +39,7 @@ export function MaximaTab({ gameState, setGameState }) {
   return (
     <div className="space-y-6">
       <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
-        <h2 className="text-lg font-black text-white">Mes maxima</h2>
+        <h2 className="text-lg font-black text-white"><Art name="gauge" />Mes maxima</h2>
         <p className="text-sm text-slate-300">Ce que tu pourrais soulever en une seule répétition, estimé d’après tes séances.</p>
         <details className="text-sm text-slate-300">
           <summary className="text-xs font-bold text-slate-400">Comment lire ces chiffres</summary>
@@ -55,7 +56,7 @@ export function MaximaTab({ gameState, setGameState }) {
           </span>
         </label>
         <details className="text-xs text-slate-400">
-          <summary className="cursor-pointer font-bold text-slate-300">Comment c’est calculé (sources)</summary>
+          <summary className="cursor-pointer font-bold text-slate-300"><Art name="book" />Comment c’est calculé (sources)</summary>
           <ul className="mt-2 space-y-1.5 list-disc pl-5">
             <li><strong>Charges :</strong> moyenne de 7 équations de prédiction du 1RM (Epley 1985, Brzycki 1993, Lander 1985, Lombardi 1989, Mayhew 1992, O’Conner 1989, Wathen 1994) appliquées à tes séries de 1 à 15 répétitions. Aucune n’est la meilleure pour tous les exercices : une étude de 2024 comparant neuf équations sur le développé couché, le squat et le curl le confirme (
               <a className="text-pink-300 underline" href="https://doaj.org/article/248a0c4089a641d5b87f1ca3f9770895" target="_blank" rel="noreferrer">Int. J. Strength Cond.</a>

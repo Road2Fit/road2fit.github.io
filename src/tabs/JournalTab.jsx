@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { cleanText } from '../edition';
 import { formatDayFr } from '../lib/dates';
 import { cardioHasElevation } from '../lib/calories';
@@ -15,7 +16,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-4 space-y-3">
         <h3 className="text-sm font-black uppercase tracking-wider text-pink-300 flex items-center gap-2">
-          <Calendar className="w-4 h-4" /> Jours d’entraînement ({dailyJournalList.length})
+          <Art name="calendar" size={18} bare /> Jours d’entraînement ({dailyJournalList.length})
         </h3>
 
         {dailyJournalList.length === 0 ? (
@@ -77,7 +78,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                   Rapport Détaillé de la Journée
                 </span>
                 <h3 className="text-xl font-black text-white mt-0.5">
-                  Séance du {formatDayFr(activeJournalDayObj.date)}
+                  <Art name="dumbbell" size={22} />Séance du {formatDayFr(activeJournalDayObj.date)}
                 </h3>
               </div>
 
@@ -198,7 +199,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-extrabold uppercase tracking-wider text-xs text-slate-300">
-                        Comparaison avec la séance précédente
+                        <Art name="chart" />Comparaison avec la séance précédente
                       </span>
                       {!comparison.isFirst && (
                         <span className="text-xs font-bold text-slate-300">

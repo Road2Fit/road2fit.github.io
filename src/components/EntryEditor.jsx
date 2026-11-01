@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { useState } from 'react';
 import { cardioHasElevation } from '../lib/calories';
 import { isTimedQuest, repUnit } from '../lib/quests';
@@ -36,7 +37,7 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
 
   return (
     <form onSubmit={save} className="bg-slate-900 border border-pink-500/40 rounded-xl p-3.5 space-y-3">
-      <p className="text-xs font-black text-pink-300">Corriger cette séance</p>
+      <p className="text-xs font-black text-pink-300"><Art name="pencil" />Corriger cette séance</p>
 
       {cardio ? (
         <div className={`grid gap-2 ${isMinutes && !showElevation ? 'grid-cols-1' : isMinutes || !showElevation ? 'grid-cols-2' : 'grid-cols-3'}`}>

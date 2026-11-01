@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { card } from './ui';
 
 export function CoachHeader({ coach, guidedActive, onResumeGuided, trainingWeeks, updateCoach, w0, weekStart0 }) {
@@ -5,7 +6,7 @@ export function CoachHeader({ coach, guidedActive, onResumeGuided, trainingWeeks
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-black text-white">Cette semaine</h2>
+          <h2 className="font-black text-white"><Art name="calendar" />Cette semaine</h2>
           <p className="text-xs text-slate-400 mt-0.5">Séances calculées d’après ton historique : des repères, pas un avis médical.</p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-bold">

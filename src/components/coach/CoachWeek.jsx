@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { COACH_TYPES } from '../../coach/settings';
 import { card } from './ui';
 
@@ -5,7 +6,7 @@ import { card } from './ui';
 export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">Ma semaine</h3>
+      <h3 className="font-black text-white"><Art name="calendar" />Ma semaine</h3>
       {ov.weeks.map(w => (
         <div key={w.weekStart}>
           <p className="text-xs text-slate-400 mb-1.5">

@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { DAILY_FULL_XP } from '../lib/xp';
 import { addDaysISO, getTodayISODate, getWeekStart } from '../lib/dates';
 
@@ -19,7 +20,7 @@ export function XpProgress({ gameState, levelInfo }) {
 
   return (
     <section className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
-      <h3 className="font-black text-white">Mon EXP semaine par semaine</h3>
+      <h3 className="font-black text-white"><Art name="chart" />Mon EXP semaine par semaine</h3>
       <div className="flex items-end gap-1.5 h-24">
         {weeks.map(w => (
           <div key={w.ws} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">

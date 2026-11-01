@@ -1,3 +1,5 @@
+import { Play } from '../icons';
+import { Art } from './Art';
 import { useMemo } from 'react';
 import { coachOverview } from '../coach/advice';
 import { coachDayLabel } from '../coach/settings';
@@ -33,24 +35,27 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
   return (
     <section className="bg-slate-900 border border-pink-400/50 rounded-2xl p-4 sm:p-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center shrink-0"><Art name={guidedActive ? 'dumbbell' : 'coach'} size={32} bare /></div>
         <div className="space-y-0.5">
           <h2 className="text-lg sm:text-xl font-black text-white">{headline}</h2>
           <p className="text-sm text-slate-300">{detail}</p>
         </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           {guidedActive && (
             <button type="button" onClick={onResumeGuided} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base bg-emerald-600 hover:bg-emerald-500 text-white">
-              ▶ Reprendre ma séance
+              Reprendre ma séance
             </button>
           )}
           {canStart && (
-            <button type="button" onClick={() => onStartGuided(session)} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base bg-pink-600 hover:bg-pink-500 text-white">
-              ▶ Lancer ma séance
+            <button type="button" onClick={() => onStartGuided(session)} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-500 text-white">
+              <Play className="w-4 h-4 fill-current" />Lancer ma séance
             </button>
           )}
           {!onCoachTab && (
             <button type="button" onClick={onOpenCoach} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-bold text-sm sm:text-base bg-slate-900/80 hover:bg-slate-800 text-white border border-slate-600">
-              Ouvrir le Coach
+              <Art name="coach" />Ouvrir le Coach
             </button>
           )}
         </div>

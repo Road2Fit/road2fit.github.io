@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { coachDateFR, coachFmt } from '../../coach/labels';
 import { card } from './ui';
 import { sportInfo } from '../../data/sports';
@@ -8,7 +9,7 @@ export function CoachWeightHealth({
 }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">Poids & activité</h3>
+      <h3 className="font-black text-white"><Art name="scale" />Poids & activité</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
           <span className="text-xs font-bold uppercase text-slate-400 block">Poids actuel</span>
@@ -45,7 +46,7 @@ export function CoachWeightHealth({
         </p>
       )}
       <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
-        <p className="font-bold text-slate-200">Calories (estimation)</p>
+        <p className="font-bold text-slate-200"><Art name="flame" />Calories (estimation)</p>
         <div className="flex flex-wrap items-center gap-2">
           <input type="number" placeholder="Taille (cm)" value={(coach.profile || {}).heightCm} onChange={e => updateCoach({ profile: { ...(coach.profile || {}), heightCm: e.target.value } })} className="w-28 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
           <input type="number" placeholder="Âge" value={(coach.profile || {}).age} onChange={e => updateCoach({ profile: { ...(coach.profile || {}), age: e.target.value } })} className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />

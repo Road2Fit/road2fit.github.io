@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { PROFILES, PROFILE_CHOICES, coachProfileAt } from '../../coach/profiles';
 import { card } from './ui';
 
@@ -38,7 +39,7 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
 
   return (
     <section className={card}>
-      <h3 className="font-black text-white">Profil de travail</h3>
+      <h3 className="font-black text-white"><Art name="target" />Profil de travail</h3>
       <p className="text-xs text-slate-300">
         Choisis ce que tu veux travailler en ce moment : le coach adapte les <b>répétitions, les séries, le repos et la charge</b> de chaque exercice.
       </p>
@@ -95,7 +96,7 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
       )}
 
       <details className="text-xs text-slate-400">
-        <summary className="cursor-pointer font-bold text-slate-300">Ce que dit la recherche</summary>
+        <summary className="cursor-pointer font-bold text-slate-300"><Art name="book" />Ce que dit la recherche</summary>
         <ul className="mt-2 space-y-1.5 list-disc pl-5">
           <li><b>Repères classiques</b> (ACSM 2009, NSCA) : force = 1 à 6 répétitions à 85 % du max ou plus, repos de 2 à 5 minutes ; hypertrophie = 6 à 12 répétitions à 67-85 %, repos plus courts ; endurance de force = 12 répétitions ou plus à 67 % ou moins (ACSM : 40-60 %), repos de 90 secondes ou moins. Pour progresser, l’ACSM conseille d’augmenter la charge de 2 à 10 % quand on dépasse l’objectif de 1 à 2 répétitions.</li>
           <li><b>Nuance récente</b> (Schoenfeld et al., 2021, <i>Sports</i> 9(2):32 ; Lopez et al., 2021, <i>Med. Sci. Sports Exerc.</i>) : les charges lourdes sont meilleures pour la <b>force maximale</b>, mais le muscle peut grossir sur une large plage de charges si les séries sont proches de l’échec. Les fourchettes de l’appli sont donc des repères pratiques, pas des frontières.</li>

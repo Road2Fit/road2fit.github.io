@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { ARENA_GROUPS } from '../data/arenas';
 import { openMovement } from '../lib/movement';
 import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons';
@@ -35,7 +36,7 @@ export function QuestsTab({
                 : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
             }`}
           >
-            {g.label}
+            {g.icon} {g.label}
           </button>
         ))}
       </div>
@@ -120,7 +121,7 @@ export function QuestsTab({
 
                 {evalState.isBossDefeated && (
                   <button type="button" onClick={() => openLevelUpModal(quest)} className="mt-3 w-full py-2.5 px-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 bg-amber-400 text-slate-950">
-                    <Crown className="w-4 h-4" />
+                    <Art name="crown" size={18} bare />
                     <span>Objectif atteint ! Passer au niveau {questLevel + 1}</span>
                   </button>
                 )}
@@ -131,7 +132,7 @@ export function QuestsTab({
                     <span>Noter la séance</span>
                   </button>
                   {quest.type === 'strength' && (
-                    <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200">Geste</button>
+                    <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 whitespace-nowrap"><Art name="film" size={16} className="mr-1" />Geste</button>
                   )}
                   <button
                     onClick={() => {
@@ -142,12 +143,12 @@ export function QuestsTab({
                     aria-label="Voir la courbe de progression"
                     className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
                   >
-                    <TrendingUp className="w-4 h-4" />
+                    <Art name="chart" size={18} bare />
                   </button>
                 </div>
 
                 <details className="mt-2 group">
-                  <summary className="text-xs font-bold text-slate-400 py-1.5">Détails et réglages</summary>
+                  <summary className="text-xs font-bold text-slate-400 py-1.5"><Art name="gear" size={15} className="mr-1" />Détails et réglages</summary>
                   {quest.type === 'strength' ? (
                     <div className="mt-4 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -347,7 +348,7 @@ export function QuestsTab({
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {!evalState.isBossDefeated && (
                       <button type="button" onClick={() => openLevelUpModal(quest)} className="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300">
-                        <Crown className="w-4 h-4" />
+                        <Art name="crown" size={18} bare />
                         <span>Valider l’objectif et passer au niveau {questLevel + 1}</span>
                       </button>
                     )}

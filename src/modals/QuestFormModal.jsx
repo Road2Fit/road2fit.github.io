@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { useState } from 'react';
 import { ExercisePicker, unitLabel } from '../components/ExercisePicker';
 import { SignedKgInput } from '../components/SignedKgInput';
@@ -45,7 +46,7 @@ export function QuestFormModal({
                   {editingQuestId && (
                     <div className="space-y-2">
                       <button type="button" onClick={() => setSwapOpen(o => !o)} aria-expanded={swapOpen} className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-sm font-bold text-indigo-100">
-                        <span>Changer d’exercice (garde tout l’historique)</span>
+                        <span><Art name="repeat" />Changer d’exercice (garde tout l’historique)</span>
                         <span>{swapOpen ? '▾' : '▸'}</span>
                       </button>
                       {formSwapNote && <p className="text-xs text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">{formSwapNote}</p>}
@@ -130,16 +131,16 @@ export function QuestFormModal({
 
                   {formType === 'strength' && (
                     <div className="space-y-1.5" data-testid="measure-block">
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-300">Comment se mesure l’exercice ?</label>
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-300"><Art name="gauge" />Comment se mesure l’exercice ?</label>
                       <div className="grid grid-cols-3 gap-2">
                         {[
-                          { id: 'body', title: 'Poids du corps', desc: 'avec aide ou sans' },
-                          { id: 'kg', title: 'Charge en kg', desc: 'barre, haltères, machine' },
-                          { id: 'timed', title: 'Durée', desc: 'gainage, planche…' },
+                          { id: 'body', art: 'muscle', title: 'Poids du corps', desc: 'avec aide ou sans' },
+                          { id: 'kg', art: 'dumbbell', title: 'Charge en kg', desc: 'barre, haltères, machine' },
+                          { id: 'timed', art: 'timer', title: 'Durée', desc: 'gainage, planche…' },
                         ].map(m => (
                           <button key={m.id} type="button" disabled={!canChangeMeasure && measure !== m.id} data-testid={`measure-${m.id}`} onClick={() => changeMeasure(m.id)}
                             className={`p-2 rounded-xl border text-left transition ${measure === m.id ? 'bg-indigo-600 border-indigo-400 text-white shadow' : 'bg-slate-950 border-slate-800 text-slate-300'} ${!canChangeMeasure && measure !== m.id ? 'opacity-40' : 'hover:border-slate-600'}`}>
-                            <div className="text-xs font-black">{m.title}</div>
+                            <div className="text-xs font-black"><Art name={m.art} size={15} className="mr-1" />{m.title}</div>
                             <div className="text-xs opacity-80 mt-0.5">{m.desc}</div>
                           </button>
                         ))}
@@ -153,7 +154,7 @@ export function QuestFormModal({
                   {formType === 'strength' && (
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
                       <label className="block text-xs font-black uppercase tracking-wider text-pink-300">
-                        Type d’objectif
+                        <Art name="target" />Type d’objectif
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {[
@@ -318,14 +319,14 @@ export function QuestFormModal({
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-bold text-violet-300 mb-1">
-                            Charge de départ (kg)
+                            <Art name="band" />Charge de départ (kg)
                           </label>
                           <SignedKgInput testId="signed-start" assist={formStartAssistanceKg} onAssist={setFormStartAssistanceKg}
                             className="w-full bg-slate-900 border border-violet-500/30 rounded-xl py-2 text-center font-bold text-violet-200" />
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-emerald-300 mb-1">
-                            Charge objectif (kg)
+                            <Art name="target" />Charge objectif (kg)
                           </label>
                           <SignedKgInput testId="signed-goal" assist={formGoalAssistanceKg} onAssist={setFormGoalAssistanceKg}
                             className="w-full bg-slate-900 border border-emerald-500/30 rounded-xl py-2 text-center font-bold text-emerald-300" />

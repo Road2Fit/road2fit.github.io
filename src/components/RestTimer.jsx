@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { useEffect, useState } from 'react';
 import { playGameSound } from '../lib/sound';
 
@@ -44,7 +45,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
       {open && (
         <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl w-56 self-end space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase text-pink-300">Repos entre séries</span>
+            <span className="text-xs font-black uppercase text-pink-300"><Art name="timer" />Repos entre séries</span>
             <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white text-sm">✕</button>
           </div>
           {running && (
@@ -76,7 +77,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
           running ? 'bg-emerald-600 text-white' : guidedOpen ? 'bg-slate-800 text-slate-200' : 'bg-slate-800 text-white'
         }`}
       >
-        {running ? <span className="tabular-nums text-base">Repos {fmt(left)}</span> : <span>Repos</span>}
+        {running ? <span className="tabular-nums text-base">Repos {fmt(left)}</span> : <span><Art name="timer" size={16} />Repos</span>}
         {running && next && guidedOpen && <span className="font-bold text-xs truncate">{next}</span>}
       </button>
     </div>

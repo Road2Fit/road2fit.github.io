@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { cleanText } from '../edition';
 import { Scale, Trash2 } from '../icons';
 
@@ -12,7 +13,7 @@ export function WeightTab({
           <div>
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               <Scale className="w-5 h-5 text-pink-400" />
-              <span>Nouvelle pesée</span>
+              <span><Art name="scale" />Nouvelle pesée</span>
             </h3>
             <p className="text-xs text-slate-400">
               Suis l’évolution de ton poids (+25 EXP par pesée).
@@ -71,7 +72,7 @@ export function WeightTab({
 
             <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3">
               <label className="block text-xs font-bold text-pink-300 mb-1">
-                Poids cible (kg)
+                <Art name="target" />Poids cible (kg)
               </label>
               <input
                 type="number"

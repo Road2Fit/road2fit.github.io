@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { useMemo, useState } from 'react';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeeklyGoals, coachWeightPace } from '../../coach/advice';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
@@ -217,8 +218,8 @@ export function CoachPanel({
     <div className="space-y-4" data-testid="coach-panel">
       {/* SOMMAIRE : la page est longue, on saute directement à une partie */}
       <nav aria-label="Sommaire du Coach" className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4">
-        {[['coach-seance', 'Séance'], ['coach-semaine', 'Semaine'], ['coach-objectifs', 'Objectifs'], ['coach-equilibre', 'Équilibre'], ['coach-reglages', 'Réglages']].map(([id, label]) => (
-          <button key={id} type="button" onClick={() => { const el = document.getElementById(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="shrink-0 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white">{label}</button>
+        {[['coach-seance', 'Séance', 'dumbbell'], ['coach-semaine', 'Semaine', 'calendar'], ['coach-objectifs', 'Objectifs', 'target'], ['coach-equilibre', 'Équilibre', 'scale'], ['coach-reglages', 'Réglages', 'gear']].map(([id, label, art]) => (
+          <button key={id} type="button" onClick={() => { const el = document.getElementById(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="shrink-0 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white whitespace-nowrap"><Art name={art} size={15} className="mr-1" />{label}</button>
         ))}
       </nav>
       <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">

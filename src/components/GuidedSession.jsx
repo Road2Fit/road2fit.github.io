@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
@@ -127,13 +128,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-xl font-black text-white">{it.icon} {it.name}</h2>
-                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-xs font-bold text-sky-200">Mouvement</button>
+                <button type="button" onClick={() => openMovement({ catalogId: (g.items[g.idx] || {}).catalogId, name: it.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mb-1 px-2.5 py-1 rounded-lg bg-sky-900/50 border border-sky-500/40 text-xs font-bold text-sky-200"><Art name="film" />Mouvement</button>
                                 <p className="text-xs text-slate-400">{it.arena} · repos {Math.floor(it.restSec / 60)} min{it.restSec % 60 ? ` ${it.restSec % 60}` : ''}</p>
               </div>
               {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
             </div>
             <details className="text-xs text-slate-400">
-              <summary className="font-bold text-slate-300">Aperçu animé et conseil du coach</summary>
+              <summary className="font-bold text-slate-300"><Art name="film" />Aperçu animé et conseil du coach</summary>
               <div className="mt-2 space-y-2">
                 <button type="button" onClick={() => { const v = !mini; setMini(v); try { localStorage.setItem(MINI_KEY, v ? 'on' : 'off'); } catch (e) { /* rien */ } }} aria-pressed={mini} className="px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-xs font-bold text-slate-300">{mini ? 'Masquer l’aperçu' : 'Aperçu animé'}</button>
                 {mini && <Suspense fallback={null}><MiniMovement catalogId={(g.items[g.idx] || {}).catalogId} name={it.name} /></Suspense>}
@@ -168,7 +169,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
 
             {warmRows.length > 0 && (
               <details className="space-y-2" data-testid="warmup">
-                <summary className="text-sm font-bold text-amber-300">Échauffement · {warmRows.length === 1 ? '1 série' : `${warmRows.length} séries`} avant les séries de travail ({warmRows.filter((_, k) => d.wdone && d.wdone[k]).length}/{warmRows.length})</summary>
+                <summary className="text-sm font-bold text-amber-300"><Art name="flame" />Échauffement · {warmRows.length === 1 ? '1 série' : `${warmRows.length} séries`} avant les séries de travail ({warmRows.filter((_, k) => d.wdone && d.wdone[k]).length}/{warmRows.length})</summary>
                 {warmRows.map((w, i) => {
                   const wd = !!(d.wdone && d.wdone[i]);
                   return (
@@ -245,7 +246,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
 
         {g.phase === 'summary' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-            <h2 className="text-lg font-black text-white">Résumé de la séance</h2>
+            <h2 className="text-lg font-black text-white"><Art name="clipboard" />Résumé de la séance</h2>
             {items.map(x => {
               const dd = g.data[x.questId];
               const reps = dd.reps.filter((r, i) => dd.done[i]);

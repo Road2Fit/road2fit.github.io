@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { CardioInputToggles } from '../components/CardioInputToggles';
 import { ELASTIC_PRESETS } from '../data/presets';
 import { cardioHasElevation } from '../lib/calories';
@@ -44,17 +45,17 @@ export function LogSessionModal({
             : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} ${repUnit(logModalQuest)}${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : isTimedQuest(logModalQuest) ? '' : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
           return (
             <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 py-2 text-xs text-indigo-100">
-              Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
+              <Art name="timer" />Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !
             </div>
           );
         })()}
 
         {logModalQuest.type === 'strength' && (
           <div className="flex gap-2">
-          <button type="button" onClick={() => openMovement(logModalQuest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="shrink-0 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200">Geste</button>
+          <button type="button" onClick={() => openMovement(logModalQuest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="shrink-0 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 whitespace-nowrap"><Art name="film" size={16} className="mr-1" />Geste</button>
           {!isTimedQuest(logModalQuest) && (
             <button type="button" onClick={applyCoachTarget} className="flex-1 py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-bold">
-              Remplir comme prévu par le coach
+              <Art name="coach" />Remplir comme prévu par le coach
             </button>
           )}
           </div>
@@ -81,7 +82,7 @@ export function LogSessionModal({
               {logModalQuest.unit === 'kg' && (
                 <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
                   <label className="block text-xs font-bold text-slate-300 mb-2">
-                    Charge utilisée (en kg) — Cible :{' '}
+                    <Art name="dumbbell" />Charge utilisée (en kg) — Cible :{' '}
                     <span className="text-amber-300">{logModalQuest.goalValue} kg</span>
                   </label>
                   <div className="flex items-center gap-3">
@@ -120,7 +121,7 @@ export function LogSessionModal({
                 <div className="bg-slate-950 border border-violet-500/40 rounded-xl p-3.5 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-violet-200">
-                      Aide élastique (kg)
+                      <Art name="band" />Aide élastique (kg)
                     </span>
                     <div className="flex gap-1.5">
                       <button

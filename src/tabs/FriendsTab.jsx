@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { useMemo, useState } from 'react';
 import { cleanText } from '../edition';
 import { RPG_RANKS } from '../data/gamification';
@@ -64,7 +65,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
   return (
     <div className="space-y-4" data-testid="friends-tab">
       <section className={card}>
-        <h3 className="font-black text-white">Mon code d’ami</h3>
+        <h3 className="font-black text-white"><Art name="friends" />Mon code d’ami</h3>
         <p className="text-xs text-slate-400">Donne ce code à quelqu’un : s’il le saisit, il pourra voir ton profil (prénom ou pseudo, rang, niveau, dernière séance, maxima, exercices). Jamais ton poids, tes photos ni tes notes.</p>
         <div className="flex items-center gap-3 flex-wrap">
           <span data-testid="my-code" className="font-mono text-3xl font-black tracking-[0.3em] text-pink-300 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2">{friends.code || '·······'}</span>
@@ -80,7 +81,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
       </section>
 
       <section className={card}>
-        <h3 className="font-black text-white">Ajouter un ami</h3>
+        <h3 className="font-black text-white"><Art name="friends" />Ajouter un ami</h3>
         <form onSubmit={submit} className="flex gap-2">
           <input
             data-testid="friend-input"
@@ -101,7 +102,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
 
       <section className={card}>
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-white">Mes amis ({friends.list.length})</h3>
+          <h3 className="font-black text-white"><Art name="friends" />Mes amis ({friends.list.length})</h3>
           <button type="button" onClick={friends.refresh} className="text-xs underline text-slate-400">{friends.loading ? 'Mise à jour…' : 'Actualiser'}</button>
         </div>
         {friends.list.length === 0 && <p className="text-sm text-slate-400">Pas encore d’ami. Saisis le code d’un ami ci-dessus, ou donne-lui le tien.</p>}
@@ -145,7 +146,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">Dernière séance</h4>
+        <h4 className="font-black text-white"><Art name="dumbbell" />Dernière séance</h4>
         {s.lastSession ? (
           <>
             <p className="text-xs text-slate-400">{dateFr(s.lastSession.date)}</p>
@@ -162,7 +163,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">Maxima</h4>
+        <h4 className="font-black text-white"><Art name="gauge" />Maxima</h4>
         {(s.maxima || []).length ? (
           <ul className="space-y-1.5">
             {s.maxima.map((m, i) => (
@@ -176,7 +177,7 @@ function FriendProfile({ friend, onBack, onRemove }) {
       </section>
 
       <section className={card}>
-        <h4 className="font-black text-white">Ses exercices</h4>
+        <h4 className="font-black text-white"><Art name="clipboard" />Ses exercices</h4>
         {Object.keys(byMuscle).length === 0 && <p className="text-sm text-slate-400">Aucun exercice pour l’instant.</p>}
         {Object.entries(byMuscle).map(([muscle, list]) => (
           <div key={muscle} className="space-y-1">

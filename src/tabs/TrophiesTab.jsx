@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { ACHIEVEMENTS_LIST } from '../data/gamification';
 import { CheckCircle2 } from '../icons';
 import { ACH_PROGRESS } from '../lib/stats';
@@ -15,7 +16,7 @@ export function TrophiesTab({ achStats, gameState }) {
   return (
     <div className="space-y-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
-        <p className="font-black text-white">{got} trophée{got > 1 ? 's' : ''} sur {ACHIEVEMENTS_LIST.length}</p>
+        <p className="font-black text-white"><Art name="trophy" size={22} />{got} trophée{got > 1 ? 's' : ''} sur {ACHIEVEMENTS_LIST.length}</p>
         <div className="h-2 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-amber-400" style={{ width: `${(got / ACHIEVEMENTS_LIST.length) * 100}%` }} /></div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

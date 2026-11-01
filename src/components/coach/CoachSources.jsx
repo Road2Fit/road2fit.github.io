@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { COACH_SOURCES } from '../../coach/labels';
 import { card } from './ui';
 
@@ -5,7 +6,7 @@ export function CoachSources({ setShowSources, showSources }) {
   return (
     <section className={card}>
       <button onClick={() => setShowSources(s => !s)} className="w-full flex items-center justify-between text-left">
-        <h3 className="font-black text-white">Sources scientifiques</h3>
+        <h3 className="font-black text-white"><Art name="book" />Sources scientifiques</h3>
         <span className="text-xs text-pink-300 font-bold">{showSources ? 'Masquer' : 'Afficher'}</span>
       </button>
       {showSources && (

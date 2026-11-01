@@ -1,19 +1,19 @@
+import { Art } from './Art';
 import { ACHIEVEMENTS_LIST } from '../data/gamification';
-import { Calendar, Compass, Dumbbell, Menu, TrendingUp } from '../icons';
 
 // Onglets de l'application. `group` : « suivi » (poids, maxima, courbes) et « plus » (souvenirs, bilan, trophées)
 // sont regroupés dans la barre du bas sur téléphone.
 export const TABS = [
-  { id: 'coach', icon: '🧠', label: 'Coach' },
-  { id: 'quests', icon: '🏋️', label: 'Exercices' },
-  { id: 'journal', icon: '📅', label: 'Journal' },
-  { id: 'charts', icon: '📈', label: 'Courbes', group: 'suivi' },
-  { id: 'maxima', icon: '💯', label: 'Mes maxima', group: 'suivi' },
-  { id: 'weight', icon: '⚖️', label: 'Poids', group: 'suivi' },
-  { id: 'photos', icon: '📸', label: 'Souvenirs', group: 'plus' },
-  { id: 'bilan', icon: '📊', label: 'Bilan', group: 'plus' },
-  { id: 'trophies', icon: '🏆', label: 'Trophées', group: 'plus' },
-  { id: 'friends', icon: '👥', label: 'Amis', group: 'plus' },
+  { id: 'coach', icon: '🧠', art: 'coach', label: 'Coach' },
+  { id: 'quests', icon: '🏋️', art: 'dumbbell', label: 'Exercices' },
+  { id: 'journal', icon: '📅', art: 'calendar', label: 'Journal' },
+  { id: 'charts', icon: '📈', art: 'chart', label: 'Courbes', group: 'suivi' },
+  { id: 'maxima', icon: '💯', art: 'gauge', label: 'Mes maxima', group: 'suivi' },
+  { id: 'weight', icon: '⚖️', art: 'scale', label: 'Poids', group: 'suivi' },
+  { id: 'photos', icon: '📸', art: 'camera', label: 'Souvenirs', group: 'plus' },
+  { id: 'bilan', icon: '📊', art: 'clipboard', label: 'Bilan', group: 'plus' },
+  { id: 'trophies', icon: '🏆', art: 'trophy', label: 'Trophées', group: 'plus' },
+  { id: 'friends', icon: '👥', art: 'friends', label: 'Amis', group: 'plus' },
 ];
 export const SUIVI_TABS = TABS.filter(t => t.group === 'suivi');
 export const PLUS_TABS = TABS.filter(t => t.group === 'plus');
@@ -35,7 +35,7 @@ export function TabBar({ activeTab, gameState, setActiveTab }) {
           aria-current={activeTab === t.id ? 'page' : undefined}
           className={`shrink-0 whitespace-nowrap rounded-xl font-bold px-3.5 py-2 text-sm transition ${activeTab === t.id ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
         >
-          {tabText(t, gameState)}
+          <Art name={t.art} size={16} />{tabText(t, gameState)}
         </button>
       ))}
     </nav>
@@ -54,7 +54,7 @@ export function SubTabs({ activeTab, setActiveTab }) {
           onClick={() => setActiveTab(t.id)}
           className={`flex-1 px-2 py-2 rounded-xl text-xs font-bold border ${activeTab === t.id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300'}`}
         >
-          {t.label}
+          <Art name={t.art} size={15} className="mr-1" />{t.label}
         </button>
       ))}
     </div>
@@ -66,17 +66,17 @@ export function BottomNav({ activeTab, moreOpen, onOpenMore, setActiveTab }) {
   const inSuivi = SUIVI_TABS.some(t => t.id === activeTab);
   const inPlus = PLUS_TABS.some(t => t.id === activeTab);
   const items = [
-    { key: 'coach', Icon: Compass, label: 'Coach', on: activeTab === 'coach', go: () => setActiveTab('coach') },
-    { key: 'quests', Icon: Dumbbell, label: 'Exercices', on: activeTab === 'quests', go: () => setActiveTab('quests') },
-    { key: 'journal', Icon: Calendar, label: 'Journal', on: activeTab === 'journal', go: () => setActiveTab('journal') },
-    { key: 'suivi', Icon: TrendingUp, label: 'Suivi', on: inSuivi, go: () => setActiveTab(inSuivi ? activeTab : 'weight') },
-    { key: 'plus', Icon: Menu, label: 'Plus', on: inPlus || moreOpen, go: onOpenMore },
+    { key: 'coach', art: 'coach', label: 'Coach', on: activeTab === 'coach', go: () => setActiveTab('coach') },
+    { key: 'quests', art: 'dumbbell', label: 'Exercices', on: activeTab === 'quests', go: () => setActiveTab('quests') },
+    { key: 'journal', art: 'calendar', label: 'Journal', on: activeTab === 'journal', go: () => setActiveTab('journal') },
+    { key: 'suivi', art: 'chart', label: 'Suivi', on: inSuivi, go: () => setActiveTab(inSuivi ? activeTab : 'weight') },
+    { key: 'plus', art: 'more', label: 'Plus', on: inPlus || moreOpen, go: onOpenMore },
   ];
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-800 grid grid-cols-5 pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
       {items.map(i => (
         <button key={i.key} onClick={i.go} className={`flex flex-col items-center justify-center gap-0.5 py-2 ${i.on ? 'text-pink-300' : 'text-slate-400'}`}>
-          <i.Icon className="w-6 h-6" />
+          <Art name={i.art} size={26} bare className={i.on ? '' : 'opacity-75'} />
           <span className={`text-xs ${i.on ? 'font-black' : 'font-bold'}`}>{i.label}</span>
         </button>
       ))}

@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { useState } from 'react';
 import { coachFmt } from '../../coach/labels';
 import { coachSuggestExercises } from '../../coach/suggest';
@@ -16,7 +17,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   const profileLabel = { puissance: 'force', hypertrophie: 'prise de muscle', endurance: 'endurance de force' }[balance.profile];
   return (
     <section className={card}>
-      <h3 className="font-black text-white">Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
+      <h3 className="font-black text-white"><Art name="scale" />Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
       {optimized && <MuscleBodyMap rows={balance.rows} />}
       <div className="space-y-2">
         {balance.rows.map(r => {

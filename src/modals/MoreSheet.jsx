@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { useState } from 'react';
 import { PLUS_TABS } from '../components/TabBar';
 import { readSafetyCopy } from '../lib/safetyCopy';
@@ -23,7 +24,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           <p className="text-xs font-black uppercase tracking-wider text-pink-300">Pages</p>
           {PLUS_TABS.map(t => (
             <button key={t.id} onClick={close(() => onGoTab(t.id))} className={`${row} ${activeTab === t.id ? 'border-pink-500/60' : ''}`}>
-              <span className="text-lg">{t.icon}</span>
+              <Art name={t.art} size={22} bare />
               <span>{t.label}</span>
             </button>
           ))}
@@ -32,12 +33,12 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
         <div className="space-y-2">
           <p className="text-xs font-black uppercase tracking-wider text-pink-300">Progression</p>
           <button onClick={close(onOpenRewards)} className={row}>
-            <span className="text-lg">🎁</span>
+            <Art name="gift" size={22} bare />
             <span>Récompenses</span>
           </button>
           {trialRank && (
             <button onClick={close(onOpenTrial)} className={row}>
-              <span className="text-lg">{levelInfo && levelInfo.locked ? '🔒' : '⚔️'}</span>
+              <Art name={levelInfo && levelInfo.locked ? 'lock' : 'swords'} size={22} bare />
               <span>Épreuve de rang</span>
             </button>
           )}
@@ -47,46 +48,46 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           <summary className="text-sm font-black text-slate-200 py-2">Réglages et données</summary>
           <div className="space-y-2 pt-1">
           <button onClick={() => setGameState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))} className={row}>
-            <span className="text-lg">{gameState.soundEnabled ? '🔊' : '🔇'}</span>
+            <Art name={gameState.soundEnabled ? 'sound' : 'mute'} size={22} bare />
             <span>Sons : {gameState.soundEnabled ? 'activés' : 'coupés'}</span>
           </button>
           <button onClick={() => setGameState(prev => ({ ...prev, muscleMode: prev.muscleMode === 'optimized' ? 'simple' : 'optimized' }))} className={row} data-testid="toggle-muscle-mode" aria-pressed={gameState.muscleMode === 'optimized'}>
-            <span className="text-lg">🧬</span>
+            <Art name="dna" size={22} bare />
             <span>
               Suivi des muscles : {gameState.muscleMode === 'optimized' ? 'optimisé (14 muscles)' : 'simplifié (5 grands groupes)'}
               <span className="block text-xs font-semibold text-slate-400">{gameState.muscleMode === 'optimized' ? 'Biceps, triceps, avant-bras, quadriceps, ischios, fessiers… Touche pour revenir au mode simplifié.' : 'Touche pour passer en mode optimisé : le coach suit chaque muscle séparément.'}</span>
             </span>
           </button>
           <button onClick={toggleBigText} className={row}>
-            <span className="text-lg">🔠</span>
+            <Art name="text" size={22} bare />
             <span>Texte : {prefs.bigText ? 'grand' : 'normal'}</span>
           </button>
           <button onClick={close(onOpenOnboarding)} className={row} data-testid="open-onboarding">
-            <span className="text-lg">🧭</span>
+            <Art name="compass" size={22} bare />
             <span>Assistant d’accueil (régler le coach)</span>
           </button>
           <button onClick={close(onOpenSync)} className={row} data-testid="open-account">
-            <span className="text-lg">☁️</span>
+            <Art name="cloud" size={22} bare />
             <span>Mon compte et ma sauvegarde{syncStatus === 'off' ? ' (non connecté)' : ''}</span>
           </button>
           <button onClick={close(onExport)} className={row} title="Exporter une sauvegarde (JSON)">
-            <span className="text-lg">💾</span>
+            <Art name="save" size={22} bare />
             <span>Exporter mes données</span>
           </button>
           <button onClick={close(() => importInputRef.current && importInputRef.current.click())} className={row} title="Importer une sauvegarde (JSON)">
-            <span className="text-lg">📥</span>
+            <Art name="download" size={22} bare />
             <span>Importer une sauvegarde</span>
           </button>
           </div>
         <div className="pt-1 mt-2 border-t border-slate-800 space-y-2">
           {safety && (
             <button onClick={close(onRestore)} className={row}>
-              <span className="text-lg">↩️</span>
+              <Art name="repeat" size={22} bare />
               <span>Retrouver mes données {safety.reason} <span className="block text-xs font-semibold text-slate-400">copie du {new Date(safety.savedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span></span>
             </button>
           )}
           <button onClick={close(onReset)} className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-rose-950/30 border border-rose-900/60 text-left text-sm font-bold text-rose-200" title="Réinitialiser l'aventure à zéro">
-            <span className="text-lg">♻️</span>
+            <Art name="reset" size={22} bare />
             <span>Tout réinitialiser</span>
           </button>
         </div>

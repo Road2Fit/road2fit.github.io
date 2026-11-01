@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { useEffect, useRef, useState } from 'react';
 
 // Bouton « + » flottant : les actions de saisie rapide au même endroit (au pouce)
@@ -18,7 +19,7 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
   }, []);
   const item = (label, icon, fn, title) => (
     <button key={label} onClick={() => { setOpen(false); fn(); }} title={title} className="flex items-center gap-2 px-4 py-3 rounded-full bg-slate-900 border border-slate-600 text-sm font-bold text-white shadow-xl">
-      <span>{icon}</span>
+      <Art name={icon} size={20} bare />
       <span>{label}</span>
     </button>
   );
@@ -28,10 +29,10 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
       <div className={`fixed right-4 bottom-20 md:bottom-6 z-40 flex flex-col items-end gap-2 transition-transform duration-200 ${hidden && !open ? 'translate-x-24' : ''}`}>
         {open && (
           <div className="flex flex-col items-end gap-2">
-            {item('Nouvel exercice', '➕', onExercise)}
-            {item('Activité (course, sport…)', '🏃', onCourse)}
-            {item('Dicter ma séance', '🎤', onVoice, 'Dicter toute ma séance à la voix')}
-            {item('Minuteur de repos', '⏱', onTimer)}
+            {item('Nouvel exercice', 'dumbbell', onExercise)}
+            {item('Activité (course, sport…)', 'runner', onCourse)}
+            {item('Dicter ma séance', 'sparkle', onVoice, 'Dicter toute ma séance à la voix')}
+            {item('Minuteur de repos', 'timer', onTimer)}
           </div>
         )}
         <button

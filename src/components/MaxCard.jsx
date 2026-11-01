@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { useState } from 'react';
 import { formatDuration, workingLoads } from '../lib/maxima';
 
@@ -52,7 +53,7 @@ function RecordForm({ result, onClear, onSave }) {
   return (
     <form onSubmit={submit} className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
       <p className="text-xs font-bold text-slate-300">
-        Mon record réel
+        <Art name="pencil" />Mon record réel
         {current && <span className="ml-2 text-emerald-300">{current} <span className="text-slate-500 font-semibold">(le {fmtDate(manual.date)})</span></span>}
       </p>
       <div className="flex flex-wrap items-end gap-2">
@@ -168,7 +169,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
 
       {reference > 0 && (
         <details className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-          <summary className="cursor-pointer text-xs font-bold text-slate-300">Charges de travail ({manual ? 'd’après ton record réel' : 'd’après l’estimation'} : {fmt(reference)} kg)</summary>
+          <summary className="cursor-pointer text-xs font-bold text-slate-300"><Art name="clipboard" />Charges de travail ({manual ? 'd’après ton record réel' : 'd’après l’estimation'} : {fmt(reference)} kg)</summary>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {workingLoads(reference, step).map(l => (
               <div key={l.pct} className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center">

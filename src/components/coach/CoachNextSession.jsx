@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { useState } from 'react';
 import { openMovement } from '../../lib/movement';
 import { coachSwapOptions } from '../../coach/advice';
@@ -23,12 +24,12 @@ export function CoachNextSession({
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-black text-white">Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+        <h3 className="font-black text-white"><Art name="dumbbell" />Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
         {!plan && ov.hasExercises && (
-          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">Choisir le jour / modifier</button>
+          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
         )}
         {plan && (
-          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">Revenir à la proposition du coach</button>
+          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="repeat" />Revenir à la proposition du coach</button>
         )}
       </div>
 
@@ -36,19 +37,19 @@ export function CoachNextSession({
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
           <p className="text-xs font-bold text-slate-300">Comment te sens-tu aujourd’hui ?</p>
           <div className="flex flex-wrap gap-1.5">
-            {[['low', 'Cuit'], ['ok', 'Normal'], ['high', 'En forme']].map(([lv, lab]) => {
+            {[['low', 'Cuit', 'tired'], ['ok', 'Normal', 'smile'], ['high', 'En forme', 'muscle']].map(([lv, lab, art]) => {
               const on = coach.readiness && coach.readiness.date === today && coach.readiness.level === lv;
               return (
                 <button key={lv} onClick={() => updateCoach({ readiness: on ? null : { date: today, level: lv } })}
                   className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${on ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                  {lab}
+                  <Art name={art} />{lab}
                 </button>
               );
             })}
             {!plan && first && (
               <button onClick={() => setShortMode(v => !v)}
                 className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                Version courte (40 min)
+                <Art name="timer" />Version courte (40 min)
               </button>
             )}
           </div>
@@ -166,7 +167,7 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
-                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2">Voir le mouvement</button>
+                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2"><Art name="film" />Voir le mouvement</button>
                   <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>
@@ -182,7 +183,7 @@ export function CoachNextSession({
                     </button>
                     {e.manual && (
                       <button onClick={() => adjustTarget(e, 'reset')} className="px-2 py-1 rounded-lg bg-violet-900/50 hover:bg-violet-800/60 border border-violet-500/40 font-bold text-violet-200">
-                        Proposition du coach
+                        <Art name="repeat" />Proposition du coach
                       </button>
                     )}
                   </div>

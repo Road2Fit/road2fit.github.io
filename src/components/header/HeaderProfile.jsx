@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { useMemo } from 'react';
 import { Flame } from '../../icons';
 import { MuscleBodyMap } from '../coach/MuscleBodyMap';
@@ -69,7 +70,7 @@ export function HeaderProfile({
               aria-label="Réglages et données"
               className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700 text-lg text-slate-200 hover:text-white"
             >
-              ⚙️
+              <Art name="gear" size={22} bare />
             </button>
             </div>
           </div>
@@ -111,11 +112,11 @@ export function HeaderProfile({
           title={`${lifetimeStats.totalKcal} kcal brûlées au total${streakBonusPct > 0 ? ` · chaque semaine d’affilée avec une séance : +10 % d’EXP (maximum +50 %)` : ''}`}
           className={`${chip} bg-amber-500/15 text-amber-300 border-amber-500/30`}
         >
-          <Flame className="w-3.5 h-3.5 text-amber-400" /> Série : {currentStreak} j
+          <Art name="flame" size={15} bare /> Série : {currentStreak} j
         </span>
-        {streakBonusPct > 0 && <span title="Chaque semaine d’affilée avec une séance donne +10 % d’EXP (maximum +50 %)" className={`${chip} bg-slate-800 text-amber-200 border-slate-700`}>+{streakBonusPct} % d’EXP</span>}
+        {streakBonusPct > 0 && <span title="Chaque semaine d’affilée avec une séance donne +10 % d’EXP (maximum +50 %)" className={`${chip} bg-slate-800 text-amber-200 border-slate-700`}><Art name="bolt" size={14} bare />+{streakBonusPct} % d’EXP</span>}
         <button type="button" onClick={() => setActiveTab('weight')} title="Voir le suivi du poids" className={`${chip} bg-slate-800 text-slate-200 border-slate-600`}>
-          ⚖️ {gameState.userWeightKg} kg ➔ {gameState.targetWeightKg} kg
+          <Art name="scale" size={15} bare /> {gameState.userWeightKg} kg ➔ {gameState.targetWeightKg} kg
         </button>
         <button
           type="button"

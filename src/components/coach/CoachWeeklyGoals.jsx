@@ -1,10 +1,11 @@
+import { Art } from '../Art';
 import { card } from './ui';
 
 export function CoachWeeklyGoals({ onClaimWeekly, weeklyGoals }) {
   return (
     <section className={card}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-black text-white">Objectifs de la semaine</h3>
+        <h3 className="font-black text-white"><Art name="medal" />Objectifs de la semaine</h3>
         {weeklyGoals.allDone && !weeklyGoals.claimed && (
           <button onClick={() => onClaimWeekly(weeklyGoals.weekStart)} className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-black">Réclamer +{weeklyGoals.xp} EXP</button>
         )}

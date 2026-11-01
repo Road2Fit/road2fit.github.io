@@ -1,3 +1,4 @@
+import { Art } from './Art';
 import { useState } from 'react';
 import { Calendar, Flame, Trash2 } from '../icons';
 import { formatSetsBreakdown, getSetDetailsArray } from '../lib/quests';
@@ -12,7 +13,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="inline-flex items-center gap-1.5 text-sm font-black text-white">
-              <Flame className="w-3.5 h-3.5 text-orange-400" /> Calories du jour
+              <Art name="flame" size={18} bare /> Calories du jour
             </span>
             <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1">
               <Calendar className="w-3.5 h-3.5 text-pink-400" />
@@ -32,7 +33,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
             <span className="text-xs font-bold uppercase text-slate-400 block">
-              Musculation
+              <Art name="dumbbell" />Musculation
             </span>
             <span className="text-sm sm:text-base font-black text-pink-300">
               {dailySummary.strengthKcal} kcal
@@ -40,7 +41,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
           </div>
           <div className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 text-center">
             <span className="text-xs font-bold uppercase text-slate-400 block">
-              Course / Cardio
+              <Art name="runner" />Course / Cardio
             </span>
             <span className="text-sm sm:text-base font-black text-emerald-300">
               {dailySummary.cardioKcal} kcal
@@ -48,7 +49,7 @@ export function DailySummary({ dailySummary, handleDeleteSessionEntry, selectedD
           </div>
           <div className="bg-gradient-to-br from-orange-500/20 to-rose-500/20 border border-orange-500/40 rounded-xl px-3 py-2 text-center">
             <span className="text-xs font-bold uppercase text-orange-300 block">
-              Total Jour
+              <Art name="flame" />Total Jour
             </span>
             <span className="text-sm sm:text-base font-black text-orange-300">
               {dailySummary.totalKcal} kcal

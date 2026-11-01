@@ -1,3 +1,4 @@
+import { Art } from '../Art';
 import { coachDateFR, coachFmt } from '../../coach/labels';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { card } from './ui';
@@ -5,7 +6,7 @@ import { card } from './ui';
 export function CoachObjectives({ gameState, onAddExercise, questRows }) {
   return (
     <section className={card}>
-      <h3 className="font-black text-white">Mes objectifs</h3>
+      <h3 className="font-black text-white"><Art name="target" />Mes objectifs</h3>
       {questRows.length === 0 && <p className="text-xs text-slate-400">Aucun exercice de musculation pour l’instant.</p>}
       <div className="grid gap-2 sm:grid-cols-2">
         {questRows.map(r => {

@@ -1,3 +1,4 @@
+import { Art } from '../components/Art';
 import { X } from '../icons';
 
 export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, trialRank }) {
@@ -6,7 +7,7 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
       <div className="m-auto bg-slate-900 border border-amber-400/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
-            <h3 className="text-base font-black text-white">Épreuve de rang</h3>
+            <h3 className="text-base font-black text-white"><Art name="swords" />Épreuve de rang</h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Pour devenir {trialRank.badge} <strong className="text-amber-300">{trialRank.title}</strong> (niveau {trialRank.minLevel}), il ne suffit pas d’avoir assez d’EXP : réussis ces objectifs.
             </p>

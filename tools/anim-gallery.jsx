@@ -4,6 +4,7 @@ import { Figure } from '../src/anim/Figure';
 import { poseAt } from '../src/anim/skeleton';
 import { ALL_SCENES } from '../src/anim/registry';
 import { movementFor } from '../src/anim/resolve';
+import { Art, ART_NAMES } from '../src/components/Art';
 import '../src/styles.css';
 
 const params = new URLSearchParams(location.search);
@@ -29,4 +30,10 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById('root')).render(<App />);
+// ?art=1 : planche de toutes les icônes de l'appli
+const ArtSheet = () => (
+  <div style={{ padding: 8, display: 'grid', gap: 6, gridTemplateColumns: 'repeat(10, 1fr)' }} className="text-slate-300 text-xs text-center">
+    {ART_NAMES.map(n => <div key={n}><Art name={n} size={60} bare /><div>{n}</div><Art name={n} size={18} bare /></div>)}
+  </div>
+);
+createRoot(document.getElementById('root')).render(params.get('art') ? <ArtSheet /> : <App />);
