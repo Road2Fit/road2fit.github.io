@@ -1,4 +1,5 @@
 import { coachFmt } from './labels';
+import { programNext, programSession } from './program';
 import { coachDayInfo, coachNextTemplateIdx, coachPlanWeek } from './planning';
 import { coachBuildPlanned } from './sessions';
 import { COACH_ARENAS, COACH_TYPES, coachDayLabel, coachDaysBetween, coachKind, coachRealEntries, coachSetsOf, getCoachSettings } from './settings';
@@ -183,6 +184,12 @@ export function coachOverview(state, today, extra = {}) {
     const di = coachDayInfo(first.iso, coach);
     const tired = !!(coach.readiness && coach.readiness.date === today && coach.readiness.level === 'low' && first.iso === today);
     session = coachBuildPlanned(state, first, di, { deload: first.week.deload, matchWeek: first.week.matchInWeek, tired, minutes: extra.minutes });
+  }
+  // Programme d'un coach extérieur : sa prochaine séance remplace celle que l'appli aurait choisie
+  const pNext = programNext(state, today);
+  if (pNext) {
+    const ps = programSession(state, pNext);
+    if (ps && ps.exercises.length) return { coach, weeks, templates, plannedAll, first: { iso: pNext.date, week: w0p, templateIdx: -1, type: null }, session: ps, hasExercises: true, nextIdx, program: pNext };
   }
   return { coach, weeks, templates, plannedAll, first, session, hasExercises, nextIdx };
 }

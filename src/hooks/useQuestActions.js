@@ -1,4 +1,4 @@
-import { suggestStart } from '../coach/startSuggestion';
+import { makeQuestFromCatalog } from '../lib/questFactory';
 import { getCoachSettings } from '../coach/settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -29,48 +29,8 @@ export function useQuestActions({ gameState, registerUndo, setGameState, trigger
       return existing.id;
     }
     // charge de départ, séries et répétitions adaptées à tes maxima et à ton profil de travail du moment
-    const sug = suggestStart(c, gameState, getTodayISODate(), EXERCISE_CATALOG);
-    const gSets = sug.goalSets;
-    const gReps = sug.goalReps;
-    const unit = c.unit;
-    const startV = Number(sug.startValue) || 0;
-    const initialSetDetails = Array(gSets).fill(unit === 'reps' ? startV : gReps);
-    const assist = unit === 'reps' ? Number(c.defaultStartAssistance) || 0 : 0;
-    const cat = normalizeArenaGroup(c.category, c.type);
-    const newQuest = {
-      id: `q_${Date.now()}`,
-      catalogId: c.id,
-      name: c.name,
-      category: cat,
-      type: 'strength',
-      unit,
-      timed: isTimedCatalog(c) ? true : undefined,
-      goalMode: c.defaultGoalMode || 'sets_reps',
-      level: 1,
-      icon: c.icon,
-      startValue: startV,
-      currentValue: startV,
-      goalValue: unit === 'reps' ? gReps : Math.max(1, Number(sug.goalValue) || gReps),
-      goalSets: gSets,
-      goalReps: gReps,
-      setDetails: initialSetDetails,
-      startAssistanceKg: assist,
-      currentAssistanceKg: assist,
-      goalAssistanceKg: unit === 'reps' ? Number(c.defaultGoalAssistance) || 0 : 0,
-      history: [{
-        id: `h_start_${Date.now()}`,
-        date: getTodayISODate(),
-        value: startV,
-        sets: gSets,
-        reps: unit === 'reps' ? startV : gReps,
-        setDetails: initialSetDetails,
-        assistanceKg: assist,
-        rpe: 7,
-        calories: 0,
-        goalBeaten: false,
-        note: `Point de départ — Niveau 1 (${c.name}) • ajouté par le Coach`
-      }]
-    };
+    const { quest: newQuest, note } = makeQuestFromCatalog(c, gameState, getTodayISODate());
+    const sug = { note };
     setGameState(prev => ({ ...prev, ...computeXp(prev, 40, getTodayISODate(), 'minor').patch, quests: [newQuest, ...prev.quests] }));
     triggerToast('Exercice ajouté !', `${c.name} : ${sug.note || 'ajuste la charge de départ dans « Exercices » (✏️).'}`, 40, c.icon);
     return newQuest.id;

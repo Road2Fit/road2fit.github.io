@@ -48,7 +48,8 @@ export function useGuidedSession({
       idx: 0,
       phase: 'run',
       rpe: 7,
-      warmup: session.warmup || ''
+      warmup: session.warmup || '',
+      programKey: session.program ? session.program.key : null,
     });
     setGuidedOpen(true);
   };
@@ -113,6 +114,8 @@ export function useGuidedSession({
     setSelectedDate(today);
     setSelectedJournalDay(today);
     setGameState(prev => { const cs = prev.coach; return cs && cs.plan && cs.plan.date <= today ? { ...prev, coach: { ...cs, plan: null } } : prev; });
+    // séance du programme de ton coach : marquée comme faite, la suivante prend sa place
+    if (g.programKey) setGameState(prev => { const cs = prev.coach || {}; return cs.program ? { ...prev, coach: { ...cs, program: { ...cs.program, log: { ...(cs.program.log || {}), [g.programKey]: today } } } } : prev; });
     setGuided(null);
     setGuidedOpen(false);
     playGameSound(bossQuest ? 'boss' : 'xp', gameState.soundEnabled);

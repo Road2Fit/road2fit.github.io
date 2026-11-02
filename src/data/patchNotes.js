@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '2.8',
+    date: '2026-11-02',
+    title: 'Tu as déjà un coach ? Ajoute son programme',
+    items: [
+      'Dans le Coach : « Ajouter le programme de mon coach ». Une ligne par exercice, par exemple « Squat 4x8 60kg » ou « Tractions 3x6 aide 10kg ».',
+      'Tu peux saisir plusieurs semaines (copie la semaine et change les chiffres) : l’appli suit le programme séance après séance.',
+      'Une fois le programme fini, le coach de l’appli propose la suite dans la même logique : même progression (charge, répétitions ou aide), même rythme de semaines allégées.',
+      'La partie « Ce que j’ai compris du programme » résume son analyse.',
+    ],
+  },
+  {
     version: '2.7',
     date: '2026-11-02',
     title: 'Nouveautés et rappel de mise à jour',

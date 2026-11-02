@@ -17,6 +17,8 @@ import { Fold } from './Fold';
 import { CoachProfile } from './CoachProfile';
 import { CoachHeader } from './CoachHeader';
 import { CoachNextSession } from './CoachNextSession';
+import { CoachProgram } from './CoachProgram';
+import { programSession } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
 import { CoachSettings } from './CoachSettings';
 import { CoachSources } from './CoachSources';
@@ -142,6 +144,7 @@ export function CoachPanel({
     }
     if (!first || !ov.hasExercises) return null;
     if (first.iso === today) return ov.session;
+    if (ov.program) return programSession(gameState, { ...ov.program, date: today }); // séance du programme faite en avance
     return coachBuildPlanned(gameState, first, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek, tired: tiredToday, minutes: shortMode ? 40 : undefined });
   })();
   // Édition du plan personnalisé (mises à jour fonctionnelles pour éviter les écrasements)
@@ -224,6 +227,7 @@ export function CoachPanel({
       </nav>
       <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">
       <div id="coach-seance" className="scroll-mt-3 space-y-4">
+      <CoachProgram gameState={gameState} setGameState={setGameState} />
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
