@@ -16,7 +16,12 @@ export function startUpdateCheck(onUpdate, { intervalMs = 10 * 60 * 1000 } = {})
     try {
       const html = await fetch('./', { cache: 'no-store' }).then(r => (r.ok ? r.text() : ''));
       const latest = appScriptName(html);
-      if (latest && latest !== current) { stopped = true; onUpdate(); }
+      if (latest && latest !== current) {
+        stopped = true;
+        // résumé de la nouvelle version (version.json, écrit à la publication) ; sans lui, le bandeau reste simple
+        const note = await fetch('./version.json', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+        onUpdate(note);
+      }
     } catch (e) { /* hors ligne */ }
   };
   const onVisible = () => { if (document.visibilityState === 'visible') check(); };

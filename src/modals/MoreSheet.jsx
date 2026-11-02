@@ -32,6 +32,10 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
 
         <div className="space-y-2">
           <p className="text-xs font-black uppercase tracking-wider text-pink-300">Progression</p>
+          <button onClick={close(() => window.dispatchEvent(new Event('rondoufit-patchnotes')))} className={row} data-testid="open-patchnotes">
+            <Art name="sparkle" size={22} bare />
+            <span>Nouveautés</span>
+          </button>
           <button onClick={close(onOpenRewards)} className={row}>
             <Art name="gift" size={22} bare />
             <span>Récompenses</span>

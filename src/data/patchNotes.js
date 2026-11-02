@@ -1,0 +1,60 @@
+// Notes de version (« Nouveautés ») : la plus récente EN PREMIER. À compléter à chaque publication, en français simple :
+// ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
+export const PATCH_NOTES = [
+  {
+    version: '2.7',
+    date: '2026-11-02',
+    title: 'Nouveautés et rappel de mise à jour',
+    items: [
+      'Cette fenêtre « Nouveautés » résume chaque mise à jour, et toutes les précédentes sont dans Plus → Nouveautés.',
+      'Quand une version plus récente est publiée, un bandeau te le dit et te propose de rafraîchir la page.',
+    ],
+  },
+  {
+    version: '2.6',
+    date: '2026-11-02',
+    title: 'Des logos maison partout',
+    items: [
+      'Environ 170 logos dessinés pour l’appli remplacent tous les emojis : exercices, muscles, sports, trophées, messages.',
+      'Ils s’affichent pareil sur tous les téléphones.',
+    ],
+  },
+  {
+    version: '2.5',
+    date: '2026-11-02',
+    title: 'Icônes en couleur',
+    items: ['Navigation, titres et boutons principaux ont leur icône en couleur : l’appli est moins austère.'],
+  },
+  {
+    version: '2.4',
+    date: '2026-11-01',
+    title: 'Interface plus simple',
+    items: [
+      'L’appli s’ouvre sur le Coach, avec ta séance du jour en haut.',
+      'Cartes d’exercice repliées : nom, objectif, « Noter la séance » ; le reste dans « Détails et réglages ».',
+      'Séance guidée : le repos est une bande fixe en bas, la série en cours est encadrée.',
+      'Le bouton « Valider » reste visible dans Noter la séance et Ajuster.',
+      'Coach : sommaire en haut de page et deux colonnes sur ordinateur.',
+    ],
+  },
+  {
+    version: '2.3',
+    date: '2026-11-01',
+    title: 'Animations des exercices revues',
+    items: [
+      'Nouveau personnage, muscles en rouge selon l’effort, vues de côté et de face côte à côte.',
+      'Une quinzaine de gestes faux corrigés (tractions, banc décliné, lombaires, hip thrust, presses…).',
+    ],
+  },
+  {
+    version: '2.2',
+    date: '2026-10-31',
+    title: 'Amis',
+    items: [
+      'Un code à 7 caractères pour ajouter des amis et voir leur profil.',
+      'Le rang de tes amis à côté de leur nom, un pseudo à choisir dans Mon compte, une liste qui se met à jour seule.',
+    ],
+  },
+];
+
+export const CURRENT_VERSION = PATCH_NOTES[0].version;

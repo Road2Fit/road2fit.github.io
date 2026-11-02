@@ -3,6 +3,7 @@
 Application de fitness façon RPG Pokémon pour **un seul utilisateur** (français, Gabin). Publiée sur GitHub Pages depuis `main` (repo `road2fit/road2fit.github.io`) : https://road2fit.github.io/
 
 ## Règles de travail avec l'utilisateur
+- **À chaque publication : ajouter une note EN TÊTE de `src/data/patchNotes.js`** (version suivante, date, titre, 1 à 5 points en français simple, ce qui change pour l'utilisateur). Elle s'affiche une fois après la mise à jour (fenêtre « Quoi de neuf ? », `components/PatchNotes.jsx`, clé `rondoufit:seenVersion`), reste dans Plus → Nouveautés, et sert de résumé au bandeau « Une nouvelle version est disponible… Rafraîchir » (`UpdateBanner`, via `version.json` écrit au build par `vite.config.js`, jamais mis en cache par `public/sw.js`).
 - Parler **français**, réponses courtes, orientées résultat. L'utilisateur n'est pas développeur : instructions simples, pas de jargon.
 - **Pousser sur `main` automatiquement** une fois les tests faits (autorisation permanente de l'utilisateur, 21/10/2026), puis **expliquer clairement ce qui a changé**. Ne pas publier de données personnelles. Pour un gros chantier (refonte, changement de sauvegarde…), demander avant de publier.
 - Commits : message en français + trailers `Co-Authored-By` / `Claude-Session` demandés par l'environnement.

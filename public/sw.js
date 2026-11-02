@@ -23,6 +23,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith('/version.json')) return; // toujours la version publiée, jamais une copie en cache
 
   if (req.mode === 'navigate') {
     event.respondWith(

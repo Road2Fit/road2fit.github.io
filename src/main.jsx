@@ -15,6 +15,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker indisponible', err));
     // bandeau « Nouvelle version disponible » quand un déploiement plus récent existe
-    startUpdateCheck(() => window.dispatchEvent(new Event('rondoufit-update')));
+    startUpdateCheck(note => window.dispatchEvent(new CustomEvent('rondoufit-update', { detail: note })));
   });
 }

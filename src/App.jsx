@@ -25,6 +25,7 @@ import { FriendsTab } from './tabs/FriendsTab';
 import { useFriends } from './hooks/useFriends';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
+import { PatchNotes } from './components/PatchNotes';
 import { MovementHost } from './components/MovementHost';
 import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
 import { playGameSound } from './lib/sound';
@@ -372,6 +373,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />
       )}
       <UpdateBanner />
+      <PatchNotes />
 
       {/* CÉLÉBRATION : NOUVEAU RANG */}
       {celebration && <RankUpModal celebration={celebration} onClose={closeCelebration} />}
