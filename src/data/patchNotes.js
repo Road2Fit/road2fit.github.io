@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.0.1',
+    date: '2026-11-02',
+    title: 'Onglets en entier sur ordinateur',
+    items: ['Sur ordinateur, l’onglet « Amis » n’est plus coupé : tous les onglets sont visibles (ils passent sur deux lignes si l’écran est étroit).'],
+  },
+  {
     version: '3.0',
     date: '2026-11-02',
     title: 'Le coach intelligent',

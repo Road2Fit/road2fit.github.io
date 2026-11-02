@@ -26,14 +26,14 @@ const tabText = (t, gameState) =>
 // Grande barre d'onglets (ordinateur et tablette)
 export function TabBar({ activeTab, gameState, setActiveTab }) {
   return (
-    <nav className="hidden md:flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-slate-800 pb-3" aria-label="Onglets">
+    <nav className="hidden md:flex flex-wrap items-center gap-1.5 border-b border-slate-800 pb-3" aria-label="Onglets">
       {TABS.map(t => (
         <button
           key={t.id}
           onClick={() => setActiveTab(t.id)}
           data-tab={t.id}
           aria-current={activeTab === t.id ? 'page' : undefined}
-          className={`shrink-0 whitespace-nowrap rounded-xl font-bold px-3.5 py-2 text-sm transition ${activeTab === t.id ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`shrink-0 whitespace-nowrap rounded-xl font-bold px-3 py-2 text-sm transition ${activeTab === t.id ? 'bg-pink-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
         >
           <Art name={t.art} size={16} />{tabText(t, gameState)}
         </button>
