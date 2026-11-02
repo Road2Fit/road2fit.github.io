@@ -19,6 +19,7 @@ import { CoachHeader } from './CoachHeader';
 import { CoachNextSession } from './CoachNextSession';
 import { CoachProgram } from './CoachProgram';
 import { VoiceCallout } from '../VoiceCallout';
+import { CoachChat } from './CoachChat';
 import { programSession } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
 import { CoachSettings } from './CoachSettings';
@@ -228,6 +229,7 @@ export function CoachPanel({
       </nav>
       <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">
       <div id="coach-seance" className="scroll-mt-3 space-y-4">
+      <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       <VoiceCallout compact testId="voice-callout-coach" />
       <CoachProgram gameState={gameState} setGameState={setGameState} />
       {/* PROCHAINE SÉANCE */}

@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.0',
+    date: '2026-11-02',
+    title: 'Le coach intelligent',
+    items: [
+      'En haut du Coach : « Parle à ton coach ». Dis-lui en langage courant tes jours, ta durée, ta forme, une douleur… Il t’explique et règle l’appli pour toi (après ton accord).',
+      'Il se souvient de ce que tu lui dis (blessure, matériel, contraintes) : « Ce que je retiens de toi ».',
+      'La dictée comprend toutes les formulations : charges différentes par série, corrections, ressenti (« la dernière, j’ai galéré »).',
+      'Programme de ton coach : colle-le tel quel (message, tableau), il est rangé en semaines et en séances.',
+      'Il faut être connecté à ton compte et l’activer une fois. Sans internet, l’appli marche comme avant.',
+    ],
+  },
+  {
     version: '2.9',
     date: '2026-11-02',
     title: 'La dictée de séance, bien en vue',

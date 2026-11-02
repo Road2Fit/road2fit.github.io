@@ -290,6 +290,14 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       }
       if (method === 'DELETE') { mine.delete(id); return res(204, null); }
     }
+    // ---- Coach intelligent (supabase/functions/coach-ai) : srv.ai(task, body) renvoie le JSON produit, ou lance { status, error } ----
+    if (u.pathname === '/functions/v1/coach-ai') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { error: 'auth' });
+      srv.aiCalls = [...(srv.aiCalls || []), body];
+      if (!srv.ai) return res(503, { error: 'not_configured' });
+      try { return res(200, { ok: true, data: await srv.ai(body.task, body) }); } catch (e) { return res(e.status || 500, { error: e.error || 'server' }); }
+    }
     // ---- Amis (reproduit docs/supabase-amis.sql) ----
     if (u.pathname === '/rest/v1/profiles' || u.pathname.startsWith('/rest/v1/rpc/friend_')) {
       const uid = tokens.get(bearer);

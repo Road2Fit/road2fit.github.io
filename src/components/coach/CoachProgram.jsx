@@ -5,6 +5,8 @@ import { card } from './ui';
 import { DAY_SHORT, analyzeProgram, catalogById, parseProgramLine, programDefaultStart, programLine, programNext, programWeek, sessionKey } from '../../coach/program';
 import { makeQuestFromCatalog } from '../../lib/questFactory';
 import { getTodayISODate } from '../../lib/dates';
+import { aiStatus, callAi } from '../../ai/client';
+import { catalogText, exercisesText } from '../../ai/context';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white';
 const btn = 'px-3 py-2 rounded-xl text-sm font-bold';
@@ -97,6 +99,32 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
   const [wi, setWi] = useState(0);
   const [err, setErr] = useState('');
   const week = weeks[wi];
+  // coach intelligent : le programme collé tel quel (message, tableau…) est converti en lignes que la saisie sait lire
+  const aiOn = aiStatus(gameState) === 'ok';
+  const [paste, setPaste] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiNote, setAiNote] = useState('');
+  const readWithAi = async () => {
+    if (!paste.trim() || aiBusy) return;
+    setAiBusy(true);
+    setAiNote('');
+    setErr('');
+    try {
+      const data = await callAi('program', { text: paste, context: `Exercices de l'utilisateur (identifiant | nom | muscle | mesure) :\n${exercisesText(gameState, { history: 0 })}`, catalog: catalogText() });
+      const ws = (Array.isArray(data && data.weeks) ? data.weeks : []).slice(0, 12)
+        .map(w => ({ sessions: (Array.isArray(w.sessions) ? w.sessions : []).slice(0, 7).map((s, i) => ({ ...newSession(i, Number(s.dow) >= 1 && Number(s.dow) <= 7 ? Number(s.dow) : null), name: String(s.name || '').slice(0, 40) || `Séance ${String.fromCharCode(65 + i)}`, text: (Array.isArray(s.lines) ? s.lines : []).map(l => String(l).trim()).filter(Boolean).join('\n') })).filter(s => s.text) }))
+        .filter(w => w.sessions.length);
+      if (!ws.length) throw new Error('Je n’ai trouvé aucune séance dans ce texte.');
+      setWeeks(ws);
+      setWi(0);
+      if (!name.trim() && data.name) setName(String(data.name).slice(0, 40));
+      setAiNote(`C’est lu : ${ws.length} semaine${ws.length > 1 ? 's' : ''}. Vérifie ci-dessous puis enregistre.${data.notes ? ` Non repris : ${data.notes}` : ''}`);
+    } catch (e) {
+      setAiNote(e.message || 'Le coach intelligent ne répond pas.');
+    } finally {
+      setAiBusy(false);
+    }
+  };
   const patchSession = (si, p) => setWeeks(ws => ws.map((w, i) => (i !== wi ? w : { sessions: w.sessions.map((s, j) => (j === si ? { ...s, ...p } : s)) })));
   const copyWeek = () => setWeeks(ws => { const copy = { sessions: ws[ws.length - 1].sessions.map(s => ({ ...s, id: `${s.id}c${uid++}` })) }; setWi(ws.length); return [...ws, copy]; });
 
@@ -146,6 +174,15 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg bg-slate-800 text-slate-400 shrink-0"><X className="w-4 h-4" /></button>
         </div>
+        {aiOn && (
+          <div className="bg-slate-950 border border-pink-500/40 rounded-xl p-3 space-y-2" data-testid="program-ai">
+            <p className="text-sm font-black text-white"><Art name="sparkle" size={18} />Le plus simple : colle le programme tel quel</p>
+            <p className="text-xs text-slate-400">Message de ton coach, tableau copié, notes… Le coach intelligent le range en semaines et en séances.</p>
+            <textarea value={paste} onChange={e => setPaste(e.target.value)} rows={4} placeholder={'Lundi : squat 4x8 à 60, développé couché 4x8 à 50…\nJeudi : soulevé de terre 3x5…\n+2,5 kg chaque semaine pendant 4 semaines'} className={field} aria-label="Programme collé tel quel" data-testid="program-paste" />
+            <button type="button" onClick={readWithAi} disabled={!paste.trim() || aiBusy} data-testid="program-ai-read" className="w-full py-2.5 rounded-xl text-sm font-black bg-pink-600 disabled:bg-slate-800 disabled:text-slate-500 text-white">{aiBusy ? 'Lecture en cours…' : 'Lire le programme'}</button>
+            {aiNote && <p className="text-xs text-slate-300" data-testid="program-ai-note">{aiNote}</p>}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <label className="text-xs font-bold text-slate-400">Nom (facultatif)<input value={name} onChange={e => setName(e.target.value)} placeholder="Programme de Max" className={field} data-testid="program-name" /></label>
           <label className="text-xs font-bold text-slate-400">Début (lundi)<input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={field} /></label>

@@ -9,6 +9,10 @@ import { computeXp, xpNote } from '../lib/xp';
 import { getTodayISODate } from '../lib/dates';
 import { pick } from '../edition';
 import { arenaOf } from '../data/muscles';
+import { aiStatus, callAi } from '../ai/client';
+import { aiDictationItems } from '../ai/dictation';
+import { catalogText, dictationContext } from '../ai/context';
+import { Art } from './Art';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,21 +29,52 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   const [editableItems, setEditableItems] = useState([]);
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
+  // coach intelligent : il relit la phrase entière (formulations libres, corrections, ressenti) ; l'analyse locale reste en secours
+  const [aiState, setAiState] = useState('idle'); // idle | loading | done | error
+  const [aiMsg, setAiMsg] = useState('');
+  const aiTextRef = useRef('');
+  const aiOn = aiStatus(gameState) === 'ok';
 
   const combinedText = (spokenText + (interimText ? ' ' + interimText : '')).trim();
+  const textRef = useRef('');
+  textRef.current = spokenText.trim();
 
-  // Met à jour la liste des exercices détectés dès que le texte dicté évolue
+  // Met à jour la liste des exercices détectés dès que le texte dicté évolue (sauf s'il vient d'être lu par le coach intelligent)
   useEffect(() => {
+    if (combinedText && combinedText === aiTextRef.current) return;
+    if (aiTextRef.current) { aiTextRef.current = ''; setAiState('idle'); setAiMsg(''); }
     const parsed = parseSpokenWorkout(combinedText, gameState.quests, gameState.userWeightKg);
     setEditableItems(parsed);
   }, [combinedText, gameState.quests, gameState.userWeightKg]);
+
+  const analyzeWithAi = async text => {
+    const t = String(text || '').trim();
+    if (!aiOn || t.length < 4) return;
+    setAiState('loading');
+    setAiMsg('');
+    try {
+      const data = await callAi('dictation', { text: t, context: dictationContext(gameState, getTodayISODate()), catalog: catalogText() });
+      const items = aiDictationItems(data, gameState);
+      if (!items.length) throw Object.assign(new Error('Je n’ai reconnu aucun exercice dans cette phrase.'), { soft: true });
+      aiTextRef.current = t;
+      setEditableItems(items);
+      setAiState('done');
+      setAiMsg(data && data.unclear ? `Pas compris : ${data.unclear}` : '');
+    } catch (e) {
+      setAiState('error');
+      setAiMsg(`${e.message || 'Le coach intelligent ne répond pas.'} J’affiche la lecture simple.`);
+    }
+  };
+  const analyzeRef = useRef(analyzeWithAi);
+  analyzeRef.current = analyzeWithAi;
 
   const toggleBrowserDictation = () => {
     if (isListening && recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch (e) {}
       setIsListening(false);
       setInterimText('');
-      setMicStatusMsg('Écoute terminée. Vérifiez l’aperçu ci-dessous puis validez en 1 clic !');
+      setMicStatusMsg(aiOn ? '' : 'Écoute terminée. Vérifie l’aperçu ci-dessous puis valide en 1 clic.');
+      setTimeout(() => analyzeRef.current(textRef.current), 300);
       return;
     }
 
@@ -93,6 +128,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
       rec.onend = () => {
         setIsListening(false);
         setInterimText('');
+        setTimeout(() => { if (textRef.current !== aiTextRef.current) analyzeRef.current(textRef.current); }, 300);
       };
 
       rec.start();
@@ -149,10 +185,10 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               value: item.unit === 'min' ? item.durationMin : item.distanceKm,
               durationMin: item.durationMin,
               elevationM: 0,
-              rpe: 7,
+              rpe: item.rpe || 7,
               calories: item.calories,
               goalBeaten: false,
-              note: `Dictée : ${item.summary}`
+              note: `Dictée : ${item.summary}${item.aiNote ? ` • ${item.aiNote}` : ''}`
             }
           : {
               id: `h_voice_${Date.now()}_${Math.random()}`,
@@ -162,10 +198,12 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               reps: Math.max(...item.setDetails),
               setDetails: item.setDetails,
               assistanceKg: item.assistanceKg,
-              rpe: 7,
+              ...(item.setLoads ? { setLoads: item.setLoads } : {}),
+              ...(item.setAssists ? { setAssists: item.setAssists } : {}),
+              rpe: item.rpe || 7,
               calories: item.calories,
               goalBeaten: false,
-              note: `Dictée : ${item.summary}`
+              note: `Dictée : ${item.summary}${item.aiNote ? ` • ${item.aiNote}` : ''}`
             };
 
         const existingIdx = updatedQuests.findIndex(
@@ -241,6 +279,9 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
     setInterimText('');
     setEditableItems([]);
     setMicStatusMsg('');
+    aiTextRef.current = '';
+    setAiState('idle');
+    setAiMsg('');
     setIsOpen(false);
   };
 
@@ -319,6 +360,19 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
             </button>
           </div>
 
+          {aiOn ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="voice-ai">
+              {aiState === 'loading' && <span className="text-sky-300 font-bold animate-pulse"><Art name="sparkle" size={16} />Le coach lit ta séance…</span>}
+              {aiState === 'done' && aiTextRef.current === combinedText && <span className="text-emerald-300 font-bold"><Art name="sparkle" size={16} />Lu par le coach intelligent</span>}
+              {combinedText && aiState !== 'loading' && aiTextRef.current !== combinedText && !isListening && (
+                <button type="button" onClick={() => analyzeWithAi(combinedText)} data-testid="voice-ai-read" className="px-3 py-2 rounded-xl bg-pink-600 text-white font-black"><Art name="sparkle" size={16} />Lire avec le coach intelligent</button>
+              )}
+              {aiMsg && <span className={aiState === 'error' ? 'text-amber-200' : 'text-slate-300'}>{aiMsg}</span>}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">Astuce : active le coach intelligent (onglet Coach) pour une dictée qui comprend toutes les formulations.</p>
+          )}
+
           {micStatusMsg && (
             <div className="text-xs bg-slate-950/90 border border-amber-500/40 text-amber-200 px-3 py-2 rounded-xl">
               {micStatusMsg}
@@ -334,20 +388,20 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 {editableItems.map(item => (
                   <div
                     key={item.id}
-                    className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs"
+                    className="flex items-start gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
                       <span className="text-base">{item.icon}</span>
                       <strong className="text-white">{item.name}</strong>
                       <span className="px-2 py-0.5 rounded bg-slate-800 text-xs text-slate-300 font-bold">
                         {item.category}
                       </span>
-                      <span className="text-pink-300 font-bold">{item.summary}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 font-bold">
                         🔥 ~{item.calories} kcal
                       </span>
+                      <span className="w-full text-pink-300 font-bold">{item.summary}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleRemovePreviewItem(item.id)}

@@ -88,6 +88,11 @@ export function App() {
   const [obOpen, setObOpen] = useState(false);
   useEffect(() => { setQuestFilter('all'); }, [gameState.muscleMode]); // les groupes changent avec le mode : on repart de « tous »
   const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
+  useEffect(() => { // « Me connecter » depuis le coach intelligent
+    const h = () => setAccountOpen(true);
+    window.addEventListener('rondoufit-account', h);
+    return () => window.removeEventListener('rondoufit-account', h);
+  }, []);
   // lien « mot de passe oublié » reçu par e-mail : l'adresse contient un jeton temporaire
   useEffect(() => {
     const t = readRecoveryToken();
