@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '2.9',
+    date: '2026-11-02',
+    title: 'La dictée de séance, bien en vue',
+    items: [
+      '« Dicter ma séance » est maintenant en haut du Coach, des Exercices et du Journal, et en premier dans le bouton « + ».',
+      'Dis toute ta séance d’une traite (« développé couché 4 fois 8 à 60 kilos, tractions 6 6 5… ») : je remplis les séries pour toi.',
+    ],
+  },
+  {
     version: '2.8',
     date: '2026-11-02',
     title: 'Tu as déjà un coach ? Ajoute son programme',

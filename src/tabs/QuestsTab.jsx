@@ -7,6 +7,7 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { cleanText, pick } from '../edition';
 import { arenaLabel, hasArena } from '../data/muscles';
+import { VoiceCallout } from '../components/VoiceCallout';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
@@ -15,6 +16,7 @@ export function QuestsTab({
 }) {
   return (
     <div className="space-y-4">
+      {gameState.quests.length > 0 && <VoiceCallout compact testId="voice-callout-quests" />}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1" role="group" aria-label="Filtrer par muscle">
         <button
           onClick={() => setQuestFilter('all')}

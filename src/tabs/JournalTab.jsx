@@ -1,6 +1,7 @@
 import { Art } from '../components/Art';
 import { cleanText } from '../edition';
 import { formatDayFr } from '../lib/dates';
+import { VoiceCallout } from '../components/VoiceCallout';
 import { cardioHasElevation } from '../lib/calories';
 import { useState } from 'react';
 import { EntryEditor } from '../components/EntryEditor';
@@ -15,6 +16,7 @@ export function JournalTab({ activeJournalDayObj, dailyJournalList, handleDelete
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-4 space-y-3">
+        <VoiceCallout testId="voice-callout-journal" />
         <h3 className="text-sm font-black uppercase tracking-wider text-pink-300 flex items-center gap-2">
           <Art name="calendar" size={18} bare /> Jours d’entraînement ({dailyJournalList.length})
         </h3>

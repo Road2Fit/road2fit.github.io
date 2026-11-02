@@ -29,9 +29,9 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
       <div className={`fixed right-4 bottom-20 md:bottom-6 z-40 flex flex-col items-end gap-2 transition-transform duration-200 ${hidden && !open ? 'translate-x-24' : ''}`}>
         {open && (
           <div className="flex flex-col items-end gap-2">
+            {item('Dicter ma séance', 'mic', onVoice, 'Dicter toute ma séance à la voix')}
             {item('Nouvel exercice', 'dumbbell', onExercise)}
             {item('Activité (course, sport…)', 'runner', onCourse)}
-            {item('Dicter ma séance', 'sparkle', onVoice, 'Dicter toute ma séance à la voix')}
             {item('Minuteur de repos', 'timer', onTimer)}
           </div>
         )}
