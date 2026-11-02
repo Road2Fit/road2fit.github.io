@@ -92,6 +92,8 @@ export function coachContext(state, today, { overview } = {}) {
   if (c.readiness && c.readiness.date === today) lines.push(`Forme déclarée aujourd'hui : ${c.readiness.level}.`);
   const skips = (c.gymSkips || []).filter(d => d >= today);
   if (skips.length) lines.push(`Séances de salle annulées : ${skips.join(', ')}.`);
+  const extra = (c.gymExtra || []).filter(d => d >= today);
+  if (extra.length) lines.push(`Séances en plus (exceptionnelles) : ${extra.join(', ')}.`);
   const mem = Array.isArray(c.memory) ? c.memory : [];
   lines.push(`Ce que tu as retenu de la personne : ${mem.length ? mem.map(m => `[${m.id}] ${m.text}`).join(' ; ') : 'rien pour l’instant'}.`);
 

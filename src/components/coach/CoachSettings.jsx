@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Art } from '../Art';
 import { coachSlotFor } from '../../coach/planning';
 import { COACH_DAY_NAMES, coachDayLabel, coachDow } from '../../coach/settings';
@@ -10,6 +11,7 @@ export function CoachSettings({
   setExtraVolleyInput, setMatchInput, setSerie, today, toggleGymSkip, toggleMatch, toggleVolleyDay,
   toggleVolleySkip, upcomingGym, upcomingVolley, updateCoach,
 }) {
+  const [extraGymInput, setExtraGymInput] = useState('');
   const sp = sportInfo(coach.sport);
   return (
     <section className={card}>
@@ -84,6 +86,17 @@ export function CoachSettings({
             </div>
           </div>
         )}
+        {/* séance exceptionnelle : un jour précis en plus, sans changer le rythme habituel */}
+        <div className="space-y-1" data-testid="gym-extra">
+          <p className="text-slate-400">Une séance en plus, juste une fois :</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <input type="date" min={today} value={extraGymInput} onChange={e => setExtraGymInput(e.target.value)} aria-label="Date de la séance en plus" className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
+            <button disabled={!extraGymInput} onClick={() => { updateCoach({ gymExtra: Array.from(new Set([...(coach.gymExtra || []), extraGymInput])).sort(), gymSkips: (coach.gymSkips || []).filter(x => x !== extraGymInput) }); setExtraGymInput(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black">Ajouter</button>
+            {(coach.gymExtra || []).filter(d => d >= today).map(d => (
+              <button key={d} onClick={() => updateCoach({ gymExtra: (coach.gymExtra || []).filter(x => x !== d) })} aria-label={`Retirer la séance en plus du ${coachDayLabel(d)}`} className="px-2 py-1 rounded-lg bg-emerald-600/80 text-white text-xs font-bold">+ {coachDayLabel(d)} ✕</button>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="text-slate-300 font-bold">Durée de séance voulue :</span>

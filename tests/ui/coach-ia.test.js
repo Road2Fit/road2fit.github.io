@@ -166,3 +166,19 @@ describe('coach intelligent', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('séance ratée', () => {
+  it('une séance prévue hier et pas faite : bouton pour la faire maintenant', async () => {
+    const quests = DEMO_STATE.quests.map(q => ({ ...q, history: (q.history || []).filter(e => e.date < '2026-10-16') }));
+    const h = await launch({ openCoach: true, storage: { rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, quests, coach: { ...DEMO_STATE.coach, volleyDays: [], gymSlots: { 2: { start: '18:00', end: '19:30' } } } }) } });
+    open.push(h);
+    await advance(h, 300);
+    const card = byTest(h, 'missed-session');
+    expect(card).toBeTruthy();
+    expect(card.textContent).toContain('mardi 20 octobre');
+    await clickEl(h, byTest(h, 'missed-session-start'));
+    await advance(h, 300);
+    expect(pageText(h)).toMatch(/Série 1|Terminer la séance|Échauffement/);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

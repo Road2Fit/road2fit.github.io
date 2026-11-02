@@ -124,3 +124,34 @@ describe('jours choisis et annulation', () => {
     expect(back.muscleMode).toBe(S.muscleMode || 'simple');
   });
 });
+
+describe('séance en plus, juste une fois', () => {
+  it('lundi et dimanche habituels + jeudi en plus : rien d’autre ne change', async () => {
+    const { coachPlanWeek } = await import('../coach/planning');
+    const mon = '2026-11-02';
+    const st = { ...S, coach: { ...S.coach, sessionsPerWeek: 2, splitMode: 'auto', volleyDays: [], gymSlots: { 1: { start: '18:00', end: '19:30' }, 0: { start: '10:00', end: '11:30' } } } };
+    expect(coachPlanWeek(st, mon, mon).planned).toEqual(['2026-11-02', '2026-11-08']);
+    const [a] = normalizeActions([act('extra_session', { add: ['2026-11-05'] })], st, mon);
+    const st2 = applyActions(st, [a], mon);
+    expect(st2.coach.gymExtra).toEqual(['2026-11-05']);
+    expect(st2.coach.sessionsPerWeek).toBe(2);
+    expect(st2.coach.gymSlots).toEqual(st.coach.gymSlots);
+    expect(coachPlanWeek(st2, mon, mon).planned).toEqual(['2026-11-02', '2026-11-05', '2026-11-08']);
+    expect(coachPlanWeek(st2, '2026-11-09', mon).planned).toEqual(['2026-11-09', '2026-11-15']); // la semaine suivante est normale
+    const [r] = normalizeActions([act('extra_session', { remove: ['2026-11-05'] })], st2, mon);
+    expect(applyActions(st2, [r], mon).coach.gymExtra).toEqual([]);
+  });
+});
+
+describe('séance ratée à rattraper', () => {
+  it('dimanche prévu et pas fait : proposé lundi ; plus rien une fois rattrapé ou ignoré', async () => {
+    const { coachMissedSession } = await import('../coach/advice');
+    const strip = st => ({ ...st, quests: st.quests.map(q => ({ ...q, history: (q.history || []).filter(e => e.date < '2026-10-28') })) });
+    const st = strip({ ...S, coach: { ...S.coach, volleyDays: [], gymSlots: { 0: { start: '10:00', end: '11:30' }, 4: { start: '18:00', end: '19:30' } } } });
+    expect(coachMissedSession(st, '2026-11-02')).toEqual({ iso: '2026-11-01' });
+    const done = { ...st, quests: st.quests.map(q => (q.id === 'q_bench_3x8' ? { ...q, history: [...q.history, { id: 'h_x', date: '2026-11-02', value: 45, sets: 3, reps: 8, setDetails: [8, 8, 8] }] } : q)) };
+    expect(coachMissedSession(done, '2026-11-02')).toBeNull();
+    expect(coachMissedSession({ ...st, coach: { ...st.coach, missedDismissed: ['2026-11-01'] } }, '2026-11-02')).toBeNull();
+    expect(coachMissedSession(st, '2026-11-06')).toEqual({ iso: '2026-11-05' }); // la plus récente ratée
+  });
+});

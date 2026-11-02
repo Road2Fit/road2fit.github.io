@@ -1,6 +1,6 @@
 import { Art } from '../Art';
 import { useMemo, useState } from 'react';
-import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeeklyGoals, coachWeightPace } from '../../coach/advice';
+import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeeklyGoals, coachWeightPace } from '../../coach/advice';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
@@ -8,7 +8,7 @@ import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoa
 import { profileOpts } from '../../coach/profiles';
 import { computeExerciseTarget } from '../../coach/targets';
 
-import { addDaysISO, getTodayISODate, getWeekStart } from '../../lib/dates';
+import { addDaysISO, formatDayFr, getTodayISODate, getWeekStart } from '../../lib/dates';
 import { evaluateQuestProgress } from '../../lib/progress';
 import { CoachAdvice } from './CoachAdvice';
 import { CoachBalance } from './CoachBalance';
@@ -47,6 +47,7 @@ export function CoachPanel({
 
   const ov = useMemo(() => coachOverview(gameState, today, { minutes: shortMode ? 40 : undefined }), [gameState.quests, gameState.coach, gameState.userWeightKg, today, shortMode]);
   const advice = useMemo(() => coachDayAdvice(gameState, today), [gameState.coach, today]);
+  const missedSession = useMemo(() => coachMissedSession(gameState, today), [gameState.quests, gameState.coach, today]);
   const missedMsgs = useMemo(() => coachMissed(gameState, today), [gameState.quests, gameState.coach, today]);
   const weeklyGoals = useMemo(() => coachWeeklyGoals(gameState, today), [gameState.quests, gameState.weightHistory, gameState.coach, today]);
   const strengthTrend = useMemo(() => coachStrengthTrend(gameState, today), [gameState.quests, today]);
@@ -229,6 +230,22 @@ export function CoachPanel({
       </nav>
       <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">
       <div id="coach-seance" className="scroll-mt-3 space-y-4">
+      {/* séance prévue ces derniers jours et pas faite : la faire maintenant en un geste */}
+      {missedSession && sessionToStart && !guidedActive && (
+        <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <span className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shrink-0"><Art name="calendar" size={26} bare /></span>
+            <div className="min-w-0">
+              <h3 className="font-black text-white">Séance de {formatDayFr(missedSession.iso)} pas faite</h3>
+              <p className="text-xs text-slate-300">Pas grave : fais-la aujourd’hui, le coach décale la suite de ton planning.</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" data-testid="missed-session-start" onClick={() => onStartGuided(sessionToStart)} className="flex-1 py-3 rounded-xl bg-pink-600 text-white text-sm font-black">Faire cette séance maintenant</button>
+            <button type="button" onClick={() => updateCoach({ missedDismissed: [...(coach.missedDismissed || []), missedSession.iso].slice(-10) })} className="px-4 py-3 rounded-xl bg-slate-800 text-slate-300 text-sm font-bold">Ignorer</button>
+          </div>
+        </section>
+      )}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       <VoiceCallout compact testId="voice-callout-coach" />
       <CoachProgram gameState={gameState} setGameState={setGameState} />

@@ -102,6 +102,12 @@ export function normalizeAction(a, state, today) {
       if (dates.length) args = { dates };
       break;
     }
+    case 'extra_session': {
+      const add = dateList(x.add || x.dates, today);
+      const remove = Array.isArray(x.remove) ? x.remove.map(String).filter(d => ISO.test(d)) : [];
+      if (add.length || remove.length) args = { add, remove };
+      break;
+    }
     case 'remember': {
       const text = String(x.text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
       if (text.length >= 2) args = { text };
@@ -199,6 +205,12 @@ export function applyAction(state, a, today) {
     }
     case 'skip':
       return withCoach({ gymSkips: [...new Set([...(coach.gymSkips || []), ...x.dates])].sort() });
+    case 'extra_session': {
+      const extra = new Set(coach.gymExtra || []);
+      x.add.forEach(d => extra.add(d));
+      x.remove.forEach(d => extra.delete(d));
+      return withCoach({ gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !x.add.includes(d)) });
+    }
     case 'remember':
       return withCoach({ memory: [...(coach.memory || []), { id: memId(), text: x.text, at: today }].slice(-30) });
     case 'forget':
@@ -213,7 +225,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */

@@ -46,6 +46,24 @@ export function coachMissed(state, today) {
   return msgs;
 }
 
+/**
+ * Séance ratée à rattraper : la plus récente séance de muscu prévue ces 3 derniers jours qui n'a pas été faite,
+ * à condition qu'aucune séance n'ait été faite depuis (sinon elle est déjà rattrapée). null s'il n'y en a pas.
+ */
+export function coachMissedSession(state, today) {
+  const coach = getCoachSettings(state);
+  const dismissed = new Set(coach.missedDismissed || []);
+  const strength = getAllEntries(state).filter(e => e.quest.type === 'strength' && !isStartEntry(e)).map(e => e.date);
+  for (let k = 1; k <= 3; k++) {
+    const d = addDaysISO(today, -k);
+    if (strength.some(x => x >= d)) return null;
+    if (dismissed.has(d)) return null;
+    // le planning tel qu'il était ce jour-là (aucune séance faite depuis : il n'a pas bougé)
+    if (coachPlanWeek(state, getWeekStart(d), d).planned.includes(d)) return { iso: d };
+  }
+  return null;
+}
+
 // ---- Évolution de la force (1RM estimé, formule d'Epley) ----
 export function coachStrengthTrend(state, today) {
   const diffs = [];

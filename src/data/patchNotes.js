@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.2',
+    date: '2026-11-02',
+    title: 'Séance en plus et séance ratée',
+    items: [
+      'Une séance en plus, juste une fois : demande-la au coach (« cette semaine j’en veux une aussi jeudi ») ou ajoute-la dans Réglages. Ton rythme habituel ne change pas.',
+      'Séance prévue et pas faite ? En haut du Coach : « Faire cette séance maintenant » lance la séance qui était prévue, et la suite se décale.',
+    ],
+  },
+  {
     version: '3.1',
     date: '2026-11-02',
     title: 'Le coach comprend mieux les jours',

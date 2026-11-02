@@ -47,6 +47,7 @@ export function coachSlotFor(coach, iso) {
 const coachSlotsDefined = coach => Object.keys(coach.gymSlots || {}).length > 0;
 
 function coachCanTrain(coach, info) {
+  if ((coach.gymExtra || []).includes(info.iso)) return true; // séance en plus demandée pour ce jour précis
   if ((coach.gymSkips || []).includes(info.iso)) return false;
   if (info.isMatch) return false;
   if (coachSlotsDefined(coach)) return !!coachSlotFor(coach, info.iso);
@@ -73,14 +74,17 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
   const info = days.map(d => coachDayInfo(d, coach)).map(i => ({ ...i, slot: coachSlotFor(coach, i.iso), avail: coachCanTrain(coach, i) }));
   const doneDays = days.filter(d => strengthDays.has(d));
   const lastBefore = [...strengthDays].filter(d => d < weekStart).sort().pop() || null;
-  const cand = info.filter(i => i.iso >= today && i.avail && !strengthDays.has(i.iso));
+  // séances exceptionnelles (coach.gymExtra) : ajoutées telles quelles, en plus du rythme habituel, sans changer les autres
+  const extraSet = new Set(coach.gymExtra || []);
+  const extras = days.filter(d => extraSet.has(d) && d >= today && !strengthDays.has(d));
+  const cand = info.filter(i => i.iso >= today && i.avail && !strengthDays.has(i.iso) && !extraSet.has(i.iso));
   const trio = coach.splitMode === 'trio';
   let planned = [];
   const plannedTypes = {};
   let remaining;
 
   if (!trio) {
-    remaining = Math.max(0, coach.sessionsPerWeek - doneDays.length);
+    remaining = Math.max(0, coach.sessionsPerWeek - doneDays.filter(d => !extraSet.has(d)).length);
     const fixed = [...doneDays, ...(lastBefore ? [lastBefore] : []), ...prior.map(p => p.iso)];
     // plus grand nombre de séances (≤ objectif) espacées d'au moins 2 jours (≈ 48 h de repos)
     let best = null;
@@ -105,7 +109,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       rec(0, []);
       if (best) break;
     }
-    planned = best ? best.chosen : [];
+    planned = [...(best ? best.chosen : []), ...extras].sort();
   } else {
     // Mode 3 séances : full body, jambes, haut du corps répartis sur les jours disponibles
     const doneTypes = [];
@@ -171,8 +175,10 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
     if (best) {
       best.chosen.sort((x, y) => x.d.localeCompare(y.d)).forEach(c => { planned.push(c.d); plannedTypes[c.d] = c.t; });
     }
+    extras.forEach(d => { planned.push(d); plannedTypes[d] = 'FB'; });
+    planned.sort();
   }
-  const shortfall = Math.max(0, remaining - planned.length);
+  const shortfall = Math.max(0, remaining - planned.filter(d => !extraSet.has(d)).length);
   const matchInWeek = days.some(d => (coach.matchDates || []).includes(d));
   return {
     weekStart, coach, matchInWeek, remaining, shortfall, trio, plannedTypes,
