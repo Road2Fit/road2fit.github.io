@@ -75,6 +75,15 @@ describe('coach intelligent', () => {
     expect(c.sessionMinutes).toBe(45);
     expect(c.memory.map(m => m.text)).toEqual(['Épaule droite sensible']);
     expect(pageText(h)).toContain('C’est réglé.');
+    expect(byTest(h, 'coach-chat-upcoming').textContent).toMatch(/Prochaines séances : (lundi|jeudi)/);
+    // annuler d'un geste : tout revient comme avant
+    await clickEl(h, byTest(h, 'coach-chat-undo'));
+    await advance(h, 300);
+    const back = saved(h).coach;
+    expect(back.gymSlots || {}).toEqual(DEMO_STATE.coach.gymSlots || {});
+    expect(back.memory || []).toEqual([]);
+    expect(pageText(h)).toContain('Annulé : tout est revenu comme avant.');
+    expect(byTest(h, 'coach-chat-undo')).toBeFalsy();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

@@ -56,12 +56,32 @@ export function dictationContext(state, today) {
   return `Date : ${today}. Poids de corps : ${lastWeight(state) || 'inconnu'} kg.\nExercices de l'utilisateur (identifiant | nom | muscle | mesure) :\n${exercisesText(state, { history: 1 })}`;
 }
 
+/** Dates des prochaines séances de muscu prévues par l'appli (séance personnalisée du coach comprise), au plus `n`. */
+export function upcomingSessions(state, today, overview, n = 4) {
+  const c = getCoachSettings(state);
+  const ov = overview || coachOverview(state, today);
+  const list = ((ov && ov.plannedAll) || []).map(p => p.iso).filter(d => d >= today);
+  if (ov && ov.program && ov.first) list[0] = ov.first.iso; // séance du programme de son coach
+  if (c.plan && Array.isArray(c.plan.questIds) && c.plan.questIds.length && c.plan.date >= today) list[0] = c.plan.date; // séance personnalisée : remplace la prochaine
+  return [...new Set(list.filter(Boolean))].sort().slice(0, n);
+}
+
 /** Contexte complet pour la discussion avec le coach. */
 export function coachContext(state, today, { overview } = {}) {
   const c = getCoachSettings(state);
   const lines = [];
   const dow = new Date(`${today}T00:00:00`).getDay();
   lines.push(`Aujourd'hui : ${dayName(dow)} ${today}.`);
+  // calendrier explicite : « jeudi » = le prochain jeudi, sans erreur de date
+  lines.push(`Calendrier des 14 prochains jours : ${Array.from({ length: 14 }, (_, i) => { const d = addDaysISO(today, i); return `${dayName(new Date(`${d}T00:00:00`).getDay())} ${d}${i === 0 ? ' (aujourd’hui)' : ''}`; }).join(', ')}.`);
+  const weekStart = addDaysISO(today, -((dow + 6) % 7));
+  const doneWeek = new Set();
+  (state.quests || []).filter(q => q.type === 'strength').forEach(q => coachRealEntries(q).forEach(e => { if (e.date >= weekStart && e.date <= today) doneWeek.add(e.date); }));
+  lines.push(`Séances de muscu déjà faites cette semaine (du lundi ${weekStart} à aujourd'hui) : ${doneWeek.size ? [...doneWeek].sort().join(', ') : 'aucune'}.`);
+  try {
+    const up = upcomingSessions(state, today, overview);
+    lines.push(`Séances prévues par l'appli avec les réglages actuels : ${up.length ? up.map(u => `${dayName(new Date(`${u}T00:00:00`).getDay())} ${u}`).join(', ') : 'aucune'}.`);
+  } catch { /* rien */ }
   const p = c.profile || {};
   lines.push(`Profil : ${p.sex === 'f' ? 'femme' : 'homme'}${p.age ? `, ${p.age} ans` : ''}${p.heightCm ? `, ${p.heightCm} cm` : ''}${lastWeight(state) ? `, ${lastWeight(state)} kg` : ''}${state.targetWeightKg ? `, poids visé ${state.targetWeightKg} kg` : ''}.`);
   const gym = Object.keys(c.gymSlots || {}).map(Number).sort((a, b) => toAiDay(a) - toAiDay(b));

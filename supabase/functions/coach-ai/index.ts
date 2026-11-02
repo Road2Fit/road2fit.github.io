@@ -63,7 +63,9 @@ Actions (actions) : seulement si la personne demande un changement ou si c'est c
 - remember {"text":"..."} : retient une information durable (blessure, matériel disponible, préférence, contrainte). Fais-le chaque fois que la personne en donne une.
 - forget {"id":"..."} : oublie une information retenue.
 - muscle_mode {"mode":"simple"|"optimized"} : suivi en 5 grands groupes ou en 14 muscles.
-Jours : 1 = lundi … 7 = dimanche. Dates à partir d'aujourd'hui. N'utilise que des questId et catalogId présents dans les données.`;
+Jours : 1 = lundi … 7 = dimanche. Dates à partir d'aujourd'hui. N'utilise que des questId et catalogId présents dans les données.
+Dates : un jour cité sans date (« jeudi ») est le PROCHAIN jour de ce nom à partir d'aujourd'hui (voir le calendrier fourni), jamais celui de la semaine d'après.
+Planning de l'appli : au plus sessionsPerWeek séances par semaine (du lundi au dimanche), séances déjà faites cette semaine comprises, seulement sur les jours de salle, avec au moins 48 h entre deux séances. Avant de proposer, vérifie que tes réglages donneront bien les dates voulues (compare avec « Séances prévues par l'appli » et « Séances déjà faites cette semaine ») : si la personne veut plus de séances cette semaine, passe sessionsPerWeek à 3 ; pour une séance à une date précise, ajoute une action session avec cette date. Dans reply, cite les dates exactes (« jeudi 5 novembre »).`;
 
 const PROGRAM = `Tâche : convertir un programme d'entraînement collé tel quel (message d'un coach, tableau copié, notes) en semaines et séances que l'application sait suivre.
 Chaque exercice devient une ligne au format : « <nom> <séries>x<répétitions> <charge>kg », par exemple « Développé couché 4x8 60kg », « Tractions Pronation 3x6 aide 10kg », « Planche 3x45s », « Curl haltères 12 10 8 » (répétitions différentes par série).

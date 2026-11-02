@@ -84,3 +84,43 @@ describe('dictée lue par le coach intelligent', () => {
     expect(squat.catalogRef.id).toBe('squat');
   });
 });
+
+describe('jours choisis et annulation', () => {
+  it('avec des jours de salle choisis, la séance va au prochain jour choisi (jeudi 5 avant dimanche 8)', async () => {
+    const { coachPlanWeek } = await import('../coach/planning');
+    const mon = '2026-11-02';
+    const st = {
+      ...S,
+      coach: { ...S.coach, sessionsPerWeek: 2, splitMode: 'auto', volleyDays: [4, 5], gymSlots: { 4: { start: '18:00', end: '19:30' }, 0: { start: '10:00', end: '11:30' } } },
+      quests: S.quests.map(q => (q.id === 'q_bench_3x8' ? { ...q, history: [...q.history, { id: 'h_mon', date: mon, value: 45, sets: 3, reps: 8, setDetails: [8, 8, 8] }] } : q)),
+    };
+    expect(coachPlanWeek(st, mon, mon).planned).toEqual(['2026-11-05']); // une séance déjà faite cette semaine : la suivante jeudi
+    const st3 = { ...st, coach: { ...st.coach, sessionsPerWeek: 3 } };
+    expect(coachPlanWeek(st3, mon, mon).planned).toEqual(['2026-11-05', '2026-11-08']);
+  });
+
+  it('le coach reçoit un calendrier et les séances prévues', () => {
+    const c = coachContext(S, '2026-11-02');
+    expect(c).toContain('Jeudi 2026-11-05');
+    expect(c).toContain('Séances prévues par l\'appli');
+  });
+
+  it('« Annuler » remet les réglages, l’objectif et retire l’exercice ajouté', async () => {
+    const { undoSnapshot, applyUndo } = await import('./actions');
+    const list = normalizeActions([
+      act('schedule', { gymDays: [4, 7], sessionsPerWeek: 3 }),
+      act('adjust', { questId: 'q_bench_3x8', load: 40 }),
+      act('add_exercise', { catalogId: 'deadlift' }),
+      act('muscle_mode', { mode: 'optimized' }),
+    ], S, today);
+    const snap = undoSnapshot(S, list);
+    const after = applyActions(S, list, today);
+    expect(after.quests.length).toBe(S.quests.length + 1);
+    const back = applyUndo(after, snap);
+    expect(back.coach.gymSlots).toEqual(S.coach.gymSlots);
+    expect(back.coach.sessionsPerWeek).toBe(S.coach.sessionsPerWeek);
+    expect(back.quests.map(q => q.id)).toEqual(S.quests.map(q => q.id));
+    expect(back.quests.find(q => q.id === 'q_bench_3x8').coachOverride).toBeUndefined();
+    expect(back.muscleMode).toBe(S.muscleMode || 'simple');
+  });
+});

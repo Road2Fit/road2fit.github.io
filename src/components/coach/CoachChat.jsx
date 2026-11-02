@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Art } from '../Art';
 import { aiStatus, callAi } from '../../ai/client';
-import { applyActions, normalizeActions } from '../../ai/actions';
-import { catalogText, coachContext } from '../../ai/context';
+import { applyActions, applyUndo, normalizeActions, undoSnapshot } from '../../ai/actions';
+import { catalogText, coachContext, upcomingSessions } from '../../ai/context';
+import { formatDayFr } from '../../lib/dates';
 import { useSpeech } from '../../ai/useSpeech';
 import { getCoachSettings } from '../../coach/settings';
 import { getTodayISODate } from '../../lib/dates';
@@ -23,7 +24,7 @@ const CHIPS = [
 /** Historique envoyé au coach : on lui dit aussi ce que la personne a fait de ses propositions. */
 const historyForAi = msgs => msgs.filter(m => !m.error).map(m => ({
   role: m.role,
-  content: m.content + (m.actions && m.actions.length ? `\n[Propositions : ${m.actions.map(a => a.label).join(' ; ')} → ${m.status === 'applied' ? 'appliquées' : m.status === 'declined' ? 'refusées' : 'sans réponse'}]` : ''),
+  content: m.content + (m.actions && m.actions.length ? `\n[Propositions : ${m.actions.map(a => a.label).join(' ; ')} → ${m.status === 'applied' ? 'appliquées' : m.status === 'undone' ? 'appliquées puis annulées' : m.status === 'declined' ? 'refusées' : 'sans réponse'}]` : ''),
 }));
 
 /** « Parle à ton coach » : discussion en langage courant avec le coach intelligent, qui peut régler l'appli après accord. */
@@ -94,9 +95,19 @@ export function CoachChat({ gameState, setGameState, overview }) {
   const decide = (i, ok) => {
     const m = msgs[i];
     if (!m || m.status !== 'pending') return;
+    // anciennes valeurs gardées avec le message : « Annuler » les remet
+    const undo = ok ? undoSnapshot(gameState, m.actions) : null;
     if (ok) setGameState(prev => applyActions(prev, m.actions, getTodayISODate()));
-    setMsgs(list => list.map((x, j) => (j === i ? { ...x, status: ok ? 'applied' : 'declined' } : x)));
+    setMsgs(list => list.map((x, j) => (j === i ? { ...x, status: ok ? 'applied' : 'declined', undo } : x)));
   };
+  const undoAt = i => {
+    const m = msgs[i];
+    if (!m || m.status !== 'applied' || !m.undo) return;
+    setGameState(prev => applyUndo(prev, m.undo));
+    setMsgs(list => list.map((x, j) => (j === i ? { ...x, status: 'undone' } : x)));
+  };
+  const lastApplied = msgs.reduce((k, m, j) => (m.status === 'applied' && m.undo ? j : k), -1);
+  const upcoming = (() => { try { return upcomingSessions(gameState, today, overview, 3); } catch { return []; } })();
   const forget = id => setGameState(prev => ({ ...prev, coach: { ...getCoachSettings(prev), memory: (getCoachSettings(prev).memory || []).filter(x => x.id !== id) } }));
   const shown = msgs.slice(-8);
   const offset = msgs.length - shown.length;
@@ -123,7 +134,15 @@ export function CoachChat({ gameState, setGameState, overview }) {
                           <button type="button" onClick={() => decide(i, false)} className="px-3 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Non merci</button>
                         </div>
                       ) : (
-                        <p className={`text-xs font-bold ${m.status === 'applied' ? 'text-emerald-300' : 'text-slate-500'}`}>{m.status === 'applied' ? 'C’est réglé.' : 'Rien n’a été changé.'}</p>
+                        <div className="space-y-1.5">
+                          <p className={`text-xs font-bold ${m.status === 'applied' ? 'text-emerald-300' : 'text-slate-500'}`}>{m.status === 'applied' ? 'C’est réglé.' : m.status === 'undone' ? 'Annulé : tout est revenu comme avant.' : 'Rien n’a été changé.'}</p>
+                          {i === lastApplied && (
+                            <>
+                              {upcoming.length > 0 && <p className="text-xs text-slate-300" data-testid="coach-chat-upcoming">Prochaines séances : {upcoming.map(d => formatDayFr(d)).join(', ')}</p>}
+                              <button type="button" data-testid="coach-chat-undo" onClick={() => undoAt(i)} className="w-full py-2 rounded-xl bg-slate-800 text-slate-100 text-xs font-black"><Art name="undo" size={14} />Annuler ce changement</button>
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

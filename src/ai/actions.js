@@ -210,6 +210,48 @@ export function applyAction(state, a, today) {
   }
 }
 
+// Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
+const COACH_KEYS = {
+  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], remember: ['memory'], forget: ['memory'],
+};
+
+/** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */
+export function undoSnapshot(state, actions) {
+  const coach = (state && state.coach) || {};
+  const snap = { coach: {}, top: {}, overrides: {}, questIds: (state.quests || []).map(q => q.id) };
+  (actions || []).forEach(a => {
+    (COACH_KEYS[a.type] || []).forEach(k => { if (!(k in snap.coach)) snap.coach[k] = coach[k] === undefined ? null : coach[k]; });
+    if (a.type === 'body' && a.args.targetWeightKg && !('targetWeightKg' in snap.top)) snap.top.targetWeightKg = state.targetWeightKg === undefined ? null : state.targetWeightKg;
+    if (a.type === 'muscle_mode' && !('muscleMode' in snap.top)) snap.top.muscleMode = state.muscleMode || 'simple';
+    if (a.type === 'adjust' && !(a.args.questId in snap.overrides)) {
+      const q = (state.quests || []).find(x => x.id === a.args.questId);
+      snap.overrides[a.args.questId] = q && q.coachOverride ? q.coachOverride : null;
+    }
+  });
+  return snap;
+}
+
+/** Annule : remet les anciennes valeurs et retire les exercices ajoutés par le coach (s'ils n'ont encore aucune séance). */
+export function applyUndo(state, snap) {
+  if (!snap) return state;
+  const coach = { ...((state && state.coach) || {}) };
+  Object.entries(snap.coach || {}).forEach(([k, v]) => { if (v === null) delete coach[k]; else coach[k] = v; });
+  const next = { ...state, coach };
+  Object.entries(snap.top || {}).forEach(([k, v]) => { if (v === null) delete next[k]; else next[k] = v; });
+  const before = new Set(snap.questIds || []);
+  next.quests = (state.quests || [])
+    .filter(q => before.has(q.id) || coachRealEntries(q).length > 0)
+    .map(q => {
+      if (!(q.id in (snap.overrides || {}))) return q;
+      const o = snap.overrides[q.id];
+      if (o) return { ...q, coachOverride: o };
+      const { coachOverride, ...rest } = q;
+      return rest;
+    });
+  return next;
+}
+
 /** Applique une liste d'actions déjà vérifiées par normalizeActions (les jours y sont déjà au format de l'appli). */
 export function applyActions(state, actions, today) {
   return (actions || []).reduce((s, a) => {

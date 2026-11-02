@@ -89,7 +89,11 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       best = null;
       const rec = (start, chosen) => {
         if (chosen.length === target) {
-          const score = [chosen.filter(d => cand.find(c => c.iso === d).legsOk).length, -chosen.reduce((s, d) => s + coachDaysBetween(weekStart, d), 0)];
+          // jours de salle choisis par la personne : les plus proches d'abord (elle s'attend à la séance du prochain jour choisi),
+          // puis les jours où les jambes sont possibles ; sans créneaux : jambes possibles d'abord, puis les plus proches
+          const legs = chosen.filter(d => cand.find(c => c.iso === d).legsOk).length;
+          const early = -chosen.reduce((s, d) => s + coachDaysBetween(weekStart, d), 0);
+          const score = coachSlotsDefined(coach) ? [early, legs] : [legs, early];
           if (!best || score[0] > best.score[0] || (score[0] === best.score[0] && score[1] > best.score[1])) best = { chosen, score };
           return;
         }
