@@ -53,6 +53,17 @@ describe('micro', () => {
     startListening({ onError: m => errs.push(m), onEnd: () => {} });
     expect(errs[0]).toContain('Windows + H');
   });
+  it('Opera GX : message tout de suite, sans demander le micro pour rien', () => {
+    let asked = 0;
+    made = [];
+    vi.stubGlobal('window', { webkitSpeechRecognition: FakeRec });
+    vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 Chrome/130 Safari/537.36 OPR/115.0 (Edition GX)', mediaDevices: { getUserMedia: async () => { asked++; return { getTracks: () => [] }; } } });
+    const errs = [];
+    startListening({ onError: m => errs.push(m), onEnd: () => {} });
+    expect(errs[0]).toContain('Opera GX');
+    expect(asked).toBe(0);
+    expect(made).toHaveLength(0);
+  });
   it('erreur réseau de la reconnaissance (Brave, Opera…) : message clair ; le silence n’est pas une erreur', async () => {
     expect(micErrorMessage('network')).toContain('Chrome ou Edge');
     expect(micErrorMessage('no-speech')).toBe('');

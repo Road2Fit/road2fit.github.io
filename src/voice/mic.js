@@ -7,10 +7,14 @@
 export const getSpeechRec = () => (typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null) || null;
 
 const isBrave = () => typeof navigator !== 'undefined' && !!navigator.brave;
+// Opera (dont Opera GX) présente la fonction de reconnaissance vocale mais le service de Google la refuse (erreur « network ») :
+// on le dit tout de suite au lieu de laisser croire que le micro va marcher.
+export const isOpera = () => typeof navigator !== 'undefined' && /\bOPR\/|Opera|OPX\//.test(navigator.userAgent || '');
 const isFirefox = () => typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent || '');
 
 /** Message affiché quand le navigateur ne propose pas la reconnaissance vocale. */
 export function noSpeechMessage() {
+  if (isOpera()) return 'Opera (et Opera GX) ne fournit pas la reconnaissance vocale : le bouton ne peut pas y marcher. Ouvre l’appli dans Chrome ou Edge (installée, elle s’ouvre comme une appli), ou dicte avec Windows + H dans la zone de texte.';
   if (isFirefox()) return 'Firefox ne propose pas la reconnaissance vocale. Ouvre l’appli dans Chrome ou Edge, ou dicte avec Windows + H dans la zone de texte.';
   return 'Ce navigateur ne propose pas la reconnaissance vocale. Ouvre l’appli dans Chrome ou Edge, ou dicte avec Windows + H (ou le micro du clavier du téléphone) dans la zone de texte.';
 }
@@ -28,6 +32,7 @@ export function micErrorMessage(code) {
     case 'NotReadableError':
       return 'Aucun micro utilisable : branche ou active ton micro (il est peut-être pris par une autre appli, comme Teams ou Zoom), puis réessaie.';
     case 'network':
+      if (isOpera()) return noSpeechMessage();
       return isBrave()
         ? 'Brave ne fournit pas la reconnaissance vocale. Ouvre l’appli dans Chrome ou Edge, ou dicte avec Windows + H dans la zone de texte.'
         : 'La reconnaissance vocale passe par internet et n’a pas répondu (certains navigateurs comme Brave, Opera ou Vivaldi ne la fournissent pas). Réessaie, ou utilise Chrome ou Edge, ou Windows + H.';
@@ -59,7 +64,7 @@ export async function askMicPermission() {
  * callbacks : onStart(), onFinal(texte), onInterim(texte), onError(message), onEnd()
  */
 export function startListening({ interim = false, onStart, onFinal, onInterim, onError, onEnd }) {
-  const SpeechRec = getSpeechRec();
+  const SpeechRec = isOpera() ? null : getSpeechRec();
   let wanted = true;
   let rec = null;
   let started = false;
