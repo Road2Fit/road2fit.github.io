@@ -58,6 +58,7 @@ export function useGuidedSession({
   };
 
   const handleFinishGuided = g => {
+    try { window.dispatchEvent(new CustomEvent('rondoufit-rest-stop')); } catch (e) { /* rien */ } // séance finie : plus de repos
     const today = getTodayISODate();
     let xpEarned = 0;
     let bossQuest = null;

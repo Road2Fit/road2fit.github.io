@@ -37,6 +37,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const d = it ? g.data[it.questId] : null;
   const patch = (qid, p) => setG(prev => ({ ...prev, data: { ...prev.data, [qid]: { ...prev.data[qid], ...p } } }));
   // détail = durée du repos + rappel de ce qui vient ensuite (affiché sur le minuteur)
+  const stopRest = () => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest-stop')); } catch (e) {} };
   const startRest = (sec, next = '') => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest', { detail: { sec, next } })); } catch (e) {} };
 
   // La charge (ou l'aide) se règle entre deux séries : elle s'applique aux séries pas encore faites.
@@ -55,9 +56,10 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     const done = d.done.map((x, k) => (k === i ? !x : x));
     patch(it.questId, { done });
     if (!wasDone) {
-      const isLastSet = i === d.done.length - 1;
-      const isLastEx = g.idx === items.length - 1;
-      if (!(isLastSet && isLastEx)) {
+      // plus aucune série à faire dans toute la séance (quel que soit l'ordre suivi) : pas de repos, la séance est finie
+      const sessionDone = items.every(x => (x.questId === it.questId ? done : ((g.data[x.questId] || {}).done || [])).every(Boolean));
+      if (sessionDone) { stopRest(); return; }
+      {
         const j = d.done.findIndex((x, k) => k > i && !x);
         const nx = items[g.idx + 1];
         const pd = partnerIdx >= 0 ? g.data[items[partnerIdx].questId] : null;

@@ -30,3 +30,31 @@ describe('séance guidée : repos et saisie rapide', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('fin de séance : pas de repos', () => {
+  it('la dernière série de la séance (même cochée dans le désordre) ne lance pas le minuteur, et coupe celui en cours', async () => {
+    const h = await launch();
+    open.push(h);
+    const events = [];
+    let stops = 0;
+    h.w.addEventListener('rondoufit-rest', e => events.push(e.detail));
+    h.w.addEventListener('rondoufit-rest-stop', () => { stops++; });
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
+    await clickText(h, lancer.textContent.trim().slice(0, 30));
+    const faite = () => [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim() === 'Faite');
+    const suivant = () => [...h.doc.querySelectorAll('button')].find(b => /Exercice suivant/.test(b.textContent));
+    let before = 0;
+    for (let k = 0; k < 80; k++) {
+      const f = faite();
+      if (f) { before = events.length; await click(h, f); continue; }
+      const n = suivant();
+      if (!n) break;
+      await click(h, n);
+    }
+    expect(faite()).toBeFalsy(); // tout est coché
+    expect(events.length).toBe(before); // la dernière série n'a pas lancé de repos
+    expect(stops).toBeGreaterThanOrEqual(1);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

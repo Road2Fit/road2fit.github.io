@@ -32,9 +32,11 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
       setNext(d && typeof d === 'object' && d.next ? d.next : '');
     };
     const o = () => setOpen(true);
+    const s = () => stop(); // fin de séance : on coupe le repos en cours
     window.addEventListener('rondoufit-rest', h);
     window.addEventListener('rondoufit-rest-open', o);
-    return () => { window.removeEventListener('rondoufit-rest', h); window.removeEventListener('rondoufit-rest-open', o); };
+    window.addEventListener('rondoufit-rest-stop', s);
+    return () => { window.removeEventListener('rondoufit-rest', h); window.removeEventListener('rondoufit-rest-open', o); window.removeEventListener('rondoufit-rest-stop', s); };
   });
   const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   const running = !!endAt;

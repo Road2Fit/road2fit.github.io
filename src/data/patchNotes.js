@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.5.1',
+    date: '2026-11-04',
+    title: 'Plus de repos en fin de séance',
+    items: [
+      'Séance guidée : la dernière série de la séance ne lance plus le minuteur de repos (même si tu coches les séries dans le désordre), et terminer la séance coupe le repos en cours.',
+    ],
+  },
+  {
     version: '3.5',
     date: '2026-11-04',
     title: 'Coach plus clair, trophées de la semaine',
