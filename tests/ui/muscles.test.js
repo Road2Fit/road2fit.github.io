@@ -98,16 +98,27 @@ describe('bilan du coach en mode optimisé', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('en mode simplifié : pas de silhouette', async () => {
+  it('en mode simplifié aussi : silhouette colorée par grand groupe (les bras prennent la couleur de « Épaules & Bras »)', async () => {
     const h = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }) } });
     open.push(h);
     await advance(h, 400);
-    expect(byTest(h, 'muscle-map')).toBeNull();
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    await advance(h, 1000);
+    const map = byTest(h, 'muscle-map');
+    expect(map).toBeTruthy();
+    const titles = [...map.querySelectorAll('ellipse title')].map(t => t.textContent);
+    expect(titles.some(t => t.startsWith('Épaules & Bras'))).toBe(true);
+    expect(titles.some(t => t.startsWith('Biceps'))).toBe(false);
+    const fill = name => [...map.querySelectorAll('ellipse')].find(e => e.querySelector('title').textContent.startsWith(name)).getAttribute('fill');
+    const colors = new Set([...map.querySelectorAll('ellipse')].filter(e => e.querySelector('title').textContent.startsWith('Jambes')).map(e => e.getAttribute('fill')));
+    expect(colors.size).toBe(1); // quadriceps, ischios, fessiers, mollets : une seule couleur, celle des jambes
+    expect(fill('Jambes')).toBeTruthy();
+    expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
 
 describe('mini silhouette en haut de page', () => {
-  it('présente à côté de la barre d’EXP en mode optimisé, absente en mode simplifié', async () => {
+  it('présente à côté de la barre d’EXP dans les deux modes', async () => {
     const opt = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
     open.push(opt);
     await advance(opt, 400);
@@ -116,7 +127,7 @@ describe('mini silhouette en haut de page', () => {
     const sim = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }) } });
     open.push(sim);
     await advance(sim, 400);
-    expect(byTest(sim, 'muscle-map-mini')).toBeNull();
+    expect(byTest(sim, 'muscle-map-mini')).toBeTruthy();
     expect(opt.errors).toEqual([]);
   }, TIMEOUT);
 });

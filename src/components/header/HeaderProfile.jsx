@@ -4,7 +4,6 @@ import { Flame } from '../../icons';
 import { MuscleBodyMap } from '../coach/MuscleBodyMap';
 import { coachBalance } from '../../coach/advice';
 import { getTodayISODate } from '../../lib/dates';
-import { isOptimized } from '../../data/muscles';
 import { RANK_FRAMES, activeCosmetics } from '../../data/rewards';
 import { RPG_RANKS } from '../../data/gamification';
 import { JigglypuffAvatar } from '../JigglypuffAvatar';
@@ -19,8 +18,8 @@ export function HeaderProfile({
 }) {
   const { theme, accessory, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
   const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
-  const optimized = gameState.muscleMode === 'optimized' && isOptimized();
-  const balanceRows = useMemo(() => (optimized ? coachBalance(gameState, getTodayISODate()).rows : null), [optimized, gameState.quests]);
+  // silhouette des muscles à côté de la barre d'EXP (5 grands groupes en mode simplifié, 14 muscles en mode optimisé)
+  const balanceRows = useMemo(() => coachBalance(gameState, getTodayISODate()).rows, [gameState.muscleMode, gameState.quests]);
   const rankIndex = Math.max(0, RPG_RANKS.findIndex(r => r.title === levelInfo.rank.title));
   return (
     <div className="space-y-2.5">

@@ -18,7 +18,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   return (
     <section className={card}>
       <h3 className="font-black text-white"><Art name="scale" />Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
-      {optimized && <MuscleBodyMap rows={balance.rows} />}
+      <MuscleBodyMap rows={balance.rows} />
       <div className="space-y-2">
         {balance.rows.map(r => {
           const color = COLOR[r.status] || COLOR.low;

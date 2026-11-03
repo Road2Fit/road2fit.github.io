@@ -1,4 +1,7 @@
-// Silhouette (face + dos) colorée selon le travail de chaque muscle sur les 4 dernières semaines (mode optimisé).
+// Silhouette (face + dos) colorée selon le travail de chaque muscle sur les 4 dernières semaines.
+// Mode optimisé : une couleur par muscle ; mode simplifié : chaque zone prend la couleur de son grand groupe
+// (bras et épaules = « Épaules & Bras », obliques = abdominaux, lombaires = dos, tout le bas du corps = jambes).
+import { coarseOf } from '../../data/muscles';
 const COLORS = { none: '#334155', low: '#f43f5e', mid: '#fbbf24', good: '#10b981', high: '#a78bfa' };
 
 // [cx, cy, rx, ry] par muscle ; deux vues
@@ -27,14 +30,15 @@ const BACK = {
 export function MuscleBodyMap({ rows, mini = false }) {
   const byArena = {};
   rows.forEach(r => { byArena[r.arena] = r; });
+  const rowOf = a => byArena[a] || byArena[coarseOf(a)];
   const colorOf = a => {
-    const r = byArena[a];
+    const r = rowOf(a);
     return !r || r.avg === 0 ? COLORS.none : COLORS[r.status] || COLORS.none;
   };
   const draw = shapes => Object.entries(shapes).flatMap(([a, list]) =>
     list.map(([cx, cy, rx, ry], i) => (
       <ellipse key={a + i} cx={cx} cy={cy} rx={rx} ry={ry} fill={colorOf(a)} fillOpacity={0.85} stroke="#0f172a" strokeWidth="1">
-        <title>{a}{byArena[a] ? ` : ${byArena[a].avg} séries/sem.` : ''}</title>
+        <title>{rowOf(a) ? `${rowOf(a).arena} : ${rowOf(a).avg} séries/sem.` : a}</title>
       </ellipse>
     ))
   );

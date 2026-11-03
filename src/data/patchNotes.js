@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.3.1',
+    date: '2026-11-03',
+    title: 'Silhouette des muscles pour tous',
+    items: [
+      'En mode simplifié aussi, la silhouette montre le travail de chaque groupe (pectoraux, dos, jambes, épaules et bras, abdominaux) : dans le Coach et en petit à côté de ta barre d’EXP.',
+    ],
+  },
+  {
     version: '3.3',
     date: '2026-11-03',
     title: 'Séances variées, objectif et niveau',
