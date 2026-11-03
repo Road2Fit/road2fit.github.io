@@ -37,3 +37,11 @@ describe('résumé de profil partagé avec les amis', () => {
     expect(JSON.stringify(p).length).toBeLessThan(20000);
   });
 });
+
+describe('maxima partagés', () => {
+  it('le record réel saisi dans « Mes maxima » est partagé (avant l’estimation)', () => {
+    const q = DEMO_STATE.quests.find(x => x.id === 'q_bench_3x8');
+    const p = buildFriendProfile({ ...DEMO_STATE, maxRecords: { [q.id]: { kg: 92.5, date: '2026-10-20' } } }, TODAY);
+    expect(p.maxima.find(m => m.name === q.name).text).toBe('92.5 kg (record)');
+  });
+});

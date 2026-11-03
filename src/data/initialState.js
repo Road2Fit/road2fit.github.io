@@ -11,7 +11,8 @@ export const INITIAL_STATE = {
   weightHistory: [],
   muscleMode: 'simple',                         // suivi des muscles : 'simple' (5 grands groupes) ou 'optimized' (14 muscles précis)
   onboarded: false,
-  aiConsent: false,                             // coach intelligent (API Claude) activé par la personne                             // l'assistant d'accueil a été fait (ou passé)
+  aiConsent: false,
+  friendsOn: false,                             // amis activés (vaut pour tous les appareils du compte)                             // coach intelligent (API Claude) activé par la personne                             // l'assistant d'accueil a été fait (ou passé)
   xp: 0,
   streak: 0,
   soundEnabled: true,

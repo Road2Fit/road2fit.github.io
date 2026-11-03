@@ -69,7 +69,7 @@ describe('épreuve de rang', () => {
   it('refuse de valider tant que les objectifs ne sont pas atteints', async () => {
     const h = await start(save(xpForLevel(4) + 50, { quests: [quest(['2026-10-12'])] }));
     await clickText(h, 'Épreuve de rang');
-    expect(pageText(h)).toContain('1 / 3');
+    expect(pageText(h)).toContain('1 / 2');
     const bouton = findByText(h, 'Objectifs pas encore atteints')[0].closest('button');
     expect(bouton.disabled).toBe(true);
   }, TIMEOUT);

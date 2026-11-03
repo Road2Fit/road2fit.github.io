@@ -12,12 +12,19 @@ const msg = e => (e && e.message) || 'Erreur du service d’amis.';
  * Amis : mon code à 7 caractères, ma liste d'amis et leur résumé de profil. Nécessite un compte connecté.
  * Mon résumé (sans poids ni photos) est publié automatiquement quand mes données changent, sauf si j'ai coupé le partage.
  */
-export function useFriends({ gameState, user, active = false }) {
+export function useFriends({ gameState, setGameState, user, active = false }) {
   const cfg = SUPABASE;
   const connected = supabaseReady(cfg) && !!user;
   // Rien n'est publié tant que la personne n'a pas activé les amis (bouton dans l'onglet) : choix explicite, mémorisé sur l'appareil
-  const [enabled, setEnabled] = useState(() => { try { return localStorage.getItem('rondoufit:friends') === '1'; } catch { return false; } });
+  // (l'accord est aussi enregistré dans les données du compte : gameState.friendsOn, pour que TOUS ses appareils publient)
+  const [localOn, setEnabled] = useState(() => { try { return localStorage.getItem('rondoufit:friends') === '1'; } catch { return false; } });
+  const enabled = localOn || !!gameState.friendsOn;
   const on = connected && enabled;
+  // amis activés avant cette version sur un seul appareil : on l'enregistre dans le compte pour ses autres appareils
+  useEffect(() => {
+    if (connected && localOn && !gameState.friendsOn && setGameState) setGameState(prev => (prev.friendsOn ? prev : { ...prev, friendsOn: true }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, localOn, gameState.friendsOn]);
   const [code, setCode] = useState('');
   const [share, setShareState] = useState(true);
   const [list, setList] = useState([]);
@@ -80,9 +87,13 @@ export function useFriends({ gameState, user, active = false }) {
     }, PUBLISH_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on, code, gameState.quests, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
+  }, [on, code, gameState.quests, gameState.maxRecords, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
 
-  const enable = () => { try { localStorage.setItem('rondoufit:friends', '1'); } catch { /* sans mémoire : valable pour cette session */ } setEnabled(true); };
+  const enable = () => {
+    try { localStorage.setItem('rondoufit:friends', '1'); } catch { /* sans mémoire : valable pour cette session */ }
+    setEnabled(true);
+    if (setGameState) setGameState(prev => (prev.friendsOn ? prev : { ...prev, friendsOn: true }));
+  };
 
   const addFriend = async c => {
     setError('');

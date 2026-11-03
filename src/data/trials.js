@@ -4,14 +4,17 @@
 import { getAllEntries } from '../lib/quests';
 import { weekStreak } from '../lib/xp';
 
-/** Conditions par rang (clé = niveau du rang). */
+/**
+ * Conditions par rang (clé = niveau du rang). Simplifiées le 03/11/2026 (Gabin bloqué avec 15 000 EXP) : peu de conditions,
+ * atteignables avec une pratique régulière ; et au-delà de MAX_RESERVE EXP en réserve, le rang est franchi tout seul (lib/levels.js).
+ */
 export const RANK_TRIALS = {
-  4: { days: 3 },
-  8: { days: 12, streak: 3 },
-  14: { days: 40, streak: 6, leveled: 2 },
-  22: { days: 90, streak: 10, leveled: 5, kcal: 25000 },
-  35: { days: 180, streak: 20, leveled: 8, kcal: 60000 },
-  50: { days: 300, streak: 30, leveled: 12, kcal: 100000 },
+  4: { days: 2 },
+  8: { days: 6, streak: 2 },
+  14: { days: 15, streak: 3 },
+  22: { days: 30, streak: 4, leveled: 2 },
+  35: { days: 60, streak: 6, leveled: 4 },
+  50: { days: 100, streak: 8, leveled: 6 },
 };
 
 const LABELS = {

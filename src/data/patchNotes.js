@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.4.1',
+    date: '2026-11-03',
+    title: 'Amis à jour et épreuves de rang simplifiées',
+    items: [
+      'Amis : les records que tes amis rentrent dans « Mes maxima » apparaissent maintenant sur leur profil, et leurs changements se publient depuis tous leurs appareils (pas seulement celui où ils ont activé les amis).',
+      'Épreuves de rang plus simples (moins de jours, plus de calories à brûler), et jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul.',
+    ],
+  },
+  {
     version: '3.4',
     date: '2026-11-03',
     title: 'Séries personnalisées',

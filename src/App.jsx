@@ -65,7 +65,7 @@ export function App() {
   const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('coach'); // l'appli s'ouvre sur le Coach : c'est lui qui dit quoi faire aujourd'hui
-  const friends = useFriends({ gameState, user: sync.user, active: activeTab === 'friends' });
+  const friends = useFriends({ gameState, setGameState, user: sync.user, active: activeTab === 'friends' });
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
   // pour ne pas avoir à descendre à la main.
   const tabsRef = useRef(null);

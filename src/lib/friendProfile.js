@@ -31,6 +31,15 @@ function describeEntry(e) {
 /** Maximum lisible d'un exercice : { label, value } ou null s'il n'y a rien à montrer. */
 function describeMax(q, state, today) {
   const r = estimateQuestMax(q, state, { today });
+  // record réel saisi à la main (onglet « Mes maxima ») : c'est ce que la personne a rentré, il passe en premier
+  const m = (state.maxRecords || {})[q.id];
+  if (m) {
+    if (Number(m.kg) > 0) return `${round1(Number(m.kg))} kg (record)`;
+    if (Number(m.extraKg) > 0) return `lesté de ${round1(Number(m.extraKg))} kg (record)`;
+    if (Number(m.assistKg) > 0) return `aide de ${round1(Number(m.assistKg))} kg (record)`;
+    if (Number(m.seconds) > 0) return `${Math.round(Number(m.seconds))} s (record)`;
+    if (Number(m.distanceKm) > 0) return `${round1(Number(m.distanceKm))} km${Number(m.minutes) > 0 ? ` en ${Math.round(Number(m.minutes))} min` : ''} (record)`;
+  }
   if (!r || r.empty) return null;
   if (r.kind === 'cardio') return r.bestDistance > 0 ? `${round1(r.bestDistance)} km (plus longue distance)` : null;
   if (r.kind === 'timed') return r.best ? `${r.best.seconds} s` : null;

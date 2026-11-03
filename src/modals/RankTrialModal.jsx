@@ -38,7 +38,7 @@ export function RankTrialModal({ levelInfo, onClose, onValidate, trialEval, tria
 
         {levelInfo.locked ? (
           <p className="text-xs text-amber-300">
-            Ton niveau est bloqué en attendant. L’EXP que tu gagnes continue de s’accumuler : {levelInfo.reserve} EXP en réserve, qui seront comptés dès l’épreuve réussie.
+            Ton niveau est bloqué en attendant. L’EXP que tu gagnes continue de s’accumuler : {levelInfo.reserve} EXP en réserve, qui seront comptés dès l’épreuve réussie. Au-delà de 1 000 EXP en réserve, le rang est franchi tout seul.
           </p>
         ) : (
           <p className="text-xs text-slate-500">

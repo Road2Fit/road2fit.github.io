@@ -61,24 +61,35 @@ describe('computeXp', () => {
 });
 
 describe('épreuves de rang et blocage du niveau', () => {
-  it('l’épreuve du rang 4 demande 3 jours d’entraînement', () => {
-    expect(RANK_TRIALS[4]).toEqual({ days: 3 });
-    expect(evaluateTrial(4, state(['2026-10-12', '2026-10-14']), TODAY).done).toBe(false);
-    const ok = evaluateTrial(4, state(['2026-10-12', '2026-10-14', '2026-10-16', '2026-10-16']), TODAY);
+  it('l’épreuve du rang 4 demande 2 jours d’entraînement', () => {
+    expect(RANK_TRIALS[4]).toEqual({ days: 2 });
+    expect(evaluateTrial(4, state(['2026-10-12', '2026-10-12']), TODAY).done).toBe(false);
+    const ok = evaluateTrial(4, state(['2026-10-12', '2026-10-14']), TODAY);
     expect(ok.done).toBe(true);
-    expect(ok.tasks[0]).toMatchObject({ current: 3, target: 3, done: true });
+    expect(ok.tasks[0]).toMatchObject({ current: 2, target: 2, done: true });
   });
 
   it('le niveau reste juste avant un rang dont l’épreuve n’est pas réussie', () => {
-    const xp = xpForLevel(6);
-    expect(levelFromXp(xp).level).toBe(6); // sans règle de blocage
+    const xp = xpForLevel(4) + 600; // niveau 4 atteint, moins de 1 000 EXP au-delà du rang
+    expect(levelFromXp(xp).level).toBe(4); // sans règle de blocage
     const bloque = levelFromXp(xp, { passed: [] });
     expect(bloque.level).toBe(3);
     expect(bloque.locked.minLevel).toBe(4);
     expect(bloque.progressPct).toBe(100);
     expect(bloque.reserve).toBe(xp - xpForLevel(4));
-    expect(levelFromXp(xp, { passed: [4] }).level).toBe(6);
-    expect(levelFromXp(xpForLevel(10), { passed: [4] }).level).toBe(7); // bloqué avant le rang 8
+    expect(levelFromXp(xp, { passed: [4] }).level).toBe(4);
+    expect(levelFromXp(xpForLevel(8) + 500, { passed: [4] }).level).toBe(7); // bloqué avant le rang 8
     expect(levelFromXp(xpForLevel(3), { passed: [] }).locked).toBeNull(); // pas encore au seuil
+  });
+
+  it('jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul', () => {
+    const r = levelFromXp(15000, { passed: [] }); // le cas de Gabin : 15 000 EXP
+    expect(r.locked).toBeNull();
+    expect(r.autoPassed).toEqual([4, 8]);
+    expect(r.level).toBe(levelFromXp(15000).level);
+    const juste = levelFromXp(xpForLevel(8) + 999, { passed: [4] });
+    expect(juste.locked.minLevel).toBe(8);
+    expect(juste.reserve).toBe(999);
+    expect(levelFromXp(xpForLevel(8) + 1000, { passed: [4] }).locked).toBeNull();
   });
 });

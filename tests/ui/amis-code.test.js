@@ -165,3 +165,17 @@ describe('amis : code à 7 caractères', () => {
     expect(byTest(h, 'friends-offline')).toBeTruthy();
   }, TIMEOUT);
 });
+
+describe('amis : mises à jour', () => {
+  it('amis activés sur un appareil : un autre appareil du même compte publie aussi ses changements', async () => {
+    const srv = fakeSupabase();
+    const user = srv.addUser('a@x.fr');
+    // deuxième appareil : aucune mémoire locale « amis activés », mais l'accord est dans les données du compte
+    const h = await launch({ storage: { __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }), 'rondoufit:account': JSON.stringify({ session: user.session }), 'rondoufit:lastUser': user.id, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, friendsOn: true, heroName: 'Léa' }) }, fetchImpl: srv.fetch });
+    open.push(h);
+    await advance(h, 3500);
+    expect(srv.profiles.size).toBe(1);
+    expect(JSON.stringify([...srv.profiles.values()][0].summary)).toContain('Léa');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});
