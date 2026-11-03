@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.6.2',
+    date: '2026-11-04',
+    title: 'Erreurs fréquentes réalistes',
+    items: [
+      '« Voir le mouvement » → Erreur fréquente : les mauvaises exécutions sont maintenant réalistes et propres à chaque exercice, sans personnage qui traverse un banc, un siège ou le sol.',
+      'Exemples : développé couché → les fesses décollent du banc ; machines → les fesses décollent du siège ; pompes et planche → le bassin s’affaisse ; squat → le buste plonge ; rowing, soulevé de terre → le dos lâche ; tirages → le buste bascule ; curls, développé debout → le buste part en arrière ; crunch → on tire sur la nuque ; tractions, dips → balancement des jambes.',
+    ],
+  },
+  {
     version: '3.6.1',
     date: '2026-11-04',
     title: 'Animations cohérentes entre les vues',

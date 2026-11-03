@@ -3,13 +3,10 @@ import { Figure } from '../anim/Figure';
 import { flagAnimation } from '../lib/movement';
 import { animatedList, animationIdFor, movementFor } from '../anim/resolve';
 import { effortAt, firstPhaseEnd, phaseOfU, phaseToU, poseAt, tempoU } from '../anim/skeleton';
+import { applyMistake, mistakesFor } from '../anim/mistakes';
 
 const CYCLE_MS = 5200;
-const MISTAKES = [
-  { key: 'fast', label: 'Trop vite, avec élan', text: 'Trop vite, avec de l’élan : la charge balance, les muscles ne travaillent presque plus et les articulations encaissent.' },
-  { key: 'short', label: 'Amplitude trop courte', text: 'Amplitude trop courte : le fantôme montre le trajet complet que tu dois faire.' },
-  { key: 'lean', label: 'Le dos lâche', text: 'Le buste se penche et le dos lâche : la charge part sur le bas du dos au lieu des muscles visés.' },
-];
+// erreurs fréquentes : réalistes et propres à la posture de l'exercice (anim/mistakes.js)
 const LIST = animatedList();
 const viewLabel = sc => (sc.view === 'top' ? 'Vue de dessus' : sc.view === 'front' ? (sc.back ? 'Vue de dos' : 'Vue de face') : 'Vue de côté');
 
@@ -88,7 +85,8 @@ export function MovementPreview({ initial = null }) {
   const scene = mv && mv.scene;
   const views = mv ? [{ key: 'side', label: viewLabel(mv.scene), scene: mv.scene }, ...mv.alts] : [];
   const info = mv && mv.info;
-  const canMistake = !!(scene && info && !info.hold && scene.view !== 'front');
+  const MISTAKES = scene && info ? mistakesFor(scene, info, id) : [];
+  const canMistake = MISTAKES.length > 0;
   const err = canMistake ? mistake : null;
   const loop = scene ? scene.loop : 'pingpong';
   const eff = info && info.eff ? 1 : 0;
@@ -96,10 +94,8 @@ export function MovementPreview({ initial = null }) {
   const u = err === 'short' ? baseU * 0.5 : baseU;
   const poseOf = sc => {
     const pose = poseAt(sc.keys, u);
-    if (sc.view) return pose;
-    if (err === 'lean') return { ...pose, torso: (pose.torso || 0) + 20 * u };
-    if (err === 'fast') return { ...pose, torso: (pose.torso || 0) + 14 * Math.sin(phase * Math.PI * 4) };
-    return pose;
+    if (sc.view || !err) return pose;
+    return applyMistake(err, pose, sc, id, u, phase);
   };
   const effort = scene ? effortAt(phase, loop, eff, !!(info && info.hold)) : 0;
   const labels = info ? info.p : ['Effort', 'Retour'];
