@@ -182,3 +182,46 @@ describe('séance ratée', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('raconte ton passé', () => {
+  it('je raconte mon passé : le coach remplit niveau, records, exercices et limites après « Appliquer »', async () => {
+    const srv = fakeSupabase();
+    srv.ai = async (task, body) => {
+      expect(task).toBe('history');
+      expect(body.text).toContain('cinq ans');
+      expect(body.context).toContain('q_bench_3x8');
+      return {
+        level: 'advanced', years: 5, breakMonths: 0, weeklySets: 0, methods: ['drop_set'], limits: 'épaule droite fragile',
+        exercises: [
+          { questId: 'q_bench_3x8', catalogId: '', customName: '', best: { kg: 100, reps: 3 }, bestDate: '2026-06-01', work: { sets: 0, reps: 0, kg: 0 } },
+          { questId: '', catalogId: 'deadlift', customName: '', best: { kg: 160, reps: 1 }, bestDate: '', work: { sets: 3, reps: 5, kg: 130 } },
+          { questId: '', catalogId: '', customName: 'Machine inventée', best: { kg: 0, reps: 0 }, bestDate: '', work: { sets: 0, reps: 0, kg: 0 } },
+        ],
+        summary: 'Tu t’entraînes depuis cinq ans.', unclear: '',
+      };
+    };
+    const h = await logIn(srv, { aiConsent: true });
+    const fold = [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach'));
+    await clickEl(h, fold);
+    expect(byTest(h, 'coach-past')).toBeTruthy();
+    await setInput(h, byTest(h, 'past-text'), 'Je fais de la muscu depuis cinq ans, 100 kg pour 3 au développé couché, soulevé de terre 160.');
+    await clickEl(h, byTest(h, 'past-send'));
+    expect(await waitFor(h, () => byTest(h, 'past-preview'))).toBeTruthy();
+    const t = byTest(h, 'past-preview').textContent;
+    expect(t).toContain('Avancé');
+    expect(t).toContain('pas reconnu');
+    expect(saved(h).coach.experience || null).toBeNull(); // rien avant « Appliquer »
+    await clickEl(h, byTest(h, 'past-apply'));
+    await advance(h, 300);
+    const s = saved(h);
+    expect(s.coach.experience).toMatchObject({ level: 'advanced', years: 5, methods: ['drop_set'] });
+    expect(s.coach.memory.some(m => m.text.includes('épaule droite'))).toBe(true);
+    expect(s.quests.find(q => q.id === 'q_bench_3x8').known).toBe(true);
+    expect(s.maxRecords.q_bench_3x8.kg).toBeGreaterThan(100); // 100 × 3 → max estimé
+    const dl = s.quests.find(q => q.catalogId === 'deadlift');
+    expect(dl.startValue).toBe(130); // séance type
+    expect(dl.known).toBe(true);
+    expect(byTest(h, 'past-done').textContent).toContain('1 exercice(s) ajouté(s)');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

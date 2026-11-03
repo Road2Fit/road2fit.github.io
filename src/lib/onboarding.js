@@ -79,8 +79,16 @@ export function applyOnboarding(prev, a, today) {
     onboarded: true,
   };
 
-  // exercices connus : on les crée un par un pour que les suivants profitent des maxima des premiers
-  (a.exercises || []).forEach((ex, i) => {
+  return addKnownExercises(state, a.exercises || [], today, { known, factor, origin: 'l’assistant d’accueil' });
+}
+
+/**
+ * Crée les exercices déclarés (assistant d'accueil, « Raconte ton passé ») un par un, pour que les suivants profitent des
+ * maxima des premiers. exercises = [{ catalogId, kg?, reps?, date?, workSets?, workReps?, workKg? }] ; un exercice déjà suivi est ignoré.
+ */
+export function addKnownExercises(state, exercises, today, { known = false, factor = 1, origin = 'l’assistant d’accueil' } = {}) {
+  state = { ...state, quests: [...(state.quests || [])], maxRecords: { ...(state.maxRecords || {}) } };
+  exercises.forEach((ex, i) => {
     const c = EXERCISE_CATALOG.find(x => x.id === ex.catalogId);
     if (!c || state.quests.some(q => q.catalogId === c.id)) return;
     const sug = suggestStart(c, state, today, EXERCISE_CATALOG);
@@ -149,10 +157,10 @@ export function applyOnboarding(prev, a, today) {
         rpe: 7,
         calories: 0,
         goalBeaten: false,
-        note: `Point de départ — Niveau 1 (${c.name}) • créé par l’assistant d’accueil`,
+        note: `Point de départ — Niveau 1 (${c.name}) • créé par ${origin}`,
       }],
     };
-    if (rec.kg) state.maxRecords[id] = { kg: rec.kg, date: /^d{4}-d{2}-d{2}$/.test(ex.date || '') && ex.date <= today ? ex.date : today };
+    if (rec.kg) state.maxRecords[id] = { kg: rec.kg, date: /^\d{4}-\d{2}-\d{2}$/.test(ex.date || '') && ex.date <= today ? ex.date : today };
     state = { ...state, quests: [...state.quests, quest] };
   });
   return state;

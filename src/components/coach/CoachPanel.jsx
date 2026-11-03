@@ -22,6 +22,7 @@ import { VoiceCallout } from '../VoiceCallout';
 import { CoachChat } from './CoachChat';
 import { CoachGoal } from './CoachGoal';
 import { CoachExperience } from './CoachExperience';
+import { CoachPast } from './CoachPast';
 import { programSession } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
 import { CoachSettings } from './CoachSettings';
@@ -339,6 +340,7 @@ export function CoachPanel({
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
       <Fold title="⚙️ Réglages et détails du coach" subtitle={`Niveau, profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('maxima') : null} />
+        <CoachPast gameState={gameState} setGameState={setGameState} />
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs" data-testid="method-style">
           <h3 className="text-sm font-black text-white"><Art name="sparkle" />Forme des séries</h3>

@@ -2,8 +2,8 @@
 // - La clé ANTHROPIC_API_KEY est un secret du projet Supabase (Edge Functions → Secrets) : elle n'est jamais dans l'appli.
 // - Seuls les comptes connectés peuvent appeler (session vérifiée auprès de Supabase Auth), avec une limite d'appels par jour
 //   (table ai_usage, docs/supabase-ia.sql).
-// - Trois tâches : « dictation » (lire une séance dictée), « coach » (discussion + changements proposés), « program » (lire
-//   un programme collé tel quel). Les réponses sont du JSON contraint par un schéma, revérifié ensuite par l'appli.
+// - Quatre tâches : « dictation » (lire une séance dictée), « coach » (discussion + changements proposés), « program » (lire
+//   un programme collé tel quel), « history » (lire le passé d'entraînement raconté par la personne, souvent à l'oral). Les réponses sont du JSON contraint par un schéma, revérifié ensuite par l'appli.
 // Déploiement : supabase functions deploy coach-ai --no-verify-jwt (la session est vérifiée ici même).
 import Anthropic from "npm:@anthropic-ai/sdk";
 
@@ -82,6 +82,16 @@ Chaque exercice devient une ligne au format : « <nom> <séries>x<répétitions>
 - Si le programme décrit une progression sur plusieurs semaines (« +2,5 kg par semaine pendant 4 semaines », « semaine 4 allégée »), écris chaque semaine explicitement, 12 semaines au plus. Sinon une seule semaine.
 - name du programme : court, ou "". notes : ce que tu n'as pas pu convertir (échauffement, tempo, consignes…), en une ou deux phrases, ou "".`;
 
+const HISTORY = `Tâche : la personne raconte son passé en musculation (souvent dicté à l'oral, donc avec des fautes de reconnaissance vocale : « dévelopé couchait » = développé couché). Extrais ce qui sert au coach.
+- level : beginner (débute, ou très peu de pratique), advanced (pratique régulière depuis plus d'environ un an, connaît ses charges), expert (plusieurs années de pratique sérieuse et structurée, compétition, programmation), unknown si on ne peut pas dire.
+- years : années de pratique régulière (0 si inconnu). breakMonths : mois sans entraînement jusqu'à aujourd'hui (0 si elle s'entraîne en ce moment ou si inconnu).
+- weeklySets : séries par muscle et par semaine habituelles si elle les donne, sinon 0. methods : formes de séries qu'elle dit pratiquer (sinon liste vide).
+- limits : blessures, douleurs, exercices à éviter, en une phrase, sinon "".
+- exercises : un élément par exercice cité. questId = id d'un exercice de l'utilisateur s'il correspond, sinon "" ; catalogId = id du catalogue le plus proche s'il n'est pas déjà dans ses exercices, sinon "" ; customName = nom dit si aucun ne correspond.
+  best = meilleure performance citée ({kg, reps} ; poids du corps : kg 0 et reps ; inconnu : 0 et 0) ; bestDate = AAAA-MM-JJ si une date ou une période est donnée (« il y a deux ans » → calcule depuis aujourd'hui, au 1er du mois), sinon "".
+  work = séance type récente {sets, reps, kg} si elle est dite, sinon 0, 0, 0.
+- N'invente rien : ce qui n'est pas dit vaut 0 ou "". summary : ce que tu as compris, en deux phrases au plus, en tutoyant. unclear : ce que tu n'as pas compris, sinon "".`;
+
 // ---------- Schémas de réponse ----------
 
 const str = { type: "string" };
@@ -113,6 +123,17 @@ const SCHEMAS: Record<string, unknown> = {
       }),
     },
   }),
+  history: obj({
+    level: { type: "string", enum: ["beginner", "advanced", "expert", "unknown"] },
+    years: num, breakMonths: int, weeklySets: int,
+    methods: { type: "array", items: { type: "string", enum: ["pyramid", "reverse_pyramid", "top_backoff", "drop_set", "rest_pause", "myo_reps", "cluster", "amrap"] } },
+    limits: str,
+    exercises: {
+      type: "array",
+      items: obj({ questId: str, catalogId: str, customName: str, best: obj({ kg: num, reps: int }), bestDate: str, work: obj({ sets: int, reps: int, kg: num }) }),
+    },
+    summary: str, unclear: str,
+  }),
   program: obj({
     name: str,
     weeks: { type: "array", items: obj({ sessions: { type: "array", items: obj({ name: str, dow: int, lines: { type: "array", items: str } }) } }) },
@@ -124,6 +145,7 @@ const TASKS: Record<string, { model: string; prompt: string; effort: string; max
   dictation: { model: FAST, prompt: DICTATION, effort: "low", maxTokens: 8000 },
   coach: { model: SMART, prompt: COACH, effort: "medium", maxTokens: 10000 },
   program: { model: SMART, prompt: PROGRAM, effort: "medium", maxTokens: 16000 },
+  history: { model: SMART, prompt: HISTORY, effort: "medium", maxTokens: 10000 },
 };
 
 const clip = (v: unknown, n: number) => String(v ?? "").slice(0, n);
@@ -132,6 +154,9 @@ function buildMessages(task: string, body: any) {
   const ctx = clip(body.context, 30_000);
   if (task === "dictation") {
     return [{ role: "user", content: `Données de l'utilisateur :\n${ctx}\n\nSéance dictée :\n"""${clip(body.text, 4000)}"""` }];
+  }
+  if (task === "history") {
+    return [{ role: "user", content: `Données de l'utilisateur :\n${ctx}\n\nMon passé en musculation :\n"""${clip(body.text, 8000)}"""` }];
   }
   if (task === "program") {
     return [{ role: "user", content: `Données de l'utilisateur :\n${ctx}\n\nProgramme à convertir :\n"""${clip(body.text, 20_000)}"""` }];

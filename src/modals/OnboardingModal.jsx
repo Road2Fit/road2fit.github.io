@@ -142,6 +142,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             {a.level === 'beginner' && <p className="text-xs text-slate-400">Le coach a choisi pour toi des machines simples à régler, une par grand mouvement. Décoche ce que tu ne veux pas ; il proposera des charges prudentes et les ajustera après tes premières séances.</p>}
             {a.level === 'advanced' && <p className="text-xs text-slate-400">Coche les exercices que tu as déjà pratiqués et indique ta meilleure série récente : « 80 kg pour 5 répétitions » (1 répétition = ton maximum). Le coach part de là, sans programme de débutant.</p>}
             {expert && <p className="text-xs text-slate-400">Pour chaque exercice pratiqué : ta meilleure série (et sa date) et ta séance type actuelle (séries × répétitions × charge). Le coach repart de ta séance type.</p>}
+            {a.level !== 'beginner' && <p className="text-xs text-sky-300">Plus simple : une fois ton compte créé, tu pourras aussi raconter ton passé à l’oral au coach (Coach → Réglages → « Raconte ton passé ») : il remplira tout seul tes exercices et tes records.</p>}
             {a.level === 'advanced' && <BreakPicker value={a.experience.breakMonths} onChange={v => setXp({ breakMonths: v })} />}
             <div className="space-y-2">
               {listed.map(c => {
