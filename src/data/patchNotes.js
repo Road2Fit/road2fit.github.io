@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.6.1',
+    date: '2026-11-04',
+    title: 'Animations cohérentes entre les vues',
+    items: [
+      'Sur toutes les animations à plusieurs vues, les mains et les coudes suivent maintenant le même trajet que la vue de profil, au même moment.',
+      'Les coudes ne partent plus sur le côté quand ils doivent rester près du corps (développé couché, pompes, dips, rowings, curls…) : leur écart suit la bonne technique de chaque exercice.',
+    ],
+  },
+  {
     version: '3.6',
     date: '2026-11-04',
     title: 'Lest, RIR et nouveaux exercices',

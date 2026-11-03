@@ -192,9 +192,31 @@ describe('animations réalistes', () => {
         if (s.view !== 'front') continue;
         framesOf(s, solveFront).forEach(f => {
           for (const [sd, side] of [[f.R, 1], [f.L, -1]]) {
-            if (!ELBOW_OK.has(e.id) && sd.wrist[1] > sd.shoulder[1] + 2 && (sd.elbow[0] - (sd.shoulder[0] + sd.wrist[0]) / 2) * side < -1) errs.push(e.id + ' : coude vers l’intérieur');
+            if (!ELBOW_OK.has(e.id) && sd.wrist[1] > sd.shoulder[1] + 2 && (sd.elbow[0] - Math.min(sd.shoulder[0] * side, (sd.shoulder[0] + sd.wrist[0]) / 2 * side) * side) * side < -1) errs.push(e.id + ' : coude vers l’intérieur'); // le coude peut rester au niveau de l'épaule (coudes collés), jamais en travers du buste
           }
         });
+      }
+    }
+    expect([...new Set(errs)]).toEqual([]);
+  });
+
+  it('trajets cohérents entre les vues : mains et coudes à la même hauteur que de profil, coudes pas plus écartés que la technique', () => {
+    const errs = [];
+    for (const e of ALL_SCENES) {
+      if (e.scene.view) continue;
+      for (const a of e.alts) {
+        if (a.scene.view !== 'front') continue;
+        if (a.scene.elbows === undefined) { errs.push(e.id + '#' + a.key + ' : écart des coudes non déclaré'); continue; }
+        for (let i = 0; i <= 20; i++) {
+          const u = i / 20;
+          const s = solvePose(poseAt(e.scene.keys, u));
+          const p = poseAt(a.scene.keys, u);
+          const f = solveFront(p).R;
+          if (Math.abs((f.elbow[1] - f.shoulder[1]) - (s.elbow[1] - s.shoulder[1])) > 3) errs.push(e.id + '#' + a.key + ' : hauteur du coude');
+          if (p.hand && !p.handL && Math.abs((f.wrist[1] - f.shoulder[1]) - (s.wrist[1] - s.shoulder[1])) > 4) errs.push(e.id + '#' + a.key + ' : hauteur de la main');
+          const lat = typeof a.scene.elbows === 'number' ? a.scene.elbows : Array.isArray(a.scene.elbows) ? Math.max(...a.scene.elbows) : SEG.uarm;
+          if (Math.abs(f.elbow[0] - f.shoulder[0]) > lat + 1) errs.push(e.id + '#' + a.key + ' : coudes trop écartés');
+        }
       }
     }
     expect([...new Set(errs)]).toEqual([]);

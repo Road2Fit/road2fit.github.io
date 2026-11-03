@@ -7,9 +7,24 @@ import { abMachine, hsObliqueCrunch, tgTotalAbdominal, abWheel, cableCrunch, cap
 import { bulgarianSquat, burpee, calfRaise, deadlift, gluteBridge, gluteKickback, goodMorning, hipMachine, hipThrust, legCurl, legExtension, legPress, lunge, mountainClimber, multiHip, squat, stepUp, wallBall, wallSit } from './scenes-legs';
 import { benchPress, dips, fly, machinePress, pullover, pushUp } from './scenes-push';
 
+
 const E = [];
 const add = (id, name, scene) => E.push({ id, name, scene, alts: [] });
-const alt = (ids, key, label, scene) => { for (const id of [].concat(ids)) { const e = E.find(x => x.id === id); if (!e) throw new Error('alt : ' + id); e.alts.push({ key, label, scene }); } };
+const alt = (ids, key, label, scene) => { for (const id of [].concat(ids)) { const e = E.find(x => x.id === id); if (!e) throw new Error('alt : ' + id); e.alts.push({ key, label, scene: elbowsFromSide(e.scene, scene) }); } };
+
+/**
+ * Trajet des coudes identique entre les vues : pour une vue de face qui déclare `elbows` (écart latéral en px, ou 'frontal' si le
+ * bras travaille dans le plan du corps), chaque pose reçoit la hauteur du coude par rapport à l'épaule lue sur la vue de PROFIL
+ * à la même phase (les vues sont synchronisées, voir anim.test.js). Les coudes ne peuvent donc plus « partir sur le côté » de face
+ * alors qu'ils restent collés au corps de profil (ex. développé couché).
+ */
+function elbowsFromSide(side, front) {
+  if (!front || front.view !== 'front' || side.view) return front;
+  // écart propre à chaque étape (Arnold : coudes devant puis ouverts) : posé sur les poses, la hauteur vient du profil
+  const keys = Array.isArray(front.elbows) ? front.keys.map((k, i) => ({ ...k, elbowLat: front.elbows[i] })) : front.keys.slice();
+  keys.sync = { side: side.keys, hands: front.syncHands !== false, elbows: Array.isArray(front.elbows) ? 0 : front.elbows };
+  return { ...front, keys };
+}
 add('bench_press', 'Développé couché barre', benchPress({}));
 add('incline_dumbbell', 'Développé incliné haltères', benchPress({ tool: 'db', ang: 30 }));
 add('fp_db_bench', 'Développé couché haltères', benchPress({ tool: 'db' }));
@@ -148,55 +163,55 @@ add('fp_woodchop', 'Bûcheron poulie', woodchop());
 add('fp_pallof', 'Pallof press', pallof());
 
 // ---- Vues supplémentaires (face / dos) là où le profil masque le mouvement ----
-alt(['bench_press', 'fp_incline_barbell', 'fp_decline_barbell'], 'feet', 'Vue depuis les pieds', lyingPressFront({}));
-alt('fp_close_grip_bench', 'feet', 'Vue depuis les pieds', lyingPressFront({ grip: 16 }));
-alt(['fp_db_bench', 'incline_dumbbell'], 'feet', 'Vue depuis les pieds', lyingPressFront({ tool: 'db', grip: 30 }));
-alt(['fp_smith_bench', 'fp_smith_incline'], 'feet', 'Vue depuis les pieds', lyingPressFront({ tool: 'smith' }));
-alt(['fp_db_fly', 'fp_incline_fly'], 'feet', 'Vue depuis les pieds', lyingFlyFront());
-alt('fp_pec_deck', 'front', 'Vue de face', pecDeckFront());
-alt('fp_cable_fly', 'front', 'Vue de face', cableFlyFront());
-alt(['fp_chest_press', 'fp_hammer_incline'], 'front', 'Vue de face', chestMachineFront({}));
-alt('fp_hammer_chest', 'front', 'Vue de face', chestMachineFront({ hammer: true }));
-alt('pullups', 'back', 'Vue de dos', pullUpBack({}));
-alt('chinups', 'back', 'Vue de dos', pullUpBack({ grip: 20 }));
-alt('fp_assisted_pullup', 'back', 'Vue de dos', pullUpBack({ assisted: true }));
-alt('fp_dead_hang', 'back', 'Vue de dos', pullUpBack({ hang: true }));
-alt(['lat_pulldown', 'fp_hammer_pulldown', 'fp_vertical_traction'], 'front', 'Vue de face', pulldownFront({}));
-alt('fp_close_pulldown', 'front', 'Vue de face', pulldownFront({ grip: 16 }));
-alt('barbell_row', 'back', 'Vue de dos', rowBack({}));
-alt('fp_tbar_row', 'back', 'Vue de dos', rowBack({ tool: 'tbar' }));
-alt('fp_db_row', 'back', 'Vue de dos', rowBack({ tool: 'db' }));
-alt(['fp_seated_row', 'fp_low_row_machine'], 'front', 'Vue de face', seatedRowFront({}));
-alt('fp_hammer_row', 'front', 'Vue de face', seatedRowFront({ hammer: true }));
-alt(['overhead_press', 'fp_smith_shoulder'], 'front', 'Vue de face', overheadFront({}));
-alt('fp_db_shoulder', 'front', 'Vue de face', overheadFront({ tool: 'db' }));
-alt('fp_arnold', 'front', 'Vue de face', overheadFront({ tool: 'arnold' }));
-alt(['fp_machine_shoulder', 'fp_hammer_shoulder'], 'front', 'Vue de face', overheadFront({ tool: 'machine' }));
-alt('fp_face_pull', 'front', 'Vue de face', facePullFront());
-alt('fp_upright_row', 'front', 'Vue de face', uprightRowFront());
-alt(['squat', 'fp_front_squat', 'fp_smith_squat'], 'front', 'Vue de face', squatFrontView());
-alt(['pushups', 'fp_decline_pushups'], 'head', 'Vue depuis la tête', pushUpFront({}));
-alt('fp_diamond_pushups', 'head', 'Vue depuis la tête', pushUpFront({ narrow: true }));
-alt('dips', 'front', 'Vue de face', dipsFront());
-alt('fp_multihip', 'front', 'Vue de face', multiHipFront());
-alt('fp_high_row', 'front', 'Vue de face', pulldownFront({ grip: 36 }));
-alt('fp_woodchop', 'front', 'Vue de face', woodchopFront());
-alt('fp_decline_press_machine', 'front', 'Vue de face', chestMachineFront({ hammer: true }));
+alt(['bench_press', 'fp_incline_barbell', 'fp_decline_barbell'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({}), elbows: 9 });
+alt('fp_close_grip_bench', 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ grip: 16 }), elbows: 2 });
+alt(['fp_db_bench', 'incline_dumbbell'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ tool: 'db', grip: 30 }), elbows: 9 });
+alt(['fp_smith_bench', 'fp_smith_incline'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ tool: 'smith' }), elbows: 9 });
+alt(['fp_db_fly', 'fp_incline_fly'], 'feet', 'Vue depuis les pieds', { ...lyingFlyFront(), elbows: 'frontal' });
+alt('fp_pec_deck', 'front', 'Vue de face', { ...pecDeckFront(), elbows: 'frontal' });
+alt('fp_cable_fly', 'front', 'Vue de face', { ...cableFlyFront(), elbows: 'frontal' });
+alt(['fp_chest_press', 'fp_hammer_incline'], 'front', 'Vue de face', { ...chestMachineFront({}), elbows: 16 });
+alt('fp_hammer_chest', 'front', 'Vue de face', { ...chestMachineFront({ hammer: true }), elbows: 16 });
+alt('pullups', 'back', 'Vue de dos', { ...pullUpBack({}), elbows: 'frontal' });
+alt('chinups', 'back', 'Vue de dos', { ...pullUpBack({ grip: 20 }), elbows: 8 });
+alt('fp_assisted_pullup', 'back', 'Vue de dos', { ...pullUpBack({ assisted: true }), elbows: 'frontal' });
+alt('fp_dead_hang', 'back', 'Vue de dos', { ...pullUpBack({ hang: true }), elbows: 'frontal' });
+alt(['lat_pulldown', 'fp_hammer_pulldown', 'fp_vertical_traction'], 'front', 'Vue de face', { ...pulldownFront({}), elbows: 'frontal' });
+alt('fp_close_pulldown', 'front', 'Vue de face', { ...pulldownFront({ grip: 16 }), elbows: 6 });
+alt('barbell_row', 'back', 'Vue de dos', { ...rowBack({}), elbows: 10 });
+alt('fp_tbar_row', 'back', 'Vue de dos', { ...rowBack({ tool: 'tbar' }), elbows: 8 });
+alt('fp_db_row', 'back', 'Vue de dos', { ...rowBack({ tool: 'db' }), elbows: 4 });
+alt(['fp_seated_row', 'fp_low_row_machine'], 'front', 'Vue de face', { ...seatedRowFront({}), elbows: 4 });
+alt('fp_hammer_row', 'front', 'Vue de face', { ...seatedRowFront({ hammer: true }), elbows: 6 });
+alt(['overhead_press', 'fp_smith_shoulder'], 'front', 'Vue de face', { ...overheadFront({}), elbows: 10 });
+alt('fp_db_shoulder', 'front', 'Vue de face', { ...overheadFront({ tool: 'db' }), elbows: 10 });
+alt('fp_arnold', 'front', 'Vue de face', { ...overheadFront({ tool: 'arnold' }), elbows: [4, 12, 10] });
+alt(['fp_machine_shoulder', 'fp_hammer_shoulder'], 'front', 'Vue de face', { ...overheadFront({ tool: 'machine' }), elbows: 10 });
+alt('fp_face_pull', 'front', 'Vue de face', { ...facePullFront(), elbows: 'frontal' });
+alt('fp_upright_row', 'front', 'Vue de face', { ...uprightRowFront(), elbows: 'frontal' });
+alt(['squat', 'fp_front_squat', 'fp_smith_squat'], 'front', 'Vue de face', { ...squatFrontView(), elbows: 10 });
+alt(['pushups', 'fp_decline_pushups'], 'head', 'Vue depuis la tête', { ...pushUpFront({}), elbows: 9 });
+alt('fp_diamond_pushups', 'head', 'Vue depuis la tête', { ...pushUpFront({ narrow: true }), elbows: 2 });
+alt('dips', 'front', 'Vue de face', { ...dipsFront(), elbows: 4 });
+alt('fp_multihip', 'front', 'Vue de face', { ...multiHipFront(), elbows: 6 });
+alt('fp_high_row', 'front', 'Vue de face', { ...pulldownFront({ grip: 36 }), elbows: 'frontal' });
+alt('fp_woodchop', 'front', 'Vue de face', { ...woodchopFront(), elbows: 'frontal' });
+alt('fp_decline_press_machine', 'front', 'Vue de face', { ...chestMachineFront({ hammer: true }), elbows: 16 });
 export const ALL_SCENES = E;
-alt(['deadlift', 'fp_trapbar'], 'front', 'Vue de face', deadliftFront({}));
-alt('fp_rdl', 'front', 'Vue de face', deadliftFront({ rdl: true }));
-alt('fp_sumo', 'front', 'Vue de face', deadliftFront({ sumo: true }));
-alt(['barbell_curl', 'fp_cable_curl'], 'front', 'Vue de face', curlFront({}));
-alt(['fp_db_curl', 'fp_hammer_curl'], 'front', 'Vue de face', curlFront({ alternate: true }));
-alt('fp_overhead_ext_db', 'back', 'Vue de dos', overheadExtBack({}));
-alt('fp_overhead_ext_cable', 'back', 'Vue de dos', overheadExtBack({ cable: true }));
-alt('fp_goblet', 'front', 'Vue de face', squatFrontView({ tool: 'goblet' }));
-alt(['fp_hack_squat', 'fp_belt_squat'], 'front', 'Vue de face', squatFrontView({ tool: 'free' }));
-alt(['fp_walking_lunge', 'fp_bulgarian'], 'front', 'Vue de face', lungeFront({}));
-alt('fp_barbell_lunge', 'front', 'Vue de face', lungeFront({ barbell: true }));
-alt('fp_calf_standing', 'back', 'Vue de dos', calfBack());
-alt('fp_deadlift_machine', 'front', 'Vue de face', deadliftFront({}));
-alt('fp_assisted_dip', 'front', 'Vue de face', dipsFront());
+alt(['deadlift', 'fp_trapbar'], 'front', 'Vue de face', { ...deadliftFront({}), elbows: 3 });
+alt('fp_rdl', 'front', 'Vue de face', { ...deadliftFront({ rdl: true }), elbows: 3 });
+alt('fp_sumo', 'front', 'Vue de face', { ...deadliftFront({ sumo: true }), elbows: 3 });
+alt(['barbell_curl', 'fp_cable_curl'], 'front', 'Vue de face', { ...curlFront({}), elbows: 3 });
+alt(['fp_db_curl', 'fp_hammer_curl'], 'front', 'Vue de face', { ...curlFront({ alternate: true }), elbows: 3 });
+alt('fp_overhead_ext_db', 'back', 'Vue de dos', { ...overheadExtBack({}), elbows: 4 });
+alt('fp_overhead_ext_cable', 'back', 'Vue de dos', { ...overheadExtBack({ cable: true }), elbows: 4 });
+alt('fp_goblet', 'front', 'Vue de face', { ...squatFrontView({ tool: 'goblet' }), elbows: 4 });
+alt(['fp_hack_squat', 'fp_belt_squat'], 'front', 'Vue de face', { ...squatFrontView({ tool: 'free' }), elbows: 6 });
+alt(['fp_walking_lunge', 'fp_bulgarian'], 'front', 'Vue de face', { ...lungeFront({}), elbows: 3 });
+alt('fp_barbell_lunge', 'front', 'Vue de face', { ...lungeFront({ barbell: true }), elbows: 10 });
+alt('fp_calf_standing', 'back', 'Vue de dos', { ...calfBack(), elbows: 3 });
+alt('fp_deadlift_machine', 'front', 'Vue de face', { ...deadliftFront({}), elbows: 3 });
+alt('fp_assisted_dip', 'front', 'Vue de face', { ...dipsFront(), elbows: 4 });
 alt('fp_rotary_torso', 'top', 'Vue de dessus', rotaryTop());
 alt('fp_woodchop', 'top', 'Vue de dessus', woodchopTop());
 alt('fp_pallof', 'top', 'Vue de dessus', pallofTop());

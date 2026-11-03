@@ -134,9 +134,10 @@ export function facePullFront() {
 
 export function uprightRowFront() {
   const hy = 112;
-  const mk = arm => F(hy, { arm, foot: [C + 14, 194] });
+  // mains serrées sur la barre ; leur hauteur et celle des coudes viennent de la vue de profil (coudes qui montent sur les côtés)
+  const mk = y => F(hy, { hand: [C + 10, y], handBend: 1, foot: [C + 14, 194] });
   return {
-    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk([95, 85]), mk([-22, 128])],
+    view: 'front', trace: 'wrist', loop: 'pingpong', keys: [mk(116), mk(64)],
     equip: [floorRect(80)], follow: [bar('wrist', { ext: 10, r: 8 })],
   };
 }
@@ -234,7 +235,8 @@ export function curlFront({ alternate = false } = {}) {
   const down = [C + 24, 116];
   const up = [C + 33, 74];
   const both = (r, l) => F(112, { hand: r, handL: [2 * C - l[0], l[1]], handBend: 1 });
-  const keys = alternate ? [both(down, up), both(up, down)] : [both(down, down), both(up, up)];
+  const same = r => F(112, { hand: r, handBend: 1 }); // barre : les deux mains ensemble (hauteur reprise de la vue de profil)
+  const keys = alternate ? [both(down, up), both(up, down)] : [same(down), same(up)];
   return {
     view: 'front', trace: 'wrist', loop: 'pingpong', keys,
     equip: [floorRect(100)],

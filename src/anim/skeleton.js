@@ -65,7 +65,7 @@ function unify(a, b) {
   return [A, B];
 }
 
-const NUM_KEYS = ['torso', 'neck', 'toe', 'handBend', 'footBend', 'lift', 'c', 'hipY', 'flex', 'bend', 'twist'];
+const NUM_KEYS = ['torso', 'neck', 'toe', 'handBend', 'footBend', 'lift', 'c', 'hipY', 'flex', 'bend', 'twist', 'elbowDy', 'elbowLat'];
 const lerp = (a, b, t) => a + (b - a) * t;
 const lerpPt = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
@@ -74,6 +74,7 @@ export function lerpPose(a0, b0, t) {
   const [a, b] = unify(a0, b0);
   const out = a.hip ? { hip: lerpPt(a.hip, b.hip, t) } : {};
   if (a.flat) out.flat = true;
+  if (a.elbowFrontal) out.elbowFrontal = true;
   for (const k of NUM_KEYS) {
     if (a[k] !== undefined || b[k] !== undefined) {
       const zero = ['neck', 'toe', 'bend', 'lift', 'twist', 'flex'].includes(k); // absent de la pose = 0 (sinon un buste penché ne se redresserait jamais)
@@ -96,10 +97,31 @@ export const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2)
 
 /** Pose à l'instant `u` ∈ [0,1] d'une séquence de poses (aller simple, de la première à la dernière). */
 export function poseAt(keys, u) {
-  if (keys.length === 1) return keys[0];
+  if (keys.length === 1) return keys.sync ? syncWithSide(keys[0], keys.sync, u) : keys[0];
   const x = Math.min(0.9999, Math.max(0, u)) * (keys.length - 1);
   const i = Math.floor(x);
-  return lerpPose(keys[i], keys[i + 1], easeInOut(x - i));
+  const p = lerpPose(keys[i], keys[i + 1], easeInOut(x - i));
+  return keys.sync ? syncWithSide(p, keys.sync, u) : p;
+}
+
+/**
+ * Vue de face liée à la vue de profil (registry.js) : à CHAQUE image, la hauteur de la main et du coude par rapport à l'épaule
+ * est celle de la vue de profil au même instant ; seul l'écart latéral (largeur de prise, écart des coudes) vient de la vue.
+ * sync = { side: poses de profil, hands: bool, elbows: écart en px | 'frontal' | undefined }.
+ */
+function syncWithSide(p, sync, u) {
+  const s = solvePose(poseAt(sync.side, u));
+  let out = p;
+  if (sync.hands && p.hand && !p.handL && !p.arm) {
+    const sy = solveFront(p).R.shoulder[1];
+    out = { ...out, hand: [p.hand[0], sy + s.wrist[1] - s.shoulder[1]] };
+  }
+  if (sync.elbows !== undefined) {
+    out = { ...out, elbowDy: s.elbow[1] - s.shoulder[1] };
+    if (sync.elbows === 'frontal') out.elbowFrontal = true;
+    else if (out.elbowLat === undefined) out.elbowLat = sync.elbows;
+  }
+  return out;
 }
 
 /** Position de l'instant u de l'animation (0→1→0 en aller-retour, ou 0→1 en boucle). */
@@ -166,6 +188,14 @@ export function solveFront(p) {
       // De face, un bras plié vers l'avant se voit raccourci : le coude reste près de la ligne épaule-main (jamais en travers du buste)
       if (p.flat) a = { mid: line, end: a.end };
       else if (a.end[1] > shoulder[1]) a = { mid: [line[0] + Math.max(0, Math.min(10, Math.abs(a.mid[0] - line[0]))) * side, a.mid[1]], end: a.end };
+      // Coude cohérent avec la vue de profil (registry.js → elbowsFromSide) : même hauteur par rapport à l'épaule que de profil,
+      // écart latéral fixé par la technique (elbowLat, en px depuis l'épaule ; coudes près du corps = petit écart),
+      // ou bras dans le plan du corps (elbowFrontal : l'écart est ce qui reste de la longueur du bras).
+      if (p.elbowDy !== undefined) {
+        const dy = Math.max(-SEG.uarm, Math.min(SEG.uarm, p.elbowDy));
+        const lat = p.elbowFrontal ? Math.sqrt(Math.max(0, SEG.uarm * SEG.uarm - dy * dy)) : Math.max(0, p.elbowLat || 0);
+        a = { mid: [shoulder[0] + side * lat, shoulder[1] + dy], end: a.end };
+      }
     }
     const hip = [c + side * HIP_HALF, hy];
     const foot = own.foot ? own.foot : p.foot ? [c + side * (p.foot[0] - c), p.foot[1]] : [hip[0] + side * 2, GROUND - 6];
