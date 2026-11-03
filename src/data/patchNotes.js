@@ -6,7 +6,7 @@ export const PATCH_NOTES = [
     date: '2026-11-03',
     title: 'Séances variées, objectif et niveau',
     items: [
-      'Le coach varie la forme des séries : pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées, dernière série au maximum, supersets (change toutes les deux semaines ; séries fixes : Coach → Réglages → Forme des séries → Classique).',
+      'Formes de séries « selon les études » : séries classiques, et une autre forme seulement quand une étude montre un intérêt pour toi (séance courte : dégressives et supersets ; objectif de répétitions : repos-pause). Envie de pyramides, myo-reps, série lourde… ? Demande-les au coach ou choisis « Variée » : il te les propose sans problème.',
       'En haut du Coach, « Ton objectif » : force sur un exercice, muscle sur un groupe, répétitions, poids… Le coach adapte tes séances d’après les études (affichées sous l’objectif).',
       'Dans la séance guidée : chaque série a sa charge, son repos et son explication ; les supersets s’enchaînent tout seuls.',
       'La dictée comprend les séances particulières (échauffement, série lourde, dégressives, mini-séries) et la progression, les maxima et les objectifs fonctionnent avec n’importe quelle forme.',

@@ -9,7 +9,7 @@ import { INITIAL_STATE } from '../data/initialState';
 const E = { questId: 'q_squat_3x6', catalogId: 'squat', name: 'Squat', kind: 'load', load: 80, assist: 0, sets: 3, targetReps: [6, 6, 6], restSec: 150, arena: 'Jambes', compound: true };
 const st = (experience, extra = {}) => ({
   ...DEMO_STATE,
-  coach: { ...DEMO_STATE.coach, experience },
+  coach: { ...DEMO_STATE.coach, methodStyle: 'variety', experience },
   quests: DEMO_STATE.quests.map(q => (q.id === 'q_squat_3x6' ? { ...q, history: (q.history || []).filter(h => /Point de départ/.test(h.note || '')), ...extra } : q)),
 });
 

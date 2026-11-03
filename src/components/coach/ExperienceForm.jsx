@@ -51,7 +51,7 @@ export function ExpertFields({ exp, onChange }) {
         <span>Je sais estimer mes répétitions en réserve (RPE) : le coach et « Mes maxima » tiennent compte de mon ressenti.</span>
       </label>
       <div>
-        <p className={lab}>Formes de séries que je connais (le coach ne proposera que celles-ci)</p>
+        <p className={lab}>Formes de séries que je connais (si tu demandes de la variété, le coach ne proposera que celles-ci)</p>
         <div className="flex flex-wrap gap-1.5">
           {Object.entries(METHODS).filter(([id]) => id !== 'straight').map(([id, m]) => (
             <button key={id} type="button" onClick={() => onChange({ methods: toggle(methods, id) })} aria-pressed={methods.includes(id)} data-testid={`xp-method-${id}`} className={chip(methods.includes(id))}>{m.label}</button>

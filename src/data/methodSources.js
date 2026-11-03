@@ -25,26 +25,25 @@ export const GOAL_GUIDES = {
   strength: {
     label: 'Plus de force sur un exercice',
     points: [
-      'Séries lourdes (environ 3 à 6 répétitions) sur cet exercice : série lourde + séries allégées, ou séries fractionnées pour garder la vitesse.',
+      'Séries lourdes (environ 3 à 6 répétitions) en séries classiques : aucune autre forme n’a montré plus de force sur la durée (séries fractionnées : mêmes gains, Davies 2021).',
       'Pas besoin d’aller à l’échec pour la force : garde 1 à 2 répétitions en réserve.',
       'La charge suit ton ressenti et tes meilleures séries (max estimé), séance après séance.',
     ],
-    sources: ['robinson2024', 'latella2019', 'helms2018'],
+    sources: ['robinson2024', 'davies2021', 'helms2018'],
   },
   muscle: {
     label: 'Plus de muscle sur un groupe',
     points: [
       'Une série de plus sur les exercices de ce groupe : le muscle grossit avec le nombre de séries par semaine (repère : 10 ou plus).',
       'Séries proches de l’échec (0 à 2 répétitions en réserve) sur les exercices d’isolation.',
-      'Dégressives, repos-pause, myo-reps et supersets pour faire ce volume sans allonger la séance.',
+      'Si ta séance est courte : séries dégressives et supersets pour faire ce volume sans l’allonger (même résultat en moins de temps).',
     ],
     sources: ['schoenfeld2017', 'robinson2024', 'sodal2023', 'enes2021'],
   },
   reps: {
     label: 'Plus de répétitions sur un exercice',
     points: [
-      'Dernière série au maximum pour mesurer tes progrès, en alternance avec le repos-pause.',
-      'Le repos-pause améliore l’endurance musculaire locale.',
+      'Repos-pause sur cet exercice : il a donné plus d’endurance musculaire que des séries classiques (petite étude chez des pratiquants entraînés).',
       'Les répétitions de chaque série montent avant l’aide ou la charge.',
     ],
     sources: ['prestes2019', 'enes2021'],
@@ -53,7 +52,7 @@ export const GOAL_GUIDES = {
     label: 'Perdre du poids en gardant ses muscles',
     points: [
       'Garder la musculation (au moins 6 séries par semaine et par groupe) pour conserver le muscle pendant la perte de poids.',
-      'Supersets pour des séances plus denses et plus courtes.',
+      'Si tu manques de temps : supersets, pour des séances plus courtes avec le même travail.',
       'Le déficit vient surtout de l’alimentation : suis tes calories dans le Coach (Poids et santé).',
     ],
     sources: ['zhang2025', 'robbins2010'],
@@ -61,8 +60,8 @@ export const GOAL_GUIDES = {
   general: {
     label: 'Forme générale',
     points: [
-      'Séries classiques en base, avec de la variété (pyramides, dégressives…) toutes les deux semaines.',
-      'Aucune forme n’est magique : à volume égal, elles donnent des résultats proches ; la régularité compte le plus.',
+      'Séries classiques : à volume égal, les autres formes donnent des résultats proches ; la régularité compte le plus.',
+      'Envie de variété (pyramides, dégressives…) ? Demande-la au coach ou choisis « Variée » dans les réglages : c’est possible, juste pas plus efficace.',
     ],
     sources: ['krzysztofik2019', 'angleri2017', 'grgic2017'],
   },

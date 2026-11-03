@@ -344,11 +344,13 @@ export function CoachPanel({
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs" data-testid="method-style">
           <h3 className="text-sm font-black text-white"><Art name="sparkle" />Forme des séries</h3>
-          <p className="text-slate-400">Variée : le coach alterne séries classiques, pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées et supersets (dès 6 séances sur un exercice, change toutes les deux semaines). Classique : toujours des séries fixes.</p>
-          <div className="flex gap-2">
-            {[['varied', 'Variée'], ['classic', 'Classique']].map(([id, lab]) => (
-              <button key={id} type="button" onClick={() => updateCoach({ methodStyle: id })} aria-pressed={(coach.methodStyle || 'varied') === id} className={`px-3 py-1.5 rounded-lg font-black border ${(coach.methodStyle || 'varied') === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>{lab}</button>
-            ))}
+          <p className="text-slate-400">Selon les études (conseillé) : séries classiques, car à volume égal aucune autre forme ne fait plus de muscle. Le coach n’en change que lorsqu’une étude montre un intérêt pour toi : séance courte (séries dégressives et supersets, même résultat en moins de temps) ou objectif de répétitions (repos-pause).</p>
+          <p className="text-slate-400">Variée (à ta demande) : le coach alterne pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées, supersets, pour le plaisir de varier (pas plus efficace). Classique : toujours des séries fixes. Tu peux aussi simplement le demander au coach intelligent.</p>
+          <div className="flex flex-wrap gap-2">
+            {[['evidence', 'Selon les études'], ['variety', 'Variée'], ['classic', 'Classique']].map(([id, lab]) => {
+              const cur = ['variety', 'classic'].includes(coach.methodStyle) ? coach.methodStyle : 'evidence';
+              return <button key={id} type="button" data-testid={`method-style-${id}`} onClick={() => updateCoach({ methodStyle: id })} aria-pressed={cur === id} className={`px-3 py-1.5 rounded-lg font-black border ${cur === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>{lab}</button>;
+            })}
           </div>
           <p className="text-slate-500">Une forme précise pour un exercice : « Pourquoi ? / Ajuster » sous l’exercice, dans la prochaine séance.</p>
         </div>

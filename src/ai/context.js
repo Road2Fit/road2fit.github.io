@@ -97,7 +97,7 @@ export function coachContext(state, today, { overview } = {}) {
   const extra = (c.gymExtra || []).filter(d => d >= today);
   if (extra.length) lines.push(`Séances en plus (exceptionnelles) : ${extra.join(', ')}.`);
   const g = c.mainGoal && c.mainGoal.kind ? c.mainGoal : null;
-  lines.push(`Objectif principal : ${g ? `${g.text} (type ${g.kind}${g.target ? `, cible ${g.target}` : ''}${g.deadline ? `, pour le ${g.deadline}` : ''})` : 'aucun'}. Forme des séries : ${c.methodStyle === 'classic' ? 'classique (séries fixes)' : 'variée (le coach alterne les formes)'}.`);
+  lines.push(`Objectif principal : ${g ? `${g.text} (type ${g.kind}${g.target ? `, cible ${g.target}` : ''}${g.deadline ? `, pour le ${g.deadline}` : ''})` : 'aucun'}. Forme des séries : ${c.methodStyle === 'classic' ? 'classique (séries fixes)' : c.methodStyle === 'variety' ? 'variée à sa demande (le coach alterne les formes)' : 'selon les études (séries classiques, dégressives et supersets seulement si la séance est courte, repos-pause pour un objectif de répétitions)'}.`);
   const mem = Array.isArray(c.memory) ? c.memory : [];
   lines.push(`Ce que tu as retenu de la personne : ${mem.length ? mem.map(m => `[${m.id}] ${m.text}`).join(' ; ') : 'rien pour l’instant'}.`);
 

@@ -76,18 +76,29 @@ describe('choix de la forme par le coach', () => {
   const st = (coach = {}, extra = {}) => ({ ...DEMO_STATE, coach: { ...DEMO_STATE.coach, ...coach }, quests: DEMO_STATE.quests.map(q => (q.id === 'q_bench_3x8' ? { ...q, history: many(8), ...extra } : q)) });
   const ex = id => ({ ...E, questId: id });
 
-  it('débutant sur l’exercice : séries classiques ; expérimenté : une forme variée selon la période', () => {
-    const r1 = applyMethods(st(), [ex('q_squat_3x6')], { iso: '2026-10-21' });
+  it('par défaut (selon les études) : séries classiques, sauf séance courte ou objectif de répétitions', () => {
+    for (let w = 0; w < 8; w++) expect(applyMethods(st(), [ex('q_bench_3x8')], { iso: `2026-11-${String(2 + w * 3).padStart(2, '0')}` }).exercises[0].method).toBe('straight');
+    const iso = { ...E, questId: 'q_bench_3x8', compound: false };
+    const short = applyMethods(st(), [iso], { iso: '2026-10-21', minutes: 40 }).exercises[0];
+    expect(short.method).toBe('drop_set');
+    expect(short.methodWhy).toContain('Sødal 2023');
+    const reps = applyMethods(st({ mainGoal: { kind: 'reps', questId: 'q_bench_3x8', text: '20 pompes' } }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0];
+    expect(reps.method).toBe('rest_pause');
+    expect(reps.methodWhy).toContain('Prestes 2019');
+    expect(applyMethods(st({ mainGoal: { kind: 'strength', questId: 'q_bench_3x8', text: '100 kg' } }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0].method).toBe('straight');
+  });
+  it('variée à la demande : débutant sur l’exercice en séries classiques ; expérimenté : une forme variée selon la période', () => {
+    const r1 = applyMethods(st({ methodStyle: 'variety' }), [ex('q_squat_3x6')], { iso: '2026-10-21' });
     expect(r1.exercises[0].method).toBe('straight');
     const seen = new Set();
-    for (let w = 0; w < 12; w++) seen.add(applyMethods(st(), [ex('q_bench_3x8')], { iso: `2026-${w < 6 ? '10' : '11'}-${String(1 + (w % 6) * 5).padStart(2, '0')}` }).exercises[0].method);
+    for (let w = 0; w < 12; w++) seen.add(applyMethods(st({ methodStyle: 'variety' }), [ex('q_bench_3x8')], { iso: `2026-${w < 6 ? '10' : '11'}-${String(1 + (w % 6) * 5).padStart(2, '0')}` }).exercises[0].method);
     expect(seen.size).toBeGreaterThan(1);
   });
   it('« classique » dans les réglages, semaine allégée, forme imposée par la personne, objectif de force', () => {
     expect(applyMethods(st({ methodStyle: 'classic' }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0].method).toBe('straight');
     expect(applyMethods(st(), [ex('q_bench_3x8')], { iso: '2026-10-21', deload: true }).exercises[0].method).toBe('straight');
     expect(applyMethods(st({}, { coachMethod: 'myo_reps' }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0].method).toBe('myo_reps');
-    const g = applyMethods(st({ mainGoal: { kind: 'strength', questId: 'q_bench_3x8', text: '100 kg au développé couché' } }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0];
+    const g = applyMethods(st({ methodStyle: 'variety', mainGoal: { kind: 'strength', questId: 'q_bench_3x8', text: '100 kg au développé couché' } }), [ex('q_bench_3x8')], { iso: '2026-10-21' }).exercises[0];
     expect(['top_backoff', 'cluster']).toContain(g.method);
     expect(g.methodWhy).toContain('objectif de force');
   });

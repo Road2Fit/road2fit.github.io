@@ -130,7 +130,8 @@ export function normalizeAction(a, state, today) {
       break;
     }
     case 'method_style':
-      if (x.style === 'varied' || x.style === 'classic') args = { style: x.style };
+      if (x.style === 'evidence' || x.style === 'classic') args = { style: x.style };
+      else if (x.style === 'varied' || x.style === 'variety') args = { style: 'variety' }; // variété demandée explicitement
       break;
     case 'main_goal': {
       if (x.clear) { args = { clear: true }; break; }

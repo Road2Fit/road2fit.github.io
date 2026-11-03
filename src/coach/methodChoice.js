@@ -1,7 +1,14 @@
 // Choix de la forme des séries pour chaque exercice d'une séance, et supersets.
-// Règles : forme choisie par la personne (quest.coachMethod) > semaine allégée / exercice chronométré / débutant sur
-// l'exercice (séries classiques) > objectif principal (coach.mainGoal) > profil de travail > rotation toutes les deux semaines.
-// Réglage coach.methodStyle : 'varied' (par défaut) ou 'classic' (toujours des séries classiques, comme avant).
+// Réglage coach.methodStyle :
+//  - 'evidence' (par défaut) : séries classiques, SAUF quand une étude montre un intérêt pour la personne : séance courte
+//    (≤ 45 min) → séries dégressives sur l'isolation (autant de muscle en 2 à 3 fois moins de temps, Sødal 2023) et supersets
+//    (≤ 50 min : plus de travail par minute, Robbins 2010) ; objectif de répétitions → repos-pause (plus d'endurance musculaire,
+//    Prestes 2019). À volume égal, aucune forme ne fait plus de muscle que les séries classiques (Angleri 2017) : pas de
+//    variété « pour varier ».
+//  - 'variety' : à la demande de la personne (l'ancienne valeur 'varied', l'ancien défaut, vaut 'evidence'), le coach alterne les formes (rotation toutes les deux semaines) ;
+//  - 'classic' : toujours des séries classiques.
+// Dans tous les cas : forme choisie pour un exercice (quest.coachMethod) d'abord ; semaine allégée, chronométré, geste en
+// apprentissage → séries classiques.
 import { withMethod } from './methods';
 import { profileOpts } from './profiles';
 import { entriesBeforeMethods, knowsExercise, knownMethods, priorityArenas } from './experience';
@@ -55,7 +62,7 @@ function pairSupersets(exs, ok) {
  */
 export function applyMethods(state, exercises, { iso, deload = false, minutes = 0 } = {}) {
   const coach = getCoachSettings(state);
-  const style = coach.methodStyle || 'varied';
+  const style = ['variety', 'classic'].includes(coach.methodStyle) ? coach.methodStyle : 'evidence';
   const goal = coach.mainGoal && typeof coach.mainGoal === 'object' ? coach.mainGoal : null;
   const prof = profileOpts(state, iso).profile;
   const blk = blockOf(iso);
@@ -83,17 +90,22 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
     if (deload) return withMethod(ex, 'straight', 'Semaine allégée : séries classiques.');
     if (ex.timed) return withMethod(ex, 'straight', '');
     if (!knowsExercise(state, q)) return withMethod(ex, 'straight', `Séries classiques tant que le geste se met en place (moins de ${entriesBeforeMethods(state, q)} séances sur cet exercice).`);
+    if (style === 'evidence') {
+      if (goal && goal.questId === e.questId && goal.kind === 'reps') return withMethod(ex, 'rest_pause', 'Pour ton objectif de répétitions : le repos-pause a donné plus d’endurance musculaire que des séries classiques chez des pratiquants entraînés (Prestes 2019).');
+      if (minutes && minutes <= 45 && !e.compound) return withMethod(ex, 'drop_set', 'Séance courte : la série dégressive donne autant de muscle que des séries classiques, en 2 à 3 fois moins de temps (méta-analyse Sødal 2023).');
+      return withMethod(ex, 'straight', '');
+    }
     let list;
-    let why = '';
+    let why = 'Variété à ta demande. ';
     if (goal && goal.questId === e.questId && goal.kind === 'strength') {
       list = ['top_backoff', 'cluster'];
-      why = 'Pour ton objectif de force : ';
+      why = 'Variété à ta demande, pour ton objectif de force : ';
     } else if (goal && goal.questId === e.questId && goal.kind === 'reps') {
       list = ['amrap', 'rest_pause'];
-      why = 'Pour ton objectif de répétitions : ';
+      why = 'Variété à ta demande, pour ton objectif de répétitions : ';
     } else if (minutes && minutes <= 45 && !e.compound) {
       list = ['myo_reps', 'rest_pause', 'drop_set'];
-      why = 'Séance courte : ';
+      why = 'Variété à ta demande, séance courte : ';
     } else if (prof === 'puissance') {
       list = e.compound ? ['top_backoff', 'cluster', 'straight'] : ['straight', 'rest_pause'];
     } else if (prof === 'endurance') {
@@ -108,11 +120,12 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
   if (prioBoost.size) notes.push(`Muscle${prioBoost.size > 1 ? 's' : ''} prioritaire${prioBoost.size > 1 ? 's' : ''} (${[...prioBoost].join(', ')}) : une série de plus.`);
   if (goalBoost) notes.push(`Ton objectif (${goal.text || goal.arena}) : une série de plus sur ${goal.arena}.`);
 
-  // supersets : séance courte, profil endurance, ou une période sur deux en mode varié
-  if (style === 'varied' && !deload && ((minutes && minutes <= 50) || prof === 'endurance' || blk % 2 === 1)) {
+  // supersets : séance courte (gain de temps documenté) ; en mode varié aussi profil endurance ou une période sur deux
+  const supers = style === 'evidence' ? !!(minutes && minutes <= 50) : style === 'variety' && ((minutes && minutes <= 50) || prof === 'endurance' || blk % 2 === 1);
+  if (supers && !deload) {
     const r = pairSupersets(out, e => knowsExercise(state, byId[e.questId])); // pas pendant l'apprentissage du geste
     out = r.exercises;
-    if (r.count) notes.push(`Superset${r.count > 1 ? 's' : ''} : alterne une série de chaque exercice de la paire, repos après la paire. Même résultat que des séries classiques, en moins de temps (méta-analyse 2025).`);
+    if (r.count) notes.push(`Superset${r.count > 1 ? 's' : ''} : alterne une série de chaque exercice de la paire, repos après la paire. Plus de travail par minute (Robbins 2010) et des gains comparables aux séries classiques (méta-analyse 2025) : utile quand le temps est court.`);
   }
   return { exercises: out, notes };
 }
