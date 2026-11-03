@@ -179,3 +179,22 @@ describe('amis : mises à jour', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('amis : prénom', () => {
+  it('un appareil resté avec un prénom vide n’efface pas le prénom déjà publié, et le remet dans l’appli', async () => {
+    const srv = fakeSupabase();
+    const user = srv.addUser('a@x.fr');
+    const store = name => ({ __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }), 'rondoufit:account': JSON.stringify({ session: user.session }), 'rondoufit:lastUser': user.id, 'rondoufit:friends': '1', rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, heroName: name }) });
+    const a = await launch({ storage: store('Léa'), fetchImpl: srv.fetch });
+    open.push(a);
+    await advance(a, 3500);
+    expect([...srv.profiles.values()][0].summary.name).toBe('Léa');
+    a.close(); open.pop();
+    const b = await launch({ storage: store(''), fetchImpl: srv.fetch });
+    open.push(b);
+    await advance(b, 3500);
+    expect([...srv.profiles.values()][0].summary.name).toBe('Léa');
+    expect(JSON.parse(b.w.localStorage.getItem('rondoudou_save_v1')).heroName).toBe('Léa');
+    expect(b.errors).toEqual([]);
+  }, TIMEOUT);
+});

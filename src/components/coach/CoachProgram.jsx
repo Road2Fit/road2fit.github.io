@@ -6,6 +6,7 @@ import { DAY_SHORT, analyzeProgram, catalogById, parseProgramLine, programDefaul
 import { makeQuestFromCatalog } from '../../lib/questFactory';
 import { getTodayISODate } from '../../lib/dates';
 import { aiStatus, callAi } from '../../ai/client';
+import { useSpeech } from '../../ai/useSpeech';
 import { catalogText, exercisesText } from '../../ai/context';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white';
@@ -17,7 +18,7 @@ const newSession = (n, dow = null) => ({ id: `s${Date.now()}${uid++}`, name: `S�
  * « J'ai déjà un coach » : la personne saisit le programme de son coach (semaine par semaine) ; le coach de l'appli
  * le suit dans l'ordre, puis en propose la suite (voir coach/program.js).
  */
-export function CoachProgram({ gameState, setGameState }) {
+export function CoachProgram({ gameState, setGameState, inSettings = false }) {
   const program = gameState.coach && gameState.coach.program;
   const [editing, setEditing] = useState(false);
   const today = getTodayISODate();
@@ -29,8 +30,13 @@ export function CoachProgram({ gameState, setGameState }) {
     return (
       <section className={card} data-testid="program-intro">
         <h3 className="font-black text-white"><Art name="clipboard" />Tu as déjà un coach ?</h3>
-        <p className="text-sm text-slate-300">Saisis le programme qu’il t’a donné : je le suis séance après séance, puis je te propose la suite dans la même logique.</p>
-        <button type="button" onClick={() => setEditing(true)} data-testid="program-add" className={`${btn} bg-pink-600 text-white`}>Ajouter le programme de mon coach</button>
+        <p className="text-sm text-slate-300">Saisis le programme qu’il t’a donné (ou dicte-le) : je le suis séance après séance, puis je te propose la suite dans la même logique.</p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setEditing(true)} data-testid="program-add" className={`${btn} bg-pink-600 text-white`}>Ajouter le programme de mon coach</button>
+          {/* « Non » : l'encadré quitte le haut du Coach et se range dans les réglages */}
+          {!inSettings && <button type="button" onClick={() => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), noCoach: true } }))} data-testid="program-no" className={`${btn} bg-slate-800 border border-slate-600 text-slate-100`}>Non, je n’ai pas de coach</button>}
+          {inSettings && <button type="button" onClick={() => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), noCoach: false } }))} className="text-xs font-bold text-slate-400 underline">Remettre cet encadré en haut du Coach</button>}
+        </div>
         {editing && <ProgramEditor gameState={gameState} setGameState={setGameState} onClose={() => setEditing(false)} />}
       </section>
     );
@@ -104,7 +110,9 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
   const [paste, setPaste] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState('');
+  const speech = useSpeech(t => setPaste(prev => (prev ? `${prev} ${t}` : t)));
   const readWithAi = async () => {
+    if (speech.listening) speech.toggle();
     if (!paste.trim() || aiBusy) return;
     setAiBusy(true);
     setAiNote('');
@@ -176,10 +184,14 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
         </div>
         {aiOn && (
           <div className="bg-slate-950 border border-pink-500/40 rounded-xl p-3 space-y-2" data-testid="program-ai">
-            <p className="text-sm font-black text-white"><Art name="sparkle" size={18} />Le plus simple : colle le programme tel quel</p>
-            <p className="text-xs text-slate-400">Message de ton coach, tableau copié, notes… Le coach intelligent le range en semaines et en séances.</p>
+            <p className="text-sm font-black text-white"><Art name="sparkle" size={18} />Le plus simple : colle ou dicte le programme tel quel</p>
+            <p className="text-xs text-slate-400">Message de ton coach, tableau copié, notes, ou dis-le à l’oral (« lundi, squat 4 séries de 8 à 60 kilos… »). Le coach intelligent le range en semaines et en séances.</p>
             <textarea value={paste} onChange={e => setPaste(e.target.value)} rows={4} placeholder={'Lundi : squat 4x8 à 60, développé couché 4x8 à 50…\nJeudi : soulevé de terre 3x5…\n+2,5 kg chaque semaine pendant 4 semaines'} className={field} aria-label="Programme collé tel quel" data-testid="program-paste" />
-            <button type="button" onClick={readWithAi} disabled={!paste.trim() || aiBusy} data-testid="program-ai-read" className="w-full py-2.5 rounded-xl text-sm font-black bg-pink-600 disabled:bg-slate-800 disabled:text-slate-500 text-white">{aiBusy ? 'Lecture en cours…' : 'Lire le programme'}</button>
+            <div className="flex gap-2">
+              <button type="button" onClick={speech.toggle} data-testid="program-mic" className={`px-4 h-11 rounded-xl flex items-center justify-center gap-1.5 shrink-0 text-sm font-bold text-white ${speech.listening ? 'bg-rose-600 animate-pulse' : 'bg-slate-800'}`}><Art name="mic" size={20} bare />{speech.listening ? 'Stop' : 'Dicter'}</button>
+              <button type="button" onClick={readWithAi} disabled={!paste.trim() || aiBusy} data-testid="program-ai-read" className="flex-1 h-11 rounded-xl text-sm font-black bg-pink-600 disabled:bg-slate-800 disabled:text-slate-500 text-white">{aiBusy ? 'Lecture en cours…' : 'Lire le programme'}</button>
+            </div>
+            {speech.error && <p className="text-xs text-amber-300" role="alert" data-testid="mic-error">{speech.error}</p>}
             {aiNote && <p className="text-xs text-slate-300" data-testid="program-ai-note">{aiNote}</p>}
           </div>
         )}

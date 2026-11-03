@@ -1,9 +1,10 @@
 import { Art } from '../components/Art';
+import { WeeklyTrophies } from '../components/WeeklyTrophies';
 import { ACHIEVEMENTS_LIST } from '../data/gamification';
 import { CheckCircle2 } from '../icons';
 import { ACH_PROGRESS } from '../lib/stats';
 
-export function TrophiesTab({ achStats, gameState }) {
+export function TrophiesTab({ achStats, gameState, onClaimWeekly }) {
   // débloqués d'abord, puis les plus proches d'être gagnés, les secrets à la fin
   const score = ach => {
     if (gameState.unlockedAchievements.includes(ach.id)) return 2;
@@ -15,6 +16,7 @@ export function TrophiesTab({ achStats, gameState }) {
   const got = gameState.unlockedAchievements.length;
   return (
     <div className="space-y-4">
+      <WeeklyTrophies gameState={gameState} onClaimWeekly={onClaimWeekly} />
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
         <p className="font-black text-white"><Art name="trophy" size={22} />{got} trophée{got > 1 ? 's' : ''} sur {ACHIEVEMENTS_LIST.length}</p>
         <div className="h-2 bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-amber-400" style={{ width: `${(got / ACHIEVEMENTS_LIST.length) * 100}%` }} /></div>

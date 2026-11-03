@@ -39,6 +39,8 @@ describe('formes de séries', () => {
     await clickEl(h, byTest(h, 'goal-save'));
     await advance(h, 300);
     expect(saved(h).coach.mainGoal).toMatchObject({ kind: 'strength', questId: 'q_squat_3x6', target: 100 });
+    expect(byTest(h, 'coach-goal')).toBeNull(); // rempli : il quitte le haut de la page pour les réglages
+    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach')));
     const card = byTest(h, 'coach-goal').textContent;
     expect(card).toContain('Squat Barre');
     expect(card).toContain('Comment le coach t’y emmène');

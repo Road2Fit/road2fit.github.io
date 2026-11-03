@@ -242,3 +242,12 @@ describe('syncOnce (synchronisation avec la sauvegarde en ligne)', () => {
     expect(gh.puts).toBe(puts);
   });
 });
+
+describe('prénom', () => {
+  it('un prénom vide ne remplace jamais un prénom donné, même sans état commun', async () => {
+    const { mergeStates } = await import('./merge');
+    expect(mergeStates(null, { heroName: '' }, { heroName: 'Léa' }, { preferLocal: true }).heroName).toBe('Léa');
+    expect(mergeStates(null, { heroName: 'Léa' }, { heroName: '' }).heroName).toBe('Léa');
+    expect(mergeStates(null, { heroName: 'Lélé' }, { heroName: 'Léa' }, { preferLocal: true }).heroName).toBe('Lélé');
+  });
+});

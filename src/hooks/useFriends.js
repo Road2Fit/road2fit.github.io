@@ -12,7 +12,8 @@ const msg = e => (e && e.message) || 'Erreur du service d’amis.';
  * Amis : mon code à 7 caractères, ma liste d'amis et leur résumé de profil. Nécessite un compte connecté.
  * Mon résumé (sans poids ni photos) est publié automatiquement quand mes données changent, sauf si j'ai coupé le partage.
  */
-export function useFriends({ gameState, setGameState, user, active = false }) {
+export function useFriends({ gameState, setGameState, user, active = false, isLoaded = null }) {
+  const ready = () => !isLoaded || isLoaded.current !== false; // sauvegarde en ligne lue (sinon l'état local peut être une vieille copie)
   const cfg = SUPABASE;
   const connected = supabaseReady(cfg) && !!user;
   // Rien n'est publié tant que la personne n'a pas activé les amis (bouton dans l'onglet) : choix explicite, mémorisé sur l'appareil
@@ -22,15 +23,16 @@ export function useFriends({ gameState, setGameState, user, active = false }) {
   const on = connected && enabled;
   // amis activés avant cette version sur un seul appareil : on l'enregistre dans le compte pour ses autres appareils
   useEffect(() => {
-    if (connected && localOn && !gameState.friendsOn && setGameState) setGameState(prev => (prev.friendsOn ? prev : { ...prev, friendsOn: true }));
+    if (connected && localOn && !gameState.friendsOn && setGameState && ready()) setGameState(prev => (prev.friendsOn ? prev : { ...prev, friendsOn: true }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, localOn, gameState.friendsOn]);
+  }, [connected, localOn, gameState.friendsOn, gameState.quests]);
   const [code, setCode] = useState('');
   const [share, setShareState] = useState(true);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const lastSent = useRef('');
+  const serverName = useRef(''); // prénom déjà publié : jamais remplacé par un prénom vide
   const shareRef = useRef(true);
   shareRef.current = share;
 
@@ -66,7 +68,11 @@ export function useFriends({ gameState, setGameState, user, active = false }) {
         let mine = await api.mine(cfg);
         if (!mine) mine = await api.publish(cfg, buildFriendProfile(gameState, getTodayISODate()), true);
         if (!alive) return;
-        if (mine) { setCode(mine.friend_code || ''); setShareState(mine.share !== false); }
+        if (mine) {
+          setCode(mine.friend_code || '');
+          setShareState(mine.share !== false);
+          serverName.current = String((mine.summary && mine.summary.name) || '');
+        }
         const l = await api.list(cfg);
         if (alive) { setList(l); setError(''); }
       } catch (e) { if (alive) setError(msg(e)); }
@@ -79,8 +85,13 @@ export function useFriends({ gameState, setGameState, user, active = false }) {
   useEffect(() => {
     if (!on || !code) return undefined;
     const t = setTimeout(async () => {
-      if (!shareRef.current) return;
+      if (!shareRef.current || !ready()) return;
       const summary = buildFriendProfile(gameState, getTodayISODate());
+      // prénom vide sur cet appareil (vieille copie) alors qu'un prénom est déjà publié : on garde celui-là, et on le remet dans l'appli
+      if (!summary.name && serverName.current) {
+        summary.name = serverName.current;
+        if (setGameState && !gameState.heroName) setGameState(prev => (prev.heroName ? prev : { ...prev, heroName: serverName.current }));
+      } else if (summary.name) serverName.current = summary.name;
       const key = JSON.stringify(summary);
       if (key === lastSent.current) return;
       try { await api.publish(cfg, summary, true); lastSent.current = key; } catch (e) { setError(msg(e)); }

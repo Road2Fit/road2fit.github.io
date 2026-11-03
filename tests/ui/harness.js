@@ -308,7 +308,7 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       if (u.pathname === '/rest/v1/profiles') {
         if (method === 'GET') {
           const p = srv.profiles.get(uid);
-          return res(200, p && u.searchParams.get('user_id') === `eq.${uid}` ? [{ friend_code: p.friend_code, share: p.share }] : []);
+          return res(200, p && u.searchParams.get('user_id') === `eq.${uid}` ? [{ friend_code: p.friend_code, share: p.share, summary: p.summary }] : []);
         }
         if (body.user_id !== uid) return res(403, { message: 'new row violates row-level security policy' });
         const prev = srv.profiles.get(uid);

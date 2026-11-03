@@ -1,6 +1,6 @@
 import { Art } from '../Art';
 import { useMemo, useState } from 'react';
-import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeeklyGoals, coachWeightPace } from '../../coach/advice';
+import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
@@ -30,7 +30,6 @@ import { CoachSettings } from './CoachSettings';
 import { CoachSources } from './CoachSources';
 import { CoachVolley } from './CoachVolley';
 import { CoachWeek } from './CoachWeek';
-import { CoachWeeklyGoals } from './CoachWeeklyGoals';
 import { CoachWeightHealth } from './CoachWeightHealth';
 import { sportInfo } from '../../data/sports';
 import { arenaOf } from '../../data/muscles';
@@ -41,6 +40,7 @@ export function CoachPanel({
 }) {
   const today = getTodayISODate();
   const coach = getCoachSettings(gameState);
+  const hasGoal = !!(coach.mainGoal && coach.mainGoal.kind);
   const [showSources, setShowSources] = useState(false);
   const [matchInput, setMatchInput] = useState('');
   const [serie, setSerie] = useState({ dow: 0, from: today, to: addDaysISO(today, 364) });
@@ -53,7 +53,6 @@ export function CoachPanel({
   const advice = useMemo(() => coachDayAdvice(gameState, today), [gameState.coach, today]);
   const missedSession = useMemo(() => coachMissedSession(gameState, today), [gameState.quests, gameState.coach, today]);
   const missedMsgs = useMemo(() => coachMissed(gameState, today), [gameState.quests, gameState.coach, today]);
-  const weeklyGoals = useMemo(() => coachWeeklyGoals(gameState, today), [gameState.quests, gameState.weightHistory, gameState.coach, today]);
   const strengthTrend = useMemo(() => coachStrengthTrend(gameState, today), [gameState.quests, today]);
   const nutrition = useMemo(() => coachNutrition(gameState, today), [gameState.quests, gameState.coach, gameState.weightHistory, gameState.targetWeightKg, gameState.userWeightKg, today]);
   const balance = useMemo(() => coachBalance(gameState, today), [gameState.quests, today]);
@@ -251,9 +250,11 @@ export function CoachPanel({
         </section>
       )}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
-      <CoachGoal gameState={gameState} setGameState={setGameState} />
+      {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}
+      {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
       <VoiceCallout compact testId="voice-callout-coach" />
-      <CoachProgram gameState={gameState} setGameState={setGameState} />
+      {/* « Tu as déjà un coach ? » : rangé dans les réglages si la personne a répondu non (et sans programme) */}
+      {!(coach.noCoach && !coach.program) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
@@ -296,6 +297,11 @@ export function CoachPanel({
         updateCoach={updateCoach}
       />
 
+      {/* ÉQUILIBRE : juste sous la prochaine séance (ordinateur et téléphone), grande silhouette et explications */}
+      <div id="coach-equilibre" className="scroll-mt-3">
+      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
+      </div>
+
       </div>
       <div className="space-y-4">
       <div id="coach-semaine" className="scroll-mt-3 space-y-4">
@@ -314,8 +320,7 @@ export function CoachPanel({
         <CoachAdvice advice={advice} missedMsgs={missedMsgs} />
       )}
 
-      {/* OBJECTIFS DE LA SEMAINE */}
-      <CoachWeeklyGoals onClaimWeekly={onClaimWeekly} weeklyGoals={weeklyGoals} />
+      {/* les objectifs de la semaine sont devenus des trophées renouvelables (onglet Trophées, WeeklyTrophies) */}
 
       {/* SEMAINE */}
       <CoachWeek
@@ -334,16 +339,13 @@ export function CoachPanel({
       <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
 
       </div>
-      <div id="coach-equilibre" className="scroll-mt-3">
-      {/* ÉQUILIBRE : grande silhouette et explications, toujours visibles */}
-      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
-
-      </div>
       </div>
       </div>
       <div id="coach-reglages" className="scroll-mt-3">
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
       <Fold title="⚙️ Réglages et détails du coach" subtitle={`Niveau, profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
+        {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
+        {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('maxima') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}

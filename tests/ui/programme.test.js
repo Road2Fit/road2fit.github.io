@@ -56,3 +56,38 @@ describe('programme de mon coach', () => {
     expect(save(h).coach && save(h).coach.program).toBeFalsy();
   }, T);
 });
+
+describe('« Tu as déjà un coach ? » : réponse non', () => {
+  it('l’encadré quitte le haut du Coach et se range dans les réglages, d’où on peut le remettre', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await advance(h, 300);
+    expect(by(h, 'program-intro')).toBeTruthy();
+    await clickEl(h, by(h, 'program-no'));
+    expect(save(h).coach.noCoach).toBe(true);
+    expect(by(h, 'program-intro')).toBeNull();
+    await clickText(h, 'Réglages et détails du coach');
+    expect(by(h, 'program-intro')).toBeTruthy(); // dans les réglages
+    expect(by(h, 'program-no')).toBeNull();
+    await clickText(h, 'Remettre cet encadré en haut du Coach');
+    expect(save(h).coach.noCoach).toBe(false);
+    expect(h.errors).toEqual([]);
+  }, T);
+});
+
+describe('trophées de la semaine', () => {
+  it('les objectifs de la semaine sont dans l’onglet Trophées (plus dans le Coach)', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await advance(h, 300);
+    expect(h.doc.body.textContent).not.toContain('Objectifs de la semaine');
+    await clickText(h, 'Trophées');
+    await advance(h, 200);
+    const box = by(h, 'weekly-trophies');
+    expect(box).toBeTruthy();
+    expect(box.textContent).toContain('Séances de muscu');
+    expect(box.textContent).toContain('Pesées');
+    expect(box.textContent).toContain('renouvellent chaque lundi');
+    expect(h.errors).toEqual([]);
+  }, T);
+});

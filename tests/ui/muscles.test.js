@@ -92,6 +92,8 @@ describe('bilan du coach en mode optimisé', () => {
     await clickText(h, 'Réglages et détails du coach');
     expect(byTest(h, 'muscle-map')).toBeTruthy();
     expect(pageText(h)).toContain('Équilibre des groupes musculaires');
+    expect(byTest(h, 'toggle-sources')).toBeNull(); // replié : le schéma seul
+    await clickEl(h, byTest(h, 'balance-details'));
     await clickEl(h, byTest(h, 'toggle-sources'));
     expect(byTest(h, 'sources-list').textContent).toContain('Schoenfeld 2017');
     expect(byTest(h, 'sources-list').textContent).toContain('estimations prudentes');

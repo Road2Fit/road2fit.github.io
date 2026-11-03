@@ -248,7 +248,7 @@ export const friends = {
   async mine(cfg) {
     const s = await freshSession(cfg);
     try {
-      const rows = await call(cfg, 'GET', '/rest/v1/profiles', { token: s.access_token, query: `?select=friend_code,share&user_id=eq.${uid(s)}` });
+      const rows = await call(cfg, 'GET', '/rest/v1/profiles', { token: s.access_token, query: `?select=friend_code,share,summary&user_id=eq.${uid(s)}` });
       return Array.isArray(rows) && rows[0] ? rows[0] : null;
     } catch (e) { throw friendError(e); }
   },

@@ -12,6 +12,7 @@ const COLOR = { good: 'bg-emerald-500', mid: 'bg-amber-400', low: 'bg-rose-500',
 
 export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   const [showSources, setShowSources] = useState(false);
+  const [details, setDetails] = useState(false); // par défaut : le schéma seul, le détail se déroule au clic
   const optimized = isOptimized();
   const alerts = balance.alerts || [];
   const profileLabel = { puissance: 'force', hypertrophie: 'prise de muscle', endurance: 'endurance de force' }[balance.profile];
@@ -19,6 +20,10 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
     <section className={card}>
       <h3 className="font-black text-white"><Art name="scale" />Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
       <MuscleBodyMap rows={balance.rows} />
+      <button type="button" onClick={() => setDetails(v => !v)} aria-expanded={details} data-testid="balance-details" className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">
+        {details ? '▾ Masquer le détail' : `▸ Voir le détail par groupe${lowRows.length || alerts.length ? ' et les conseils' : ''}`}
+      </button>
+      {details && <>
       <div className="space-y-2">
         {balance.rows.map(r => {
           const color = COLOR[r.status] || COLOR.low;
@@ -105,6 +110,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
           })}
         </div>
       )}
+      </>}
     </section>
   );
 }

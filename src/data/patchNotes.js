@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.5',
+    date: '2026-11-04',
+    title: 'Coach plus clair, trophées de la semaine',
+    items: [
+      'Coach : l’équilibre des groupes musculaires est juste sous la prochaine séance, avec le schéma seul (« Voir le détail » pour le reste). « Ton objectif », une fois rempli, et « Tu as déjà un coach ? » (bouton « Non ») se rangent dans les réglages.',
+      'Les objectifs de la semaine deviennent des trophées qui se renouvellent chaque lundi, dans l’onglet Trophées (avec le nombre de fois où tu les as gagnés).',
+      'Programme de ton coach : bouton « Dicter » pour le dire à l’oral au lieu de l’écrire.',
+      'Amis : un prénom déjà donné ne peut plus disparaître (un appareil resté sur une vieille copie l’effaçait).',
+    ],
+  },
+  {
     version: '3.4.2',
     date: '2026-11-03',
     title: 'Épreuves de rang plus accessibles',

@@ -130,6 +130,10 @@ function merge3(base, local, remote, ctx, key, parent) {
     if (isIdList(local) || isIdList(remote)) return mergeIdLists(base, local, remote, ctx);
     if (key in SET_KEYS) return mergeSets(key, base, local, remote);
   }
+  // prénom / pseudo : une valeur vide (appareil resté sur une vieille copie) n'efface jamais un prénom déjà donné
+  if (key === 'heroName' && typeof local === 'string' && typeof remote === 'string' && (!local.trim() || !remote.trim())) {
+    return local.trim() ? local : remote;
+  }
   // EXP : les gains des deux appareils s'additionnent (ici pour le total et pour chaque semaine de `xpWeeks`)
   if ((key === 'xp' || parent === 'xpWeeks') && typeof local === 'number' && typeof remote === 'number') {
     return typeof base === 'number' ? Math.max(0, local + remote - base) : Math.max(local, remote);
