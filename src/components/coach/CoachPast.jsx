@@ -81,6 +81,7 @@ export function CoachPast({ gameState, setGameState }) {
             )}
             <button type="button" onClick={send} disabled={busy} className="flex-1 h-11 rounded-xl bg-pink-600 disabled:bg-slate-800 text-white text-sm font-black" data-testid="past-send">{busy ? 'Le coach lit…' : 'Envoyer au coach'}</button>
           </div>
+          {speech.error && <p className="text-xs text-amber-300" role="alert" data-testid="mic-error">{speech.error}</p>}
         </>
       )}
       {err && <p className="text-rose-300">{err}</p>}

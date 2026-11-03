@@ -174,10 +174,11 @@ export function CoachChat({ gameState, setGameState, overview }) {
       />
       <div className="flex gap-2">
         {speech.supported && (
-          <button type="button" onClick={speech.toggle} className={`px-4 h-11 rounded-xl flex items-center justify-center gap-1.5 shrink-0 text-sm font-bold text-white ${speech.listening ? 'bg-rose-600 animate-pulse' : 'bg-slate-800'}`}><Art name="mic" size={20} bare />{speech.listening ? 'Stop' : 'Parler'}</button>
+          <button type="button" onClick={speech.toggle} data-testid="coach-chat-mic" className={`px-4 h-11 rounded-xl flex items-center justify-center gap-1.5 shrink-0 text-sm font-bold text-white ${speech.listening ? 'bg-rose-600 animate-pulse' : 'bg-slate-800'}`}><Art name="mic" size={20} bare />{speech.listening ? 'Stop' : 'Parler'}</button>
         )}
         <button type="button" onClick={() => send(text)} disabled={!text.trim() || loading} data-testid="coach-chat-send" className="flex-1 h-11 rounded-xl bg-pink-600 disabled:bg-slate-800 disabled:text-slate-500 text-white text-sm font-black">Envoyer</button>
       </div>
+      {speech.error && <p className="text-xs text-amber-300" role="alert" data-testid="mic-error">{speech.error}</p>}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <button type="button" onClick={() => setShowMem(v => !v)} className="text-slate-400 font-bold underline-offset-2 hover:underline">Ce que je retiens de toi ({memory.length})</button>
         <div className="flex gap-3">

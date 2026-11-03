@@ -13,6 +13,7 @@ import { aiStatus, callAi } from '../ai/client';
 import { aiDictationItems } from '../ai/dictation';
 import { catalogText, dictationContext } from '../ai/context';
 import { Art } from './Art';
+import { startListening } from '../voice/mic';
 
 export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, triggerToast, playGameSound }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,71 +71,36 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
 
   const toggleBrowserDictation = () => {
     if (isListening && recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
       setIsListening(false);
       setInterimText('');
       setMicStatusMsg(aiOn ? '' : 'Écoute terminée. Vérifie l’aperçu ci-dessous puis valide en 1 clic.');
       setTimeout(() => analyzeRef.current(textRef.current), 300);
       return;
     }
-
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRec) {
-      setMicStatusMsg("💡 Astuce : touche la zone de texte et utilise le bouton Micro 🎤 de votre clavier (ou Windows + H sur PC) !");
-      inputRef.current?.focus();
-      return;
-    }
-
-    try {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.abort(); } catch (e) {}
-      }
-
-      const rec = new SpeechRec();
-      recognitionRef.current = rec;
-      rec.lang = 'fr-FR';
-      rec.continuous = true;
-      rec.interimResults = true;
-
-      rec.onstart = () => {
-        setIsListening(true);
-        setMicStatusMsg('Micro actif : dicte toute ta séance d’une traite (plusieurs exercices)...');
-      };
-
-      rec.onresult = (event) => {
-        let finalChunk = '';
-        let interimChunk = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalChunk += transcript + ' ';
-          } else {
-            interimChunk += transcript;
-          }
-        }
-        if (finalChunk) {
-          setSpokenText(prev => (prev ? `${prev.trim()} ${finalChunk.trim()}` : finalChunk.trim()));
-        }
-        setInterimText(interimChunk);
-      };
-
-      rec.onerror = () => {
-        setIsListening(false);
-        setInterimText('');
-        setMicStatusMsg("💡 Google Sites bloque le micro direct sur ce navigateur : cliquez dans le champ texte et utilisez le micro 🎤 de votre clavier de téléphone (ou Touche Windows + H sur PC) !");
+    // micro commun (voice/mic.js) : demande d'autorisation, relance après un silence, message clair en cas d'échec
+    setIsListening(true);
+    setMicStatusMsg('Démarrage du micro…');
+    let failed = false;
+    const ctl = startListening({
+      interim: true,
+      onStart: () => setMicStatusMsg('Micro actif : dicte toute ta séance d’une traite (plusieurs exercices)...'),
+      onFinal: t => setSpokenText(prev => (prev ? `${prev.trim()} ${t}` : t)),
+      onInterim: t => setInterimText(t),
+      onError: msg => {
+        failed = true;
+        setMicStatusMsg(msg);
         inputRef.current?.focus();
-      };
-
-      rec.onend = () => {
+      },
+      onEnd: () => {
         setIsListening(false);
         setInterimText('');
-        setTimeout(() => { if (textRef.current !== aiTextRef.current) analyzeRef.current(textRef.current); }, 300);
-      };
-
-      rec.start();
-    } catch (e) {
-      setIsListening(false);
-    }
+        if (recognitionRef.current && recognitionRef.current === ctl) recognitionRef.current = null;
+        if (!failed) setTimeout(() => { if (textRef.current !== aiTextRef.current) analyzeRef.current(textRef.current); }, 300);
+      },
+    });
+    if (!failed) recognitionRef.current = ctl;
   };
 
   const handleRemovePreviewItem = (id) => {
@@ -144,7 +110,8 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   const handleConfirmAllVoiceSessions = () => {
     if (editableItems.length === 0) return;
     if (isListening && recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
       setIsListening(false);
     }
 

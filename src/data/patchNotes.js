@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.3.2',
+    date: '2026-11-03',
+    title: 'Micro sur ordinateur',
+    items: [
+      'Le bouton « Parler » demande maintenant l’accès au micro et continue d’écouter même après un silence (dictée, coach, « Raconte ton passé »).',
+      'Si le micro ne peut pas démarrer, l’appli dit pourquoi et quoi faire : micro bloqué (cadenas à gauche de l’adresse → Micro → Autoriser), aucun micro, ou navigateur sans reconnaissance vocale (Firefox, Brave : utilise Chrome ou Edge).',
+    ],
+  },
+  {
     version: '3.3.1',
     date: '2026-11-03',
     title: 'Silhouette des muscles pour tous',
