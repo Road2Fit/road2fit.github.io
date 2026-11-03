@@ -1,6 +1,7 @@
 // Dictée lue par le coach intelligent : sa réponse (séries par exercice) est convertie dans le même format que l'analyse locale
 // (voice/parser.js), pour réutiliser l'aperçu et l'enregistrement de VoiceWorkoutAssistant.
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
+import { assistText } from '../lib/assist';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { METHODS, methodLabel } from '../coach/methods';
@@ -46,7 +47,8 @@ export function aiDictationItems(data, state) {
     const unit = (ref && ref.unit) || (anyKg ? 'kg' : 'reps');
     const setDetails = sets.map(s => Math.round(timed ? n(s.seconds) || n(s.reps) : n(s.reps) || n(s.seconds)));
     const loads = sets.map(s => r1(n(s.kg)));
-    const assists = sets.map(s => r1(Math.max(0, n(s.assistKg))));
+    // exercice au poids du corps : des kilos dits = du lest (aide négative, lib/assist.js)
+    const assists = sets.map(s => (unit === 'reps' && n(s.kg) > 0 ? -r1(n(s.kg)) : r1(Math.max(0, n(s.assistKg)))));
     const weightKg = unit === 'kg' ? (anyKg ? Math.max(...loads) : n(quest && quest.currentValue)) : Math.max(...setDetails);
     const assistanceKg = unit === 'reps' ? Math.min(...assists) : 0;
     const differs = arr => arr.some(v => v !== arr[0]);
@@ -60,7 +62,7 @@ export function aiDictationItems(data, state) {
       setKinds: kinds.some(k => k !== 'work') ? kinds : undefined,
       method: method || undefined,
       calories: calculateStrengthCalories({ unit, timed, weightKg: unit === 'kg' ? weightKg : 0, assistanceKg, setDetails, rpe: rpe || 7, userWeightKg }),
-      summary: `${unit === 'kg' ? (differs(loads) && anyKg ? `${loads.join('/')} kg • ` : `${weightKg} kg • `) : ''}[${setDetails.join(' - ')} ${timed ? 's' : 'reps'}]${unit === 'reps' && !timed && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''}${rpe ? ` • ressenti ${rpe}/10` : ''}${method ? ` • ${methodLabel(method)}` : ''}`,
+      summary: `${unit === 'kg' ? (differs(loads) && anyKg ? `${loads.join('/')} kg • ` : `${weightKg} kg • `) : ''}[${setDetails.join(' - ')} ${timed ? 's' : 'reps'}]${unit === 'reps' && !timed && assistanceKg ? ` (${assistText(assistanceKg)})` : ''}${rpe ? ` • ressenti ${rpe}/10` : ''}${method ? ` • ${methodLabel(method)}` : ''}`,
     });
   });
   return out;

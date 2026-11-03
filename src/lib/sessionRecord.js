@@ -1,4 +1,5 @@
 import { evaluateQuestProgress } from './progress';
+import { assistText } from './assist';
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from './quests';
 import { fmtLoads, isMixed } from './setLoads';
 
@@ -23,13 +24,14 @@ export function applyStrengthSession(q, input) {
   const banner = { title: 'Séance Validée !', subtitle: `+${calories} kcal brûlées`, badge: '🎵' };
 
   const loadList = isKg && loads ? loads.map(x => Math.max(0, Number(x) || 0)) : null;
-  const assistList = !isKg && assists ? assists.map(x => Math.max(0, Number(x) || 0)) : null;
+  const assistList = !isKg && assists ? assists.map(x => Number(x) || 0) : null; // négatif = lest (lib/assist.js)
   // valeur « de record » : charge la plus lourde, aide la plus faible
   const effectiveValue = isKg ? Math.max(...(loadList || [0]), 0) : best;
   const assistanceUsed = assistList ? Math.min(...assistList) : 0;
 
   const prevDetails = getSetDetailsArray(q, goalSets, goalReps);
-  const reducedAssistance = !isKg && assistanceUsed < (Number.isFinite(Number(q.currentAssistanceKg)) ? Number(q.currentAssistanceKg) : 0);
+  // moins d'aide élastique qu'avant (le lest ajouté ne compte pas pour ce trophée)
+  const reducedAssistance = !isKg && Number(q.currentAssistanceKg) > 0 && assistanceUsed < Number(q.currentAssistanceKg);
   const increasedLoad = isKg && effectiveValue > (Number(q.currentValue) || 0);
   const moreSetsValidated = validatedNow > countValidatedSets(prevDetails, goalReps);
 
@@ -58,9 +60,9 @@ export function applyStrengthSession(q, input) {
   }
 
   const loadTxt = loadList && isMixed(loadList) ? fmtLoads(loadList) : `${effectiveValue} kg`;
-  const assistTxt = assistList && assistanceUsed > 0 ? `Aide ${isMixed(assistList) ? fmtLoads(assistList) : assistanceUsed + ' kg'}` : 'Strict 0 kg';
+  const assistTxt = assistList && assistanceUsed ? (isMixed(assistList) ? `${assistanceUsed > 0 ? 'Aide' : 'Lest'} ${fmtLoads(assistList.map(Math.abs))}` : assistText(assistanceUsed)) : 'Strict 0 kg';
   const defaultNote = guidedLabel !== undefined
-    ? `Séance guidée ${guidedLabel || ''} • ${isKg ? fmtLoads(loadList || [effectiveValue]) + ' • ' : assistList && assistanceUsed > 0 ? 'Aide ' + fmtLoads(assistList) + ' • ' : ''}${setDetails.join(' - ')} reps`
+    ? `Séance guidée ${guidedLabel || ''} • ${isKg ? fmtLoads(loadList || [effectiveValue]) + ' • ' : assistList && assistanceUsed ? assistTxt + ' • ' : ''}${setDetails.join(' - ')} reps`
     : isTimedQuest(q)
       ? `Séries : ${formatSetsBreakdown(setDetails)} s • ${validatedNow}/${goalSets} séries validées`
       : !isKg

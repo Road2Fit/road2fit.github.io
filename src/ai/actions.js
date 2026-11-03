@@ -89,7 +89,8 @@ export function normalizeAction(a, state, today) {
       if (!q) break;
       const o = { questId: q.id };
       if (q.unit === 'kg' && inRange(x.load, 0, 500) !== null && num(x.load) > 0) o.load = Math.round(num(x.load) * 4) / 4;
-      if (q.unit === 'reps' && inRange(x.assist, 0, 80) !== null && x.assist !== undefined) o.assist = Math.round(num(x.assist) * 2) / 2;
+      // exercice au poids du corps : aide (> 0) ou lest (< 0, ex. −10 = dips lestés de 10 kg)
+      if (q.unit === 'reps' && !q.timed && inRange(x.assist, -150, 80) !== null && x.assist !== undefined) o.assist = Math.round(num(x.assist) * 2) / 2;
       const rd = inRange(x.repsDelta, -5, 5);
       if (rd !== null && Math.round(rd) !== 0) o.repsDelta = Math.round(rd);
       if (Object.keys(o).length > 1) args = o;
@@ -98,6 +99,12 @@ export function normalizeAction(a, state, today) {
     case 'add_exercise': {
       const c = EXERCISE_CATALOG.find(e => e.id === x.catalogId && e.type !== 'cardio');
       if (c && !(state.quests || []).some(q => q.catalogId === c.id)) args = { catalogId: c.id };
+      break;
+    }
+    case 'create_exercise': {
+      // exercice absent du catalogue : créé (et partagé) au moment d'« Appliquer » (CoachChat → ai/exercise.js)
+      const name = String(x.name || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (name.length >= 2) args = { name, details: String(x.details || '').replace(/\s+/g, ' ').trim().slice(0, 200) };
       break;
     }
     case 'skip': {
@@ -125,7 +132,7 @@ export function normalizeAction(a, state, today) {
     case 'method': {
       const q = strengthQuest(state, x.questId);
       if (!q) break;
-      const kind = q.unit === 'kg' ? 'load' : Number(q.currentAssistanceKg) > 0 ? 'assisted' : 'reps';
+      const kind = q.unit === 'kg' ? 'load' : Number(q.currentAssistanceKg) !== 0 ? 'assisted' : 'reps';
       if (x.method === 'auto' || (x.method !== 'custom' && METHODS[x.method] && methodFits(x.method, { kind }))) args = { questId: q.id, method: x.method };
       break;
     }
@@ -222,6 +229,8 @@ export function applyAction(state, a, today) {
           if (x.load !== undefined) o.load = x.load;
           if (x.assist !== undefined) o.assist = x.assist;
           if (x.repsDelta) o.repsDelta = x.repsDelta;
+          // lest sur un exercice qui était au poids du corps seul : il devient un exercice lesté (réglé en kg, la progression ajoute du lest)
+          if (x.assist !== undefined && x.assist < 0 && !(Number(q.currentAssistanceKg) < 0)) return { ...q, currentAssistanceKg: x.assist, coachOverride: o };
           return { ...q, coachOverride: o };
         }),
       };

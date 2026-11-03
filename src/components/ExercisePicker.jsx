@@ -8,8 +8,17 @@ import { isTimedCatalog } from '../lib/quests';
 // (kg / répétitions / durée) sont marqués et passent par `onSelectOther`.
 export const unitLabel = c => (isTimedCatalog(c) ? 'durée' : c.unit === 'kg' ? 'charge en kg' : 'répétitions');
 
-export function ExercisePicker({ value, onSelect, accept, allowCustom = true, compat, onSelectOther }) {
+export function ExercisePicker({ value, onSelect, accept, allowCustom = true, compat, onSelectOther, onCreateAi = null }) {
   const [query, setQuery] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState('');
+  // introuvable : le coach intelligent crée l'exercice, ajouté au catalogue de tous les utilisateurs
+  const createAi = async () => {
+    if (!onCreateAi || aiBusy) return;
+    setAiBusy(true); setAiMsg('');
+    try { const id = await onCreateAi(query.trim()); setQuery(''); onSelect(id); } catch (e) { setAiMsg(e.message || 'Le coach n’a pas pu créer cet exercice.'); }
+    setAiBusy(false);
+  };
   const [filter, setFilter] = useState('all');
   const optimized = isOptimized();
   const FILTERS = optimized
@@ -72,6 +81,12 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
           </button>
         ))}
         {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}
+        {onCreateAi && query.trim().length >= 3 && results.length < 3 && (
+          <button type="button" onClick={createAi} disabled={aiBusy} data-testid="picker-ai-create" className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-sky-300 hover:bg-slate-800 font-bold">
+            {aiBusy ? 'Le coach crée l’exercice…' : `Créer « ${query.trim()} » avec le coach (ajouté au catalogue de tout le monde)`}
+          </button>
+        )}
+        {aiMsg && <p className="text-xs text-rose-300 px-2">{aiMsg}</p>}
         {allowCustom && <button type="button" onClick={() => onSelect('custom_bodyweight')} className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-pink-300 hover:bg-slate-800 font-bold">
           Autre exercice au poids du corps personnalisé…
         </button>}

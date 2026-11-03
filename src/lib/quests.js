@@ -6,7 +6,7 @@ const TIMED_NAME_RE = /gainage|planche|plank|chaise murale|wall sit|dead hang|su
 
 const timedNameOf = name => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-export const isTimedCatalog = c => !!c && c.type !== 'cardio' && (TIMED_IDS.has(c.id) || TIMED_NAME_RE.test(timedNameOf(c.name)));
+export const isTimedCatalog = c => !!c && c.type !== 'cardio' && (c.timed === true || TIMED_IDS.has(c.id) || TIMED_NAME_RE.test(timedNameOf(c.name)));
 
 export const isTimedQuest = q => {
   if (!q || q.type === 'cardio' || q.unit === 'kg') return false;

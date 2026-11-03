@@ -26,6 +26,9 @@ export function makeQuestFromCatalog(c, state, today, note = 'ajouté par le Coa
       goalMode: c.defaultGoalMode || 'sets_reps',
       level: 1,
       icon: c.icon,
+      // exercice du catalogue commun (créé par le coach) : son muscle vient de sa fiche
+      ...(c.muscle ? { muscle: c.muscle } : {}),
+      ...(c.muscle2 ? { muscle2: c.muscle2 } : {}),
       startValue: startV,
       currentValue: startV,
       goalValue: unit === 'reps' ? gReps : Math.max(1, Number(sug.goalValue) || gReps),

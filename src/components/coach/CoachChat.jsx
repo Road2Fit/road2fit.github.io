@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Art } from '../Art';
 import { aiStatus, callAi } from '../../ai/client';
 import { applyActions, applyUndo, normalizeActions, undoSnapshot } from '../../ai/actions';
+import { createExerciseWithAi } from '../../ai/exercise';
 import { catalogText, coachContext, upcomingSessions } from '../../ai/context';
 import { formatDayFr } from '../../lib/dates';
 import { useSpeech } from '../../ai/useSpeech';
@@ -92,13 +93,29 @@ export function CoachChat({ gameState, setGameState, overview }) {
       setLoading(false);
     }
   };
-  const decide = (i, ok) => {
+  const decide = async (i, ok) => {
     const m = msgs[i];
     if (!m || m.status !== 'pending') return;
+    let actions = m.actions;
+    const notes = [];
+    // exercice nouveau : le coach le décrit, il rejoint le catalogue commun, puis il est ajouté comme un exercice du catalogue
+    if (ok && actions.some(a => a.type === 'create_exercise')) {
+      setMsgs(list => list.map((x, j) => (j === i ? { ...x, status: 'working' } : x)));
+      const out = [];
+      for (const a of actions) {
+        if (a.type !== 'create_exercise') { out.push(a); continue; }
+        try {
+          const r = await createExerciseWithAi(gameState, `${a.args.name}${a.args.details ? ` (${a.args.details})` : ''}`);
+          notes.push(r.created ? `« ${r.entry.name} » ajouté au catalogue de tous les utilisateurs.` : `« ${r.entry.name} » existait déjà dans le catalogue.`);
+          if (!(gameState.quests || []).some(q => q.catalogId === r.entry.id)) out.push({ type: 'add_exercise', label: `Ajouter « ${r.entry.name} »`, args: { catalogId: r.entry.id } });
+        } catch (e) { notes.push(`« ${a.args.name} » : ${e.message || 'pas pu être créé.'}`); }
+      }
+      actions = out;
+    }
     // anciennes valeurs gardées avec le message : « Annuler » les remet
-    const undo = ok ? undoSnapshot(gameState, m.actions) : null;
-    if (ok) setGameState(prev => applyActions(prev, m.actions, getTodayISODate()));
-    setMsgs(list => list.map((x, j) => (j === i ? { ...x, status: ok ? 'applied' : 'declined', undo } : x)));
+    const undo = ok ? undoSnapshot(gameState, actions) : null;
+    if (ok) setGameState(prev => applyActions(prev, actions, getTodayISODate()));
+    setMsgs(list => list.map((x, j) => (j === i ? { ...x, actions, status: ok ? 'applied' : 'declined', undo, notes: notes.length ? notes : x.notes } : x)));
   };
   const undoAt = i => {
     const m = msgs[i];
@@ -135,7 +152,8 @@ export function CoachChat({ gameState, setGameState, overview }) {
                         </div>
                       ) : (
                         <div className="space-y-1.5">
-                          <p className={`text-xs font-bold ${m.status === 'applied' ? 'text-emerald-300' : 'text-slate-500'}`}>{m.status === 'applied' ? 'C’est réglé.' : m.status === 'undone' ? 'Annulé : tout est revenu comme avant.' : 'Rien n’a été changé.'}</p>
+                          <p className={`text-xs font-bold ${m.status === 'applied' ? 'text-emerald-300' : 'text-slate-500'}`}>{m.status === 'working' ? 'Je crée l’exercice…' : m.status === 'applied' ? 'C’est réglé.' : m.status === 'undone' ? 'Annulé : tout est revenu comme avant.' : 'Rien n’a été changé.'}</p>
+                          {(m.notes || []).map((t, k) => <p key={k} className="text-xs text-sky-200" data-testid="coach-chat-note">{t}</p>)}
                           {i === lastApplied && (
                             <>
                               {upcoming.length > 0 && <p className="text-xs text-slate-300" data-testid="coach-chat-upcoming">Prochaines séances : {upcoming.map(d => formatDayFr(d)).join(', ')}</p>}

@@ -49,10 +49,10 @@ export function rebuildEntry(q, entry, patch, userWeightKg) {
     if (!setDetails.length) setDetails.push(0);
     const best = Math.max(...setDetails, 0);
     // charge / aide différente selon la série : une valeur par série réalisée
-    const fit = arr => setDetails.map((_, i) => Math.max(0, Number(arr[i] !== undefined ? arr[i] : arr[arr.length - 1]) || 0));
+    const fit = (arr, signed = false) => setDetails.map((_, i) => { const v = Number(arr[i] !== undefined ? arr[i] : arr[arr.length - 1]) || 0; return signed ? v : Math.max(0, v); });
     const setLoads = q.unit === 'kg' && Array.isArray(e.setLoads) && e.setLoads.length ? fit(e.setLoads) : null;
-    const setAssists = q.unit === 'reps' && Array.isArray(e.setAssists) && e.setAssists.length ? fit(e.setAssists) : null;
-    const assistanceKg = q.unit === 'reps' ? (setAssists ? Math.min(...setAssists) : Math.max(0, Number(e.assistanceKg) || 0)) : 0;
+    const setAssists = q.unit === 'reps' && Array.isArray(e.setAssists) && e.setAssists.length ? fit(e.setAssists, true) : null; // aide négative = lest
+    const assistanceKg = q.unit === 'reps' ? (setAssists ? Math.min(...setAssists) : Number(e.assistanceKg) || 0) : 0;
     const value = q.unit === 'kg' ? (setLoads ? Math.max(...setLoads) : Math.max(0, Number(e.value) || 0)) : best;
     const totalReps = setDetails.reduce((a, r) => a + r, 0);
     const mean = arr => (totalReps > 0 ? setDetails.reduce((a, r, i) => a + r * arr[i], 0) / totalReps : arr[0]);

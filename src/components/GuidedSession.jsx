@@ -1,4 +1,5 @@
 import { Art } from './Art';
+import { assistText } from '../lib/assist';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
@@ -45,7 +46,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const plan = it && Array.isArray(it.plan) ? it.plan : null;
   const scaled = (x, v) => { const base = Number(d.load) || 0; if (!plan || !(base > 0)) return v; return Math.round(((Number(x) || 0) * v / base) * 4) / 4; };
   const setLoad = v => patch(it.questId, { load: v, loads: loadsOf(d).map((x, i) => (d.done[i] ? x : scaled(x, v))) });
-  const setAssist = v => patch(it.questId, { assist: v, assists: assistsOf(d).map((x, i) => (d.done[i] ? x : plan ? Math.max(0, (Number(x) || 0) + (v - (Number(d.assist) || 0))) : v)) });
+  const setAssist = v => patch(it.questId, { assist: v, assists: assistsOf(d).map((x, i) => (d.done[i] ? x : plan ? (Number(x) || 0) + (v - (Number(d.assist) || 0)) : v)) });
   const setLabel = i => (plan && plan[i] ? plan[i].label : 'Série ' + (i + 1));
   const restAfter = i => (plan && plan[i] && plan[i].rest !== undefined ? plan[i].rest : it.restSec);
   // superset : on alterne avec l'autre exercice de la paire (15 s après le premier, repos normal après le second)
@@ -70,7 +71,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
           return;
         }
         const next = j >= 0
-          ? `${plan ? `${setLabel(j)} (${j + 1}/${d.done.length})` : `Série ${j + 1}/${d.done.length}`}${it.kind === 'load' ? ` · ${coachFmt(loadsOf(d)[j])} kg` : it.kind === 'assisted' ? ` · aide ${coachFmt(assistsOf(d)[j])} kg` : ''} · ${d.reps[j]} ${it.timed ? 's' : 'reps'}`
+          ? `${plan ? `${setLabel(j)} (${j + 1}/${d.done.length})` : `Série ${j + 1}/${d.done.length}`}${it.kind === 'load' ? ` · ${coachFmt(loadsOf(d)[j])} kg` : it.kind === 'assisted' ? ` · ${assistText(assistsOf(d)[j])}` : ''} · ${d.reps[j]} ${it.timed ? 's' : 'reps'}`
           : nx ? `Ensuite : ${nx.name}` : '';
         startRest(restAfter(i), next);
       }
@@ -181,10 +182,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             {it.kind === 'assisted' && (
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-slate-300 mr-auto">Aide élastique</span>
-                  <button onClick={() => setAssist(Math.max(0, d.assist - 2.5))} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
-                  <input type="number" step="2.5" value={d.assist} onChange={e => setAssist(Math.max(0, Number(e.target.value) || 0))} className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
-                  <button onClick={() => setAssist(d.assist + 2.5)} className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
+                  {/* un seul nombre : positif = lest, négatif = aide élastique (lib/assist.js) */}
+                  <span className="text-sm font-bold text-slate-300 mr-auto">{d.assist > 0 ? 'Aide élastique (kg, négatif)' : d.assist < 0 ? 'Lest (kg)' : 'Poids du corps (+ = lest)'}</span>
+                  <button onClick={() => setAssist(d.assist + 2.5)} aria-label="Plus facile" className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">−</button>
+                  <input type="number" step="2.5" value={-(Number(d.assist) || 0)} onChange={e => setAssist(-(Number(e.target.value) || 0))} data-testid="guided-assist" className="w-24 text-center bg-slate-950 border border-slate-700 rounded-lg py-2 text-xl font-black text-pink-300" />
+                  <button onClick={() => setAssist(d.assist - 2.5)} aria-label="Plus difficile" className="w-10 h-10 rounded-lg bg-slate-800 text-white text-xl font-black">+</button>
                   <span className="text-sm text-slate-400">kg</span>
                 </div>
                 <p className="text-xs text-slate-500">Changée entre deux séries, elle vaut pour les séries restantes.</p>
@@ -218,7 +220,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     <p className="text-sm font-black text-white">{setLabel(i)}</p>
                     <p className="text-xs text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
                     {it.kind === 'load' && <p className="text-xs font-bold text-amber-300">{coachFmt(loadsOf(d)[i])} kg</p>}
-                    {it.kind === 'assisted' && <p className="text-xs font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}
+                    {it.kind === 'assisted' && <p className="text-xs font-bold text-violet-300">{assistText(assistsOf(d)[i])}</p>}
                   </div>
                   <div className="order-last w-full flex items-center gap-1.5">
                     {i > 0 && !d.done[i] && (

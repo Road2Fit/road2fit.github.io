@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.6',
+    date: '2026-11-04',
+    title: 'Lest, RIR et nouveaux exercices',
+    items: [
+      'Exercices au poids du corps lestés (dips, tractions, muscle-up…) : un seul nombre, +10 = 10 kg de lest, −10 = 10 kg d’aide. Le coach fait progresser : moins d’aide, puis du lest. La dictée comprend « dips 3 fois 8 à 10 kilos ».',
+      'Le coach comprend le RIR (répétitions en réserve) : « RIR 2 » = ressenti 8/10, à l’oral comme dans la discussion.',
+      'Un exercice qui n’existe pas ? Demande-le au coach, dicte-le, ou cherche-le puis « Créer avec le coach » : il fait une recherche sur le web, le range dans le bon groupe musculaire et l’ajoute au catalogue de tous les utilisateurs ; il le propose ensuite dans tes séances comme les autres.',
+    ],
+  },
+  {
     version: '3.5.1',
     date: '2026-11-04',
     title: 'Plus de repos en fin de séance',

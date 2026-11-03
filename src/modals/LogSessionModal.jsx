@@ -1,4 +1,5 @@
 import { Art } from '../components/Art';
+import { assistText } from '../lib/assist';
 import { CardioInputToggles } from '../components/CardioInputToggles';
 import { ELASTIC_PRESETS } from '../data/presets';
 import { cardioHasElevation } from '../lib/calories';
@@ -42,7 +43,7 @@ export function LogSessionModal({
           if (!last) return null;
           const txt = logModalQuest.type === 'cardio'
             ? `${last.value} ${logModalQuest.unit}${last.durationMin ? ` en ${last.durationMin} min` : ''}`
-            : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} ${repUnit(logModalQuest)}${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : isTimedQuest(logModalQuest) ? '' : Number(last.assistanceKg) > 0 ? ` (aide ${last.assistanceKg} kg)` : ' (strict)'}`;
+            : `${Array.isArray(last.setDetails) ? last.setDetails.join(' - ') : `${last.sets}×${last.reps}`} ${repUnit(logModalQuest)}${logModalQuest.unit === 'kg' ? ` à ${last.value} kg` : isTimedQuest(logModalQuest) ? '' : Number(last.assistanceKg) ? ` (${assistText(last.assistanceKg)})` : ' (strict)'}`;
           return (
             <div className="bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 py-2 text-xs text-indigo-100">
               <Art name="timer" />Dernière fois ({last.date ? last.date.slice(8, 10) + '/' + last.date.slice(5, 7) : '—'}) : <b>{txt}</b> — à battre !

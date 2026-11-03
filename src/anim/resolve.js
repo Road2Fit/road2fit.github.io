@@ -8,6 +8,9 @@ const CAT = Object.fromEntries(EXERCISE_CATALOG.map(c => [c.id, c]));
 /** Identifiant d'exercice animé correspondant à un exercice (catalogue d'abord, puis reconnaissance du nom). */
 export function animationIdFor({ catalogId, name } = {}) {
   if (catalogId && BY_ID[catalogId]) return catalogId;
+  // exercice du catalogue commun : animation de l'exercice le plus proche indiqué par le coach (`like`)
+  const shared = catalogId && EXERCISE_CATALOG.find(c => c.id === catalogId && c.like);
+  if (shared && BY_ID[shared.like]) return shared.like;
   const n = normSearch(name || '');
   if (!n) return null;
   const exact = EXERCISE_CATALOG.find(c => normSearch(c.name) === n && BY_ID[c.id]);

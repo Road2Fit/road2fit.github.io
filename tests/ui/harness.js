@@ -290,6 +290,11 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       }
       if (method === 'DELETE') { mine.delete(id); return res(204, null); }
     }
+    // ---- Catalogue commun : exercices créés par le coach (lecture seule) ----
+    if (u.pathname === '/rest/v1/shared_exercises') {
+      if (!tokens.get(bearer)) return res(401, { message: 'JWT' });
+      return res(200, srv.sharedEx || []);
+    }
     // ---- Coach intelligent (supabase/functions/coach-ai) : srv.ai(task, body) renvoie le JSON produit, ou lance { status, error } ----
     if (u.pathname === '/functions/v1/coach-ai') {
       const uid = tokens.get(bearer);

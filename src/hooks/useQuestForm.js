@@ -1,4 +1,6 @@
 import { suggestStart } from '../coach/startSuggestion';
+import { aiStatus } from '../ai/client';
+import { createExerciseWithAi } from '../ai/exercise';
 import { normalizeArenaGroup } from '../data/arenas';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
@@ -102,8 +104,10 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
 
   const handleSelectCatalogExercise = catId => {
     setFormCatalogId(catId);
-    setFormMuscle('');
-    setFormMuscle2('');
+    // exercice du catalogue commun (créé par le coach) : son muscle vient de sa fiche
+    const shared = EXERCISE_CATALOG.find(c => c.id === catId && c.shared);
+    setFormMuscle(shared ? shared.muscle || '' : '');
+    setFormMuscle2(shared ? shared.muscle2 || '' : '');
     setFormSuggestion('');
     if (catId === 'custom_strength') {
       setFormCustomName('');
@@ -336,5 +340,8 @@ export function useQuestForm({ gameState, setGameState, setSelectedChartQuestId,
     playGameSound('xp', gameState.soundEnabled);
   };
 
-  return { questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon, swapOther, setSwapOther, measure, changeMeasure, canChangeMeasure };
+  // exercice introuvable : le coach intelligent le crée (et le partage avec tous les utilisateurs)
+  const createWithAi = aiStatus(gameState) === 'ok' ? async text => (await createExerciseWithAi(gameState, text)).entry.id : null;
+
+  return { createWithAi, questModalOpen, setQuestModalOpen, editingQuestId, formCatalogId, formCustomName, setFormCustomName, formCategory, setFormCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formType, formUnit, setFormUnit, formTimed, setFormTimed, formGoalMode, setFormGoalMode, formStartValue, setFormStartValue, setFormCurrentValue, formGoalValue, setFormGoalValue, formGoalSets, setFormGoalSets, formGoalReps, setFormGoalReps, formStartAssistanceKg, setFormStartAssistanceKg, formGoalAssistanceKg, setFormGoalAssistanceKg, openCreateQuestModal, openEditQuestModal, handleSelectCatalogExercise, handleSaveQuestForm, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, formIcon, swapOther, setSwapOther, measure, changeMeasure, canChangeMeasure };
 }

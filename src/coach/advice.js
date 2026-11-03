@@ -1,4 +1,5 @@
 import { coachFmt } from './labels';
+import { assistText } from '../lib/assist';
 import { programNext, programSession } from './program';
 import { coachDayInfo, coachNextTemplateIdx, coachPlanWeek } from './planning';
 import { coachBuildPlanned } from './sessions';
@@ -170,7 +171,7 @@ export function coachSessionRecap(oldQuests, newQuests, g, today, xp, state = nu
     const ton = kind === 'load' ? tonOf(entry) : 0;
     if (kind === 'load' && prior.length) { tonnage += ton; prevTonnage += tonOf(prior[prior.length - 1]); }
     const nt = computeExerciseTarget(nq, { ...(state ? profileOpts(state, addDaysISO(today, 3)) : {}), today: addDaysISO(today, 3) });
-    const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, aide ${coachFmt(nt.assist)} kg` : `${nt.sets} × ${nt.goalReps} ${nt.timed ? 's' : 'reps'}`;
+    const nextTxt = nt.kind === 'load' ? `${nt.sets} × ${nt.goalReps} à ${coachFmt(nt.load)} kg` : nt.kind === 'assisted' ? `${nt.sets} × ${nt.goalReps}, ${assistText(nt.assist)}` : `${nt.sets} × ${nt.goalReps} ${nt.timed ? 's' : 'reps'}`;
     rows.push({
       name: nq.name, icon: nq.icon, pr,
       summary: `${(entry.setDetails || []).join(' - ')} ${isTimedQuest(nq) ? 's' : 'reps'}${kind === 'load' ? ` à ${fmtLoads(entryLoads(entry))}` : kind === 'assisted' ? ` · aide ${fmtLoads(entryAssists(entry))}` : ''}`,

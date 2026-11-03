@@ -52,6 +52,8 @@ import { useRewards } from './hooks/useRewards';
 import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
 import { OnboardingModal } from './modals/OnboardingModal';
+import './data/sharedExercises'; // catalogue commun (exercices créés par le coach) : copie locale chargée tout de suite
+import { useSharedExercises } from './hooks/useSharedExercises';
 import { needsOnboarding } from './lib/onboarding';
 import { NEUTRAL } from './edition';
 import { AccountModal } from './modals/AccountModal';
@@ -65,6 +67,7 @@ export function App() {
   const [moreOpen, setMoreOpen] = useState(false);
   // Navigation et filtres
   const [activeTab, setActiveTab] = useState('coach'); // l'appli s'ouvre sur le Coach : c'est lui qui dit quoi faire aujourd'hui
+  useSharedExercises(sync.user);
   const friends = useFriends({ gameState, setGameState, isLoaded: sync.isLoaded, user: sync.user, active: activeTab === 'friends' });
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
   // pour ne pas avoir à descendre à la main.

@@ -1,4 +1,5 @@
 import { estimateQuestMax } from '../lib/maxima';
+import { assistChangeText, nextAssistDown } from '../lib/assist';
 import { coachDaysBetween, coachRound, coachSetsOf, coachStep } from './settings';
 
 // Objectif d'un exercice selon le profil de travail choisi (voir profiles.js) : fourchette de répétitions, nombre de séries,
@@ -92,9 +93,10 @@ export function decideProfileTarget({ q, P, kind, last, today, opts, boss, load,
         return result({ load: nl, assist: 0, reps: fill(lo), change: 'up', reason: `${minReps >= hi ? `${hi} reps réussies partout` : `Séries faciles (ressenti ${rpe}/10)`} → +${coachRound(nl - curLoad, 0.5)} kg, et on repart de ${lo} reps (profil ${P.label}).` });
       }
       if (kind === 'assisted') {
-        if (curAssist <= goalAssist) return result({ ...keep, reps: fill(hi), change: 'goal', reason: 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Exercices.' });
-        const na = Math.max(goalAssist, curAssist - (curAssist >= 20 ? 5 : 2.5));
-        return result({ load: 0, assist: na, reps: fill(lo), change: 'assist_down', reason: `${hi} reps réussies partout → l’aide passe de ${curAssist} à ${na} kg, et on repart de ${lo} reps.` });
+        const st = nextAssistDown(curAssist, goalAssist);
+        if (st.reached) return result({ ...keep, reps: fill(hi), change: 'goal', reason: st.lest ? 'Objectif de lest atteint ! Valide le niveau suivant dans l’onglet Exercices.' : 'Objectif atteint sans aide ! Valide le niveau suivant dans l’onglet Exercices.' });
+        const na = st.value;
+        return result({ load: 0, assist: na, reps: fill(lo), change: 'assist_down', reason: `${hi} reps réussies partout → ${assistChangeText(curAssist, na)}, et on repart de ${lo} reps.` });
       }
       return result({ ...keep, reps: fill(hi), change: 'hold', reason: `Haut de la fourchette atteint (${hi} reps). Pour progresser dans le profil ${P.label}, ajoute du lest ou passe à une variante plus difficile.` });
     }
@@ -116,8 +118,8 @@ export function decideProfileTarget({ q, P, kind, last, today, opts, boss, load,
       });
     }
     if (kind === 'assisted') {
-      const na = Math.max(goalAssist, curAssist - (curAssist >= 20 ? 5 : 2.5));
-      return result({ load: 0, assist: na, reps: fill(lo), change: 'profile', reason: `Profil ${P.label} : tu faisais ${Math.round(m)} reps, c’est plus que la fourchette (${range}). L’aide passe de ${curAssist} à ${na} kg.` });
+      const na = nextAssistDown(curAssist, goalAssist).value;
+      return result({ load: 0, assist: na, reps: fill(lo), change: 'profile', reason: `Profil ${P.label} : tu faisais ${Math.round(m)} reps, c’est plus que la fourchette (${range}) : ${assistChangeText(curAssist, na)}.` });
     }
     return result({ ...keep, reps: fill(hi), change: 'profile', reason: `Profil ${P.label} : tu faisais ${Math.round(m)} reps, c’est plus que la fourchette (${range}). Ajoute du lest ou passe à une variante plus difficile.` });
   }
@@ -136,7 +138,7 @@ export function decideProfileTarget({ q, P, kind, last, today, opts, boss, load,
   }
   if (kind === 'assisted') {
     const na = curAssist + (m < lo - 3 ? 5 : 2.5);
-    return result({ load: 0, assist: na, reps: fill(lo), change: 'profile', reason: `Profil ${P.label} : tu faisais ${Math.round(m)} reps, la fourchette est ${range}. L’aide passe de ${curAssist} à ${na} kg.` });
+    return result({ load: 0, assist: na, reps: fill(lo), change: 'profile', reason: `Profil ${P.label} : tu faisais ${Math.round(m)} reps, la fourchette est ${range} : ${assistChangeText(curAssist, na)}.` });
   }
   return result({ ...keep, reps: fill(lo), change: 'hold', reason: `Sous la fourchette du profil ${P.label} (${Math.round(m)} reps pour ${range}) : on vise ${lo} reps par série.` });
 }

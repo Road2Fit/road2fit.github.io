@@ -51,7 +51,8 @@ export function coachRealEntries(q) {
 
 export function coachKind(q) {
   if (q.unit === 'kg') return 'load';
-  return (Number(q.startAssistanceKg) || 0) > 0 || (Number(q.currentAssistanceKg) || 0) > 0 ? 'assisted' : 'reps';
+  // aide (> 0) ou lest (< 0, voir lib/assist.js) : réglé en kg
+  return (Number(q.startAssistanceKg) || 0) !== 0 || (Number(q.currentAssistanceKg) || 0) !== 0 || (Number(q.goalAssistanceKg) || 0) < 0 ? 'assisted' : 'reps';
 }
 
 export function coachEquip(q) {

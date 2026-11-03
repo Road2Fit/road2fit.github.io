@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-// Charge au poids du corps : un seul nombre. Négatif = aide élastique (−10 = 10 kg d'aide), 0 = poids du corps seul.
-// `assist` = aide en kg (positive) ; `onAssist` reçoit l'aide en kg. Une valeur positive (lest) est ramenée à 0 : pour du lest, on choisit « Charge en kg ».
-const show = assist => (Number(assist) > 0 ? String(-Number(assist)) : '0');
+// Charge au poids du corps : un seul nombre. Négatif = aide élastique (−10 = 10 kg d'aide), 0 = poids du corps seul,
+// positif = lest (+10 = 10 kg ajoutés). `assist` = aide en kg (négative pour du lest, voir lib/assist.js).
+const show = assist => String(-(Number(assist) || 0));
 
 export function SignedKgInput({ assist, onAssist, className, testId }) {
   const [text, setText] = useState(show(assist));
@@ -21,7 +21,7 @@ export function SignedKgInput({ assist, onAssist, className, testId }) {
         setText(raw);
         const n = Number(raw.replace(',', '.'));
         if (raw === '' || raw === '-' || Number.isNaN(n)) return;
-        onAssist(n >= 0 ? 0 : Math.round(-n * 2) / 2);
+        onAssist(Math.round(-n * 2) / 2 || 0);
       }}
       onBlur={() => setText(show(assist))}
       className={className}

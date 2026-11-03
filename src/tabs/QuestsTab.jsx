@@ -1,4 +1,5 @@
 import { Art } from '../components/Art';
+import { assistText } from '../lib/assist';
 import { ARENA_GROUPS } from '../data/arenas';
 import { openMovement } from '../lib/movement';
 import { Crown, Play, Plus, Shield, Sliders, Trash2, TrendingUp } from '../icons';
@@ -105,7 +106,7 @@ export function QuestsTab({
                           : `Objectif ${goalSets} × ${goalReps} ${repUnit(quest)}`
                         : goalMode === 'free_mode' ? 'Entraînement libre' : `Objectif ${quest.goalValue} ${quest.unit}`}
                       {quest.unit === 'kg' && goalMode !== 'weight_only' ? ` · ${quest.currentValue} kg` : ''}
-                      {quest.unit === 'reps' && Number(quest.currentAssistanceKg) > 0 ? ` · aide ${quest.currentAssistanceKg} kg` : ''}
+                      {quest.unit === 'reps' && Number(quest.currentAssistanceKg) ? ` · ${assistText(quest.currentAssistanceKg)}` : ''}
                     </p>
                     <p className="text-xs text-slate-500">Niv. {questLevel} · {arenaLabel(quest)}</p>
                   </div>

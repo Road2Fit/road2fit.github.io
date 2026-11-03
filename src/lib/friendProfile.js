@@ -1,6 +1,7 @@
 // Résumé de profil partagé avec les amis (jamais le poids, les photos, les notes ni la sauvegarde complète).
 // Construit sur l'appareil à partir des données, puis publié dans `profiles.summary` (voir docs/supabase-amis.sql).
 import { arenaOf } from '../data/muscles';
+import { assistText } from './assist';
 import { RPG_RANKS } from '../data/gamification';
 import { levelFromXp } from './levels';
 import { estimateQuestMax } from './maxima';
@@ -24,7 +25,7 @@ function describeEntry(e) {
   const unit = isTimedQuest(q) ? 's' : 'reps';
   const reps = sets ? (sets.every(r => r === sets[0]) ? `${sets.length} × ${sets[0]}` : sets.join(' - ')) : `${Number(e.sets) || 1} × ${Number(e.reps) || 0}`;
   if (q.unit === 'kg' && Number(e.value) > 0) return `${reps} à ${round1(Number(e.value))} kg`;
-  if (Number(e.assistanceKg) > 0) return `${reps} ${unit} (aide ${round1(Number(e.assistanceKg))} kg)`;
+  if (Number(e.assistanceKg)) return `${reps} ${unit} (${assistText(e.assistanceKg)})`;
   return `${reps} ${unit}`;
 }
 

@@ -1,4 +1,5 @@
 import { countValidatedSets, formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from './quests';
+import { assistText } from './assist';
 
 // Progression d'un exercice (objectif atteint, niveau suivant) et comparaison avec la séance précédente.
 export function evaluateQuestProgress(quest) {
@@ -158,7 +159,7 @@ export function compareWithPreviousSession(quest, currentEntry, prevEntry) {
     const prevAssist = Number(prevEntry.assistanceKg) || 0;
     if (currAssist < prevAssist) {
       improved = true;
-      badges.push(`🪢 -${+(prevAssist - currAssist).toFixed(1)} kg d'aide élastique`);
+      badges.push(currAssist < 0 ? `🪢 +${+(prevAssist <= 0 ? prevAssist - currAssist : -currAssist).toFixed(1)} kg de lest` : `🪢 -${+(prevAssist - currAssist).toFixed(1)} kg d'aide élastique`);
     }
   }
 
@@ -174,11 +175,11 @@ export function compareWithPreviousSession(quest, currentEntry, prevEntry) {
 
   const prevSummary = quest.unit === 'kg'
     ? `${prevEntry.value} kg • [${formatSetsBreakdown(prevSetsArr)}]`
-    : isTimedQuest(quest) ? `[${formatSetsBreakdown(prevSetsArr)}] s` : `[${formatSetsBreakdown(prevSetsArr)}] (${Number(prevEntry.assistanceKg) > 0 ? `Aide ${prevEntry.assistanceKg}kg` : 'Strict 0kg'})`;
+    : isTimedQuest(quest) ? `[${formatSetsBreakdown(prevSetsArr)}] s` : `[${formatSetsBreakdown(prevSetsArr)}] (${Number(prevEntry.assistanceKg) ? assistText(prevEntry.assistanceKg) : 'Strict 0kg'})`;
 
   const currSummary = quest.unit === 'kg'
     ? `${currentEntry.value} kg • [${formatSetsBreakdown(currSetsArr)}]`
-    : isTimedQuest(quest) ? `[${formatSetsBreakdown(currSetsArr)}] s` : `[${formatSetsBreakdown(currSetsArr)}] (${Number(currentEntry.assistanceKg) > 0 ? `Aide ${currentEntry.assistanceKg}kg` : 'Strict 0kg'})`;
+    : isTimedQuest(quest) ? `[${formatSetsBreakdown(currSetsArr)}] s` : `[${formatSetsBreakdown(currSetsArr)}] (${Number(currentEntry.assistanceKg) ? assistText(currentEntry.assistanceKg) : 'Strict 0kg'})`;
 
   return {
     isFirst: false,

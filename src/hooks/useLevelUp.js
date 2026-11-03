@@ -33,7 +33,8 @@ export function useLevelUp({ gameState, setGameState, triggerToast }) {
       setNextGoalAssistanceKg(0);
     } else {
       const currAssist = Number(quest.currentAssistanceKg) || 0;
-      const nextAssist = Math.max(0, currAssist - 5);
+      // déjà lesté : le niveau suivant vise 5 kg de lest en plus ; sinon 5 kg d'aide en moins (jamais en dessous de 0)
+      const nextAssist = currAssist < 0 ? currAssist - 5 : Math.max(0, currAssist - 5);
       setNextGoalAssistanceKg(nextAssist);
       setNextGoalSets(Number(quest.goalSets) || 3);
       const nextReps = currAssist === 0 ? (Number(quest.goalReps) || 6) + (isTimedQuest(quest) ? 10 : 2) : Number(quest.goalReps) || 6;
@@ -81,7 +82,7 @@ export function useLevelUp({ gameState, setGameState, triggerToast }) {
           goalSets: gSets,
           goalReps: gReps,
           startAssistanceKg: item.currentAssistanceKg || 0,
-          goalAssistanceKg: item.unit === 'reps' ? Math.max(0, Number(nextGoalAssistanceKg) || 0) : 0
+          goalAssistanceKg: item.unit === 'reps' ? Number(nextGoalAssistanceKg) || 0 : 0 // négatif = lest visé
         };
       })
     }));

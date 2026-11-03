@@ -1,4 +1,5 @@
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
+import { assistText } from '../lib/assist';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { stripAccents } from '../lib/text';
 import { VOICE_DICTIONARY } from './dictionary';
@@ -297,13 +298,19 @@ export function parseSpokenWorkout(rawText, existingQuests = [], userWeightKg = 
     }
 
     const unit = anchor.quest?.unit || ref.unit || (kgMatch ? 'kg' : 'reps');
+    // exercice au poids du corps : « lesté de 10 kg », « dips 3x8 à 10 kilos » = du lest (aide négative, lib/assist.js)
+    const assistOrLest = unit === 'reps' && kgMatch && !assistMatch ? -Number(kgMatch[1]) : assistanceKg;
+    // ressenti : « RIR 2 » / « 2 reps en réserve » → RPE 8 ; « RPE 8 » tel quel
+    const rirMatch = seg.match(/\brir\s*(?:de|a)?\s*(\d)\b/) || seg.match(/(\d)\s*(?:reps?|repetitions?)?\s*en\s*reserve/);
+    const rpeMatch = seg.match(/\brpe\s*(?:de|a)?\s*(\d+)\b/);
+    const rpe = rirMatch ? Math.max(1, 10 - Number(rirMatch[1])) : rpeMatch ? Math.min(10, Math.max(1, Number(rpeMatch[1]))) : 0;
     const kcal = calculateStrengthCalories({
       unit,
       timed: timedEx,
       weightKg: unit === 'kg' ? weightKg : 0,
-      assistanceKg: unit === 'reps' ? assistanceKg : 0,
+      assistanceKg: unit === 'reps' ? assistOrLest : 0,
       setDetails,
-      rpe: 7,
+      rpe: rpe || 7,
       userWeightKg
     });
 
@@ -317,13 +324,14 @@ export function parseSpokenWorkout(rawText, existingQuests = [], userWeightKg = 
       unit,
       icon: ref.icon || '🏋️',
       weightKg: unit === 'kg' ? weightKg : Math.max(...setDetails),
-      assistanceKg: unit === 'reps' ? assistanceKg : 0,
+      assistanceKg: unit === 'reps' ? assistOrLest : 0,
       setDetails,
+      ...(rpe ? { rpe } : {}),
       calories: kcal,
       timed: timedEx,
       summary: `${unit === 'kg' ? `${weightKg} kg • ` : ''}[${setDetails.join(' - ')} ${timedEx ? 's' : 'reps'}]${
-        unit === 'reps' && !timedEx && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''
-      }`
+        unit === 'reps' && !timedEx && assistOrLest ? ` (${assistText(assistOrLest)})` : ''
+      }${rpe ? ` • ressenti ${rpe}/10` : ''}`
     };
   });
 }

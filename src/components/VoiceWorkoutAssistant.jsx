@@ -12,6 +12,8 @@ import { arenaOf } from '../data/muscles';
 import { aiStatus, callAi } from '../ai/client';
 import { aiDictationItems } from '../ai/dictation';
 import { catalogText, dictationContext } from '../ai/context';
+import { createExerciseWithAi } from '../ai/exercise';
+import { EXERCISE_CATALOG } from '../data/catalog';
 import { Art } from './Art';
 import { startListening } from '../voice/mic';
 
@@ -55,12 +57,25 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
     setAiMsg('');
     try {
       const data = await callAi('dictation', { text: t, context: dictationContext(gameState, getTodayISODate()), catalog: catalogText() });
-      const items = aiDictationItems(data, gameState);
+      // exercice de musculation inconnu du catalogue : le coach le crée (catalogue commun de tous les utilisateurs),
+      // puis la séance est relue avec lui (sa mesure : charge ou poids du corps, lest compris)
+      const created = [];
+      const known = it => (gameState.quests || []).some(q => q.id === it.questId) || EXERCISE_CATALOG.some(c => c.id === it.catalogId);
+      const raw = Array.isArray(data && data.items) ? data.items : [];
+      const fixed = await Promise.all(raw.map(async it => {
+        if (!it || it.kind !== 'strength' || known(it) || !String(it.customName || '').trim()) return it;
+        try {
+          const r = await createExerciseWithAi(gameState, it.customName);
+          created.push(r.entry.name);
+          return { ...it, catalogId: r.entry.id, customName: '' };
+        } catch { return it; }
+      }));
+      const items = aiDictationItems({ ...data, items: fixed }, gameState);
       if (!items.length) throw Object.assign(new Error('Je n’ai reconnu aucun exercice dans cette phrase.'), { soft: true });
       aiTextRef.current = t;
       setEditableItems(items);
       setAiState('done');
-      setAiMsg(data && data.unclear ? `Pas compris : ${data.unclear}` : '');
+      setAiMsg([created.length ? `Nouveau dans le catalogue : ${created.join(', ')}.` : '', data && data.unclear ? `Pas compris : ${data.unclear}` : ''].filter(Boolean).join(' '));
     } catch (e) {
       setAiState('error');
       setAiMsg(`${e.message || 'Le coach intelligent ne répond pas.'} J’affiche la lecture simple.`);
@@ -209,6 +224,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
             elevationM: item.type === 'cardio' ? 0 : undefined,
             level: 1,
             icon: item.icon,
+            ...(item.catalogRef && item.catalogRef.muscle ? { muscle: item.catalogRef.muscle, ...(item.catalogRef.muscle2 ? { muscle2: item.catalogRef.muscle2 } : {}) } : {}),
             startValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
             currentValue: item.type === 'cardio' ? (item.unit === 'min' ? item.durationMin : item.distanceKm) : item.weightKg,
             // la charge de départ est celle que tu viens de dicter ; séries et répétitions visées suivent ton profil du moment

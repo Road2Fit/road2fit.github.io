@@ -1,5 +1,6 @@
 // Ce que le coach intelligent reçoit : un résumé texte compact des données utiles (jamais de photo, d'e-mail, de note de pesée ni de prénom).
 import { coachBalance, coachOverview } from '../coach/advice';
+import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
 import { analyzeProgram } from '../coach/program';
 import { coachProfileAt } from '../coach/profiles';
@@ -15,9 +16,11 @@ export const fromAiDay = d => (Number(d) === 7 ? 0 : Number(d));
 const dayName = d => COACH_DAY_NAMES[Number(d)] || '';
 
 let catalogCache = '';
+let catalogCacheN = 0;
 /** Catalogue compact (identique pour tout le monde : mis en cache côté serveur). */
 export function catalogText() {
-  if (!catalogCache) {
+  if (!catalogCache || catalogCacheN !== EXERCISE_CATALOG.length) { // le catalogue commun peut grandir pendant la séance
+    catalogCacheN = EXERCISE_CATALOG.length;
     catalogCache = EXERCISE_CATALOG.map(c => `${c.id} | ${c.name} | ${c.type === 'cardio' ? 'cardio' : 'muscu'} | ${c.unit}${isTimedCatalog(c) ? ' (durée)' : ''}`).join('\n');
   }
   return catalogCache;
@@ -30,7 +33,7 @@ function entryText(q, e) {
   const reps = coachSetsOf(e, Number(q.goalSets) || 3, Number(q.goalReps) || 8);
   const unit = timed ? ' s' : '';
   if (q.type === 'cardio') return `${e.date} : ${n1(e.distanceKm || (q.unit === 'km' ? e.value : 0)) ? `${n1(e.distanceKm || e.value)} km, ` : ''}${n1(e.durationMin || (q.unit === 'min' ? e.value : 0))} min`;
-  const load = q.unit === 'kg' ? (Array.isArray(e.setLoads) ? `${e.setLoads.join('/')} kg ` : `${n1(e.value)} kg `) : Number(e.assistanceKg) > 0 ? `aide ${n1(e.assistanceKg)} kg ` : '';
+  const load = q.unit === 'kg' ? (Array.isArray(e.setLoads) ? `${e.setLoads.join('/')} kg ` : `${n1(e.value)} kg `) : Number(e.assistanceKg) ? `${assistText(e.assistanceKg)} ` : '';
   return `${e.date} : ${load}${reps.join('-')}${unit}${e.rpe ? ` (ressenti ${e.rpe}/10)` : ''}`;
 }
 
@@ -40,7 +43,7 @@ export function exercisesText(state, { history = 3 } = {}) {
   if (!qs.length) return 'Aucun exercice enregistré pour l’instant.';
   return qs.map(q => {
     const timed = isTimedQuest(q);
-    const mesure = q.type === 'cardio' ? `cardio (${q.unit})` : q.unit === 'kg' ? `charge actuelle ${n1(q.currentValue)} kg` : timed ? 'durée en secondes' : Number(q.currentAssistanceKg) > 0 ? `poids du corps, aide actuelle ${n1(q.currentAssistanceKg)} kg` : 'poids du corps';
+    const mesure = q.type === 'cardio' ? `cardio (${q.unit})` : q.unit === 'kg' ? `charge actuelle ${n1(q.currentValue)} kg` : timed ? 'durée en secondes' : Number(q.currentAssistanceKg) > 0 ? `poids du corps, aide actuelle ${n1(q.currentAssistanceKg)} kg` : Number(q.currentAssistanceKg) < 0 ? `poids du corps lesté, lest actuel ${n1(-q.currentAssistanceKg)} kg` : 'poids du corps (lest possible)';
     const goal = q.type === 'cardio' ? '' : `, objectif ${q.goalSets || 3}x${q.goalReps || 8}${timed ? ' s' : ''}${q.unit === 'kg' && q.goalValue ? ` (cible ${n1(q.goalValue)} kg)` : ''}`;
     const last = history ? coachRealEntries(q).slice(-history).map(e => entryText(q, e)).join(' ; ') : '';
     return `- ${q.id} | ${q.name} | ${q.type === 'cardio' ? 'cardio' : arenaOf(q)} | ${mesure}${goal}${last ? ` | dernières séances : ${last}` : ''}`;
@@ -107,7 +110,7 @@ export function coachContext(state, today, { overview } = {}) {
       const s = ov.session;
       lines.push(`Prochaine séance prévue par l'appli${ov.program ? ' (programme de son coach)' : ''} : ${s.date || (ov.first && ov.first.iso) || ''}${s.estMin ? `, environ ${s.estMin} min` : ''}.`);
       s.exercises.forEach(e => {
-        const tgt = `${e.sets}x${(e.targetReps || []).join('-')}${e.timed ? ' s' : ''}${e.kind === 'load' ? ` à ${e.load} kg` : e.kind === 'assisted' ? ` avec ${e.assist} kg d'aide` : ''}`;
+        const tgt = `${e.sets}x${(e.targetReps || []).join('-')}${e.timed ? ' s' : ''}${e.kind === 'load' ? ` à ${e.load} kg` : e.kind === 'assisted' ? ` (${assistText(e.assist)})` : ''}`;
         const form = e.plan ? ` — forme : ${e.method} (${e.plan.map(p => `${p.reps}${e.kind === 'load' ? '×' + p.load : ''}`).join(', ')})` : '';
         const sup = e.superset ? ` — superset ${e.superset.id}` : '';
         lines.push(`  · ${e.questId} | ${e.name} : ${tgt}${form}${sup}${e.reason ? ` — pourquoi : ${String(e.reason).slice(0, 220)}` : ''}${e.methodWhy ? ` ${e.methodWhy}` : ''}`);

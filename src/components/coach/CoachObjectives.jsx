@@ -1,4 +1,5 @@
 import { Art } from '../Art';
+import { assistText } from '../../lib/assist';
 import { coachDateFR, coachFmt } from '../../coach/labels';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { card } from './ui';
@@ -11,7 +12,7 @@ export function CoachObjectives({ gameState, onAddExercise, questRows }) {
       <div className="grid gap-2 sm:grid-cols-2">
         {questRows.map(r => {
           const t = r.target;
-          const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `aide ${coachFmt(t.assist)} kg × ${t.goalReps}` : `${t.goalReps} ${t.timed ? 's' : 'reps'}`;
+          const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `${assistText(t.assist)} × ${t.goalReps}` : `${t.goalReps} ${t.timed ? 's' : 'reps'}`;
           const eta = r.eta.done ? 'Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : 'Estimation après 3 séances';
           const sugg = r.plateau ? coachSuggestExercises(gameState, r.arena, 2) : [];
           return (

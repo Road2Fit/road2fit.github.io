@@ -66,7 +66,7 @@ describe('aller à l’encontre du coach', () => {
     await clickText(h, 'Moins d’aide'); // 10 → 7,5
     expect(pageText(h)).toContain('aide 7,5 kg');
     expect(pageText(h)).toContain('Ton choix');
-    expect(pageText(h)).toContain('Le coach proposait 12.5 kg d’aide');
+    expect(pageText(h)).toContain('Le coach proposait aide 12,5 kg');
     expect(saved(h).quests[0].coachOverride).toMatchObject({ entries: 2, assist: 7.5 });
     await clickText(h, 'Proposition du coach');
     expect(pageText(h)).toContain('aide 12,5 kg');

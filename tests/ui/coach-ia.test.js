@@ -280,3 +280,38 @@ describe('raconte ton passé dans l’assistant d’accueil', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('exercices créés par le coach (catalogue commun)', () => {
+  it('« ajoute-moi des muscle-up » : le coach crée l’exercice, il rejoint le catalogue et mes exercices', async () => {
+    const srv = fakeSupabase();
+    srv.ai = async task => {
+      if (task === 'coach') return { reply: 'Je t’ajoute le muscle-up.', actions: [{ type: 'create_exercise', label: 'Créer « Muscle-up »', args: '{"name":"Muscle-up","details":"barre fixe, technique"}' }] };
+      if (task === 'exercise') return { existing: '', id: 'ai_muscle_up_test', exercise: { name: 'Muscle-up Test', category: 'Dos', muscle: 'Dos', muscle2: 'Triceps', unit: 'reps', timed: false, equip: 'Poids du corps', like: 'pullups', start: 2, goal: 6, sets: 4, reps: 3, icon: '🦍', how: 'Tirage explosif puis passage au-dessus de la barre.', caution: '' }, reply: 'Ajouté.' };
+      throw { status: 400, error: 'bad_task' };
+    };
+    const h = await logIn(srv, { aiConsent: true });
+    await setInput(h, byTest(h, 'coach-chat-input'), 'Ajoute-moi des muscle-up');
+    await clickEl(h, byTest(h, 'coach-chat-send'));
+    expect(await waitFor(h, () => byTest(h, 'coach-chat-apply'))).toBeTruthy();
+    await clickEl(h, byTest(h, 'coach-chat-apply'));
+    expect(await waitFor(h, () => byTest(h, 'coach-chat-note'))).toBeTruthy();
+    expect(byTest(h, 'coach-chat-note').textContent).toContain('catalogue de tous les utilisateurs');
+    await advance(h, 300);
+    const q = saved(h).quests.find(x => x.catalogId === 'ai_muscle_up_test');
+    expect(q).toBeTruthy();
+    expect(q.unit).toBe('reps');
+    expect(q.muscle).toBe('Dos');
+    expect(srv.aiCalls.some(c => c.task === 'exercise')).toBe(true);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('un exercice créé par quelqu’un d’autre arrive dans mon catalogue', async () => {
+    const srv = fakeSupabase();
+    srv.sharedEx = [{ id: 'ai_dragon_flag_test', data: { name: 'Dragon Flag Test', category: 'Abdominaux', muscle: 'Abdominaux', muscle2: '', unit: 'reps', timed: false, equip: 'Banc', like: 'hanging_leg_raises', start: 3, goal: 8, sets: 3, reps: 5, icon: '🐉', how: '', caution: '' } }];
+    const h = await logIn(srv, { aiConsent: true });
+    await advance(h, 800);
+    const cache = JSON.parse(h.w.localStorage.getItem('rondoufit:sharedEx') || '[]');
+    expect(cache.some(r => r.id === 'ai_dragon_flag_test' && r.data.name === 'Dragon Flag Test')).toBe(true);
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

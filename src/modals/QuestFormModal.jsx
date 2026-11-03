@@ -10,7 +10,7 @@ import { timedAdvice } from '../lib/quests';
 import { pick } from '../edition';
 
 export function QuestFormModal({
-  editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, swapOther, setSwapOther, openCreateQuestModal, measure, changeMeasure, canChangeMeasure, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
+  createWithAi, editingQuestId, formCatalogId, formSuggestion, formSwapNote, handleReplaceExercise, isSwapCompatible, swapOther, setSwapOther, openCreateQuestModal, measure, changeMeasure, canChangeMeasure, formCategory, formMuscle, setFormMuscle, formMuscle2, setFormMuscle2, formCustomName, formGoalAssistanceKg, formGoalMode,
   formGoalReps, formGoalSets, formGoalValue, formStartAssistanceKg, formStartValue, formTimed,
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
@@ -73,7 +73,7 @@ export function QuestFormModal({
                       <label className="block text-xs font-bold text-slate-300 mb-1.5">
                         {pick('Choisir un exercice dans le Pokédex', 'Choisir un exercice dans la liste')}
                       </label>
-                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} />
+                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} onCreateAi={createWithAi} />
                       {formSuggestion && (
                         <p className="mt-2 text-xs text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">{formSuggestion}</p>
                       )}
@@ -333,7 +333,7 @@ export function QuestFormModal({
                         </div>
                       </div>
                       <p className="text-xs text-slate-400" data-testid="signed-hint">
-                        <b>−10</b> = 10 kg d’aide élastique · <b>0</b> = poids du corps seul. Plus le nombre se rapproche de 0, plus tu es autonome. Pour ajouter du poids (lest), choisis « Charge en kg ».
+                        <b>−10</b> = 10 kg d’aide élastique · <b>0</b> = poids du corps seul · <b>+10</b> = 10 kg de lest (ceinture, gilet). Le coach fait progresser : moins d’aide, puis du lest.
                       </p>
                     </div>
                   )}

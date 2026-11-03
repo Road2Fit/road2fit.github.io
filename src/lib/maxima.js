@@ -78,7 +78,8 @@ function maxKind(q) {
   if (q.type === 'cardio') return 'cardio';
   if (isTimedQuest(q)) return 'timed';
   if (q.unit === 'kg') return 'load';
-  return (Number(q.startAssistanceKg) || 0) > 0 || (Number(q.currentAssistanceKg) || 0) > 0 ? 'assisted' : 'bodyweight';
+  // aide > 0 ou lest < 0 : charge soulevée = poids du corps − aide (donc + lest)
+  return (Number(q.startAssistanceKg) || 0) !== 0 || (Number(q.currentAssistanceKg) || 0) !== 0 ? 'assisted' : 'bodyweight';
 }
 
 const realEntries = q => (q.history || []).filter(h => !isStartEntry(h) && h.date).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));

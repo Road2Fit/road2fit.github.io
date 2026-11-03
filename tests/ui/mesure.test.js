@@ -31,7 +31,7 @@ describe('mesure de l’exercice', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('poids du corps : un seul nombre, −10 = 10 kg d’aide ; un nombre positif est ramené à 0', async () => {
+  it('poids du corps : un seul nombre, −10 = 10 kg d’aide, +5 = 5 kg de lest', async () => {
     const h = await start();
     open.push(h);
     await advance(h, 300);
@@ -43,13 +43,14 @@ describe('mesure de l’exercice', () => {
     await setInput(h, byTest(h, 'signed-start'), '-12.5');
     await setInput(h, byTest(h, 'signed-goal'), '-2');
     expect(byTest(h, 'signed-hint').textContent).toContain('aide élastique');
-    await setInput(h, byTest(h, 'signed-goal'), '5'); // du lest : pas ici, on reste à 0
-    expect(byTest(h, 'signed-goal').value).toBe('0'); // ramené tout de suite à 0 (poids du corps seul)
+    expect(byTest(h, 'signed-hint').textContent).toContain('lest');
+    await setInput(h, byTest(h, 'signed-goal'), '5'); // objectif : 5 kg de lest
+    expect(byTest(h, 'signed-goal').value).toBe('5');
     await clickText(h, 'Créer l’exercice');
     await advance(h, 300);
     const q = saved(h).quests.find(x => x.catalogId === 'pullups' && x.startAssistanceKg === 12.5);
     expect(q).toBeTruthy();
-    expect(q.goalAssistanceKg).toBe(0);
+    expect(q.goalAssistanceKg).toBe(-5); // lest = aide négative (lib/assist.js)
     expect(q.unit).toBe('reps');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);

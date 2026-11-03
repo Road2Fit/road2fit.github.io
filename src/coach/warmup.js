@@ -45,8 +45,10 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
     return out;
   }
 
-  if (item.kind === 'assisted') {
-    const A = Number(assistNow !== undefined ? assistNow : item.assist) || 0;
+  const A0 = Number(assistNow !== undefined ? assistNow : item.assist) || 0;
+  // aide élastique : un peu plus d'aide ; lesté (aide négative) : échauffement au poids du corps, plus bas
+  if (item.kind === 'assisted' && A0 > 0) {
+    const A = A0;
     const assist = A + 10;
     const reps = Math.max(3, Math.round(firstWork * 0.5));
     return [{ assist, reps, restSec: 45, label: `${reps} reps avec ${assist} kg d’aide` }];

@@ -274,3 +274,12 @@ export const friends = {
     try { return await call(cfg, 'POST', '/rest/v1/rpc/friend_regenerate_code', { token: s.access_token, body: {} }); } catch (e) { throw friendError(e); }
   },
 };
+
+/** Catalogue commun : exercices créés par le coach intelligent (lecture seule pour les comptes, docs/supabase-exercices.sql). */
+export const sharedExercises = {
+  async list(cfg) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'GET', '/rest/v1/shared_exercises', { token: s.access_token, query: '?select=id,data&order=created_at.asc' });
+    return Array.isArray(rows) ? rows : [];
+  },
+};

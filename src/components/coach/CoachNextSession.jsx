@@ -1,4 +1,5 @@
 import { Art } from '../Art';
+import { assistText } from '../../lib/assist';
 import { METHODS, METHOD_IDS, methodFits } from '../../coach/methods';
 import { useState } from 'react';
 import { openMovement } from '../../lib/movement';
@@ -150,9 +151,9 @@ export function CoachNextSession({
               const uniform = e.targetReps.every(r => r === e.targetReps[0]);
               const ru = e.timed ? 's' : 'reps';
               // forme de séries : détail série par série (« 12 × 50 · 10 × 55 · 8 × 60 kg »)
-              const planTxt = e.plan ? e.plan.map(p => `${p.reps}${e.kind === 'load' ? ` × ${coachFmt(p.load)}` : e.kind === 'assisted' ? ` (aide ${coachFmt(p.assist)})` : ''}`).join(' · ') + (e.kind === 'load' ? ' kg' : '') : '';
+              const planTxt = e.plan ? e.plan.map(p => `${p.reps}${e.kind === 'load' ? ` × ${coachFmt(p.load)}` : e.kind === 'assisted' ? ` (${assistText(p.assist)})` : ''}`).join(' · ') + (e.kind === 'load' ? ' kg' : '') : '';
               const repsTxt = e.plan ? planTxt : uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
-              const loadTxt = e.plan ? '' : e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · aide ${coachFmt(e.assist)} kg` : '';
+              const loadTxt = e.plan ? '' : e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · ${assistText(e.assist)}` : '';
               return (
                 <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
                   <div className="flex items-start justify-between gap-2">
