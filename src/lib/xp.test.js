@@ -82,14 +82,34 @@ describe('épreuves de rang et blocage du niveau', () => {
     expect(levelFromXp(xpForLevel(3), { passed: [] }).locked).toBeNull(); // pas encore au seuil
   });
 
-  it('jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul', () => {
-    const r = levelFromXp(15000, { passed: [] }); // le cas de Gabin : 15 000 EXP
-    expect(r.locked).toBeNull();
-    expect(r.autoPassed).toEqual([4, 8]);
-    expect(r.level).toBe(levelFromXp(15000).level);
-    const juste = levelFromXp(xpForLevel(8) + 999, { passed: [4] });
-    expect(juste.locked.minLevel).toBe(8);
-    expect(juste.reserve).toBe(999);
-    expect(levelFromXp(xpForLevel(8) + 1000, { passed: [4] }).locked).toBeNull();
+  it('calibrage : une épreuve ne bloque jamais plus de 2 500 EXP, même en s’entraînant tous les jours', () => {
+    // simulation jour par jour : séances régulières, EXP par jour d'entraînement (séance + records + objectifs)
+    const profils = [[3, 300], [3, 500], [4, 450], [5, 500], [6, 600], [7, 600], [7, 700]];
+    const JOURS = { 3: [0, 2, 4], 4: [0, 1, 3, 5], 5: [0, 1, 2, 3, 4], 6: [0, 1, 2, 3, 4, 5], 7: [0, 1, 2, 3, 4, 5, 6] };
+    let pire = 0;
+    for (const [parSemaine, xpJour] of profils) {
+      const gates = Object.keys(RANK_TRIALS).map(Number);
+      const reached = {};
+      let xp = 0, days = 0;
+      const weeks = new Set();
+      for (let d = 0; d < 7 * 600 && Object.keys(reached).length < gates.length * 2; d++) {
+        if (!JOURS[parSemaine].includes(d % 7)) continue;
+        xp += xpJour; days++; weeks.add(Math.floor(d / 7));
+        for (const L of gates) {
+          const r = RANK_TRIALS[L];
+          if (reached[L] === undefined && days >= (r.days || 0) && weeks.size >= (r.weeks || 0)) {
+            reached[L] = Math.max(0, xp - xpForLevel(L)); // EXP au-delà du rang au moment où l'épreuve est réussie
+            pire = Math.max(pire, reached[L]);
+          }
+        }
+        if (gates.every(L => reached[L] !== undefined)) break;
+      }
+      expect(gates.every(L => reached[L] !== undefined)).toBe(true);
+    }
+    expect(pire).toBeLessThanOrEqual(2500);
+  });
+  it('seules des conditions qui ne reculent jamais (pas de semaines d’affilée)', () => {
+    for (const r of Object.values(RANK_TRIALS)) expect(Object.keys(r).every(k => k === 'days' || k === 'weeks')).toBe(true);
+    expect(levelFromXp(15000, { passed: [] }).locked.minLevel).toBe(4); // plus de passage automatique : l'épreuve reste à faire
   });
 });

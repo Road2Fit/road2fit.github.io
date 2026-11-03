@@ -7,8 +7,6 @@ import { RPG_RANKS } from '../data/gamification';
 const XP_BASE = 300;
 const XP_EXPONENT = 1.6;
 export const MAX_LEVEL = 100;
-/** EXP qu'une épreuve de rang peut bloquer au plus : au-delà, le rang est franchi automatiquement. */
-export const MAX_RESERVE = 1000;
 
 /** EXP cumulée à avoir pour atteindre le niveau L (niveau 1 = 0). */
 export const xpForLevel = L => (L <= 1 ? 0 : Math.round(XP_BASE * Math.pow(L - 1, XP_EXPONENT)));
@@ -19,8 +17,8 @@ const rankForLevel = level => [...RPG_RANKS].reverse().find(r => level >= r.minL
  * Niveau, avancement dans le niveau, rang actuel et prochain rang pour une quantité d'EXP.
  * `passed` : niveaux des rangs dont l'épreuve est réussie (voir data/trials.js). Sans lui, aucun blocage.
  * Si l'EXP suffit pour un rang dont l'épreuve n'est pas réussie, le niveau reste juste avant (`locked` = ce rang)
- * et le surplus d'EXP est mis en réserve (`reserve`), jamais plus de MAX_RESERVE : au-delà, l'épreuve est considérée
- * comme réussie (`autoPassed` liste ces rangs) et on passe à la suivante.
+ * et le surplus d'EXP est mis en réserve (`reserve`). Les épreuves (data/trials.js) sont calculées pour que cette réserve
+ * ne dépasse pas environ 2 500 EXP, même pour quelqu'un qui s'entraîne tous les jours.
  */
 export function levelFromXp(xp, { passed } = {}) {
   const total = Math.max(0, Number(xp) || 0);
@@ -28,15 +26,11 @@ export function levelFromXp(xp, { passed } = {}) {
   while (level < MAX_LEVEL && total >= xpForLevel(level + 1)) level++;
 
   let locked = null;
-  const autoPassed = [];
   if (passed) {
-    for (const gate of RPG_RANKS) {
-      if (gate.minLevel <= 1 || passed.includes(gate.minLevel)) continue;
-      if (level < gate.minLevel) break;
-      if (total - xpForLevel(gate.minLevel) >= MAX_RESERVE) { autoPassed.push(gate.minLevel); continue; }
+    const gate = RPG_RANKS.find(r => r.minLevel > 1 && !passed.includes(r.minLevel));
+    if (gate && level >= gate.minLevel) {
       locked = gate;
       level = gate.minLevel - 1;
-      break;
     }
   }
 
@@ -56,6 +50,5 @@ export function levelFromXp(xp, { passed } = {}) {
     xpToNextRank: nextRank && !locked ? xpForLevel(nextRank.minLevel) - total : 0,
     locked,
     reserve: locked ? total - xpForLevel(locked.minLevel) : 0,
-    autoPassed,
   };
 }

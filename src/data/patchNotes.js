@@ -2,12 +2,20 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.4.2',
+    date: '2026-11-03',
+    title: 'Épreuves de rang plus accessibles',
+    items: [
+      'Les épreuves ne demandent plus que des jours d’entraînement et des semaines actives (pas forcément d’affilée) : elles avancent à chaque séance et ne reculent jamais.',
+      'Elles sont calculées pour ne presque jamais bloquer ton EXP : même en t’entraînant tous les jours, pas plus d’environ 2 500 EXP en attente. Si tu étais bloqué, ouvre « Épreuve de rang » : elle est sûrement déjà réussie.',
+    ],
+  },
+  {
     version: '3.4.1',
     date: '2026-11-03',
     title: 'Amis à jour et épreuves de rang simplifiées',
     items: [
       'Amis : les records que tes amis rentrent dans « Mes maxima » apparaissent maintenant sur leur profil, et leurs changements se publient depuis tous leurs appareils (pas seulement celui où ils ont activé les amis).',
-      'Épreuves de rang plus simples (moins de jours demandés, plus aucune condition de calories), et jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul.',
     ],
   },
   {
