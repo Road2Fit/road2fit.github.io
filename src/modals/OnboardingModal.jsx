@@ -5,6 +5,7 @@ import { GOALS, STARTER_EXERCISES, applyOnboarding } from '../lib/onboarding';
 import { stripAccents } from '../lib/text';
 import { SPORTS, sportInfo } from '../data/sports';
 import { AccountForm } from '../components/AccountForm';
+import { OnboardingPast } from '../components/OnboardingPast';
 import { BEGINNER_STARTERS, LEVELS } from '../coach/experience';
 import { BreakPicker, cleanExperience, ExperienceSources, ExpertFields, LevelPicker } from '../components/coach/ExperienceForm';
 
@@ -40,6 +41,24 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const untouched = Object.keys(a.exercises).sort().join() === Object.keys(starterSel()).sort().join() && Object.values(a.exercises).every(v => !Object.keys(v).length);
   const setLevel = level => patch({ level, exercises: level === 'beginner' ? (Object.keys(a.exercises).length ? a.exercises : starterSel()) : untouched ? {} : a.exercises });
   const setXp = p => patch({ experience: { ...a.experience, ...p } });
+  // « Raconte ton passé » : le récit lu par le coach intelligent remplit les réponses (la personne vérifie ensuite)
+  const fromStory = h => {
+    const str = v => (v ? String(v) : '');
+    const ex = { ...a.exercises };
+    let count = 0;
+    h.rows.filter(r => r.status === 'new').forEach(r => {
+      ex[r.catalogId] = { ...(ex[r.catalogId] || {}), kg: str(r.kg), reps: str(r.reps), date: r.date || '', workSets: str(r.workSets), workReps: str(r.workReps), workKg: str(r.workKg) };
+      count++;
+    });
+    const xp = { ...a.experience };
+    if (h.years) xp.years = String(h.years);
+    if (h.breakMonths) xp.breakMonths = h.breakMonths >= 12 ? 18 : h.breakMonths >= 3 ? 6 : 2;
+    if (h.weeklySets) xp.weeklySets = String(h.weeklySets);
+    if (h.methods.length) xp.methods = [...new Set([...(xp.methods || []), ...h.methods])];
+    if (h.limits) xp.limits = h.limits;
+    setA(x => ({ ...x, exercises: ex, experience: xp }));
+    return count;
+  };
   const toggleEx = id => { const n = { ...a.exercises }; if (n[id]) delete n[id]; else n[id] = {}; patch({ exercises: n }); };
 
   const found = useMemo(() => {
@@ -142,7 +161,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             {a.level === 'beginner' && <p className="text-xs text-slate-400">Le coach a choisi pour toi des machines simples à régler, une par grand mouvement. Décoche ce que tu ne veux pas ; il proposera des charges prudentes et les ajustera après tes premières séances.</p>}
             {a.level === 'advanced' && <p className="text-xs text-slate-400">Coche les exercices que tu as déjà pratiqués et indique ta meilleure série récente : « 80 kg pour 5 répétitions » (1 répétition = ton maximum). Le coach part de là, sans programme de débutant.</p>}
             {expert && <p className="text-xs text-slate-400">Pour chaque exercice pratiqué : ta meilleure série (et sa date) et ta séance type actuelle (séries × répétitions × charge). Le coach repart de ta séance type.</p>}
-            {a.level !== 'beginner' && <p className="text-xs text-sky-300">Plus simple : une fois ton compte créé, tu pourras aussi raconter ton passé à l’oral au coach (Coach → Réglages → « Raconte ton passé ») : il remplira tout seul tes exercices et tes records.</p>}
+            {a.level !== 'beginner' && <OnboardingPast sync={sync} weightKg={a.weightKg} onConsent={() => setGameState(prev => ({ ...prev, aiConsent: true }))} onResult={fromStory} />}
             {a.level === 'advanced' && <BreakPicker value={a.experience.breakMonths} onChange={v => setXp({ breakMonths: v })} />}
             <div className="space-y-2">
               {listed.map(c => {

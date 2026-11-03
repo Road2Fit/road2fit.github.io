@@ -225,3 +225,58 @@ describe('raconte ton passé', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('raconte ton passé dans l’assistant d’accueil', () => {
+  it('avancé : sans compte, on peut le créer sur place ; connecté, le récit remplit la liste et la fiche', async () => {
+    const srv = fakeSupabase();
+    const sans = await launch({ empty: true, fetchImpl: srv.fetch, storage: { __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }) } });
+    open.push(sans);
+    await advance(sans, 300);
+    await clickEl(sans, byTest(sans, 'level-advanced'));
+    await clickEl(sans, byTest(sans, 'ob-next'));
+    await setInput(sans, sans.doc.getElementById('ob-w'), '80');
+    for (let i = 0; i < 3; i++) await clickEl(sans, byTest(sans, 'ob-next'));
+    expect(byTest(sans, 'ob-past').textContent).toContain('il faut ton compte');
+    expect(byTest(sans, 'ob-past-text')).toBeNull();
+
+    srv.ai = async (task, body) => {
+      expect(task).toBe('history');
+      expect(body.text).toContain('six ans');
+      return {
+        level: 'expert', years: 6, breakMonths: 4, weeklySets: 0, methods: [], limits: 'genou gauche',
+        exercises: [{ questId: '', catalogId: 'deadlift', customName: '', best: { kg: 170, reps: 2 }, bestDate: '', work: { sets: 4, reps: 5, kg: 140 } }],
+        summary: 'Six ans de pratique.', unclear: '',
+      };
+    };
+    const user = srv.addUser('b@x.fr');
+    const h = await launch({
+      empty: true, fetchImpl: srv.fetch,
+      storage: { __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }), 'rondoufit:account': JSON.stringify({ session: user.session }), 'rondoufit:lastUser': user.id },
+    });
+    open.push(h);
+    await advance(h, 600);
+    await clickEl(h, byTest(h, 'level-expert'));
+    await clickEl(h, byTest(h, 'ob-next'));
+    await setInput(h, h.doc.getElementById('ob-w'), '80');
+    for (let i = 0; i < 3; i++) await clickEl(h, byTest(h, 'ob-next'));
+    await setInput(h, byTest(h, 'ob-past-text'), 'Je fais de la muscu depuis six ans, soulevé de terre 170 pour 2.');
+    await clickEl(h, byTest(h, 'ob-past-send'));
+    expect(await waitFor(h, () => byTest(h, 'ob-past-done'))).toBeTruthy();
+    expect(byTest(h, 'ob-past-done').textContent).toContain('1 exercice(s)');
+    expect(byTest(h, 'ex-deadlift').checked).toBe(true);
+    expect(byTest(h, 'kg-deadlift').value).toBe('170');
+    expect(byTest(h, 'wkg-deadlift').value).toBe('140');
+    await clickEl(h, byTest(h, 'ob-next'));
+    expect(byTest(h, 'xp-years').value).toBe('6');
+    expect(byTest(h, 'break-6').getAttribute('aria-pressed')).toBe('true');
+    for (let i = 0; i < 4 && !byTest(h, 'ob-finish'); i++) await clickEl(h, byTest(h, 'ob-next'));
+    await clickEl(h, byTest(h, 'ob-finish'));
+    await advance(h, 300);
+    const s = saved(h);
+    expect(s.aiConsent).toBe(true);
+    expect(s.coach.experience).toMatchObject({ level: 'expert', years: 6, breakMonths: 6, limits: 'genou gauche' });
+    const dl = s.quests.find(q => q.catalogId === 'deadlift');
+    expect(dl.startValue).toBe(125); // séance type 140 kg, −10 % après 4 mois d'arrêt, arrondi à 2,5 kg
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});
