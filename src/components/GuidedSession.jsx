@@ -4,6 +4,7 @@ import { COACH_CHANGE_BADGES, coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
+import { METHODS } from '../coach/methods';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
 const MINI_KEY = 'rondoufit:miniAnim';
@@ -39,8 +40,15 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const startRest = (sec, next = '') => { try { window.dispatchEvent(new CustomEvent('rondoufit-rest', { detail: { sec, next } })); } catch (e) {} };
 
   // La charge (ou l'aide) se règle entre deux séries : elle s'applique aux séries pas encore faites.
-  const setLoad = v => patch(it.questId, { load: v, loads: loadsOf(d).map((x, i) => (d.done[i] ? x : v)) });
-  const setAssist = v => patch(it.questId, { assist: v, assists: assistsOf(d).map((x, i) => (d.done[i] ? x : v)) });
+  // Avec une forme de séries (pyramide, dégressive…), les séries restantes gardent leurs proportions par rapport à la charge de base.
+  const plan = it && Array.isArray(it.plan) ? it.plan : null;
+  const scaled = (x, v) => { const base = Number(d.load) || 0; if (!plan || !(base > 0)) return v; return Math.round(((Number(x) || 0) * v / base) * 4) / 4; };
+  const setLoad = v => patch(it.questId, { load: v, loads: loadsOf(d).map((x, i) => (d.done[i] ? x : scaled(x, v))) });
+  const setAssist = v => patch(it.questId, { assist: v, assists: assistsOf(d).map((x, i) => (d.done[i] ? x : plan ? Math.max(0, (Number(x) || 0) + (v - (Number(d.assist) || 0))) : v)) });
+  const setLabel = i => (plan && plan[i] ? plan[i].label : 'Série ' + (i + 1));
+  const restAfter = i => (plan && plan[i] && plan[i].rest !== undefined ? plan[i].rest : it.restSec);
+  // superset : on alterne avec l'autre exercice de la paire (15 s après le premier, repos normal après le second)
+  const partnerIdx = it && it.superset ? items.findIndex(x => x.questId === it.superset.partner) : -1;
 
   const toggleSet = i => {
     const wasDone = d.done[i];
@@ -52,10 +60,17 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
       if (!(isLastSet && isLastEx)) {
         const j = d.done.findIndex((x, k) => k > i && !x);
         const nx = items[g.idx + 1];
+        const pd = partnerIdx >= 0 ? g.data[items[partnerIdx].questId] : null;
+        if (pd && pd.done.some(x => !x)) {
+          startRest(it.superset.first ? 15 : it.restSec, 'Superset : ' + items[partnerIdx].name);
+          setSw(null);
+          setG(prev => ({ ...prev, idx: partnerIdx }));
+          return;
+        }
         const next = j >= 0
-          ? `Série ${j + 1}/${d.done.length}${it.kind === 'load' ? ` · ${coachFmt(loadsOf(d)[j])} kg` : it.kind === 'assisted' ? ` · aide ${coachFmt(assistsOf(d)[j])} kg` : ''} · ${d.reps[j]} ${it.timed ? 's' : 'reps'}`
+          ? `${plan ? `${setLabel(j)} (${j + 1}/${d.done.length})` : `Série ${j + 1}/${d.done.length}`}${it.kind === 'load' ? ` · ${coachFmt(loadsOf(d)[j])} kg` : it.kind === 'assisted' ? ` · aide ${coachFmt(assistsOf(d)[j])} kg` : ''} · ${d.reps[j]} ${it.timed ? 's' : 'reps'}`
           : nx ? `Ensuite : ${nx.name}` : '';
-        startRest(it.restSec, next);
+        startRest(restAfter(i), next);
       }
     }
   };
@@ -75,8 +90,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     } else setSw({ i, start: Date.now() });
   };
   const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
-  const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist] });
-  const removeSet = () => { if (d.reps.length > 1) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1), loads: loadsOf(d).slice(0, -1), assists: assistsOf(d).slice(0, -1) }); };
+  const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist], ...(Array.isArray(d.kinds) ? { kinds: [...d.kinds, 'work'] } : {}) });
+  const removeSet = () => { if (d.reps.length > 1) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1), loads: loadsOf(d).slice(0, -1), assists: assistsOf(d).slice(0, -1), ...(Array.isArray(d.kinds) ? { kinds: d.kinds.slice(0, -1) } : {}) }); };
   const goto = idx => { setSw(null); setG(prev => ({ ...prev, idx: Math.max(0, Math.min(items.length - 1, idx)), phase: 'run' })); };
   const doneCount = it ? d.done.filter(Boolean).length : 0;
   const step = it && it.kind === 'load' ? (it.equip === 'Haltères' ? (d.load < 10 ? 1 : 2) : d.load < 10 ? 1 : 2.5) : 2.5;
@@ -133,6 +148,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               </div>
               {(() => { const b = COACH_CHANGE_BADGES[it.change] || COACH_CHANGE_BADGES.new; return <span className={`shrink-0 px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>; })()}
             </div>
+            {(plan || it.superset) && (
+              <div className="bg-slate-950 border border-violet-500/50 rounded-xl p-3 space-y-1" data-testid="guided-method">
+                {plan && <p className="text-sm font-black text-violet-200"><Art name="sparkle" size={16} />{(METHODS[it.method] || {}).label}</p>}
+                {plan && <p className="text-xs text-slate-300">{(METHODS[it.method] || {}).how}</p>}
+                {it.superset && <p className="text-xs font-bold text-sky-200">Superset {it.superset.id} avec {(items[partnerIdx] || {}).name} : une série de chaque, en alternance{it.superset.first ? ' (15 s pour passer à l’autre)' : ', puis le repos'}.</p>}
+              </div>
+            )}
             <details className="text-xs text-slate-400">
               <summary className="font-bold text-slate-300"><Art name="film" />Aperçu animé et conseil du coach</summary>
               <div className="mt-2 space-y-2">
@@ -191,7 +213,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               {d.reps.map((r, i) => (
                 <div key={i} className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2.5 ${d.done[i] ? 'bg-emerald-950/30 border-emerald-500/50' : i === d.done.findIndex(x => !x) ? 'bg-slate-950 border-pink-400/70' : 'bg-slate-950 border-slate-800'}`}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-white">Série {i + 1}</p>
+                    <p className="text-sm font-black text-white">{setLabel(i)}</p>
                     <p className="text-xs text-slate-500">objectif {it.targetReps[i] !== undefined ? it.targetReps[i] : it.goalReps} {it.timed ? 's' : 'reps'}</p>
                     {it.kind === 'load' && <p className="text-xs font-bold text-amber-300">{coachFmt(loadsOf(d)[i])} kg</p>}
                     {it.kind === 'assisted' && <p className="text-xs font-bold text-violet-300">aide {coachFmt(assistsOf(d)[i])} kg</p>}

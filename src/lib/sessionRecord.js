@@ -12,7 +12,7 @@ import { fmtLoads, isMixed } from './setLoads';
 //   guidedLabel : « A », « B »… pour la note automatique d'une séance guidée
 // résultat : { quest, entry, xp, unlocked[], banner: {title, subtitle, badge}, bossDefeated }
 export function applyStrengthSession(q, input) {
-  const { date, setDetails, loads = null, assists = null, rpe, calories, note = '', guidedLabel } = input;
+  const { date, setDetails, loads = null, assists = null, rpe, calories, note = '', guidedLabel, method = null, kinds = null } = input;
   const isKg = q.unit === 'kg';
   const goalSets = Math.max(1, Number(q.goalSets) || 3);
   const goalReps = Math.max(1, Number(q.goalReps) || Number(q.goalValue) || 6);
@@ -79,6 +79,9 @@ export function applyStrengthSession(q, input) {
     goalReps,
     assistanceKg: assistanceUsed,
     ...(loadList && isMixed(loadList) ? { setLoads: loadList } : {}),
+    // forme de séries (pyramide, dégressive…) et type de chaque série : la progression ne juge que les séries principales
+    ...(method ? { method } : {}),
+    ...(Array.isArray(kinds) && kinds.length === setDetails.length && kinds.some(k => k && k !== 'work') ? { setKinds: kinds } : {}),
     ...(assistList && isMixed(assistList) ? { setAssists: assistList } : {}),
     rpe,
     calories,

@@ -155,3 +155,37 @@ describe('séance ratée à rattraper', () => {
     expect(coachMissedSession(st, '2026-11-06')).toEqual({ iso: '2026-11-05' }); // la plus récente ratée
   });
 });
+
+describe('formes de séries et objectif via le coach intelligent', () => {
+  it('forme imposée, style, objectif ; « Annuler » remet tout', async () => {
+    const { undoSnapshot, applyUndo } = await import('./actions');
+    const list = normalizeActions([
+      act('method', { questId: 'q_bench_3x8', method: 'drop_set' }),
+      act('method', { questId: 'q_pullups_3x6', method: 'pyramid' }), // pas pour un exercice au poids du corps : refusé
+      act('method_style', { style: 'classic' }),
+      act('main_goal', { kind: 'strength', questId: 'q_squat_3x6', target: 100, deadline: '2027-03-01', text: '100 kg au squat' }),
+    ], S, today);
+    expect(list.map(a => a.type)).toEqual(['method', 'method_style', 'main_goal']);
+    const snap = undoSnapshot(S, list);
+    const s = applyActions(S, list, today);
+    expect(s.quests.find(q => q.id === 'q_bench_3x8').coachMethod).toBe('drop_set');
+    expect(s.coach.methodStyle).toBe('classic');
+    expect(s.coach.mainGoal).toMatchObject({ kind: 'strength', questId: 'q_squat_3x6', target: 100, deadline: '2027-03-01' });
+    const back = applyUndo(s, snap);
+    expect(back.quests.find(q => q.id === 'q_bench_3x8').coachMethod).toBeUndefined();
+    expect(back.coach.mainGoal == null).toBe(true);
+  });
+
+  it('dictée : échauffement écarté, série lourde et dégressives gardées avec leur type', () => {
+    const [it] = aiDictationItems({ items: [{ kind: 'strength', questId: 'q_bench_3x8', catalogId: '', customName: '', method: 'drop_set', durationMin: 0, distanceKm: 0, rpe: 9, note: '', sets: [
+      { reps: 10, kg: 20, assistKg: 0, seconds: 0, kind: 'warmup' },
+      { reps: 8, kg: 50, assistKg: 0, seconds: 0, kind: 'work' },
+      { reps: 8, kg: 50, assistKg: 0, seconds: 0, kind: 'work' },
+      { reps: 6, kg: 40, assistKg: 0, seconds: 0, kind: 'drop' },
+    ] }] }, S);
+    expect(it.setDetails).toEqual([8, 8, 6]);
+    expect(it.setKinds).toEqual(['work', 'work', 'drop']);
+    expect(it.method).toBe('drop_set');
+    expect(it.summary).toContain('Série dégressive');
+  });
+});

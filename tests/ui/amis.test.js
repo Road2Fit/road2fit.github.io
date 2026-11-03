@@ -42,6 +42,7 @@ describe('édition neutre pour les amis', () => {
     await advance(h, 300);
     expect(ob(h)).toBeTruthy();
     await fill(h, 'ob-name', 'Léa');
+    await clickEl(h, byTest(h, 'level-advanced'));
     await next(h);
     await fill(h, 'ob-age', '28'); await fill(h, 'ob-h', '168'); await fill(h, 'ob-w', '64'); await fill(h, 'ob-t', '60');
     await next(h);
@@ -79,6 +80,61 @@ describe('édition neutre pour les amis', () => {
     expect(s.quests.find(q => q.catalogId === 'squat')).toBeTruthy();
     expect(s.weightHistory).toHaveLength(1);
     expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('débutant : l’assistant choisit les exercices de départ ; expert : séance type, détails et réglages du coach', async () => {
+    const h = await launch({ empty: true, storage: NEUTRAL });
+    open.push(h);
+    await advance(h, 300);
+    expect(byTest(h, 'level-beginner').getAttribute('aria-pressed')).toBe('true');
+    await next(h);
+    await fill(h, 'ob-w', '70');
+    await next(h); await next(h); await next(h);
+    expect(byTest(h, 'ex-leg_press').checked).toBe(true); // machines choisies par le coach
+    expect(byTest(h, 'kg-leg_press')).toBeNull(); // pas de charge à saisir pour un débutant
+    for (let i = 0; i < 4 && !byTest(h, 'ob-finish'); i++) await next(h);
+    await clickEl(h, byTest(h, 'ob-finish'));
+    await advance(h, 300);
+    let st = saved(h);
+    expect(st.coach.experience.level).toBe('beginner');
+    expect(st.quests.length).toBeGreaterThanOrEqual(6);
+    expect(st.quests.every(q => !q.known)).toBe(true);
+    h.close(); open.pop();
+
+    const x = await launch({ empty: true, storage: NEUTRAL });
+    open.push(x);
+    await advance(x, 300);
+    await clickEl(x, byTest(x, 'level-expert'));
+    await next(x);
+    await fill(x, 'ob-w', '80');
+    await next(x); await next(x); await next(x);
+    expect(byTest(x, 'ex-leg_press').checked).toBe(false); // rien de coché pour un expert : il coche ce qu'il a pratiqué
+    await clickEl(x, byTest(x, 'ex-squat'));
+    await setInput(x, byTest(x, 'kg-squat'), '140');
+    await setInput(x, byTest(x, 'wsets-squat'), '4');
+    await setInput(x, byTest(x, 'wreps-squat'), '6');
+    await setInput(x, byTest(x, 'wkg-squat'), '115');
+    await next(x);
+    expect(byTest(x, 'ob-expert')).toBeTruthy();
+    await setInput(x, byTest(x, 'xp-years'), '8');
+    await setInput(x, byTest(x, 'xp-sets'), '15');
+    await clickEl(x, byTest(x, 'xp-rir'));
+    await clickEl(x, byTest(x, 'xp-method-myo_reps'));
+    await setInput(x, byTest(x, 'xp-deload'), '5');
+    await setInput(x, byTest(x, 'xp-limits'), 'épaule droite fragile');
+    for (let i = 0; i < 4 && !byTest(x, 'ob-finish'); i++) await next(x);
+    await clickEl(x, byTest(x, 'ob-finish'));
+    await advance(x, 300);
+    st = saved(x);
+    expect(st.coach.experience).toMatchObject({ level: 'expert', years: 8, weeklySets: 15, rir: true, methods: ['myo_reps'], deloadEvery: 5 });
+    expect(st.coach.cycleWeeks).toBe(5);
+    expect(st.coach.memory.some(m => m.text.includes('épaule droite'))).toBe(true);
+    const sq = st.quests.find(q => q.catalogId === 'squat');
+    expect(sq.known).toBe(true);
+    expect(sq.startValue).toBe(115); // séance type
+    expect(sq.history[0].setDetails).toEqual([6, 6, 6, 6]);
+    expect(st.maxRecords[sq.id].kg).toBe(140);
+    expect(x.errors).toEqual([]);
   }, TIMEOUT);
 
   it('l’étape sauvegarde propose de créer un compte (aucune trace de GitHub)', async () => {

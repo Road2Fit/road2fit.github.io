@@ -31,11 +31,14 @@ export function useGuidedSession({
     if (!session || !session.exercises.length) return;
     const data = {};
     session.exercises.forEach(e => {
+      // forme de séries (pyramide, dégressive…) : charge, aide et type de chaque série viennent du détail e.plan
+      const plan = Array.isArray(e.plan) && e.plan.length ? e.plan : null;
       data[e.questId] = {
-        reps: e.targetReps.slice(),
-        loads: e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
-        assists: e.targetReps.map(() => e.assist || 0), // aide de chaque série
-        done: e.targetReps.map(() => false),
+        reps: plan ? plan.map(p => p.reps) : e.targetReps.slice(),
+        loads: plan ? plan.map(p => p.load || 0) : e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
+        assists: plan ? plan.map(p => p.assist || 0) : e.targetReps.map(() => e.assist || 0), // aide de chaque série
+        kinds: plan ? plan.map(p => p.kind) : null,
+        done: (plan || e.targetReps).map(() => false),
         load: e.load || 0,
         assist: e.assist || 0
       };
@@ -92,6 +95,8 @@ export function useGuidedSession({
         rpe: exerciseRpe,
         calories,
         guidedLabel: g.templateId || '',
+        method: it.method && it.method !== 'straight' ? it.method : null,
+        kinds: Array.isArray(dd.kinds) ? dd.reps.map((_, i) => dd.kinds[i] || 'work').filter((_, i) => dd.done[i]) : null,
       });
       xpEarned += r.xp;
       r.unlocked.forEach(u => newUnlocked.add(u));

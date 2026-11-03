@@ -1,5 +1,6 @@
 // Ce que le coach intelligent reçoit : un résumé texte compact des données utiles (jamais de photo, d'e-mail, de note de pesée ni de prénom).
 import { coachBalance, coachOverview } from '../coach/advice';
+import { experienceLine } from '../coach/experience';
 import { analyzeProgram } from '../coach/program';
 import { coachProfileAt } from '../coach/profiles';
 import { COACH_DAY_NAMES, coachRealEntries, coachSetsOf, getCoachSettings } from '../coach/settings';
@@ -85,6 +86,7 @@ export function coachContext(state, today, { overview } = {}) {
   const p = c.profile || {};
   lines.push(`Profil : ${p.sex === 'f' ? 'femme' : 'homme'}${p.age ? `, ${p.age} ans` : ''}${p.heightCm ? `, ${p.heightCm} cm` : ''}${lastWeight(state) ? `, ${lastWeight(state)} kg` : ''}${state.targetWeightKg ? `, poids visé ${state.targetWeightKg} kg` : ''}.`);
   const gym = Object.keys(c.gymSlots || {}).map(Number).sort((a, b) => toAiDay(a) - toAiDay(b));
+  lines.push(experienceLine(state));
   lines.push(`Réglages : ${c.splitMode === 'trio' ? '3 séances par semaine (mode 3 séances)' : `${c.sessionsPerWeek} séances de muscu par semaine`}, durée ${Number(c.sessionMinutes) ? `${c.sessionMinutes} min` : 'libre'}, jours de salle : ${gym.length ? gym.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ') : 'non précisés'}.`);
   lines.push(`Sport régulier : ${c.sport || 'aucun'}${(c.volleyDays || []).length ? `, jours : ${c.volleyDays.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ')}` : ''}. Matchs à venir : ${(c.matchDates || []).filter(d => d >= today).slice(0, 6).join(', ') || 'aucun'}.`);
   const prof = coachProfileAt(c, today);
@@ -94,6 +96,8 @@ export function coachContext(state, today, { overview } = {}) {
   if (skips.length) lines.push(`Séances de salle annulées : ${skips.join(', ')}.`);
   const extra = (c.gymExtra || []).filter(d => d >= today);
   if (extra.length) lines.push(`Séances en plus (exceptionnelles) : ${extra.join(', ')}.`);
+  const g = c.mainGoal && c.mainGoal.kind ? c.mainGoal : null;
+  lines.push(`Objectif principal : ${g ? `${g.text} (type ${g.kind}${g.target ? `, cible ${g.target}` : ''}${g.deadline ? `, pour le ${g.deadline}` : ''})` : 'aucun'}. Forme des séries : ${c.methodStyle === 'classic' ? 'classique (séries fixes)' : 'variée (le coach alterne les formes)'}.`);
   const mem = Array.isArray(c.memory) ? c.memory : [];
   lines.push(`Ce que tu as retenu de la personne : ${mem.length ? mem.map(m => `[${m.id}] ${m.text}`).join(' ; ') : 'rien pour l’instant'}.`);
 
@@ -104,7 +108,9 @@ export function coachContext(state, today, { overview } = {}) {
       lines.push(`Prochaine séance prévue par l'appli${ov.program ? ' (programme de son coach)' : ''} : ${s.date || (ov.first && ov.first.iso) || ''}${s.estMin ? `, environ ${s.estMin} min` : ''}.`);
       s.exercises.forEach(e => {
         const tgt = `${e.sets}x${(e.targetReps || []).join('-')}${e.timed ? ' s' : ''}${e.kind === 'load' ? ` à ${e.load} kg` : e.kind === 'assisted' ? ` avec ${e.assist} kg d'aide` : ''}`;
-        lines.push(`  · ${e.questId} | ${e.name} : ${tgt}${e.reason ? ` — pourquoi : ${String(e.reason).slice(0, 220)}` : ''}`);
+        const form = e.plan ? ` — forme : ${e.method} (${e.plan.map(p => `${p.reps}${e.kind === 'load' ? '×' + p.load : ''}`).join(', ')})` : '';
+        const sup = e.superset ? ` — superset ${e.superset.id}` : '';
+        lines.push(`  · ${e.questId} | ${e.name} : ${tgt}${form}${sup}${e.reason ? ` — pourquoi : ${String(e.reason).slice(0, 220)}` : ''}${e.methodWhy ? ` ${e.methodWhy}` : ''}`);
       });
       if (Array.isArray(s.notes) && s.notes.length) lines.push(`  Remarques de l'appli : ${s.notes.slice(0, 4).join(' ; ')}`);
     } else {

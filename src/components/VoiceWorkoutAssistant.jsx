@@ -200,6 +200,8 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               assistanceKg: item.assistanceKg,
               ...(item.setLoads ? { setLoads: item.setLoads } : {}),
               ...(item.setAssists ? { setAssists: item.setAssists } : {}),
+              ...(item.setKinds ? { setKinds: item.setKinds } : {}),
+              ...(item.method ? { method: item.method } : {}),
               rpe: item.rpe || 7,
               calories: item.calories,
               goalBeaten: false,

@@ -20,6 +20,8 @@ import { CoachNextSession } from './CoachNextSession';
 import { CoachProgram } from './CoachProgram';
 import { VoiceCallout } from '../VoiceCallout';
 import { CoachChat } from './CoachChat';
+import { CoachGoal } from './CoachGoal';
+import { CoachExperience } from './CoachExperience';
 import { programSession } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
 import { CoachSettings } from './CoachSettings';
@@ -247,12 +249,14 @@ export function CoachPanel({
         </section>
       )}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
+      <CoachGoal gameState={gameState} setGameState={setGameState} />
       <VoiceCallout compact testId="voice-callout-coach" />
       <CoachProgram gameState={gameState} setGameState={setGameState} />
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
         addSel={addSel}
         adjustTarget={adjustTarget}
+        setMethod={(questId, id) => setGameState(prev => ({ ...prev, quests: prev.quests.map(q => (q.id === questId ? { ...q, coachMethod: id === 'auto' ? undefined : id } : q)) }))}
         availQuests={availQuests}
         coach={coach}
         doSwap={doSwap}
@@ -333,7 +337,20 @@ export function CoachPanel({
       </div>
       <div id="coach-reglages" className="scroll-mt-3">
       {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
-      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
+      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Niveau, profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
+        <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('maxima') : null} />
+        {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs" data-testid="method-style">
+          <h3 className="text-sm font-black text-white"><Art name="sparkle" />Forme des séries</h3>
+          <p className="text-slate-400">Variée : le coach alterne séries classiques, pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées et supersets (dès 6 séances sur un exercice, change toutes les deux semaines). Classique : toujours des séries fixes.</p>
+          <div className="flex gap-2">
+            {[['varied', 'Variée'], ['classic', 'Classique']].map(([id, lab]) => (
+              <button key={id} type="button" onClick={() => updateCoach({ methodStyle: id })} aria-pressed={(coach.methodStyle || 'varied') === id} className={`px-3 py-1.5 rounded-lg font-black border ${(coach.methodStyle || 'varied') === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>{lab}</button>
+            ))}
+          </div>
+          <p className="text-slate-500">Une forme précise pour un exercice : « Pourquoi ? / Ajuster » sous l’exercice, dans la prochaine séance.</p>
+        </div>
+
         {/* PROFIL DE TRAVAIL */}
         <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
 

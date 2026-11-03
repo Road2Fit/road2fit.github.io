@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.3',
+    date: '2026-11-03',
+    title: 'Séances variées, objectif et niveau',
+    items: [
+      'Le coach varie la forme des séries : pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées, dernière série au maximum, supersets (change toutes les deux semaines ; séries fixes : Coach → Réglages → Forme des séries → Classique).',
+      'En haut du Coach, « Ton objectif » : force sur un exercice, muscle sur un groupe, répétitions, poids… Le coach adapte tes séances d’après les études (affichées sous l’objectif).',
+      'Dans la séance guidée : chaque série a sa charge, son repos et son explication ; les supersets s’enchaînent tout seuls.',
+      'La dictée comprend les séances particulières (échauffement, série lourde, dégressives, mini-séries) et la progression, les maxima et les objectifs fonctionnent avec n’importe quelle forme.',
+      'Ton niveau réel (débutant, avancé, expert) dès l’accueil ou dans Coach → Réglages → Mon niveau : le débutant n’a rien à régler, l’avancé indique ses exercices et ses records, l’expert détaille son entraînement (séance type, volume, formes connues, cycles, blessures). Plus de programme de débutant pour qui s’entraîne depuis longtemps.',
+    ],
+  },
+  {
     version: '3.2',
     date: '2026-11-02',
     title: 'Séance en plus et séance ratée',

@@ -13,6 +13,7 @@ import { entryAssists, entryLoads, entryTonnage, fmtLoads } from '../lib/setLoad
 import { stripAccents } from '../lib/text';
 import { sportInfo } from '../data/sports';
 import { arenaOf, arenasOf, arenaBand, isOptimized, pushPullSide } from '../data/muscles';
+import { isBeginnerForVolume, personalBand } from './experience';
 
 // ---- Conseils du jour (volley / match) ----
 export function coachDayAdvice(state, today) {
@@ -232,10 +233,10 @@ export function coachBalance(state, today) {
     else if (side === 'push') push += n;
   });
   const first = all.map(e => e.date).sort()[0];
-  const beginner = !first || coachDaysBetween(first, today) < 84;
+  const beginner = isBeginnerForVolume(state, first ? coachDaysBetween(first, today) / 7 : 0);
   const profile = profileOpts(state, today).profile;
   const rows = COACH_ARENAS.map(a => {
-    const band = arenaBand(a, { profile, beginner });
+    const band = personalBand(arenaBand(a, { profile, beginner }), state);
     const avg = Math.round((sets[a] / 4) * 10) / 10;
     const status = avg < band.min ? 'low' : avg < band.good ? 'mid' : isOptimized() && avg > band.max ? 'high' : 'good';
     const missing = status === 'low' || status === 'mid' ? Math.max(1, Math.ceil(band.good - avg)) : 0;

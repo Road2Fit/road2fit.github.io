@@ -6,13 +6,15 @@ import { ARENA_GROUPS } from '../data/arenas';
 import { getTodayISODate } from '../lib/dates';
 import { estimateQuestMax } from '../lib/maxima';
 import { arenaOf } from '../data/muscles';
+import { getExperience } from '../coach/experience';
 
 const RPE_KEY = 'rondoufit:maxUseRpe';
-const readRpe = () => { try { return localStorage.getItem(RPE_KEY) === '1'; } catch (e) { return false; } };
+// sans choix enregistré : activé si la personne dit savoir estimer ses répétitions en réserve (niveau expert)
+const readRpe = fallback => { try { const v = localStorage.getItem(RPE_KEY); return v === null ? fallback : v === '1'; } catch (e) { return fallback; } };
 
 export function MaximaTab({ gameState, setGameState }) {
   const today = getTodayISODate();
-  const [useRpe, setUseRpe] = useState(readRpe);
+  const [useRpe, setUseRpe] = useState(() => readRpe(!!(getExperience(gameState) || {}).rir));
   const toggleRpe = v => {
     setUseRpe(v);
     try { localStorage.setItem(RPE_KEY, v ? '1' : '0'); } catch (e) {}

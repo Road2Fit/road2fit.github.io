@@ -4,6 +4,9 @@ import { coachRealEntries, getCoachSettings } from '../coach/settings';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { SPORTS } from '../data/sports';
 import { makeQuestFromCatalog } from '../lib/questFactory';
+import { METHODS, methodFits } from '../coach/methods';
+import { GOAL_KINDS } from '../coach/goal';
+import { COACH_ARENAS } from '../coach/settings';
 import { fromAiDay } from './context';
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -119,6 +122,30 @@ export function normalizeAction(a, state, today) {
     case 'muscle_mode':
       if (x.mode === 'simple' || x.mode === 'optimized') args = { mode: x.mode };
       break;
+    case 'method': {
+      const q = strengthQuest(state, x.questId);
+      if (!q) break;
+      const kind = q.unit === 'kg' ? 'load' : Number(q.currentAssistanceKg) > 0 ? 'assisted' : 'reps';
+      if (x.method === 'auto' || (METHODS[x.method] && methodFits(x.method, { kind }))) args = { questId: q.id, method: x.method };
+      break;
+    }
+    case 'method_style':
+      if (x.style === 'varied' || x.style === 'classic') args = { style: x.style };
+      break;
+    case 'main_goal': {
+      if (x.clear) { args = { clear: true }; break; }
+      if (!GOAL_KINDS.includes(x.kind)) break;
+      const g = { kind: x.kind, text: String(x.text || '').replace(/\s+/g, ' ').trim().slice(0, 120) };
+      if (x.kind === 'strength' || x.kind === 'reps') { const q = strengthQuest(state, x.questId); if (!q) break; g.questId = q.id; if (!g.text) g.text = q.name; }
+      if (x.kind === 'muscle') { if (!COACH_ARENAS.includes(x.arena)) break; g.arena = x.arena; if (!g.text) g.text = `Plus de muscle : ${x.arena}`; }
+      const t = inRange(x.target, 1, 500);
+      if (t !== null) g.target = Math.round(t * 2) / 2;
+      if (ISO.test(String(x.deadline || '')) && String(x.deadline) >= today) g.deadline = String(x.deadline);
+      if (!g.text) g.text = x.kind === 'weight' ? `Poids : ${g.target} kg` : 'Forme générale';
+      if (x.kind === 'weight' && !g.target) break;
+      args = g;
+      break;
+    }
     default:
       return null;
   }
@@ -217,6 +244,15 @@ export function applyAction(state, a, today) {
       return withCoach({ memory: (coach.memory || []).filter(m => m.id !== x.id) });
     case 'muscle_mode':
       return { ...state, muscleMode: x.mode };
+    case 'method':
+      return { ...state, quests: state.quests.map(q => (q.id === x.questId ? { ...q, coachMethod: x.method === 'auto' ? undefined : x.method } : q)) };
+    case 'method_style':
+      return withCoach({ methodStyle: x.style });
+    case 'main_goal': {
+      if (x.clear) return withCoach({ mainGoal: null });
+      const w = (state.weightHistory || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+      return withCoach({ mainGoal: { ...x, createdAt: today, ...(x.kind === 'weight' ? { startWeight: w ? Number(w.weightKg) : Number(state.userWeightKg) || undefined } : {}) } });
+    }
     default:
       return state;
   }
@@ -225,7 +261,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */
@@ -236,6 +272,10 @@ export function undoSnapshot(state, actions) {
     (COACH_KEYS[a.type] || []).forEach(k => { if (!(k in snap.coach)) snap.coach[k] = coach[k] === undefined ? null : coach[k]; });
     if (a.type === 'body' && a.args.targetWeightKg && !('targetWeightKg' in snap.top)) snap.top.targetWeightKg = state.targetWeightKg === undefined ? null : state.targetWeightKg;
     if (a.type === 'muscle_mode' && !('muscleMode' in snap.top)) snap.top.muscleMode = state.muscleMode || 'simple';
+    if (a.type === 'method') {
+      snap.methods = snap.methods || {};
+      if (!(a.args.questId in snap.methods)) { const q = (state.quests || []).find(x => x.id === a.args.questId); snap.methods[a.args.questId] = q && q.coachMethod ? q.coachMethod : null; }
+    }
     if (a.type === 'adjust' && !(a.args.questId in snap.overrides)) {
       const q = (state.quests || []).find(x => x.id === a.args.questId);
       snap.overrides[a.args.questId] = q && q.coachOverride ? q.coachOverride : null;
@@ -255,6 +295,11 @@ export function applyUndo(state, snap) {
   next.quests = (state.quests || [])
     .filter(q => before.has(q.id) || coachRealEntries(q).length > 0)
     .map(q => {
+      if (snap.methods && q.id in snap.methods) {
+        const m = snap.methods[q.id];
+        if (m) q = { ...q, coachMethod: m };
+        else { const { coachMethod, ...rest } = q; q = rest; }
+      }
       if (!(q.id in (snap.overrides || {}))) return q;
       const o = snap.overrides[q.id];
       if (o) return { ...q, coachOverride: o };

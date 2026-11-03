@@ -3,6 +3,7 @@
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
+import { METHODS, methodLabel } from '../coach/methods';
 
 const n = v => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const r1 = v => Math.round(v * 10) / 10;
@@ -37,7 +38,8 @@ export function aiDictationItems(data, state) {
       return;
     }
 
-    const sets = (Array.isArray(it.sets) ? it.sets : []).filter(s => s && (n(s.reps) > 0 || n(s.seconds) > 0)).slice(0, 12);
+    // les séries d'échauffement ne sont jamais enregistrées ; les autres gardent leur type (série lourde, dégressive, mini-série…)
+    const sets = (Array.isArray(it.sets) ? it.sets : []).filter(s => s && s.kind !== 'warmup' && (n(s.reps) > 0 || n(s.seconds) > 0)).slice(0, 15);
     if (!sets.length) return;
     const timed = quest ? isTimedQuest(quest) : cat ? isTimedCatalog(cat) : sets.every(s => n(s.seconds) > 0 && !n(s.reps));
     const anyKg = sets.some(s => n(s.kg) > 0);
@@ -48,13 +50,17 @@ export function aiDictationItems(data, state) {
     const weightKg = unit === 'kg' ? (anyKg ? Math.max(...loads) : n(quest && quest.currentValue)) : Math.max(...setDetails);
     const assistanceKg = unit === 'reps' ? Math.min(...assists) : 0;
     const differs = arr => arr.some(v => v !== arr[0]);
+    const kinds = sets.map(s => (['top', 'backoff', 'drop', 'mini', 'amrap', 'cluster'].includes(s.kind) ? s.kind : 'work'));
+    const method = METHODS[it.method] && it.method !== 'straight' ? it.method : null;
     out.push({
       ...base, category: (ref && ref.category) || 'Pectoraux', type: 'strength', unit, timed,
       weightKg, assistanceKg, setDetails,
       setLoads: unit === 'kg' && anyKg && differs(loads) ? loads : undefined,
       setAssists: unit === 'reps' && differs(assists) ? assists : undefined,
+      setKinds: kinds.some(k => k !== 'work') ? kinds : undefined,
+      method: method || undefined,
       calories: calculateStrengthCalories({ unit, timed, weightKg: unit === 'kg' ? weightKg : 0, assistanceKg, setDetails, rpe: rpe || 7, userWeightKg }),
-      summary: `${unit === 'kg' ? (differs(loads) && anyKg ? `${loads.join('/')} kg • ` : `${weightKg} kg • `) : ''}[${setDetails.join(' - ')} ${timed ? 's' : 'reps'}]${unit === 'reps' && !timed && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''}${rpe ? ` • ressenti ${rpe}/10` : ''}`,
+      summary: `${unit === 'kg' ? (differs(loads) && anyKg ? `${loads.join('/')} kg • ` : `${weightKg} kg • `) : ''}[${setDetails.join(' - ')} ${timed ? 's' : 'reps'}]${unit === 'reps' && !timed && assistanceKg > 0 ? ` (Aide -${assistanceKg} kg)` : ''}${rpe ? ` • ressenti ${rpe}/10` : ''}${method ? ` • ${methodLabel(method)}` : ''}`,
     });
   });
   return out;

@@ -46,6 +46,7 @@ describe('suivi des muscles : deux modes', () => {
     open.push(h);
     await advance(h, 300);
     await fill(h, 'ob-name', 'Léa');
+    await clickEl(h, byTest(h, 'level-advanced'));
     await next(h);
     await fill(h, 'ob-age', '28'); await fill(h, 'ob-h', '168'); await fill(h, 'ob-w', '64'); await fill(h, 'ob-t', '60');
     await next(h);

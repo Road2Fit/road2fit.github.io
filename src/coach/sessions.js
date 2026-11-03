@@ -4,13 +4,16 @@ import { coachSuggestExercises } from './suggest';
 import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { profileOpts } from './profiles';
+import { applyMethods } from './methodChoice';
+import { planMinutes } from './methods';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
 import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, typeArenas } from '../data/muscles';
 
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
 function coachEstimateMin(exercises) {
-  return Math.round(5 + exercises.reduce((s, e) => s + e.sets * (0.75 + e.restSec / 60), 0));
+  // avec une forme de séries (pyramide, dégressive…), le détail série par série donne la durée ; superset : un seul repos pour la paire
+  return Math.round(5 + exercises.reduce((s, e) => s + (e.plan ? planMinutes(e.plan) : e.sets * (0.75 + (e.superset && e.superset.first ? 15 : e.restSec) / 60)), 0));
 }
 
 // Complète (ou allège) la séance proposée pour tenir la durée voulue par l'utilisateur.
@@ -125,6 +128,9 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   const target = coachTargetMinutes(coach, di.iso, opts);
   if (slot && slot.min > 0) notes.push(`Créneau de salle : ${slot.start}–${slot.end} (${slot.min} min)${target && target < (Number(coach.sessionMinutes) || 0) ? ` : séance adaptée à ${target} min.` : '.'}`);
   exercises = coachFitDuration(state, exercises, di, eff, target, notes);
+  const meth = applyMethods(state, exercises, { iso: di.iso, deload: eff.deload, minutes: target || 0 });
+  exercises = meth.exercises;
+  notes.push(...meth.notes);
   const w = Number(state.userWeightKg) || 82;
   const estMin = coachEstimateMin(exercises);
   const estKcal = exercises.reduce(
@@ -227,15 +233,17 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
     }
     return e;
   });
+  const meth = applyMethods(state, exercises, { iso: dateIso, deload: deloadOn, minutes: 0 });
+  const exercisesM = meth.exercises;
   const w = Number(state.userWeightKg) || 82;
-  const estMin = Math.round(5 + exercises.reduce((s, e) => s + e.sets * (0.75 + e.restSec / 60), 0));
-  const estKcal = exercises.reduce(
+  const estMin = coachEstimateMin(exercisesM);
+  const estKcal = exercisesM.reduce(
     (s, e) => s + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
     0
   );
-  const first = exercises.find(e => e.kind === 'load' && e.load >= 20);
+  const first = exercisesM.find(e => e.kind === 'load' && e.load >= 20);
   const warmup = first
     ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg, avant la première série de travail.`
     : '';
-  return { templateIdx: -1, templateId: 'Perso', date: dateIso, exercises, notes: opts.tired && !opts.deload ? ['Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.'] : [], estMin, estKcal, warmup, custom: true };
+  return { templateIdx: -1, templateId: 'Perso', date: dateIso, exercises: exercisesM, notes: [...(opts.tired && !opts.deload ? ['Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.'] : []), ...meth.notes], estMin, estKcal, warmup, custom: true };
 }

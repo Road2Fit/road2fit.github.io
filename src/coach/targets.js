@@ -1,4 +1,5 @@
 import { PROFILES } from './profiles';
+import { normalizeForProgress } from './methods';
 import { decideProfileTarget } from './profileTarget';
 import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
 
@@ -17,7 +18,8 @@ export function computeExerciseTarget(q, opts = {}) {
   const R = Math.max(1, Number(q.goalReps) || 6);
   const goalAssist = Number(q.goalAssistanceKg) || 0;
   const entries = coachRealEntries(q);
-  const last = entries[entries.length - 1] || null;
+  // dernière séance, quelle que soit sa forme (pyramide, dégressives, séance dictée…) : ramenée à ce qui juge la progression
+  const last = normalizeForProgress(entries[entries.length - 1] || null, kind, R);
   const arena = arenaOf(q);
   const compound = coachIsCompound(q.name);
   const boss = evaluateQuestProgress(q).isBossDefeated;
@@ -150,6 +152,7 @@ export function computeExerciseTarget(q, opts = {}) {
     reason += ' • Semaine de match : une série de moins.';
   }
   reps = Array.from({ length: sets }, (_, i) => reps[i] !== undefined ? reps[i] : reps[reps.length - 1] || R);
+  if (last && last.equivalentOf) reason += ` • Dernière séance à charges différentes : ta meilleure série vaut environ ${last.value} kg pour ${R} reps (max estimé ${last.equivalentOf.best} kg).`;
 
   // Décision de l'utilisateur : elle prime sur la proposition du coach jusqu'à la prochaine séance de cet exercice
   // (voir « Tu décides » dans l'onglet Coach). On garde la proposition du coach pour pouvoir y revenir.

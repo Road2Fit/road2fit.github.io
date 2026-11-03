@@ -5,6 +5,7 @@ import { suggestStart } from '../coach/startSuggestion';
 import { coachRound, coachStep } from '../coach/settings';
 import { estimateOneRm } from './maxima';
 import { isTimedCatalog } from './quests';
+import { detrainFactor, experienceCoachPatch, LEVELS } from '../coach/experience';
 
 // Assistant d'accueil : transforme les réponses d'un nouvel utilisateur en réglages du coach, poids, exercices et records.
 // Fonction pure (testée) : l'interface est dans modals/OnboardingModal.jsx.
@@ -37,8 +38,10 @@ const num = v => {
 
 /**
  * answers = { name, sex, age, heightCm, weightKg, targetKg, goal, sessionsPerWeek, sessionMinutes, gymDays: [0-6], sportDays: [0-6],
- *             exercises: [{ catalogId, kg?, reps? }] }
- * (kg + reps = « j'ai soulevé kg pour reps répétitions » ; reps vide ou 1 = charge maximale ; exercices en répétitions : reps seulement.)
+ *             level: 'beginner'|'advanced'|'expert', experience: { years, breakMonths, weeklySets, rir, methods, priorities, periodization, deloadEvery, limits },
+ *             exercises: [{ catalogId, kg?, reps?, date?, workSets?, workReps?, workKg? }] }
+ * (kg + reps = « j'ai soulevé kg pour reps répétitions » ; reps vide ou 1 = charge maximale ; exercices en répétitions : reps seulement ;
+ *  workSets × workReps à workKg = séance type actuelle d'un expert, elle sert de charge de départ.)
  */
 export function applyOnboarding(prev, a, today) {
   const goal = GOALS.find(g => g.id === a.goal) || GOALS[GOALS.length - 1];
@@ -56,6 +59,11 @@ export function applyOnboarding(prev, a, today) {
     volleyDays: (a.sportDays || []).map(Number).sort(),
     gymSlots: gymDays.reduce((o, d) => ({ ...o, [d]: { start: '18:00', end: '19:30' } }), {}),
   };
+  const level = LEVELS.some(l => l.id === a.level) ? a.level : null;
+  const exp = level ? { ...(level === 'expert' ? a.experience || {} : { breakMonths: (a.experience || {}).breakMonths || 0 }), level } : null;
+  Object.assign(coach, experienceCoachPatch(coach, exp, today));
+  const known = level === 'advanced' || level === 'expert';
+  const factor = detrainFactor(exp && exp.breakMonths);
 
   let state = {
     ...prev,
@@ -88,7 +96,7 @@ export function applyOnboarding(prev, a, today) {
       const oneRm = reps === 1 ? kg : (estimateOneRm(kg, reps) || { mean: kg }).mean;
       const step = coachStep({ catalogId: c.id, name: c.name }, c.defaultStart);
       const pct = P ? P.pctStart / 100 : pctForReps((Number(sug.goalReps) || 8) + 3) / 100;
-      startV = Math.max(step, coachRound(oneRm * pct, step));
+      startV = Math.max(step, coachRound(oneRm * pct * factor, step));
       goalValue = Math.max(coachRound(startV * 1.2, step), startV + step);
       rec.kg = Math.round(oneRm * 10) / 10;
     } else if (unit === 'reps' && reps > 1) {
@@ -97,7 +105,17 @@ export function applyOnboarding(prev, a, today) {
     }
     const gSets = sug.goalSets;
     const gReps = sug.goalReps;
-    const setDetails = Array(gSets).fill(unit === 'reps' ? startV : gReps);
+    let setDetails = Array(gSets).fill(unit === 'reps' ? startV : gReps);
+    // séance type actuelle (expert) : elle donne directement la charge et les séries de départ
+    const wSets = Math.max(0, Math.min(10, Math.round(num(ex.workSets))));
+    const wReps = Math.max(0, Math.min(50, Math.round(num(ex.workReps))));
+    const wKg = num(ex.workKg);
+    if (wSets && wReps && (unit === 'reps' || wKg > 0)) {
+      const step = coachStep({ catalogId: c.id, name: c.name }, c.defaultStart);
+      if (unit === 'kg') { startV = Math.max(step, coachRound(wKg * factor, step)); goalValue = Math.max(goalValue || 0, coachRound(startV * 1.15, step), startV + step); }
+      else startV = Math.max(1, Math.round(wReps * factor));
+      setDetails = Array(wSets).fill(unit === 'reps' ? startV : wReps);
+    }
     const assist = unit === 'reps' ? Number(c.defaultStartAssistance) || 0 : 0;
     const quest = {
       id,
@@ -108,6 +126,7 @@ export function applyOnboarding(prev, a, today) {
       unit,
       timed: isTimedCatalog(c) ? true : undefined,
       goalMode: c.defaultGoalMode || 'sets_reps',
+      known: known || undefined,
       level: 1,
       icon: c.icon,
       startValue: startV,
@@ -123,8 +142,8 @@ export function applyOnboarding(prev, a, today) {
         id: `h_start_${Date.now()}_${i}`,
         date: today,
         value: startV,
-        sets: gSets,
-        reps: unit === 'reps' ? startV : gReps,
+        sets: setDetails.length,
+        reps: setDetails[0],
         setDetails,
         assistanceKg: assist,
         rpe: 7,
@@ -133,7 +152,7 @@ export function applyOnboarding(prev, a, today) {
         note: `Point de départ — Niveau 1 (${c.name}) • créé par l’assistant d’accueil`,
       }],
     };
-    if (rec.kg) state.maxRecords[id] = { kg: rec.kg, date: today };
+    if (rec.kg) state.maxRecords[id] = { kg: rec.kg, date: /^d{4}-d{2}-d{2}$/.test(ex.date || '') && ex.date <= today ? ex.date : today };
     state = { ...state, quests: [...state.quests, quest] };
   });
   return state;

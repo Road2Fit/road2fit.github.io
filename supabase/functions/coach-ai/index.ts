@@ -43,6 +43,8 @@ Règles :
 - Cardio : durationMin et distanceKm (0 si non dit), sets vide.
 - rpe : ressenti de 1 à 10 si la personne le laisse entendre (« facile » ≈ 6, « dur » ≈ 8, « à fond », « j'ai galéré » ≈ 9), sinon 0.
 - note : remarque utile très courte dite par la personne (douleur, sensation, matériel), sinon "".
+- Formes de séance : garde chaque série telle qu'elle a été faite et donne son type dans kind : warmup (échauffement, ne sera pas compté), top (série lourde), backoff (série allégée après la série lourde), drop (dégressive : charge baissée sans repos), mini (mini-série de repos-pause ou de myo-reps), amrap (série au maximum), cluster (série coupée par une courte pause), work (série normale).
+- method : la forme de l'exercice : straight (rien de particulier), pyramid (charge qui monte), reverse_pyramid (charge qui baisse), top_backoff, drop_set, rest_pause, myo_reps, cluster, amrap. Superset (deux exercices en alternance) : deux items normaux.
 - N'invente aucun exercice qui n'a pas été dit. unclear : ce que tu n'as pas compris, en une phrase, sinon "".`;
 
 const COACH = `Tâche : répondre à la personne comme son coach, à partir de ses données réelles (jointes à son dernier message), et proposer si besoin des changements que l'application appliquera après son accord.
@@ -64,6 +66,10 @@ Actions (actions) : seulement si la personne demande un changement ou si c'est c
 - remember {"text":"..."} : retient une information durable (blessure, matériel disponible, préférence, contrainte). Fais-le chaque fois que la personne en donne une.
 - forget {"id":"..."} : oublie une information retenue.
 - muscle_mode {"mode":"simple"|"optimized"} : suivi en 5 grands groupes ou en 14 muscles.
+- method {"questId":"...","method":"auto"|"straight"|"pyramid"|"reverse_pyramid"|"top_backoff"|"drop_set"|"rest_pause"|"myo_reps"|"cluster"|"amrap"} : impose une forme de séries pour un exercice (auto = le coach choisit). Seulement si la personne demande une forme précise.
+- method_style {"style":"varied"|"classic"} : formes de séries variées (le coach alterne) ou séries fixes.
+- main_goal {"kind":"strength"|"muscle"|"reps"|"weight"|"general","text":"...","questId":"...","arena":"...","target":n,"deadline":"AAAA-MM-JJ"} ou {"clear":true} : objectif principal (strength : max visé en kg sur questId ; reps : répétitions visées en une série sur questId ; muscle : groupe arena tel qu'écrit dans les données ; weight : poids visé en kg).
+Objectif et méthodes : quand la personne donne un but, enregistre-le (main_goal) et explique comment l'appli l'y emmène, avec ces repères d'études et seulement eux, sans inventer de chiffres : plus de séries par semaine = plus de muscle, repère environ 10 séries ou plus par muscle (Schoenfeld 2017) ; finir plus près de l'échec fait plus de muscle, la force y est moins sensible (Robinson 2024) ; séries lourdes de 3 à 6 répétitions et séries fractionnées pour la force et la vitesse (Latella 2019) ; dégressives, repos-pause, myo-reps et supersets donnent autant de muscle que les séries classiques en moins de temps (Sødal 2023, Enes 2021, Zhang 2025) ; à volume égal aucune forme n'est magique (Angleri 2017). L'appli adapte déjà les formes de séries à l'objectif, au profil et au temps disponible.
 Jours : 1 = lundi … 7 = dimanche. Dates à partir d'aujourd'hui. N'utilise que des questId et catalogId présents dans les données.
 Dates : un jour cité sans date (« jeudi ») est le PROCHAIN jour de ce nom à partir d'aujourd'hui (voir le calendrier fourni), jamais celui de la semaine d'après.
 Planning de l'appli : au plus sessionsPerWeek séances par semaine (du lundi au dimanche), séances déjà faites cette semaine comprises, seulement sur les jours de salle, avec au moins 48 h entre deux séances. Avant de proposer, vérifie que tes réglages donneront bien les dates voulues (compare avec « Séances prévues par l'appli » et « Séances déjà faites cette semaine ») : pour une séance de plus juste une fois, utilise extra_session ; change sessionsPerWeek ou gymDays seulement si la personne veut changer son rythme habituel. Dans reply, cite les dates exactes (« jeudi 5 novembre »).`;
@@ -90,7 +96,8 @@ const SCHEMAS: Record<string, unknown> = {
       items: obj({
         kind: { type: "string", enum: ["strength", "cardio"] },
         questId: str, catalogId: str, customName: str,
-        sets: { type: "array", items: obj({ reps: int, kg: num, assistKg: num, seconds: int }) },
+        sets: { type: "array", items: obj({ reps: int, kg: num, assistKg: num, seconds: int, kind: { type: "string", enum: ["work", "warmup", "top", "backoff", "drop", "mini", "amrap", "cluster"] } }) },
+        method: { type: "string", enum: ["straight", "pyramid", "reverse_pyramid", "top_backoff", "drop_set", "rest_pause", "myo_reps", "cluster", "amrap"] },
         durationMin: num, distanceKm: num, rpe: int, note: str,
       }),
     },
@@ -101,7 +108,7 @@ const SCHEMAS: Record<string, unknown> = {
     actions: {
       type: "array",
       items: obj({
-        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "remember", "forget", "muscle_mode"] },
+        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "remember", "forget", "muscle_mode", "method", "method_style", "main_goal"] },
         label: str, args: str,
       }),
     },

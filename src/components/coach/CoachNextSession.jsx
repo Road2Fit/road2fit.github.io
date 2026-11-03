@@ -1,4 +1,5 @@
 import { Art } from '../Art';
+import { METHODS, METHOD_IDS, methodFits } from '../../coach/methods';
 import { useState } from 'react';
 import { openMovement } from '../../lib/movement';
 import { coachSwapOptions } from '../../coach/advice';
@@ -12,7 +13,7 @@ import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
 export function CoachNextSession({
-  addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  setMethod, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
@@ -146,13 +147,21 @@ export function CoachNextSession({
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
               const uniform = e.targetReps.every(r => r === e.targetReps[0]);
               const ru = e.timed ? 's' : 'reps';
-              const repsTxt = uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
-              const loadTxt = e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · aide ${coachFmt(e.assist)} kg` : '';
+              // forme de séries : détail série par série (« 12 × 50 · 10 × 55 · 8 × 60 kg »)
+              const planTxt = e.plan ? e.plan.map(p => `${p.reps}${e.kind === 'load' ? ` × ${coachFmt(p.load)}` : e.kind === 'assisted' ? ` (aide ${coachFmt(p.assist)})` : ''}`).join(' · ') + (e.kind === 'load' ? ' kg' : '') : '';
+              const repsTxt = e.plan ? planTxt : uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
+              const loadTxt = e.plan ? '' : e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · aide ${coachFmt(e.assist)} kg` : '';
               return (
                 <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-extrabold text-white text-sm truncate">{e.icon} {e.name}</p>
+                      {(e.plan || e.superset) && (
+                        <p className="flex flex-wrap gap-1 my-0.5" data-testid="method-chip">
+                          {e.plan && <span className="px-2 py-0.5 rounded-full bg-violet-900/60 border border-violet-500/50 text-xs font-bold text-violet-200">{(METHODS[e.method] || {}).label}</span>}
+                          {e.superset && <span className="px-2 py-0.5 rounded-full bg-sky-900/60 border border-sky-500/50 text-xs font-bold text-sky-200">Superset {e.superset.id}</span>}
+                        </p>
+                      )}
                       <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
                     </div>
                     <div className="shrink-0 flex items-center gap-1">
@@ -172,6 +181,15 @@ export function CoachNextSession({
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>
                   {openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
+                  {openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
+                  {openEx[e.questId] && setMethod && (
+                    <label className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
+                      <select value={(gameState.quests.find(q => q.id === e.questId) || {}).coachMethod || 'auto'} onChange={ev => setMethod(e.questId, ev.target.value)} data-testid="method-select" className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
+                        <option value="auto">Le coach choisit</option>
+                        {METHOD_IDS.filter(id => methodFits(id, e)).map(id => <option key={id} value={id}>{METHODS[id].label}</option>)}
+                      </select>
+                    </label>
+                  )}
                   {openEx[e.questId] && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-slate-500 font-bold">Tu décides :</span>
