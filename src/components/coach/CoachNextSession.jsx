@@ -9,11 +9,12 @@ import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
 
 import { card } from './ui';
+import { CustomSetsEditor } from './CustomSetsEditor';
 import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
 export function CoachNextSession({
-  setMethod, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  setMethod, setCustom, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
@@ -22,6 +23,7 @@ export function CoachNextSession({
   const [openEx, setOpenEx] = useState({});
   const toggleEx = id => setOpenEx(o => ({ ...o, [id]: !o[id] }));
   const [showRating, setShowRating] = useState(false);
+  const [customFor, setCustomFor] = useState(null); // exercice dont on règle la forme personnalisée
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -182,14 +184,30 @@ export function CoachNextSession({
                   </button>
                   {openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
                   {openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
-                  {openEx[e.questId] && setMethod && (
-                    <label className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
-                      <select value={(gameState.quests.find(q => q.id === e.questId) || {}).coachMethod || 'auto'} onChange={ev => setMethod(e.questId, ev.target.value)} data-testid="method-select" className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
-                        <option value="auto">Le coach choisit</option>
-                        {METHOD_IDS.filter(id => methodFits(id, e)).map(id => <option key={id} value={id}>{METHODS[id].label}</option>)}
-                      </select>
-                    </label>
-                  )}
+                  {openEx[e.questId] && setMethod && (() => {
+                    const q = gameState.quests.find(x => x.id === e.questId) || {};
+                    const hasCustom = Array.isArray(q.coachCustom) && q.coachCustom.length > 0;
+                    // « Personnalisée » : ouvre le réglage série par série (déjà réglée : on la reprend tout de suite)
+                    const pickMethod = id => {
+                      if (id === 'custom') { if (hasCustom) setMethod(e.questId, 'custom'); setCustomFor(e.questId); return; }
+                      setCustomFor(null);
+                      setMethod(e.questId, id);
+                    };
+                    return (
+                      <>
+                        <label className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
+                          <select value={customFor === e.questId ? 'custom' : q.coachMethod || 'auto'} onChange={ev => pickMethod(ev.target.value)} data-testid="method-select" className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
+                            <option value="auto">Le coach choisit</option>
+                            {METHOD_IDS.filter(id => methodFits(id, e)).map(id => <option key={id} value={id}>{METHODS[id].label}</option>)}
+                          </select>
+                          {q.coachMethod === 'custom' && customFor !== e.questId && <button type="button" onClick={() => setCustomFor(e.questId)} className="px-2 py-1 rounded-lg bg-violet-900/60 border border-violet-500/50 text-violet-100" data-testid="custom-edit">Modifier mes séries</button>}
+                        </label>
+                        {customFor === e.questId && setCustom && (
+                          <CustomSetsEditor e={e} onCancel={() => setCustomFor(null)} onSave={rows => { setCustom(e, rows); setCustomFor(null); }} />
+                        )}
+                      </>
+                    );
+                  })()}
                   {openEx[e.questId] && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-slate-500 font-bold">Tu décides :</span>

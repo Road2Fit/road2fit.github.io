@@ -47,3 +47,36 @@ describe('formes de séries', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 });
+
+describe('forme personnalisée', () => {
+  it('je règle chaque série moi-même : le coach la retient et la reprend', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await advance(h, 300);
+    const why = [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Pourquoi ? / Ajuster'));
+    await clickEl(h, why);
+    await setInput(h, byTest(h, 'method-select'), 'custom');
+    const ed = byTest(h, 'custom-editor');
+    expect(ed).toBeTruthy();
+    const n0 = ed.querySelectorAll('[data-testid="custom-row"]').length;
+    await clickEl(h, byTest(h, 'custom-add'));
+    const rows = () => [...byTest(h, 'custom-editor').querySelectorAll('[data-testid="custom-row"]')];
+    expect(rows()).toHaveLength(n0 + 1);
+    const last = rows()[rows().length - 1];
+    await setInput(h, last.querySelector('[data-testid="custom-reps"]'), '15');
+    await setInput(h, last.querySelector('[data-testid="custom-kind"]'), 'drop');
+    await setInput(h, last.querySelector('[data-testid="custom-rest"]'), '0');
+    const load = last.querySelector('[data-testid="custom-load"]');
+    if (load) await setInput(h, load, String(Math.round(Number(load.value) * 0.5)));
+    await clickEl(h, byTest(h, 'custom-save'));
+    await advance(h, 300);
+    const q = saved(h).quests.find(x => x.coachMethod === 'custom');
+    expect(q).toBeTruthy();
+    expect(q.coachCustom).toHaveLength(n0 + 1);
+    expect(q.coachCustom.at(-1)).toMatchObject({ reps: 15, kind: 'drop', rest: 0 });
+    const chips = [...h.doc.querySelectorAll('[data-testid="method-chip"]')].map(c => c.textContent).join(' ');
+    expect(chips).toContain('Personnalisée');
+    expect(byTest(h, 'custom-edit')).toBeTruthy(); // « Modifier mes séries »
+    expect(h.errors).toEqual([]);
+  }, 120000);
+});

@@ -54,6 +54,12 @@ export const METHODS = {
     how: 'Séries classiques, mais la dernière : autant de répétitions propres que possible. Le coach s’en sert pour régler la suite.',
     kinds: ['load', 'assisted', 'reps'],
   },
+  // forme réglée série par série par la personne (quest.coachCustom) : le coach la reprend à chaque séance
+  custom: {
+    label: 'Personnalisée', short: 'Tes séries, réglées une par une.',
+    how: 'Pour la changer : « Modifier mes séries ».',
+    kinds: ['load', 'assisted', 'reps', 'timed'],
+  },
 };
 export const METHOD_IDS = Object.keys(METHODS);
 export const methodLabel = id => (METHODS[id] || METHODS.straight).label;
@@ -64,6 +70,26 @@ export function methodFits(id, e) {
   if (!m) return false;
   const k = e.timed ? 'timed' : e.kind === 'load' ? 'load' : e.kind === 'assisted' ? 'assisted' : 'reps';
   return m.kinds.includes(k);
+}
+
+/** Types de série proposés dans la forme personnalisée. */
+export const CUSTOM_KINDS = [['work', 'Normale'], ['top', 'Lourde'], ['backoff', 'Allégée'], ['drop', 'Dégressive (sans repos avant)'], ['mini', 'Mini-série'], ['amrap', 'Au maximum']];
+const KIND_LABEL = { top: 'lourde', backoff: 'allégée', drop: 'dégressive', mini: 'mini-série', amrap: 'au maximum' };
+
+/**
+ * Forme personnalisée : séries saisies (charge, aide, reps, repos, type) → modèle relatif à la charge de base de ce jour-là
+ * (ratio de charge, écart d'aide), pour que la forme suive la progression. base = { kind, load, assist }.
+ */
+export function customFromSets(sets, base) {
+  const W = Number(base.load) || 0;
+  const A = Number(base.assist) || 0;
+  return sets.slice(0, 12).map(s => ({
+    reps: Math.max(1, Math.min(100, Math.round(Number(s.reps) || 1))),
+    ratio: base.kind === 'load' && W > 0 && Number(s.load) > 0 ? Math.round((Number(s.load) / W) * 1000) / 1000 : 1,
+    assistDelta: base.kind === 'assisted' ? r1((Number(s.assist) || 0) - A) : 0,
+    rest: Math.max(0, Math.min(600, Math.round(Number(s.rest) || 0))),
+    kind: CUSTOM_KINDS.some(([k]) => k === s.kind) ? s.kind : 'work',
+  }));
 }
 
 // charge pour `reps` répétitions quand `base` vaut pour `R` répétitions (tableau % du 1RM)
@@ -85,6 +111,11 @@ export function buildPlan(id, e) {
   const set = (reps, load, kind, label, restAfter = rest, assist = A) => ({ reps: Math.max(1, Math.round(reps)), load: e.kind === 'load' ? rnd(load) : 0, assist: e.kind === 'assisted' ? r1(assist) : 0, rest: restAfter, kind, label });
   const straight = () => (e.targetReps || Array(N).fill(R)).slice(0, N).map((r, i) => set(r, W, 'work', `Série ${i + 1}`));
   switch (id) {
+    case 'custom':
+      if (Array.isArray(e.custom) && e.custom.length) {
+        return e.custom.map((c, i) => set(c.reps, W * (Number(c.ratio) || 1), c.kind || 'work', `Série ${i + 1}${KIND_LABEL[c.kind] ? ` (${KIND_LABEL[c.kind]})` : ''}`, Number.isFinite(Number(c.rest)) ? Number(c.rest) : rest, Math.max(0, A + (Number(c.assistDelta) || 0))));
+      }
+      return straight();
     case 'pyramid':
       return Array.from({ length: N }, (_, i) => { const reps = R + 2 * (N - 1 - i); return set(reps, loadFor(W, R, reps), 'work', `Série ${i + 1}${i === N - 1 ? ' (la plus lourde)' : ''}`); });
     case 'reverse_pyramid':
@@ -154,7 +185,7 @@ export function normalizeForProgress(entry, kind, R) {
   const heaviest = Math.max(...loads);
   if (!(heaviest > 0) || loads[loads.length - 1] >= heaviest || new Set(loads).size < 2) return e;
   // seulement une forme prévue pour descendre (série lourde d'abord) ; une charge baissée parce que c'était trop dur garde la charge tenue à la fin
-  const planned = e.method === 'reverse_pyramid' || e.method === 'top_backoff' || (Array.isArray(e.setKinds) && e.setKinds.some(k => k === 'top' || k === 'backoff'));
+  const planned = e.method === 'reverse_pyramid' || e.method === 'top_backoff' || e.method === 'custom' || (Array.isArray(e.setKinds) && e.setKinds.some(k => k === 'top' || k === 'backoff'));
   if (!planned) return e;
   const best = Math.max(...e.setDetails.map((r, i) => loads[i] * (1 + (Number(r) || 0) / 30)));
   const equiv = Math.round((best / (1 + R / 30)) * 4) / 4;

@@ -126,7 +126,7 @@ export function normalizeAction(a, state, today) {
       const q = strengthQuest(state, x.questId);
       if (!q) break;
       const kind = q.unit === 'kg' ? 'load' : Number(q.currentAssistanceKg) > 0 ? 'assisted' : 'reps';
-      if (x.method === 'auto' || (METHODS[x.method] && methodFits(x.method, { kind }))) args = { questId: q.id, method: x.method };
+      if (x.method === 'auto' || (x.method !== 'custom' && METHODS[x.method] && methodFits(x.method, { kind }))) args = { questId: q.id, method: x.method };
       break;
     }
     case 'method_style':

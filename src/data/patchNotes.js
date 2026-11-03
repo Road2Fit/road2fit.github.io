@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.4',
+    date: '2026-11-03',
+    title: 'Séries personnalisées',
+    items: [
+      'Sous chaque exercice de la prochaine séance (« Pourquoi ? / Ajuster » → Forme des séries → Personnalisée), règle chaque série toi-même : répétitions, charge ou aide, repos, type (normale, lourde, allégée, dégressive, mini-série, au maximum).',
+      'Le coach retient ta forme et la reprend aux séances suivantes, avec des charges qui suivent ta progression (mêmes écarts entre les séries). « Modifier mes séries » pour la changer.',
+    ],
+  },
+  {
     version: '3.3.2',
     date: '2026-11-03',
     title: 'Micro sur ordinateur',

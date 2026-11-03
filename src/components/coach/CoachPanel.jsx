@@ -21,6 +21,7 @@ import { CoachProgram } from './CoachProgram';
 import { VoiceCallout } from '../VoiceCallout';
 import { CoachChat } from './CoachChat';
 import { CoachGoal } from './CoachGoal';
+import { customFromSets } from '../../coach/methods';
 import { CoachExperience } from './CoachExperience';
 import { CoachPast } from './CoachPast';
 import { programSession } from '../../coach/program';
@@ -257,6 +258,10 @@ export function CoachPanel({
       <CoachNextSession
         addSel={addSel}
         adjustTarget={adjustTarget}
+        setCustom={(e, rows) => {
+          const custom = customFromSets(rows, { kind: e.kind, load: e.load, assist: e.assist });
+          setGameState(prev => ({ ...prev, quests: prev.quests.map(q => (q.id === e.questId ? { ...q, coachMethod: 'custom', coachCustom: custom } : q)) }));
+        }}
         setMethod={(questId, id) => setGameState(prev => ({ ...prev, quests: prev.quests.map(q => (q.id === questId ? { ...q, coachMethod: id === 'auto' ? undefined : id } : q)) }))}
         availQuests={availQuests}
         coach={coach}

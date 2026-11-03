@@ -1,7 +1,7 @@
 // Formes de séries : détail série par série, choix par le coach, progression quelle que soit la forme faite.
 import { describe, expect, it } from 'vitest';
 import { DEMO_STATE } from '../../tests/ui/demo';
-import { METHOD_IDS, buildPlan, methodFits, normalizeForProgress, withMethod } from './methods';
+import { METHOD_IDS, buildPlan, customFromSets, methodFits, normalizeForProgress, withMethod } from './methods';
 import { applyMethods } from './methodChoice';
 import { computeExerciseTarget } from './targets';
 
@@ -106,5 +106,20 @@ describe('choix de la forme par le coach', () => {
     const r = applyMethods(st({ methodStyle: 'classic', mainGoal: { kind: 'muscle', arena: 'Pectoraux', text: 'plus de pectoraux' } }), [ex('q_bench_3x8')], { iso: '2026-10-21' });
     expect(r.exercises[0].sets).toBe(4);
     expect(r.notes.join(' ')).toContain('une série de plus');
+  });
+});
+
+describe('forme personnalisée', () => {
+  it('retenue relativement à la charge du jour : la même forme suit la progression', () => {
+    const custom = customFromSets([{ reps: 10, load: 60, rest: 120, kind: 'work' }, { reps: 6, load: 75, rest: 180, kind: 'top' }, { reps: 12, load: 45, rest: 0, kind: 'drop' }], { kind: 'load', load: 60 });
+    expect(custom.map(c => c.ratio)).toEqual([1, 1.25, 0.75]);
+    const later = buildPlan('custom', { ...E, load: 64, custom });
+    expect(later.map(p => [p.reps, p.load, p.rest, p.kind])).toEqual([[10, 65, 120, 'work'], [6, 80, 180, 'top'], [12, 47.5, 0, 'drop']]);
+    const q = DEMO_STATE.quests.find(x => x.id === 'q_bench_3x8');
+    const st = { ...DEMO_STATE, quests: DEMO_STATE.quests.map(x => (x.id === q.id ? { ...x, coachMethod: 'custom', coachCustom: custom } : x)) };
+    const r = applyMethods(st, [{ ...E, questId: q.id }], { iso: '2026-10-21' }).exercises[0];
+    expect(r.method).toBe('custom');
+    expect(r.plan).toHaveLength(3);
+    expect(r.methodWhy).toContain('personnalisée');
   });
 });

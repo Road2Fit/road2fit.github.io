@@ -85,7 +85,9 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
       ex = { ...ex, sets: ex.sets + 1, targetReps: [...ex.targetReps, ex.targetReps[ex.targetReps.length - 1]] };
       prioBoost.add(e.arena);
     }
-    if (q.coachMethod && q.coachMethod !== 'auto') return withMethod(ex, q.coachMethod, 'Forme de séries choisie par toi (Ajuster).');
+    if (q.coachMethod === 'custom') {
+      if (Array.isArray(q.coachCustom) && q.coachCustom.length) return withMethod({ ...ex, custom: q.coachCustom }, 'custom', 'Ta forme personnalisée : le coach la reprend à chaque séance, avec des charges qui suivent ta progression.');
+    } else if (q.coachMethod && q.coachMethod !== 'auto') return withMethod(ex, q.coachMethod, 'Forme de séries choisie par toi (Ajuster).');
     if (style === 'classic') return withMethod(ex, 'straight', '');
     if (deload) return withMethod(ex, 'straight', 'Semaine allégée : séries classiques.');
     if (ex.timed) return withMethod(ex, 'straight', '');
