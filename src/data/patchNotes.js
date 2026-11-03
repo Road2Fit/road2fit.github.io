@@ -7,7 +7,7 @@ export const PATCH_NOTES = [
     title: 'Amis à jour et épreuves de rang simplifiées',
     items: [
       'Amis : les records que tes amis rentrent dans « Mes maxima » apparaissent maintenant sur leur profil, et leurs changements se publient depuis tous leurs appareils (pas seulement celui où ils ont activé les amis).',
-      'Épreuves de rang plus simples (moins de jours, plus de calories à brûler), et jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul.',
+      'Épreuves de rang plus simples (moins de jours demandés, plus aucune condition de calories), et jamais plus de 1 000 EXP bloqués : au-delà, le rang est franchi tout seul.',
     ],
   },
   {
