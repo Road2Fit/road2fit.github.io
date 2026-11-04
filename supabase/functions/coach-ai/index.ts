@@ -320,7 +320,7 @@ Deno.serve(async (req) => {
       output_config: { effort: conf.effort, format: { type: "json_schema", schema: SCHEMAS[task] } },
       system: [
         { type: "text", text: `${COMMON}\n\n${conf.prompt}` },
-        { type: "text", text: `Catalogue des exercices (identifiant | nom | type | unité) :\n${clip(body.catalog, 20_000)}`, cache_control: { type: "ephemeral" } },
+        { type: "text", text: `Catalogue des exercices (identifiant | nom | type | unité) :\n${clip(body.catalog, 45_000)}`, cache_control: { type: "ephemeral" } },
       ],
       messages,
     } as any);

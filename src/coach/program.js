@@ -6,6 +6,7 @@
 //   exercises: [{ questId, sets, reps: [..] (une valeur par série ; secondes si chronométré), load (kg ou null), assist (kg ou null), rest (s ou null) }] }] }],
 //   log: { 'w0:s1': '2026-11-03' } (séances faites ou passées), skipped: { clé: true }, paused }
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
+import { normalizeSlang } from '../data/slang';
 import { arenaOf } from '../data/muscles';
 import { addDaysISO, getWeekStart } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
@@ -40,8 +41,9 @@ export function programLineName(line) {
  * à la sauvegarde, le coach intelligent tranche (exercice existant ou nouvel exercice).
  */
 export function parseProgramLine(line, quests = [], opts = {}) {
-  const text = String(line || '').replace(/(\d),(\d)/g, '$1.$2').trim();
-  if (!text) return null;
+  const written = String(line || '').replace(/(\d),(\d)/g, '$1.$2').trim();
+  if (!written) return null;
+  const text = normalizeSlang(written); // argot de salle traduit (« dc », « rdl », « 2 plaques de chaque côté »…)
   const [p0] = parseSpokenWorkout(text, quests).filter(x => x.type === 'strength');
   // Nom écrit en entier (« Curl haltères ») : il passe avant la reconnaissance vocale, plus approximative (« curl » → curl barre)
   const STOP = new Set(['kg', 'kilo', 'kilos', 'aide', 'elastique', 'series', 'serie', 'reps', 'sec', 'min', 'avec', 'les', 'des', 'sur', 'top', 'set', 'back', 'off', 'rir', 'rpe', 'derniere', 'singles', 'single', 'standard', 'competition', 'biset', 'poids', 'corps', 'leste', 'lestee', 'lestes', 'lestees']);
@@ -75,7 +77,7 @@ export function parseProgramLine(line, quests = [], opts = {}) {
     .sort((x, y) => y.sc[0] - x.sc[0] || y.sc[1] - x.sc[1] || (x.quest ? -1 : 0) - (y.quest ? -1 : 0))[0] || null;
   // exercice imposé ou trouvé par son nom sans que la dictée le reconnaisse : la ligne est lue quand même
   const p = p0 || (named ? { ...(parseSpokenWorkout(`squat ${text.replace(/^[^\d+]*/, '')}`, [])[0] || { setDetails: [8, 8, 8], unit: 'reps', assistanceKg: 0 }), questId: null, catalogRef: null, timed: false } : null);
-  if (!p && !named) return { ok: false, raw: text, name: programLineName(text) };
+  if (!p && !named) return { ok: false, raw: written, name: programLineName(written) };
   let quest = !forced && p0 && p0.questId ? quests.find(q => q.id === p0.questId) : null;
   let catalog = quest || forced ? null : (p0 && p0.catalogRef) || null;
   const parsedHits = (quest || catalog) ? (score((quest || catalog).name, (quest || catalog).unit) || [0])[0] : 0;
@@ -83,12 +85,12 @@ export function parseProgramLine(line, quests = [], opts = {}) {
     quest = named.quest || quests.find(q => named.catalog && q.catalogId === named.catalog.id) || null;
     catalog = quest ? null : named.catalog;
   }
-  if (!p || (!quest && !catalog)) return { ok: false, raw: text, name: programLineName(text) };
+  if (!p || (!quest && !catalog)) return { ok: false, raw: written, name: programLineName(written) };
   // « 2x5s » sur un exercice qui ne se compte pas en secondes : ce n'est pas le même exercice (isométrie…)
   const chosen = quest || catalog;
   const secs = /\d+\s*(?:x|×)\s*\d+\s*s\b/i.test(text);
   const chosenTimed = quest ? isTimedQuest(quest) : !!(catalog && (catalog.timed || /secondes|gainage|planche|isom/i.test(normSearch(catalog.name))));
-  if (!forced && secs && !chosenTimed) return { ok: false, raw: text, name: programLineName(text) };
+  if (!forced && secs && !chosenTimed) return { ok: false, raw: written, name: programLineName(written) };
   const covered = words(chosen.name).filter(x => lineW.has(x)).length;
   const uncertain = !forced && lineW.size >= 2 && covered / lineW.size < 0.5;
   const plain = text.toLowerCase().replace(/rir\s*\d+(?:-\d+)?|rpe\s*\d+/g, ' ').replace(/(?:elastique|aide|assiste|delestage)\s*(?:de|a)?\s*\d+(?:\.\d+)?\s*(?:kg|kilos?)?/g, ' ');
@@ -101,7 +103,7 @@ export function parseProgramLine(line, quests = [], opts = {}) {
   const unit = quest ? quest.unit : catalog ? catalog.unit : p.unit;
   return {
     ok: true,
-    raw: text,
+    raw: written,
     questId: quest ? quest.id : null,
     catalogId: quest ? quest.catalogId : catalog ? catalog.id : null,
     name: (quest || catalog || p).name,

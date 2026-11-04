@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeSlang } from '../data/slang';
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
 import { FINE_GROUPS, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 import { isTimedCatalog } from '../lib/quests';
@@ -27,13 +28,14 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
   const ORDER = optimized ? [...FINE_GROUPS.map(g => g.id), 'Course & Cardio', 'Volley-ball'] : ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
   const groupOf = c => (optimized ? fineGroupOf({ ...c, catalogId: c.id }) : c.category);
   const tokens = normSearch(query).split(/\s+/).filter(Boolean);
+  const slangTokens = normSearch(normalizeSlang(query)).split(/\s+/).filter(Boolean); // « dc », « rdl », « ohp »…
   const results = EXERCISE_CATALOG
     .filter(c => {
       if (accept && !accept(c)) return false;
       const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : (groupOf(c) === filter || (optimized && secondGroupOf({ ...c, catalogId: c.id }) === filter)) && c.type !== 'cardio');
       if (!inFilter) return false;
       const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''} ${c.brands || ''}`);
-      return tokens.every(t => hay.includes(t));
+      return tokens.every(t => hay.includes(t)) || (slangTokens.join(' ') !== tokens.join(' ') && slangTokens.every(t => hay.includes(t)));
     })
     .sort((a, b) => ORDER.indexOf(groupOf(a)) - ORDER.indexOf(groupOf(b)));
   const selected = EXERCISE_CATALOG.find(c => c.id === value);

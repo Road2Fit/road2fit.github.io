@@ -1,5 +1,6 @@
 // Ce que le coach intelligent reçoit : un résumé texte compact des données utiles (jamais de photo, d'e-mail, de note de pesée ni de prénom).
 import { coachBalance, coachOverview } from '../coach/advice';
+import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
 import { analyzeProgram } from '../coach/program';
@@ -21,7 +22,8 @@ let catalogCacheN = 0;
 export function catalogText() {
   if (!catalogCache || catalogCacheN !== EXERCISE_CATALOG.length) { // le catalogue commun peut grandir pendant la séance
     catalogCacheN = EXERCISE_CATALOG.length;
-    catalogCache = EXERCISE_CATALOG.map(c => `${c.id} | ${c.name} | ${c.type === 'cardio' ? 'cardio' : 'muscu'} | ${c.unit}${isTimedCatalog(c) ? ' (durée)' : ''}`).join('\n');
+    catalogCache = EXERCISE_CATALOG.map(c => `${c.id} | ${c.name} | ${c.type === 'cardio' ? 'cardio' : 'muscu'} | ${c.unit}${isTimedCatalog(c) ? ' (durée)' : ''}`).join('\n')
+      + `\n\nArgot de salle (à comprendre dans tout ce que dit ou écrit la personne : terme = sens) :\n${slangText()}`;
   }
   return catalogCache;
 }

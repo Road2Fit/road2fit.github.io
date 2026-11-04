@@ -1,4 +1,5 @@
 import { calculateCardioCalories, calculateStrengthCalories } from '../lib/calories';
+import { normalizeSlang } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
 import { stripAccents } from '../lib/text';
@@ -68,7 +69,8 @@ const VOICE_COMMON_WORDS = new Set([
 export function parseSpokenWorkout(rawText, existingQuests = [], userWeightKg = 82) {
   if (!rawText || !rawText.trim()) return [];
 
-  const textWithDigits = normalizeSpokenNumbers(rawText);
+  // argot de salle traduit d'abord (« dc » → développé couché, « 2 plaques de chaque côté » → 100 kg, « @8 » → RPE 8)
+  const textWithDigits = normalizeSpokenNumbers(normalizeSlang(normalizeSpokenNumbers(rawText)));
   const normText = stripAccents(textWithDigits);
 
   // Construction de la liste complète de cibles (Quêtes perso + Dictionnaire vocal)

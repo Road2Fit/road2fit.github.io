@@ -7,7 +7,7 @@ import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
+export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
@@ -65,6 +65,10 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           <button onClick={toggleBigText} className={row}>
             <Art name="text" size={22} bare />
             <span>Texte : {prefs.bigText ? 'grand' : 'normal'}</span>
+          </button>
+          <button onClick={close(onOpenLexicon)} className={row} data-testid="open-lexicon">
+            <Art name="book" size={22} bare />
+            <span>Lexique de la salle (DC, RDL, top set, pump…)</span>
           </button>
           <button onClick={close(onOpenOnboarding)} className={row} data-testid="open-onboarding">
             <Art name="compass" size={22} bare />

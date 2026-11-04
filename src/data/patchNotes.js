@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.7',
+    date: '2026-11-04',
+    title: 'L’argot de la salle compris partout',
+    items: [
+      'Plus de 200 mots et abréviations de musculation compris par la dictée, la saisie d’un programme, la recherche d’exercice et le coach : DC, SDT, RDL, OHP, bench, pull-up, élév lat, top set, back-off, @8, à l’échec, « 2 plaques de chaque côté » (= 100 kg), barre à vide…',
+      'Nouveau : Plus → « Lexique de la salle », pour chercher un mot (pump, sèche, superset, PR, natty…).',
+    ],
+  },
+  {
     version: '3.6.3',
     date: '2026-11-04',
     title: 'Programme d’un coach : lest et nouveaux exercices',

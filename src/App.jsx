@@ -52,6 +52,7 @@ import { useRewards } from './hooks/useRewards';
 import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
 import { OnboardingModal } from './modals/OnboardingModal';
+import { LexiconModal } from './modals/LexiconModal';
 import './data/sharedExercises'; // catalogue commun (exercices créés par le coach) : copie locale chargée tout de suite
 import { useSharedExercises } from './hooks/useSharedExercises';
 import { needsOnboarding } from './lib/onboarding';
@@ -89,6 +90,7 @@ export function App() {
 
   const { toast, triggerToast, dismissToast } = useToast();
   const [obOpen, setObOpen] = useState(false);
+  const [lexOpen, setLexOpen] = useState(false);
   useEffect(() => { setQuestFilter('all'); }, [gameState.muscleMode]); // les groupes changent avec le mode : on repart de « tous »
   const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
   useEffect(() => { // « Me connecter » depuis le coach intelligent
@@ -358,6 +360,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           onExport={handleExportJSON}
           onGoTab={goToTab}
           onOpenOnboarding={() => setObOpen(true)}
+          onOpenLexicon={() => setLexOpen(true)}
           onOpenSync={openSync}
           onReset={() => setConfirmResetOpen(true)}
           onRestore={handleRestoreSafetyCopy}
@@ -377,6 +380,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
       {accountOpen && <AccountModal sync={sync} recovery={recovery} heroName={gameState.heroName} onRenameHero={name => setGameState(prev => ({ ...prev, heroName: name }))} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
+      {lexOpen && <LexiconModal onClose={() => setLexOpen(false)} />}
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />
       )}
