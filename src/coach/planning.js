@@ -120,7 +120,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       else if (m.upper) doneTypes.push('UPPER');
     });
     const needed = COACH_TYPE_ORDER.filter(t => !doneTypes.includes(t));
-    remaining = Math.min(needed.length, Math.max(0, 3 - doneDays.length));
+    remaining = Math.min(needed.length, Math.max(0, 3 - doneDays.filter(d => !extraSet.has(d)).length));
     const fixedM = [
       ...doneDays.map(d => coachDayMuscles(state, d)),
       ...(lastBefore ? [coachDayMuscles(state, lastBefore)] : []),
@@ -187,7 +187,12 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
     days: info.map(i => ({
       ...i,
       type: plannedTypes[i.iso] || null,
-      status: strengthDays.has(i.iso) ? 'done' : planned.includes(i.iso) ? 'planned' : i.isMatch ? 'match' : i.isVolley ? 'volley' : 'rest'
+      status: strengthDays.has(i.iso) ? 'done' : planned.includes(i.iso) ? 'planned' : i.isMatch ? 'match' : i.isVolley ? 'volley' : 'rest',
+      // une journée peut cumuler la muscu et le sport (journée double) : les deux sont donnés séparément
+      gym: strengthDays.has(i.iso) ? 'done' : planned.includes(i.iso) ? 'planned' : null,
+      extra: extraSet.has(i.iso),
+      skipped: (coach.gymSkips || []).includes(i.iso),
+      sportKind: i.isMatch ? 'match' : i.isVolley ? 'sport' : null
     })),
     planned
   };

@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.8',
+    date: '2026-11-04',
+    title: 'Journées doubles, séances en plus et alerte de mise à jour',
+    items: [
+      'Ma semaine : touche un jour pour ajouter une séance de muscu en plus juste ce jour-là (le reste de la semaine ne bouge pas), annuler la salle, ou ajouter ou retirer ton sport.',
+      'Journée double : un même jour peut avoir la muscu ET ton sport (ex. salle puis entraînement le jeudi). Le coach retire alors les jambes ce jour-là. Tu peux aussi le demander au coach intelligent.',
+      'Profil de travail « Automatique » : si tu veux perdre ou prendre du poids, le coach passe en hypertrophie (charges modérées à lourdes, près de l’échec) pour garder ou construire du muscle. D’après les études, c’est le déficit calorique qui fait perdre le gras, pas les séries longues.',
+      'Alerte de mise à jour corrigée : l’appli vérifie aussi quand tu fais défiler la page, et une pastille « Mise à jour à faire » reste en haut tant que tu n’as pas rafraîchi.',
+    ],
+  },
+  {
     version: '3.7',
     date: '2026-11-04',
     title: 'L’argot de la salle compris partout',

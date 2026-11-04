@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PROFILES, coachProfileAt, pctForReps, profileOpts } from './profiles';
+import { PROFILES, activeProfile, coachProfileAt, pctForReps, profileOpts, weightDirection } from './profiles';
 import { computeExerciseTarget } from './targets';
 
 const TODAY = '2026-10-21';
@@ -144,5 +144,23 @@ describe('profils : objectif d’un exercice', () => {
     expect(allegee.sets).toBe(normal.sets - 1);
     expect(allegee.load).toBeLessThan(normal.load);
     expect(allegee.profile).toBe('hypertrophie');
+  });
+});
+
+describe('profil automatique selon l’objectif de poids', () => {
+  const w = (kg, date = '2026-10-20') => ({ id: 'w' + kg, date, weightKg: kg });
+  it('sens de l’objectif : perdre, prendre, garder ; rien sans pesée ni objectif', () => {
+    expect(weightDirection({ targetWeightKg: 75, userWeightKg: 82, weightHistory: [] })).toBe(null); // valeur par défaut de l'appli
+    expect(weightDirection({ targetWeightKg: 75, weightHistory: [w(82)] })).toBe('lose');
+    expect(weightDirection({ targetWeightKg: 80, weightHistory: [w(72)] })).toBe('gain');
+    expect(weightDirection({ targetWeightKg: 72.5, weightHistory: [w(72)] })).toBe('keep');
+    expect(weightDirection({ weightHistory: [], userWeightKg: 90, coach: { mainGoal: { kind: 'weight', target: 80 } } })).toBe('lose');
+  });
+  it('perdre ou prendre du poids → hypertrophie ; un profil choisi reste prioritaire ; maintenir → réglage d’origine', () => {
+    expect(activeProfile({ targetWeightKg: 75, weightHistory: [w(82)] }, TODAY)).toMatchObject({ id: 'hypertrophie', fromWeight: 'lose' });
+    expect(activeProfile({ targetWeightKg: 80, weightHistory: [w(72)] }, TODAY)).toMatchObject({ id: 'hypertrophie', fromWeight: 'gain' });
+    expect(activeProfile({ targetWeightKg: 75, weightHistory: [w(82)], coach: { workProfile: 'puissance' } }, TODAY).id).toBe('puissance');
+    expect(activeProfile({ targetWeightKg: 72, weightHistory: [w(72)] }, TODAY).id).toBe(null);
+    expect(profileOpts({ targetWeightKg: 75, weightHistory: [w(82)] }, TODAY).profile).toBe('hypertrophie');
   });
 });

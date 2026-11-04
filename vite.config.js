@@ -16,8 +16,12 @@ function versionFile() {
   };
 }
 
+// numéro de la version construite (dernière note) : comparé à version.json en ligne pour savoir s'il y a plus récent
+const { PATCH_NOTES: NOTES } = await import(pathToFileURL(path.resolve('src/data/patchNotes.js')).href);
+
 export default defineConfig({
   base: './',
+  define: { __APP_VERSION__: JSON.stringify((NOTES[0] && NOTES[0].version) || '') },
   plugins: [react({ jsxImportSource: 'art-jsx' }), versionFile()], // src/jsx : les emojis affichés deviennent les logos maison
   resolve: { alias: { 'art-jsx/jsx-runtime': path.resolve('src/jsx/jsx-runtime.js'), 'art-jsx/jsx-dev-runtime': path.resolve('src/jsx/jsx-dev-runtime.js') } },
   build: { outDir: 'dist', sourcemap: false, chunkSizeWarningLimit: 700 },

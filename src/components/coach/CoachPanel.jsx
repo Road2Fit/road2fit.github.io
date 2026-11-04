@@ -324,6 +324,8 @@ export function CoachPanel({
 
       {/* SEMAINE */}
       <CoachWeek
+        coach={coach}
+        updateCoach={updateCoach}
         sport={sportInfo(coach.sport)}
         dayShort={dayShort}
         first={first}
@@ -363,7 +365,7 @@ export function CoachPanel({
         </div>
 
         {/* PROFIL DE TRAVAIL */}
-        <CoachProfile coach={coach} today={today} updateCoach={updateCoach} w0={w0} />
+        <CoachProfile coach={coach} state={gameState} today={today} updateCoach={updateCoach} w0={w0} />
 
         <CoachCycle updateCoach={updateCoach} w0={w0} weekStart0={weekStart0} />
 

@@ -46,7 +46,7 @@ export const PROFILES = {
   },
 };
 const PROFILE_IDS = Object.keys(PROFILES);
-export const PROFILE_CHOICES = [{ id: 'auto', label: 'Automatique (comme avant)' }, ...PROFILE_IDS.map(id => ({ id, label: `${PROFILES[id].icon} ${PROFILES[id].label}` }))];
+export const PROFILE_CHOICES = [{ id: 'auto', label: 'Automatique (selon ton objectif)' }, ...PROFILE_IDS.map(id => ({ id, label: `${PROFILES[id].icon} ${PROFILES[id].label}` }))];
 
 // % du 1RM selon le nombre de répétitions possibles (tableau NSCA jusqu'à 12 ; au-delà, estimation approchée)
 const POINTS = [[1, 100], [2, 95], [3, 93], [4, 90], [5, 87], [6, 85], [7, 83], [8, 80], [9, 77], [10, 75], [12, 67], [15, 62], [20, 55], [30, 45]];
@@ -79,7 +79,51 @@ export function coachProfileAt(coach, iso) {
   return { id: PROFILES[id] ? id : null, fromCycle: false, cycleIndex: null };
 }
 
+// Profil automatique selon l'objectif de poids (poids visé comparé au dernier poids, écart d'au moins 1 kg).
+// Ce que disent les études :
+//  - pour perdre du gras, c'est le déficit calorique qui compte : à effort égal (séries jusqu'à l'échec), charges lourdes
+//    (≈ 80 % du max) ou légères (≈ 60 %) font perdre autant de gras (Carlson et al. 2022, essai croisé randomisé, PMID 35998256) ;
+//  - pendant un déficit, la force se maintient mais la prise de muscle est freinée, surtout au-delà de ≈ 500 kcal par jour
+//    (Murphy et Koehler 2022, méta-analyse, Scand J Med Sci Sports, doi 10.1111/sms.14075) ;
+//  - les revues pour la sèche conseillent de garder un entraînement de musculation exigeant pour protéger le muscle,
+//    avec une perte de 0,5 à 1 % du poids par semaine (Helms et al. 2014, JISSN, PMC4033492).
+// Donc : perdre du poids → hypertrophie (charges modérées à lourdes, près de l'échec) plutôt que l'endurance de force,
+// qui ne fait pas perdre plus de gras ; prendre du poids → hypertrophie ; maintenir → réglage d'origine.
+const lastWeightOf = state => {
+  const w = ((state && state.weightHistory) || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
+  return w ? Number(w.weightKg) || 0 : Number(state && state.userWeightKg) || 0;
+};
+
+/** 'lose' | 'gain' | 'keep' | null (pas de poids visé ou pas de poids connu) */
+export function weightDirection(state) {
+  const coach = getCoachSettings(state || {});
+  const g = coach.mainGoal && coach.mainGoal.kind === 'weight' ? Number(coach.mainGoal.target) || 0 : 0;
+  // le poids visé par défaut de l'appli ne compte pas : il faut un objectif « poids » donné au coach ou au moins une pesée
+  if (!g && !((state && state.weightHistory) || []).length) return null;
+  const target = g || Number(state && state.targetWeightKg) || 0;
+  const cur = lastWeightOf(state);
+  if (!target || !cur) return null;
+  if (target <= cur - 1) return 'lose';
+  if (target >= cur + 1) return 'gain';
+  return 'keep';
+}
+
+export const WEIGHT_PROFILE_WHY = {
+  lose: 'Tu veux perdre du poids : le coach garde des charges modérées à lourdes, près de l’échec, pour protéger tes muscles. C’est le déficit calorique qui fait perdre le gras, pas les séries longues.',
+  gain: 'Tu veux prendre du poids : le coach vise la prise de muscle (8 à 12 répétitions proches de l’échec).',
+};
+
+/** Profil réellement utilisé à une date : choisi par la personne (ou par cycle), sinon déduit de l'objectif de poids. */
+export function activeProfile(state, iso) {
+  const coach = getCoachSettings(state || {});
+  const p = coachProfileAt(coach, iso);
+  if (p.id) return { ...p, fromWeight: null };
+  const dir = weightDirection(state);
+  if (dir === 'lose' || dir === 'gain') return { ...p, id: 'hypertrophie', fromWeight: dir };
+  return { ...p, fromWeight: null };
+}
+
 /** Options à passer à computeExerciseTarget pour le jour `iso`. */
 export function profileOpts(state, iso) {
-  return { profile: coachProfileAt(getCoachSettings(state), iso).id, maxRecords: (state && state.maxRecords) || {} };
+  return { profile: activeProfile(state, iso).id, maxRecords: (state && state.maxRecords) || {} };
 }

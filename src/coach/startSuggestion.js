@@ -1,7 +1,7 @@
 
 import { estimateOneRm, estimateQuestMax } from '../lib/maxima';
 import { isTimedCatalog, isTimedQuest } from '../lib/quests';
-import { PROFILES, coachProfileAt } from './profiles';
+import { PROFILES, activeProfile } from './profiles';
 import { coachIsCompound, coachRound, coachStep, getCoachSettings } from './settings';
 import { arenaOf } from '../data/muscles';
 
@@ -47,7 +47,7 @@ export function relativeStrength(state, arena, today, catalog) {
  */
 export function suggestStart(c, state, today, catalog) {
   const coach = getCoachSettings(state);
-  const profileId = coachProfileAt(coach, today).id;
+  const profileId = activeProfile(state, today).id;
   const P = profileId ? PROFILES[profileId] : null;
   const compound = coachIsCompound(c.name);
   const base = {

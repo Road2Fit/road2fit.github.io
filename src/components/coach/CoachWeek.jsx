@@ -1,9 +1,42 @@
+import { useState } from 'react';
 import { Art } from '../Art';
-import { COACH_TYPES } from '../../coach/settings';
+import { COACH_TYPES, coachDayLabel } from '../../coach/settings';
 import { card } from './ui';
 
+const uniq = list => Array.from(new Set(list)).sort();
 
-export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today }) {
+// « Ma semaine » : chaque jour peut cumuler la muscu ET le sport (journée double). Toucher un jour (à venir) ouvre ses
+// réglages : séance de muscu en plus juste ce jour-là (coach.gymExtra, sans changer le reste de la semaine), salle annulée
+// (coach.gymSkips), sport en plus ou annulé (coach.volleyExtra / volleySkips).
+export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, sport, today, updateCoach }) {
+  const [sel, setSel] = useState(null);
+  const allDays = ov.weeks.flatMap(w => w.days);
+  const selDay = allDays.find(d => d.iso === sel) || null;
+
+  // ce que montre la case « muscu » d'un jour : séance faite, prévue, séance personnalisée du coach, ou rien
+  const gymOf = d => {
+    if (d.gym === 'done') return { icon: '✅', label: 'Fait', done: true };
+    if (plan && d.iso === plan.date) return { icon: '💪', label: 'Ma séance' };
+    if (d.gym === 'planned') {
+      if (plan && first && d.iso === first.iso) return null; // remplacée par la séance personnalisée
+      const p = plannedMap[d.iso];
+      const label = d.type ? COACH_TYPES[d.type].label : p && ov.templates[p.templateIdx] ? `Séance ${ov.templates[p.templateIdx].id}` : 'Muscu';
+      return { icon: '💪', label };
+    }
+    return null;
+  };
+
+  const act = patch => { if (updateCoach) updateCoach(patch); };
+  const addGym = iso => act({ gymExtra: uniq([...(coach.gymExtra || []), iso]), gymSkips: (coach.gymSkips || []).filter(x => x !== iso) });
+  const removeExtra = iso => act({ gymExtra: (coach.gymExtra || []).filter(x => x !== iso) });
+  const skipGym = iso => act({ gymSkips: uniq([...(coach.gymSkips || []), iso]), gymExtra: (coach.gymExtra || []).filter(x => x !== iso) });
+  const unskipGym = iso => act({ gymSkips: (coach.gymSkips || []).filter(x => x !== iso) });
+  const addSport = iso => act({ volleyExtra: uniq([...(coach.volleyExtra || []), iso]), volleySkips: (coach.volleySkips || []).filter(x => x !== iso) });
+  const removeSport = iso => (coach.volleyExtra || []).includes(iso)
+    ? act({ volleyExtra: (coach.volleyExtra || []).filter(x => x !== iso) })
+    : act({ volleySkips: uniq([...(coach.volleySkips || []), iso]) });
+
+  const btn = 'px-3 py-2 rounded-lg text-xs font-black border';
   return (
     <section className={card}>
       <h3 className="font-black text-white"><Art name="calendar" />Ma semaine</h3>
@@ -16,34 +49,91 @@ export function CoachWeek({ dayShort, first, ov, plan, plannedMap, sport, today 
           </p>
           <div className="grid grid-cols-7 gap-1.5">
             {w.days.map(d => {
-              const p = plannedMap[d.iso];
-              const map = {
-                done: ['✅', 'Fait', 'border-emerald-500/50 bg-emerald-950/20'],
-                planned: ['💪', d.type ? COACH_TYPES[d.type].label : p ? `Séance ${ov.templates[p.templateIdx] ? ov.templates[p.templateIdx].id : ''}` : 'Muscu', 'border-pink-500/60 bg-pink-950/20'],
-                volley: [sport.icon, sport.cap, 'border-sky-500/40 bg-sky-950/20'],
-                match: ['🏆', 'Match', 'border-amber-500/50 bg-amber-950/20'],
-                rest: ['😴', 'Repos', 'border-slate-800 bg-slate-950']
-              };
-              let m = map[d.status];
-              if (plan && d.status !== 'done') {
-                if (d.iso === plan.date) m = ['💪', 'Ma séance', map.planned[2]];
-                else if (first && d.iso === first.iso && d.status === 'planned') m = map.rest;
-              }
+              const g = gymOf(d);
+              const sp = d.sportKind === 'match' ? { icon: '🏆', label: 'Match' } : d.sportKind ? { icon: sport.icon, label: sport.cap } : null;
+              const both = g && sp;
+              const tone = g && g.done ? 'border-emerald-500/50 bg-emerald-950/20'
+                : both ? 'border-pink-500/60 bg-gradient-to-b from-pink-950/30 to-sky-950/40'
+                : g ? 'border-pink-500/60 bg-pink-950/20'
+                : d.sportKind === 'match' ? 'border-amber-500/50 bg-amber-950/20'
+                : sp ? 'border-sky-500/40 bg-sky-950/20'
+                : 'border-slate-800 bg-slate-950';
+              const canEdit = d.iso >= today && !!updateCoach;
               return (
-                <div key={d.iso} className={`rounded-lg border p-1.5 text-center ${m[2]} ${d.iso === today ? 'ring-2 ring-pink-400' : ''}`}>
-                  <p className="text-xs font-bold text-slate-400">{dayShort[d.dow]} {d.iso.slice(8, 10)}</p>
-                  <p className="text-base leading-tight">{m[0]}</p>
-                  <p className="text-[9px] font-bold text-slate-200 leading-tight">{m[1]}</p>
-                  {d.status === 'planned' && !d.legsOk && !d.type && <p className="text-[8px] text-sky-300 leading-tight">sans jambes</p>}
-                  {d.status === 'planned' && d.slot && <p className="text-[8px] text-slate-400 leading-tight">{d.slot.start}</p>}
-                </div>
+                <button
+                  key={d.iso}
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => setSel(sel === d.iso ? null : d.iso)}
+                  aria-label={`${coachDayLabel(d.iso)} : ${[g && `muscu (${g.label})`, sp && sp.label].filter(Boolean).join(' et ') || 'repos'}`}
+                  aria-pressed={sel === d.iso}
+                  data-testid={`week-day-${d.iso}`}
+                  className={`rounded-lg border p-1 text-center flex flex-col items-center gap-0.5 min-w-0 ${tone} ${d.iso === today ? 'ring-2 ring-pink-400' : ''} ${sel === d.iso ? 'outline outline-2 outline-white' : ''}`}
+                >
+                  <span className="text-[11px] font-bold text-slate-400">{dayShort[d.dow]} {d.iso.slice(8, 10)}</span>
+                  {g && (
+                    <span className="flex flex-col items-center leading-tight">
+                      <span className="text-sm">{g.icon}</span>
+                      <span className="text-[9px] font-bold text-slate-100 break-words">{g.label}</span>
+                      {d.extra && !g.done && <span className="text-[8px] text-emerald-300">en plus</span>}
+                      {!g.done && !d.legsOk && (!d.type || sp) && <span className="text-[8px] text-sky-300">sans jambes</span>}
+                      {!g.done && d.slot && <span className="text-[8px] text-slate-400">{d.slot.start}</span>}
+                    </span>
+                  )}
+                  {both && <span className="w-full border-t border-dashed border-slate-600" />}
+                  {sp && (
+                    <span className="flex flex-col items-center leading-tight">
+                      <span className="text-sm">{sp.icon}</span>
+                      <span className="text-[9px] font-bold text-slate-100 break-words">{sp.label}</span>
+                    </span>
+                  )}
+                  {!g && !sp && (
+                    <span className="flex flex-col items-center leading-tight">
+                      <span className="text-sm">😴</span>
+                      <span className="text-[9px] font-bold text-slate-300">{d.skipped ? 'Annulée' : 'Repos'}</span>
+                    </span>
+                  )}
+                </button>
               );
             })}
           </div>
         </div>
       ))}
+
+      {selDay && (() => {
+        const g = gymOf(selDay);
+        const isSport = selDay.sportKind === 'sport';
+        return (
+          <div className="bg-slate-950 border border-slate-700 rounded-xl p-3 space-y-2" data-testid="week-day-panel">
+            <p className="text-sm font-black text-white">{coachDayLabel(selDay.iso)}</p>
+            <div className="flex flex-wrap gap-2">
+              {selDay.gym === 'done' ? (
+                <span className="text-xs text-emerald-300 font-bold">Séance de muscu déjà faite ✅</span>
+              ) : g || selDay.gym === 'planned' ? (
+                selDay.extra
+                  ? <button type="button" onClick={() => removeExtra(selDay.iso)} className={`${btn} bg-slate-800 border-slate-600 text-slate-100`}>Retirer la séance en plus</button>
+                  : <button type="button" onClick={() => skipGym(selDay.iso)} className={`${btn} bg-slate-800 border-slate-600 text-slate-100`}>Pas de salle ce jour</button>
+              ) : selDay.skipped ? (
+                <button type="button" onClick={() => unskipGym(selDay.iso)} className={`${btn} bg-pink-600 border-pink-400 text-white`}>Remettre la séance</button>
+              ) : (
+                <button type="button" onClick={() => addGym(selDay.iso)} className={`${btn} bg-pink-600 border-pink-400 text-white`} data-testid="week-add-gym">💪 + Séance de muscu en plus</button>
+              )}
+              {selDay.sportKind !== 'match' && (
+                isSport
+                  ? <button type="button" onClick={() => removeSport(selDay.iso)} className={`${btn} bg-slate-800 border-slate-600 text-slate-100`}>Pas {sport.de} ce jour</button>
+                  : <button type="button" onClick={() => addSport(selDay.iso)} className={`${btn} bg-sky-700 border-sky-500 text-white`}>{sport.icon} + {sport.cap} ce jour</button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Une séance en plus s’ajoute juste ce jour-là : le reste de ta semaine ne bouge pas.
+              {(isSport || selDay.sportKind === 'match') ? ` Journée double : le coach retire les jambes ce jour-là pour garder tes jambes fraîches.` : !selDay.legsOk ? ` Pas de jambes ce jour-là (${selDay.legsWhy}).` : ''}
+            </p>
+          </div>
+        );
+      })()}
+
       <p className="text-xs text-slate-500">
-        Les séances sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes la veille d’un jour {sport.de}, ni à moins de 48 h ou le lendemain d’un match.
+        Touche un jour pour ajouter une séance en plus ou ton sport (un même jour peut avoir les deux). Les séances habituelles sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes un jour {sport.de} ou la veille, ni à moins de 48 h ou le lendemain d’un match.
       </p>
     </section>
   );

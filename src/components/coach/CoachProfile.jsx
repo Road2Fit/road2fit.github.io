@@ -1,5 +1,5 @@
 import { Art } from '../Art';
-import { PROFILES, PROFILE_CHOICES, coachProfileAt } from '../../coach/profiles';
+import { PROFILES, PROFILE_CHOICES, WEIGHT_PROFILE_WHY, activeProfile, coachProfileAt } from '../../coach/profiles';
 import { card } from './ui';
 
 const selectClass = 'bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold text-white';
@@ -31,8 +31,9 @@ function ProfileCard({ id }) {
 }
 
 /** Choix du profil de travail du coach : le même tout le temps, ou un profil différent à chaque cycle. */
-export function CoachProfile({ coach, today, updateCoach, w0 }) {
+export function CoachProfile({ coach, state, today, updateCoach, w0 }) {
   const active = coachProfileAt(coach, today);
+  const used = activeProfile(state || { coach }, today);
   const seq = coach.cycleProfiles || [];
   const perCycle = seq.length > 0 && !!w0.cycle;
   const setSeq = next => updateCoach({ cycleProfiles: next });
@@ -49,7 +50,8 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
           <select value={PROFILES[coach.workProfile] ? coach.workProfile : 'auto'} onChange={e => updateCoach({ workProfile: e.target.value })} className={selectClass}>
             {PROFILE_CHOICES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
-          <ProfileCard id={coach.workProfile} />
+          {used.fromWeight && !PROFILES[coach.workProfile] && <p className="text-xs text-emerald-300" data-testid="profile-why">{WEIGHT_PROFILE_WHY[used.fromWeight]}</p>}
+          <ProfileCard id={PROFILES[coach.workProfile] ? coach.workProfile : used.id} />
         </div>
       )}
 
@@ -58,7 +60,7 @@ export function CoachProfile({ coach, today, updateCoach, w0 }) {
           <p className="text-xs text-slate-300">
             Profil actif cette semaine (cycle {active.cycleIndex + 1}) : <b className="text-pink-300">{active.id ? `${PROFILES[active.id].icon} ${PROFILES[active.id].label}` : 'Automatique'}</b>
           </p>
-          <ProfileCard id={active.id} />
+          <ProfileCard id={used.id} />
           <div className="space-y-1.5">
             {seq.map((p, i) => (
               <div key={i} className="flex flex-wrap items-center gap-2 text-xs">

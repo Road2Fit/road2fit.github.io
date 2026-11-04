@@ -13,10 +13,11 @@ describe('profil de travail', () => {
   it('par défaut : automatique ; choisir la puissance change les objectifs de la séance', async () => {
     const h = await start();
     expect(pageText(h)).toContain('Profil de travail');
-    expect(pageText(h)).toContain('Le coach garde son réglage d’origine');
+    // la démo a des pesées et un poids visé plus bas : le profil automatique protège le muscle (hypertrophie)
+    expect(h.doc.querySelector('[data-testid="profile-why"]').textContent).toContain('perdre du poids');
     expect(pageText(h)).not.toContain('Profil Puissance');
     const select = section(h).querySelector('select');
-    expect([...select.options].map(o => o.textContent)).toEqual(['Automatique (comme avant)', 'Puissance', 'Hypertrophie', 'Endurance de force']);
+    expect([...select.options].map(o => o.textContent)).toEqual(['Automatique (selon ton objectif)', 'Puissance', 'Hypertrophie', 'Endurance de force']);
     await setInput(h, select, 'puissance');
     expect(saved(h).coach.workProfile).toBe('puissance');
     const t = pageText(h);

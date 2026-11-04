@@ -18,6 +18,7 @@ const SET_KEYS = {
   volleySkips: true,
   volleyExtra: true,
   gymSkips: true,
+  gymExtra: true,
   deloadWeeks: true,
   rankTrials: true,
 };

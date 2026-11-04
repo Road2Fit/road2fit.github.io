@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { openMovement } from '../../lib/movement';
 import { coachSwapOptions } from '../../coach/advice';
 import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
-import { PROFILES, coachProfileAt } from '../../coach/profiles';
+import { PROFILES, activeProfile } from '../../coach/profiles';
 import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
 
@@ -138,7 +138,7 @@ export function CoachNextSession({
             </span>
             <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
             {(() => {
-              const pf = coachProfileAt(coach, shownDate);
+              const pf = activeProfile(gameState, shownDate);
               return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
             })()}
           </div>
