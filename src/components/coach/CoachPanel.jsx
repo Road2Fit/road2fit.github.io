@@ -24,7 +24,7 @@ import { CoachGoal } from './CoachGoal';
 import { customFromSets } from '../../coach/methods';
 import { CoachExperience } from './CoachExperience';
 import { CoachPast } from './CoachPast';
-import { programSession } from '../../coach/program';
+import { programSession, programCoachOff } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
 import { CoachSettings } from './CoachSettings';
 import { CoachSources } from './CoachSources';
@@ -143,7 +143,9 @@ export function CoachPanel({
     () => (shownSession && (plan || ov.hasExercises) ? coachRateSession(gameState, shownSession) : null),
     [gameState.quests, gameState.coach, shownSession && shownSession.date, shownSession && shownSession.exercises.map(e => e.questId).join(',')]
   );
-  const sessionToStart = (() => {
+  // « Non, je continue sans l'appli » : la suite du programme n'est montrée qu'en aperçu
+  const coachOff = !plan && programCoachOff(gameState, ov.program);
+  const sessionToStart = coachOff ? null : (() => {
     if (plan) {
       if (!plan.questIds.length) return null;
       return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, tired: tiredToday });
@@ -257,6 +259,8 @@ export function CoachPanel({
       {!(coach.noCoach && !coach.program) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
       {/* PROCHAINE SÉANCE */}
       <CoachNextSession
+        preview={coachOff}
+        onTakeOver={() => updateCoach({ program: { ...coach.program, takeOver: true, askTakeOver: false } })}
         addSel={addSel}
         adjustTarget={adjustTarget}
         setCustom={(e, rows) => {

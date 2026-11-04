@@ -91,3 +91,47 @@ describe('trophées de la semaine', () => {
     expect(h.errors).toEqual([]);
   }, T);
 });
+
+describe('après la saisie : l’appli prend le relais ?', () => {
+  it('question après l’enregistrement ; « Non » → à la fin du programme, aperçu seulement ; on peut changer d’avis', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await clickEl(h, by(h, 'program-add'));
+    const areas = () => [...h.doc.querySelectorAll('[data-testid="program-text"]')];
+    await setInput(h, areas()[0], 'Développé couché 4x8 40kg');
+    await setInput(h, areas()[1], 'Squat 4x6 60kg');
+    await clickEl(h, by(h, 'program-save'));
+    await advance(h, 300);
+    expect(by(h, 'program-takeover').textContent).toContain('l’appli prend le relais');
+    await clickEl(h, by(h, 'takeover-no'));
+    expect(save(h).coach.program.takeOver).toBe(false);
+    expect(by(h, 'program-takeover')).toBeNull();
+    expect(by(h, 'takeover-state').textContent).toContain('tu continues seul');
+    // pendant le programme, rien ne change : séance de son coach, à lancer normalement
+    expect(by(h, 'coach-preview')).toBeNull();
+    expect(h.doc.body.textContent).toContain('Lancer');
+    // les deux séances passées : programme fini → aperçu, rien pour lancer ni régler
+    await clickText(h, 'Passer cette séance');
+    await clickText(h, 'Passer cette séance');
+    await advance(h, 300);
+    expect(by(h, 'coach-preview')).toBeTruthy();
+    expect(h.doc.body.textContent).toContain('Aperçu de la séance suivante');
+    expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(false);
+    expect(h.doc.body.textContent).not.toContain('Pourquoi ? / Ajuster');
+    expect(h.doc.body.textContent).not.toContain('Avis du coach');
+    // changer d'avis
+    await clickEl(h, by(h, 'preview-takeover'));
+    expect(save(h).coach.program.takeOver).toBe(true);
+    expect(by(h, 'coach-preview')).toBeNull();
+    expect(h.doc.body.textContent).toContain('suite que je propose');
+    expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(true);
+    // la question revient à chaque enregistrement du programme
+    await clickEl(h, by(h, 'program-edit'));
+    await clickEl(h, by(h, 'program-save'));
+    await advance(h, 300);
+    expect(by(h, 'program-takeover')).toBeTruthy();
+    await clickEl(h, by(h, 'takeover-yes'));
+    expect(save(h).coach.program.takeOver).toBe(true);
+    expect(h.errors).toEqual([]);
+  }, T);
+});

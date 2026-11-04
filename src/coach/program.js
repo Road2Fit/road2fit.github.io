@@ -336,6 +336,15 @@ export function programSession(state, next) {
   };
 }
 
+/**
+ * La personne a répondu « Non » à « l'appli prend le relais ? » (program.takeOver === false) : une fois les semaines de son coach
+ * finies, la suite n'est plus proposée, seulement montrée en aperçu (pas de séance guidée, pas de réglages).
+ */
+export function programCoachOff(state, next) {
+  const p = state && state.coach && state.coach.program;
+  return !!(p && p.takeOver === false && next && next.suite);
+}
+
 /** Lundi de la semaine en cours (date de départ par défaut d'un programme). */
 export const programDefaultStart = today => getWeekStart(today);
 /** Semaine du programme où l'on se trouve d'après le calendrier (pour l'affichage). */

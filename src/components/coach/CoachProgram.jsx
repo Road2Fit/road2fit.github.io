@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Art } from '../Art';
 import { X } from '../../icons';
 import { card } from './ui';
@@ -27,6 +27,15 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
   const next = useMemo(() => (program ? programNext(gameState, today) : null), [gameState.quests, gameState.coach, today]);
   const analysis = useMemo(() => (program && program.weeks && program.weeks.length ? analyzeProgram(program, gameState) : null), [gameState.quests, program]);
   const setProgram = fn => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), program: fn((prev.coach || {}).program) } }));
+  const askRef = useRef(null);
+  const asking = !!(program && program.askTakeOver);
+  // la question vient juste après la fermeture de la saisie : on l'amène à l'écran (petit délai, le temps que la fenêtre se ferme)
+  useEffect(() => {
+    if (!asking) return undefined;
+    const id = setTimeout(() => { if (askRef.current && askRef.current.scrollIntoView) askRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 250);
+    return () => clearTimeout(id);
+  }, [asking]);
+  const answer = yes => setProgram(p => ({ ...p, takeOver: yes, askTakeOver: false }));
 
   if (!program) {
     return (
@@ -47,6 +56,7 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
   const total = program.weeks.length;
   const doneCount = Object.keys(program.log || {}).length;
   const thisWeek = next ? programWeek(program, gameState, next.weekIdx) : null;
+  const off = program.takeOver === false;
   return (
     <section className={card} data-testid="program-card">
       <div className="flex items-start justify-between gap-2">
@@ -54,12 +64,30 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
           <h3 className="font-black text-white"><Art name="clipboard" />{program.name || 'Programme de mon coach'}</h3>
           <p className="text-xs text-slate-400">
             {program.paused ? 'En pause : le coach de l’appli reprend la main.'
-              : next ? (next.suite ? `Programme terminé (${total} semaine${total > 1 ? 's' : ''}) : suite proposée, semaine ${next.weekIdx + 1}${next.deload ? ' (allégée)' : ''}.` : `Semaine ${next.weekIdx + 1} sur ${total} · ${doneCount} séance${doneCount > 1 ? 's' : ''} faite${doneCount > 1 ? 's' : ''}.`)
+              : next ? (next.suite ? `Programme terminé (${total} semaine${total > 1 ? 's' : ''}) : ${off ? 'tu continues seul, aperçu de la suite' : 'suite proposée'}, semaine ${next.weekIdx + 1}${next.deload ? ' (allégée)' : ''}.` : `Semaine ${next.weekIdx + 1} sur ${total} · ${doneCount} séance${doneCount > 1 ? 's' : ''} faite${doneCount > 1 ? 's' : ''}.`)
                 : 'Aucune séance à venir.'}
           </p>
         </div>
-        {next && next.suite && <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-violet-500/20 text-violet-200 border border-violet-500/40">Suite proposée</span>}
+        {next && next.suite && <span className="shrink-0 px-2 py-0.5 rounded-full text-xs font-bold bg-violet-500/20 text-violet-200 border border-violet-500/40">{off ? 'Aperçu' : 'Suite proposée'}</span>}
       </div>
+
+      {asking && (
+        <div ref={askRef} className="rounded-xl border-2 border-pink-400 bg-pink-950/30 p-3 space-y-2" data-testid="program-takeover" role="group" aria-label="L’appli prend le relais ?">
+          <p className="text-sm font-black text-white">Programme enregistré ✅ Et pour la suite, l’appli prend le relais ?</p>
+          <p className="text-xs text-slate-300"><b>Oui</b> : après {total > 1 ? `les ${total} semaines` : 'la semaine'} de ton coach, je te propose la suite dans la même logique, séance après séance.</p>
+          <p className="text-xs text-slate-300"><b>Non</b> : tu gardes ton coach ou tu continues seul. Je me mets en retrait et je te montre seulement un aperçu de la séance que j’aurais proposée.</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => answer(true)} data-testid="takeover-yes" className={`${btn} bg-pink-600 text-white flex-1`}>Oui, aide-moi pour la suite</button>
+            <button type="button" onClick={() => answer(false)} data-testid="takeover-no" className={`${btn} bg-slate-800 border border-slate-600 text-slate-100 flex-1`}>Non, je continue sans l’appli</button>
+          </div>
+        </div>
+      )}
+      {!asking && program.takeOver !== undefined && (
+        <p className="text-xs text-slate-400" data-testid="takeover-state">
+          Après le programme : {off ? 'tu continues seul (aperçu seulement).' : 'l’appli te propose la suite.'}{' '}
+          <button type="button" onClick={() => answer(off)} className="font-bold text-sky-300 underline">{off ? 'Me faire aider' : 'Continuer sans l’appli'}</button>
+        </p>
+      )}
 
       {thisWeek && !program.paused && (
         <div className="space-y-1.5">
@@ -192,7 +220,7 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
     setGameState(prev => ({
       ...prev,
       quests: [...newQuests, ...prev.quests],
-      coach: { ...(prev.coach || {}), program: { name: name.trim(), startDate, weeks: parsedWeeks, log: old ? old.log || {} : {}, paused: false, createdAt: (old && old.createdAt) || today } },
+      coach: { ...(prev.coach || {}), program: { name: name.trim(), startDate, weeks: parsedWeeks, log: old ? old.log || {} : {}, paused: false, createdAt: (old && old.createdAt) || today, takeOver: old ? old.takeOver : undefined, askTakeOver: true } },
     }));
     onClose();
   };

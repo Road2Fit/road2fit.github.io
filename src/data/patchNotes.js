@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.9',
+    date: '2026-11-04',
+    title: 'Programme de ton coach : l’appli prend le relais, ou pas',
+    items: [
+      'Après avoir enregistré le programme de ton coach, une question : l’appli prend le relais pour la suite, oui ou non ?',
+      'Non : tu gardes ton coach ou tu continues seul. À la fin du programme, le coach de l’appli se met en retrait et montre seulement un aperçu de la séance qu’il aurait proposée.',
+      'Tu peux changer d’avis à tout moment, depuis la carte du programme ou l’aperçu.',
+    ],
+  },
+  {
     version: '3.8',
     date: '2026-11-04',
     title: 'Journées doubles, séances en plus et alerte de mise à jour',

@@ -129,6 +129,7 @@ export function coachContext(state, today, { overview } = {}) {
     try {
       const a = analyzeProgram(c.program, state);
       lines.push(`Programme de son coach extérieur${c.program.paused ? ' (en pause)' : ''} : ${a.summary.join(' ')}`);
+      if (c.program.takeOver === false) lines.push('Après ce programme, la personne a choisi de continuer sans l’appli (pas de suite proposée, aperçu seulement) : ne lui impose pas de séances ; si elle veut de l’aide pour la suite, dis-lui qu’elle peut l’activer dans la carte du programme.');
     } catch { /* rien */ }
   }
 

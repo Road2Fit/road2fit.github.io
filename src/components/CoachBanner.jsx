@@ -2,6 +2,7 @@ import { Play } from '../icons';
 import { Art } from './Art';
 import { useMemo } from 'react';
 import { coachOverview } from '../coach/advice';
+import { programCoachOff } from '../coach/program';
 import { coachDayLabel } from '../coach/settings';
 import { getTodayISODate } from '../lib/dates';
 
@@ -14,7 +15,8 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
     () => coachOverview(gameState, today),
     [gameState.quests, gameState.coach, gameState.userWeightKg, today]
   );
-  const session = ov.session && ov.session.exercises.length > 0 ? ov.session : null;
+  const off = programCoachOff(gameState, ov.program);
+  const session = !off && ov.session && ov.session.exercises.length > 0 ? ov.session : null;
   const isToday = !!(ov.first && ov.first.iso === today);
 
   let headline = 'Ton coach personnel';
@@ -25,6 +27,9 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
   } else if (session && ov.first) {
     headline = isToday ? 'Séance prévue aujourd’hui' : `Prochaine séance : ${coachDayLabel(ov.first.iso)}`;
     detail = `${session.exercises.length} exercice(s) · ≈ ${session.estMin} min · ≈ ${session.estKcal} kcal`;
+  } else if (off) {
+    headline = 'Tu continues sans l’appli';
+    detail = 'Le programme de ton coach est fini : l’aperçu de la suite est dans le Coach.';
   } else if (!ov.hasExercises) {
     headline = 'Ajoute tes exercices';
     detail = 'Dès que tu as des objectifs de musculation, le coach te prépare tes séances.';

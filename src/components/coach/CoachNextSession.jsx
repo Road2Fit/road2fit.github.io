@@ -18,8 +18,9 @@ export function CoachNextSession({
   setMethod, setCustom, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
-  startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach,
+  startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach, preview = false, onTakeOver,
 }) {
+  // preview : la personne continue sans l'appli après le programme de son coach → on montre la séance, sans rien pour la lancer ni la régler
   // détails d'un exercice (explication du coach + « Tu décides ») : repliés par défaut pour raccourcir la page
   const [openEx, setOpenEx] = useState({});
   const toggleEx = id => setOpenEx(o => ({ ...o, [id]: !o[id] }));
@@ -28,8 +29,8 @@ export function CoachNextSession({
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-black text-white"><Art name="dumbbell" />Prochaine séance {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
-        {!plan && ov.hasExercises && (
+        <h3 className="font-black text-white"><Art name="dumbbell" />{preview ? 'Aperçu de la séance suivante' : 'Prochaine séance'} {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+        {!plan && ov.hasExercises && !preview && (
           <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
         )}
         {plan && (
@@ -37,7 +38,14 @@ export function CoachNextSession({
         )}
       </div>
 
-      {ov.hasExercises && (
+      {preview && (
+        <div className="bg-slate-950 border border-violet-500/50 rounded-xl p-3 space-y-2" data-testid="coach-preview">
+          <p className="text-xs text-slate-300">Le programme de ton coach est fini et tu as choisi de <b>continuer sans l’appli</b> : le coach est en retrait. Voici seulement ce qu’il t’aurait proposé, pour info.</p>
+          {onTakeOver && <button type="button" onClick={onTakeOver} data-testid="preview-takeover" className="px-3 py-2 rounded-lg bg-pink-600 text-white text-xs font-black">Finalement, aide-moi pour la suite</button>}
+        </div>
+      )}
+
+      {ov.hasExercises && !preview && (
         <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
           <p className="text-xs font-bold text-slate-300">Comment te sens-tu aujourd’hui ?</p>
           <div className="flex flex-wrap gap-1.5">
@@ -130,8 +138,9 @@ export function CoachNextSession({
       {shownSession && shownSession.exercises.length > 0 && (
         <>
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {preview && <span className="px-2.5 py-1 rounded-full bg-violet-600 text-white font-black">Aperçu</span>}
             <span className="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">
-              {plan ? 'Séance perso' : shownSession.type ? `Séance ${shownSession.typeLabel}` : `Séance ${shownSession.templateId} · corps entier`}
+              {plan ? 'Séance perso' : shownSession.type ? `Séance ${shownSession.typeLabel}` : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId} · corps entier`}
             </span>
             <span className="text-slate-300 font-bold">
               {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
@@ -142,7 +151,7 @@ export function CoachNextSession({
               return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
             })()}
           </div>
-          {shownSession.notes.map((n, i) => (
+          {!preview && shownSession.notes.map((n, i) => (
             <p key={i} className="text-xs text-sky-300">{n}</p>
           ))}
           <div className="space-y-2">
@@ -169,7 +178,7 @@ export function CoachNextSession({
                     </div>
                     <div className="shrink-0 flex items-center gap-1">
                       <span className={`px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
-                      <button onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} title="Remplacer cet exercice" className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">🔄</button>
+                      {!preview && <button onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} title="Remplacer cet exercice" className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">🔄</button>}
                       {plan && (
                         <>
                           <button onClick={() => planMove(e.questId, -1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▲</button>
@@ -180,12 +189,12 @@ export function CoachNextSession({
                     </div>
                   </div>
                   <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2"><Art name="film" />Voir le mouvement</button>
-                  <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
+                  {!preview && <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
-                  </button>
-                  {openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
-                  {openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
-                  {openEx[e.questId] && setMethod && (() => {
+                  </button>}
+                  {!preview && openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
+                  {!preview && openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
+                  {!preview && openEx[e.questId] && setMethod && (() => {
                     const q = gameState.quests.find(x => x.id === e.questId) || {};
                     const hasCustom = Array.isArray(q.coachCustom) && q.coachCustom.length > 0;
                     // « Personnalisée » : ouvre le réglage série par série (déjà réglée : on la reprend tout de suite)
@@ -209,7 +218,7 @@ export function CoachNextSession({
                       </>
                     );
                   })()}
-                  {openEx[e.questId] && (
+                  {!preview && openEx[e.questId] && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <span className="text-slate-500 font-bold">Tu décides :</span>
                     <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
@@ -256,7 +265,7 @@ export function CoachNextSession({
             })}
           </div>
           {/* l'échauffement de chaque exercice est maintenant calculé dans la séance guidée (coach/warmup.js) */}
-          {!plan && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
+          {!plan && !preview && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
               <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
               <div className="flex flex-wrap gap-1.5">
@@ -275,7 +284,7 @@ export function CoachNextSession({
         <p className="text-xs text-slate-400">Ta séance est vide : ajoute un groupe ou un exercice ci-dessus.</p>
       )}
 
-      {rating && (
+      {rating && !preview && (
         <div className={`rounded-xl border p-3 space-y-2 ${rating.score >= 7.5 ? 'bg-emerald-950/20 border-emerald-500/40' : rating.score >= 5 ? 'bg-amber-950/20 border-amber-500/40' : 'bg-rose-950/20 border-rose-500/40'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 ${rating.score >= 7.5 ? 'border-emerald-400 text-emerald-300' : rating.score >= 5 ? 'border-amber-400 text-amber-300' : 'border-rose-400 text-rose-300'}`}>
