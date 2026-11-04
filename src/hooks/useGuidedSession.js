@@ -1,5 +1,6 @@
 import { coachSessionRecap } from '../coach/advice';
-import { calculateStrengthCalories } from '../lib/calories';
+import { calculateStrengthCalories, warmupCalories } from '../lib/calories';
+import { warmupSets } from '../coach/warmup';
 import { getTodayISODate } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
 import { applyStrengthSession } from '../lib/sessionRecord';
@@ -79,7 +80,11 @@ export function useGuidedSession({
       const exerciseRpe = Math.min(10, Math.max(1, Number(dd.rpe) || g.rpe || 7));
       const avgLoad = isKg && setDetails.reduce((a, r) => a + r, 0) > 0 ? weightedMean(setDetails, doneLoads) : Math.max(...doneLoads, 0);
       const avgAssist = !isKg && it.kind === 'assisted' && setDetails.reduce((a, r) => a + r, 0) > 0 ? weightedMean(setDetails, doneAssists) : (it.kind === 'assisted' ? Math.min(...doneAssists) : 0);
-      const calories = calculateStrengthCalories({
+      // échauffement fait (séries cochées) : ajouté aux calories de l'exercice
+      const idx = g.items.indexOf(it);
+      const warmDone = warmupSets(it, g.items.slice(0, Math.max(0, idx)), dd.load, dd.assist).filter((_, k) => dd.wdone && dd.wdone[k]);
+      const warmKcal = warmupCalories({ unit: q.unit, timed: isTimedQuest(q), userWeightKg: gameState.userWeightKg }, warmDone);
+      const calories = warmKcal + calculateStrengthCalories({
         unit: q.unit,
         timed: isTimedQuest(q),
         weightKg: isKg ? avgLoad : 0,

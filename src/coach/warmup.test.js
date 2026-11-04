@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { warmupSets } from './warmup';
+import { warmupCalories } from '../lib/calories';
 
 const load = (extra = {}) => ({ name: 'Développé Couché Barre', arena: 'Pectoraux', kind: 'load', compound: true, load: 80, targetReps: [8, 8, 8], goalReps: 8, ...extra });
 
@@ -47,7 +48,7 @@ describe('échauffement de la séance guidée', () => {
     expect(warmupSets(load(), [], 100)[0].load).toBe(50);
   });
 
-  it('aide élastique : plus d’aide ; poids du corps et chronométré : moitié du travail', () => {
+  it('aide élastique : plus d’aide ; poids du corps : moitié du travail ; tenue et abdos : pas d’échauffement', () => {
     const a = warmupSets({ name: 'Tractions', arena: 'Dos', kind: 'assisted', assist: 20, targetReps: [6, 6], goalReps: 6 }, []);
     expect(a).toHaveLength(1);
     expect(a[0].assist).toBe(30);
@@ -55,6 +56,17 @@ describe('échauffement de la séance guidée', () => {
     const p = warmupSets({ name: 'Pompes', arena: 'Pectoraux', kind: 'reps', targetReps: [15, 15], goalReps: 15 }, []);
     expect(p).toEqual([expect.objectContaining({ reps: 8 })]);
     const t = warmupSets({ name: 'Planche', arena: 'Abdos', kind: 'reps', timed: true, targetReps: [60, 60], goalReps: 60 }, []);
-    expect(t[0].reps).toBe(30);
+    expect(t).toEqual([]); // planche : rien à afficher
+    expect(warmupSets({ name: 'Crunchs', arena: 'Abdominaux', kind: 'reps', targetReps: [15, 15], goalReps: 15 }, [])).toEqual([]);
+    expect(warmupSets({ name: 'Relevés de jambes', arena: 'Obliques', kind: 'reps', targetReps: [12], goalReps: 12 }, [])).toEqual([]);
+  });
+});
+
+describe('calories de l’échauffement', () => {
+  it('quelques calories en plus, rien sans série faite', () => {
+    const k = warmupCalories({ unit: 'kg', userWeightKg: 80 }, [{ load: 30, reps: 8 }, { load: 45, reps: 5 }]);
+    expect(k).toBeGreaterThan(0);
+    expect(k).toBeLessThan(15);
+    expect(warmupCalories({ unit: 'kg', userWeightKg: 80 }, [])).toBe(0);
   });
 });

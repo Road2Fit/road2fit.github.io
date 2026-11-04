@@ -202,7 +202,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                     <div key={i} className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 ${wd ? 'bg-amber-950/30 border-amber-500/50' : 'bg-slate-950 border-amber-500/20'}`}>
                       <div>
                         <p className="text-sm font-black text-amber-100">Échauffement {warmRows.length > 1 ? i + 1 : ''}</p>
-                        <p className="text-xs text-amber-200/80">{w.label}{it.timed ? ' s' : ''} · pas compté dans la séance</p>
+                        <p className="text-xs text-amber-200/80">{w.label} · compté dans les calories</p>
                       </div>
                       <button onClick={() => toggleWarm(i, w)} className={`px-3 py-2 rounded-lg text-sm font-black ${wd ? 'bg-amber-600 text-white' : 'bg-slate-800 text-amber-200'}`}>
                         {wd ? '✓ Fait' : 'Fait'}

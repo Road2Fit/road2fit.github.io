@@ -74,6 +74,16 @@ export function calculateStrengthCalories({
   return Math.max(10, Math.round((grossMet - 1) * userWeightKg * durationHours));
 }
 
+/**
+ * Calories des séries d'échauffement faites. Effort léger : musculation légère ≈ 3,5 MET (Compendium), soit 2,5 MET nets ;
+ * durée de chaque série = son repos + environ 3 s par répétition (les séries d'échauffement ont des repos courts).
+ * @param {{ userWeightKg }} q  @param {{ reps, restSec? }[]} sets
+ */
+export function warmupCalories({ userWeightKg = 82 } = {}, sets = []) {
+  const min = sets.reduce((m, w) => m + ((Number(w.restSec) || 45) + (Number(w.reps) || 0) * 3) / 60, 0);
+  return Math.round(2.5 * (Number(userWeightKg) || 82) * (min / 60));
+}
+
 export function calculateCardioCalories({
   cardioMode = 'run', distanceKm = 5, durationMin = 30, elevationM = 0, rpe = 7, userWeightKg = 82,
 }) {

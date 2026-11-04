@@ -27,7 +27,7 @@ describe('échauffement avant les séries de travail', () => {
     const zone = () => h.doc.querySelector('[data-testid="warmup"]');
     expect(zone()).toBeTruthy();
     expect(zone().textContent).toContain('Échauffement');
-    expect(zone().textContent).toContain('pas compté dans la séance');
+    expect(zone().textContent).toContain('compté dans les calories');
     const lignes = zone().querySelectorAll('button');
     expect(lignes.length).toBeGreaterThanOrEqual(1);
     expect(lignes.length).toBeLessThanOrEqual(2);
@@ -46,6 +46,10 @@ describe('échauffement avant les séries de travail', () => {
     const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');
     expect(e.setDetails).toHaveLength(nb); // aucune série d'échauffement dans l'historique
     expect(e.sets).toBe(nb);
+    // l'échauffement fait compte dans les calories : plus que les mêmes séries sans échauffement
+    const { calculateStrengthCalories } = await import('../../src/lib/calories');
+    const sans = calculateStrengthCalories({ unit: 'kg', weightKg: e.value, setDetails: e.setDetails, rpe: e.rpe, userWeightKg: saved(h).userWeightKg });
+    expect(e.calories).toBeGreaterThan(sans);
     expect(pageText(h)).not.toContain('undefined');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);

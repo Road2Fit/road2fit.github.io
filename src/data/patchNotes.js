@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.9.1',
+    date: '2026-11-04',
+    title: 'L’échauffement compte',
+    items: [
+      'Séance guidée : les séries d’échauffement cochées « Fait » s’ajoutent aux calories de la séance.',
+      'Plus d’échauffement affiché quand il n’a pas de sens (gainage planche et autres exercices tenus, abdos).',
+    ],
+  },
+  {
     version: '3.9',
     date: '2026-11-04',
     title: 'Programme de ton coach : l’appli prend le relais, ou pas',

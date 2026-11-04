@@ -6,10 +6,17 @@ import { coarseOf } from '../data/muscles';
 //    2 séries pour le premier exercice d'une arène (muscles encore froids) si la charge compte, sinon 1 seule série ;
 //  - exercice déjà « chaud » (un exercice de la même arène est passé avant) ou charge légère : 1 série à ~60 % ;
 //  - travail lourd (≤ 6 reps ou profil Puissance) : séries plus proches de la charge, moins de répétitions ;
-//  - aide élastique : 1 série avec plus d'aide ; poids du corps / chronométré : 1 série à ~la moitié du travail.
-// Les séries d'échauffement ne sont jamais enregistrées dans l'historique (ni EXP, ni calories, ni coach).
+//  - aide élastique : 1 série avec plus d'aide ; poids du corps : 1 série à ~la moitié du travail ;
+//  - pas d'échauffement pour les exercices tenus (planche, chaise…) ni les abdos : il n'aurait pas de sens, rien n'est affiché.
+// Les séries d'échauffement ne sont pas enregistrées comme séries (ni coach, ni records) ; celles cochées « Fait »
+// comptent dans les calories de l'exercice (warmupCalories).
 
-const round5 = x => Math.max(5, Math.round(x / 5) * 5);
+/** Un échauffement a-t-il un sens pour cet exercice ? Non pour les exercices tenus (en secondes) et les abdos. */
+export function hasWarmup(item) {
+  if (!item || item.timed) return false;
+  const a = String(item.arena || item.category || '');
+  return !/abdo/i.test(a) && !/abdo/i.test(String(coarseOf(a) || ''));
+}
 
 /** @returns {{ load?, assist?, reps, restSec, label }[]} */
 export function warmupSets(item, previousItems = [], loadNow, assistNow) {
@@ -17,9 +24,7 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
   const firstWork = Number(item.targetReps && item.targetReps[0]) || Number(item.goalReps) || 8;
   const warm = previousItems.some(p => coarseOf(p.arena) === coarseOf(item.arena)); // un seul échauffement par grande région, même en mode optimisé
 
-  if (item.timed) {
-    return [{ reps: round5(firstWork * 0.5), restSec: 30, label: 'Tenue facile' }];
-  }
+  if (!hasWarmup(item)) return [];
 
   if (item.kind === 'load') {
     const W = Number(loadNow !== undefined ? loadNow : item.load) || 0;
