@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEMO_STATE } from '../../tests/ui/demo';
-import { analyzeProgram, parseProgramLine, programNext, programSession, programWeek, sessionKey } from './program';
+import { analyzeProgram, parseProgramLine, programLine, programNext, programSession, programWeek, sessionKey } from './program';
 
 const Q = DEMO_STATE.quests;
 const id = name => Q.find(q => q.name.includes(name)).id;
@@ -81,5 +81,25 @@ describe('programme d’un coach extérieur', () => {
     const b = g.exercises.find(e => e.questId === bench);
     expect(b).toMatchObject({ sets: 4, targetReps: [8, 8, 8, 8], load: 40, change: 'program' });
     expect(b.reason).toMatch(/Prévu par ton coach/);
+  });
+});
+
+describe('programme réel d’un ami (lest, muscle-up, noms précis)', () => {
+  it('lit le lest, choisit les bons exercices, signale les inconnus et les lignes incertaines', () => {
+    const r = l => parseProgramLine(l, []);
+    expect(r('Dips lestés 3x8-10 +52,5 kg, dernière série RIR 1')).toMatchObject({ ok: true, catalogId: 'dips', sets: 3, assist: -52.5, load: null });
+    expect(r('Dips lestés top set 1x2 +87,5 kg RIR 2')).toMatchObject({ sets: 1, reps: [2], assist: -87.5 });
+    expect(r('Traction lestée back-off 3x8 +42,5 kg RIR 2, dernière série RIR 0-1')).toMatchObject({ catalogId: 'pullups', assist: -42.5 });
+    expect(r('Curl biceps poulie (biset) 2x10-15 22,5 kg RIR 0-1').catalogId).toBe('fp_cable_curl');
+    expect(r('Mollets machine assise 3x12-15 30 kg RIR 0-1').catalogId).toBe('fp_calf_seated');
+    expect(r('Muscle-up technique 3x2 poids de corps')).toMatchObject({ ok: false, name: 'Muscle-up technique' });
+    expect(r('Muscle-up lesté top set 1x2 +17,5 kg RIR 2')).toMatchObject({ ok: false, name: 'Muscle-up lesté' });
+    expect(r('Isométrie lockout traction 2x5s +50 kg').ok).toBe(false); // des secondes sur un exercice en répétitions : autre exercice
+    expect(r('Rowing appui poitrine 3x8-12 85 kg, dernière série RIR 1').uncertain).toBe(true);
+    expect(r('Développé couché 3x8-10 70 kg').uncertain).toBe(false);
+    // exercice imposé (trouvé ou créé par le coach intelligent)
+    expect(parseProgramLine('Muscle-up lesté top set 1x2 +17,5 kg RIR 2', [], { pick: 'chinups' })).toMatchObject({ ok: true, catalogId: 'chinups', assist: -17.5, sets: 1 });
+    // la ligne réécrite garde le lest
+    expect(programLine({ reps: [8, 8, 8], load: null, assist: -52.5 }, { name: 'Dips', unit: 'reps' })).toBe('Dips 3x8 +52,5kg');
   });
 });

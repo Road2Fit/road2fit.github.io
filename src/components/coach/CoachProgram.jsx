@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { Art } from '../Art';
 import { X } from '../../icons';
 import { card } from './ui';
-import { DAY_SHORT, analyzeProgram, catalogById, parseProgramLine, programDefaultStart, programLine, programNext, programWeek, sessionKey } from '../../coach/program';
+import { DAY_SHORT, analyzeProgram, catalogById, parseProgramLine, programDefaultStart, programLine, programLineName, programNext, programWeek, sessionKey } from '../../coach/program';
+import { createExerciseWithAi } from '../../ai/exercise';
+import { assistText } from '../../lib/assist';
 import { makeQuestFromCatalog } from '../../lib/questFactory';
 import { getTodayISODate } from '../../lib/dates';
 import { aiStatus, callAi } from '../../ai/client';
@@ -136,7 +138,30 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
   const patchSession = (si, p) => setWeeks(ws => ws.map((w, i) => (i !== wi ? w : { sessions: w.sessions.map((s, j) => (j === si ? { ...s, ...p } : s)) })));
   const copyWeek = () => setWeeks(ws => { const copy = { sessions: ws[ws.length - 1].sessions.map(s => ({ ...s, id: `${s.id}c${uid++}` })) }; setWi(ws.length); return [...ws, copy]; });
 
-  const save = () => {
+  const [saving, setSaving] = useState('');
+  // lignes inconnues (« Muscle-up technique ») ou incertaines (« Rowing appui poitrine ») : le coach intelligent trouve l'exercice
+  // du catalogue qui correspond, ou le crée (catalogue commun), avant l'enregistrement
+  const resolveWithAi = async () => {
+    const picks = {};
+    const todo = new Map();
+    weeks.forEach(w => w.sessions.forEach(sx => sx.text.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => {
+      const p = parseProgramLine(l, gameState.quests);
+      if (p && (!p.ok || p.uncertain)) { const n = programLineName(l) || l; if (!todo.has(n)) todo.set(n, []); todo.get(n).push(l); }
+    })));
+    let i = 0;
+    for (const [n, ls] of todo) {
+      i++;
+      setSaving(`Le coach cherche « ${n} » (${i}/${todo.size})…`);
+      try {
+        const r = await createExerciseWithAi(gameState, `${n} (ligne d'un programme : « ${ls[0]} »)`);
+        ls.forEach(l => { picks[l] = r.entry.id; });
+      } catch { /* la ligne restera signalée */ }
+    }
+    setSaving('');
+    return picks;
+  };
+  const save = async () => {
+    const picks = aiOn ? await resolveWithAi() : {};
     // chaque ligne : exercice existant, ou exercice du catalogue créé pour l'occasion
     const created = {};
     const newQuests = [];
@@ -145,7 +170,7 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
       sessions: w.sessions.map((s, si) => ({
         id: s.id, name: (s.name || '').trim() || `Séance ${si + 1}`, dow: s.dow ? Number(s.dow) : null,
         exercises: s.text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
-          const p = parseProgramLine(l, [...gameState.quests, ...newQuests]);
+          const p = parseProgramLine(l, [...gameState.quests, ...newQuests], picks[l] ? { pick: picks[l] } : {});
           if (!p || !p.ok) { bad.push(`Semaine ${wk + 1}, ${s.name || `séance ${si + 1}`} : « ${l} »`); return null; }
           let questId = p.questId;
           if (!questId && p.catalogId) {
@@ -220,7 +245,7 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
               <textarea value={s.text} onChange={e => patchSession(si, { text: e.target.value })} rows={Math.max(4, lines.length + 1)} placeholder={'Développé couché 4x8 60kg\nTractions 3x6 aide 10kg\nGainage planche 3x45s'} className={`${field} font-mono`} aria-label="Exercices de la séance" data-testid="program-text" />
               {parsed.length > 0 && (
                 <ul className="text-xs space-y-0.5">
-                  {parsed.map((p, i) => <li key={i} className={p && p.ok ? 'text-emerald-300' : 'text-rose-300'}>{p && p.ok ? `✓ ${p.name} : ${p.reps.every(r => r === p.reps[0]) ? `${p.sets} × ${p.reps[0]}` : p.reps.join(' - ')}${p.timed ? ' s' : ''}${p.load ? ` à ${p.load} kg` : ''}${p.assist ? `, aide ${p.assist} kg` : ''}${p.questId ? '' : ' (sera ajouté à tes exercices)'}` : `✗ non reconnu : « ${lines[i]} »`}</li>)}
+                  {parsed.map((p, i) => <li key={i} className={p && p.ok && !(p.uncertain && aiOn) ? 'text-emerald-300' : p && !p.ok && !aiOn ? 'text-rose-300' : 'text-amber-300'}>{p && p.ok ? `✓ ${p.name} : ${p.reps.every(r => r === p.reps[0]) ? `${p.sets} × ${p.reps[0]}` : p.reps.join(' - ')}${p.timed ? ' s' : ''}${p.load ? ` à ${p.load} kg` : ''}${p.assist ? `, ${assistText(p.assist)}` : ''}${p.questId ? '' : ' (sera ajouté à tes exercices)'}${p.uncertain && aiOn ? ' — à confirmer par le coach à l’enregistrement' : ''}` : aiOn ? `? « ${p ? p.name || lines[i] : lines[i]} » : le coach le cherchera (ou le créera) à l’enregistrement` : `✗ non reconnu : « ${lines[i]} »`}</li>)}
                 </ul>
               )}
               {week.sessions.length > 1 && <button type="button" onClick={() => setWeeks(ws => ws.map((w, i) => (i !== wi ? w : { sessions: w.sessions.filter((_, j) => j !== si) })))} className="text-xs text-rose-300">Supprimer cette séance</button>}
@@ -231,7 +256,7 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
         {err && <p className="text-sm text-rose-300" data-testid="program-error">{err}</p>}
         <div className="sticky bottom-0 -mx-5 -mb-5 px-5 py-3 bg-slate-900 border-t border-slate-800 rounded-b-2xl flex gap-2">
           <button type="button" onClick={onClose} className="px-4 py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-300">Annuler</button>
-          <button type="button" onClick={save} data-testid="program-save" className="flex-1 py-3 rounded-xl text-sm font-black bg-pink-600 text-white">Enregistrer le programme</button>
+          <button type="button" onClick={save} disabled={!!saving} data-testid="program-save" className="flex-1 py-3 rounded-xl text-sm font-black bg-pink-600 disabled:bg-slate-700 text-white">{saving || 'Enregistrer le programme'}</button>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { arenaOf } from '../data/muscles';
 import { addDaysISO, getWeekStart } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
 import { parseSpokenWorkout } from '../voice/parser';
+import { assistText } from '../lib/assist';
 import { profileOpts } from './profiles';
 import { coachDaysBetween, coachKind, coachRealEntries, coachRound, coachStep } from './settings';
 import { computeExerciseTarget } from './targets';
@@ -21,32 +22,76 @@ const avg = a => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
 export const sessionKey = (w, s) => `w${w}:s${s}`;
 
 // ---------------- Saisie : une ligne = un exercice ----------------
-/** « Développé couché 4x8 60kg », « Tractions 3x6 aide 10kg », « Planche 3x45s », « Curl 12 10 8 » → exercice du programme. */
-export function parseProgramLine(line, quests = []) {
+/** Nom de l'exercice dans une ligne de programme (« Muscle-up lesté top set 1x2 +17,5 kg RIR 2 » → « Muscle-up lesté »). */
+export function programLineName(line) {
+  return String(line || '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/\b(top set|back-?off|singles?|standard comp[ée]tition|biset|superset|dernière série.*)$/gi, ' ')
+    .split(/\s\+?\d/)[0]
+    .replace(/\b(top set|back-?off|singles?|standard comp[ée]tition)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * « Développé couché 4x8 60kg », « Tractions 3x6 aide 10kg », « Dips lestés 3x8 +52,5 kg », « Planche 3x45s », « Curl 12 10 8 »
+ * → exercice du programme. opts.pick = identifiant d'exercice imposé (choisi par le coach intelligent pour une ligne incertaine).
+ * uncertain = le nom trouvé ne couvre pas la moitié des mots de la ligne (« Rowing appui poitrine » → rowing barre ?) :
+ * à la sauvegarde, le coach intelligent tranche (exercice existant ou nouvel exercice).
+ */
+export function parseProgramLine(line, quests = [], opts = {}) {
   const text = String(line || '').replace(/(\d),(\d)/g, '$1.$2').trim();
   if (!text) return null;
-  const [p] = parseSpokenWorkout(text, quests).filter(x => x.type === 'strength');
+  const [p0] = parseSpokenWorkout(text, quests).filter(x => x.type === 'strength');
   // Nom écrit en entier (« Curl haltères ») : il passe avant la reconnaissance vocale, plus approximative (« curl » → curl barre)
-  const STOP = new Set(['kg', 'kilo', 'kilos', 'aide', 'elastique', 'series', 'serie', 'reps', 'sec', 'min', 'avec', 'les', 'des', 'sur']);
-  const words = t => (normSearch(String(t).replace(/\([^)]*\)/g, ' ')).match(/[a-z]{3,}/g) || []).filter(w => !STOP.has(w));
+  const STOP = new Set(['kg', 'kilo', 'kilos', 'aide', 'elastique', 'series', 'serie', 'reps', 'sec', 'min', 'avec', 'les', 'des', 'sur', 'top', 'set', 'back', 'off', 'rir', 'rpe', 'derniere', 'singles', 'single', 'standard', 'competition', 'biset', 'poids', 'corps', 'leste', 'lestee', 'lestes', 'lestees']);
+  // mots ramenés à leur racine (« assise » = « assis », « haltères » = « haltère », « tractions » = « traction »)
+  const stem = w => { let x = w; while (x.length > 4 && /(es|s|e)$/.test(x)) x = x.replace(/(es|s|e)$/, ''); return x; };
+  const words = t => [...new Set((normSearch(String(t).replace(/\([^)]*\)/g, ' ')).match(/[a-z]{3,}/g) || []).filter(w => !STOP.has(w)).map(stem))];
+  const EQUIP = new Set(['poulie', 'haltere', 'barre', 'machine', 'smith', 'kettlebell', 'corde', 'assis', 'debout', 'allonge', 'incline', 'decline', 'unilateral', 'hammer', 'guidee'].map(stem));
   const lineW = new Set(words(text));
-  const score = n => { const w = words(n); const hit = w.filter(x => lineW.has(x)).length; return hit ? [hit, -(w.length - hit)] : null; };
-  const named = lineW.size === 0 ? null : [
-    ...quests.filter(q => q.type === 'strength').map(q => ({ name: q.name, quest: q })),
-    ...EXERCISE_CATALOG.filter(c => c.type === 'strength').map(c => ({ name: c.name, catalog: c })),
-  ].map(x => ({ ...x, sc: score(x.name) }))
-    .filter(x => x.sc && x.sc[0] >= Math.min(2, lineW.size))
+  const lineEq = [...lineW].filter(w => EQUIP.has(w));
+  const aide = /aide|elastique|assist/i.test(normSearch(text));
+  const lest = /\+\s*\d/.test(text) || /lest/i.test(normSearch(text)) || aide; // lest ou aide : exercice au poids du corps
+  const absKg = /(^|\s)\d+(\.\d+)?\s*kg/i.test(text) && !lest;
+  // score : mots en commun (le matériel compte double), mots en trop, matériel qui contredit la ligne (poulie ≠ barre), mesure cohérente
+  const score = (n, unit) => {
+    const w = words(n);
+    const hits = w.filter(x => lineW.has(x));
+    if (!hits.length) return null;
+    const eqHit = hits.filter(x => EQUIP.has(x)).length;
+    const clash = lineEq.length && w.some(x => EQUIP.has(x) && !lineW.has(x)) && !eqHit ? 1 : 0;
+    const unitBonus = (lest && unit === 'reps') || (absKg && unit === 'kg') ? 0.5 : 0;
+    return [hits.length + eqHit - clash + unitBonus, -(w.length - hits.length), hits.length];
+  };
+  const pool = [
+    ...quests.filter(q => q.type === 'strength').map(q => ({ name: q.name, quest: q, unit: q.unit })),
+    ...EXERCISE_CATALOG.filter(c => c.type === 'strength').map(c => ({ name: c.name, catalog: c, unit: c.unit })),
+  ];
+  const forced = opts.pick ? pool.find(x => (x.quest && x.quest.catalogId === opts.pick) || (x.catalog && x.catalog.id === opts.pick)) : null;
+  const named = forced ? { ...forced, sc: [99, 0, 99] } : lineW.size === 0 ? null : pool
+    .map(x => ({ ...x, sc: score(x.name, x.unit) }))
+    .filter(x => x.sc && x.sc[2] >= Math.min(2, lineW.size))
     .sort((x, y) => y.sc[0] - x.sc[0] || y.sc[1] - x.sc[1] || (x.quest ? -1 : 0) - (y.quest ? -1 : 0))[0] || null;
-  if (!p && !named) return { ok: false, raw: text };
-  let quest = p && p.questId ? quests.find(q => q.id === p.questId) : null;
-  let catalog = quest ? null : (p && p.catalogRef) || null;
-  const parsedHits = (quest || catalog) ? (score((quest || catalog).name) || [0])[0] : 0;
-  if (named && named.sc[0] > parsedHits) {
+  // exercice imposé ou trouvé par son nom sans que la dictée le reconnaisse : la ligne est lue quand même
+  const p = p0 || (named ? { ...(parseSpokenWorkout(`squat ${text.replace(/^[^\d+]*/, '')}`, [])[0] || { setDetails: [8, 8, 8], unit: 'reps', assistanceKg: 0 }), questId: null, catalogRef: null, timed: false } : null);
+  if (!p && !named) return { ok: false, raw: text, name: programLineName(text) };
+  let quest = !forced && p0 && p0.questId ? quests.find(q => q.id === p0.questId) : null;
+  let catalog = quest || forced ? null : (p0 && p0.catalogRef) || null;
+  const parsedHits = (quest || catalog) ? (score((quest || catalog).name, (quest || catalog).unit) || [0])[0] : 0;
+  if (named && (forced || named.sc[0] > parsedHits)) {
     quest = named.quest || quests.find(q => named.catalog && q.catalogId === named.catalog.id) || null;
     catalog = quest ? null : named.catalog;
   }
-  if (!p) return { ok: false, raw: text };
-  const plain = text.toLowerCase().replace(/(?:elastique|aide|assiste|delestage)\s*(?:de|a)?\s*\d+(?:\.\d+)?\s*(?:kg|kilos?)?/g, ' ');
+  if (!p || (!quest && !catalog)) return { ok: false, raw: text, name: programLineName(text) };
+  // « 2x5s » sur un exercice qui ne se compte pas en secondes : ce n'est pas le même exercice (isométrie…)
+  const chosen = quest || catalog;
+  const secs = /\d+\s*(?:x|×)\s*\d+\s*s\b/i.test(text);
+  const chosenTimed = quest ? isTimedQuest(quest) : !!(catalog && (catalog.timed || /secondes|gainage|planche|isom/i.test(normSearch(catalog.name))));
+  if (!forced && secs && !chosenTimed) return { ok: false, raw: text, name: programLineName(text) };
+  const covered = words(chosen.name).filter(x => lineW.has(x)).length;
+  const uncertain = !forced && lineW.size >= 2 && covered / lineW.size < 0.5;
+  const plain = text.toLowerCase().replace(/rir\s*\d+(?:-\d+)?|rpe\s*\d+/g, ' ').replace(/(?:elastique|aide|assiste|delestage)\s*(?:de|a)?\s*\d+(?:\.\d+)?\s*(?:kg|kilos?)?/g, ' ');
   const kg = /(\d+(?:\.\d+)?)\s*(?:kg|kilo)/.exec(plain);
   // séries × répétitions lues directement dans la ligne (plus sûr que la dictée) : « 4x8 », « 4 x 8 », « 12 10 8 », « 3x45s »
   const rest = plain.replace(/(\d+(?:\.\d+)?)\s*(?:kg|kilos?)/g, ' ');
@@ -64,8 +109,10 @@ export function parseProgramLine(line, quests = []) {
     sets: reps.length,
     reps,
     load: unit === 'kg' && kg ? Number(kg[1]) : null,
-    assist: unit === 'reps' && p.assistanceKg > 0 ? p.assistanceKg : null,
+    // poids du corps : aide (« aide 10 kg ») positive ; kilos ajoutés (« +52,5 kg », « lesté ») = lest, aide négative (lib/assist.js)
+    assist: unit !== 'reps' || isTimedQuest(chosen) ? null : p0 && p0.assistanceKg > 0 && /aide|elastique|assist/i.test(normSearch(text)) ? p0.assistanceKg : kg ? -Number(kg[1]) : null,
     timed: !!p.timed,
+    uncertain,
   };
 }
 
@@ -75,7 +122,7 @@ export function programLine(ex, quest) {
   const uniform = reps.length && reps.every(r => r === reps[0]);
   const s = uniform ? `${reps.length}x${reps[0]}` : reps.join(' ');
   const t = quest && isTimedQuest(quest) ? 's' : '';
-  return `${quest ? quest.name : 'Exercice'} ${s}${t}${ex.load ? ` ${fmt(ex.load)}kg` : ''}${ex.assist ? ` aide ${fmt(ex.assist)}kg` : ''}`;
+  return `${quest ? quest.name : 'Exercice'} ${s}${t}${ex.load ? ` ${fmt(ex.load)}kg` : ''}${ex.assist > 0 ? ` aide ${fmt(ex.assist)}kg` : ex.assist < 0 ? ` +${fmt(-ex.assist)}kg` : ''}`;
 }
 
 // ---------------- Analyse du programme ----------------
@@ -197,7 +244,7 @@ export function programWeek(program, state, k) {
       let why = '';
       const step = q ? coachStep(q, load || 20) : 2.5;
       if (t.pattern === 'load' && load) { load = coachRound(load + t.loadStep * steps, step); why = `+${fmt(t.loadStep)} kg par semaine, comme dans ton programme`; }
-      else if (t.pattern === 'assist' && assist !== null && assist !== undefined) { assist = Math.max(0, coachRound(assist - t.assistStep * steps, 2.5)); why = `−${fmt(t.assistStep)} kg d’aide par semaine, comme dans ton programme`; }
+      else if (t.pattern === 'assist' && assist !== null && assist !== undefined) { assist = assist <= 0 ? coachRound(assist - t.assistStep * steps, 2.5) : Math.max(0, coachRound(assist - t.assistStep * steps, 2.5)); why = `−${fmt(t.assistStep)} kg d’aide par semaine, comme dans ton programme`; }
       else {
         // répétitions (programme) ou, sans progression prévue, double progression : +1 rép par semaine jusqu'en haut de la fourchette, puis charge
         const rs = t.pattern === 'reps' ? t.repStep : 1;
@@ -260,10 +307,14 @@ export function programSession(state, next) {
     const base = computeExerciseTarget(q, { ...profileOpts(state, next.date), today: next.date });
     const reps = (e.reps || []).length ? e.reps.slice() : base.targetReps;
     const load = q.unit === 'kg' ? (e.load !== null && e.load !== undefined ? e.load : base.load) : base.load;
-    const assist = base.kind === 'assisted' ? (e.assist !== null && e.assist !== undefined ? e.assist : base.assist) : base.assist;
-    const planned = `${reps.every(r => r === reps[0]) ? `${reps.length} × ${reps[0]}` : reps.join(' - ')}${isTimedQuest(q) ? ' s' : ''}${q.unit === 'kg' && load ? ` à ${fmt(load)} kg` : ''}${assist ? `, aide ${fmt(assist)} kg` : ''}`;
+    // aide ou lest prévu par le coach sur un exercice au poids du corps (aide négative = lest) : l'exercice se règle alors en kg
+    const planAssist = q.unit === 'reps' && !isTimedQuest(q) && e.assist !== null && e.assist !== undefined;
+    const kind = planAssist ? 'assisted' : base.kind;
+    const assist = planAssist ? e.assist : base.assist;
+    const planned = `${reps.every(r => r === reps[0]) ? `${reps.length} × ${reps[0]}` : reps.join(' - ')}${isTimedQuest(q) ? ' s' : ''}${q.unit === 'kg' && load ? ` à ${fmt(load)} kg` : ''}${kind === 'assisted' && assist ? `, ${assistText(assist)}` : ''}`;
     return {
       ...base,
+      kind,
       sets: reps.length,
       targetReps: reps,
       load,

@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.6.3',
+    date: '2026-11-04',
+    title: 'Programme d’un coach : lest et nouveaux exercices',
+    items: [
+      'Programme de ton coach : le lest est compris (« Dips lestés 3x8 +52,5 kg » = 52,5 kg de lest) et suivi dans la séance guidée.',
+      'Un exercice inconnu du programme (muscle-up, isométrie…) n’empêche plus d’enregistrer : à l’enregistrement, le coach le trouve dans le catalogue ou le crée pour tout le monde. Il vérifie aussi les lignes douteuses (« Rowing appui poitrine »).',
+      'Noms mieux reconnus : « Curl biceps poulie » → curl poulie, « Mollets machine assise » → mollets assis, « Extension lombaire 50 kg » → machine lombaires.',
+    ],
+  },
+  {
     version: '3.6.2',
     date: '2026-11-04',
     title: 'Erreurs fréquentes réalistes',

@@ -315,3 +315,31 @@ describe('exercices créés par le coach (catalogue commun)', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('programme d’un coach extérieur : exercices inconnus et lest', () => {
+  it('muscle-up inconnu : créé par le coach à l’enregistrement ; dips lestés : lest gardé', async () => {
+    const srv = fakeSupabase();
+    srv.ai = async (task, body) => {
+      if (task !== 'exercise') throw { status: 400, error: 'bad_task' };
+      expect(body.text).toContain('Muscle-up');
+      return { existing: '', id: 'ai_muscle_up_prog', exercise: { name: 'Muscle-up Prog', category: 'Dos', muscle: 'Dos', muscle2: 'Triceps', unit: 'reps', timed: false, equip: 'Poids du corps', like: 'pullups', start: 2, goal: 6, sets: 3, reps: 3, icon: '🦍', how: '', caution: '' }, reply: 'Ajouté.' };
+    };
+    const h = await logIn(srv, { aiConsent: true });
+    await clickEl(h, byTest(h, 'program-add'));
+    const area = h.doc.querySelector('[data-testid="program-text"]');
+    await setInput(h, area, 'Muscle-up lesté top set 1x2 +17,5 kg RIR 2\nDips lestés 3x8-10 +52,5 kg, dernière série RIR 1');
+    expect(h.doc.body.textContent).toContain('le coach le cherchera');
+    expect(h.doc.body.textContent).toContain('lest +52,5 kg');
+    await clickEl(h, byTest(h, 'program-save'));
+    await waitFor(h, () => saved(h).coach && saved(h).coach.program);
+    await advance(h, 300);
+    const s = saved(h);
+    const mu = s.quests.find(q => q.catalogId === 'ai_muscle_up_prog');
+    expect(mu).toBeTruthy();
+    const exs = s.coach.program.weeks[0].sessions[0].exercises;
+    expect(exs.find(e => e.questId === mu.id)).toMatchObject({ sets: 1, reps: [2], assist: -17.5 });
+    const dips = s.quests.find(q => q.catalogId === 'dips');
+    expect(exs.find(e => e.questId === dips.id)).toMatchObject({ sets: 3, assist: -52.5 });
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

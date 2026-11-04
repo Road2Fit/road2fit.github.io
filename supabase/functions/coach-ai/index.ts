@@ -80,7 +80,8 @@ Planning de l'appli : au plus sessionsPerWeek séances par semaine (du lundi au 
 
 const PROGRAM = `Tâche : convertir un programme d'entraînement collé tel quel (message d'un coach, tableau copié, notes) en semaines et séances que l'application sait suivre.
 Chaque exercice devient une ligne au format : « <nom> <séries>x<répétitions> <charge>kg », par exemple « Développé couché 4x8 60kg », « Tractions Pronation 3x6 aide 10kg », « Planche 3x45s », « Curl haltères 12 10 8 » (répétitions différentes par série).
-- <nom> : recopie EXACTEMENT le nom d'un exercice de l'utilisateur, sinon d'un exercice du catalogue (le plus proche). Cardio : nom du catalogue suivi de la durée, ex. « Course à pied (Endurance) 30min ».
+- <nom> : recopie EXACTEMENT le nom d'un exercice de l'utilisateur, sinon d'un exercice du catalogue s'il s'agit vraiment du même mouvement. Si l'exercice n'existe pas (ex. muscle-up, isométrie, variante précise), garde son nom tel qu'écrit : l'application le créera. Cardio : nom du catalogue suivi de la durée, ex. « Course à pied (Endurance) 30min ».
+- Lest sur un exercice au poids du corps (dips, tractions lestés…) : écris « +<kg>kg », ex. « Dips sur Barres Parallèles 3x8 +52.5kg ». Aide élastique : « aide <kg>kg ».
 - Fourchette « 8-10 » : prends le bas (8). Pourcentage du max sans max connu : pas de charge. Charge inconnue : rien.
 - dow : jour de la séance, 1 = lundi … 7 = dimanche, 0 si non précisé. name : nom court de la séance (« Haut du corps », « Séance A »).
 - Si le programme décrit une progression sur plusieurs semaines (« +2,5 kg par semaine pendant 4 semaines », « semaine 4 allégée »), écris chaque semaine explicitement, 12 semaines au plus. Sinon une seule semaine.
