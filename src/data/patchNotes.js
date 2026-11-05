@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.4.1',
+    date: '2026-11-05',
+    title: 'Icônes qui disparaissaient',
+    items: [
+      'Séance guidée : « Cuit », « Normal » et « En forme » ont le même aspect, chacun avec son icône (celle de « Normal » ne disparaît plus).',
+      'Les icônes des boutons sélectionnés (pages du Coach, « Mon poids »…) restent visibles en style néon.',
+    ],
+  },
+  {
     version: '4.4',
     date: '2026-11-05',
     title: 'Nouveau style « néon de salle »',

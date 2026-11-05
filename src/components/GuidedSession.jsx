@@ -311,7 +311,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             <h2 className="text-2xl font-black text-white text-center">Comment te sens-tu aujourd’hui ?</h2>
             {[['low', 'Cuit', 'tired', 'Séance allégée'], ['ok', 'Normal', 'smile', ''], ['high', 'En forme', 'muscle', '']].map(([lv, lab, art, sub]) => (
               <button key={lv} type="button" onClick={() => chooseFeel(lv)} data-testid={`feel-${lv}`}
-                className={`w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-3 text-xl font-black ${lv === 'ok' ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-100'}`}>
+                className={`w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-3 text-xl font-black bg-slate-900 border-slate-700 text-slate-100`}>
                 <Art name={art} size={30} bare />
                 <span>{lab}</span>
                 {sub && <span className="text-xs font-bold text-slate-400">{sub}</span>}
