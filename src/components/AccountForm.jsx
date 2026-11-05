@@ -4,7 +4,7 @@ import { SUPABASE } from '../config';
 
 const field = 'w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white placeholder:text-slate-600';
 const label = 'block text-xs font-bold text-slate-400 mb-1';
-const btn = 'px-4 py-2.5 rounded-xl text-sm font-black disabled:bg-slate-800 disabled:text-slate-600';
+const btn = 'px-4 py-2.5 rounded-xl text-sm font-black disabled:bg-slate-800 disabled:text-slate-400';
 
 /**
  * Compte de l'application : créer un compte, se connecter, mot de passe oublié, se déconnecter.

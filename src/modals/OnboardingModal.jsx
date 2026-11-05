@@ -248,7 +248,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         <div className="flex gap-2 pt-2">
           {step > 0 && <button type="button" onClick={() => setStep(s => s - 1)} className="px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-white text-sm font-bold">← Retour</button>}
           {step < STEPS.length - 1
-            ? <button type="button" onClick={() => setStep(s => s + 1)} disabled={!canNext} data-testid="ob-next" className="flex-1 px-4 py-3 rounded-xl bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-sm font-black">{key === 'backup' && !sync.configured ? 'Plus tard →' : 'Suivant →'}</button>
+            ? <button type="button" onClick={() => setStep(s => s + 1)} disabled={!canNext} data-testid="ob-next" className="flex-1 px-4 py-3 rounded-xl bg-sky-600 disabled:bg-slate-800 disabled:text-slate-400 text-white text-sm font-black">{key === 'backup' && !sync.configured ? 'Plus tard →' : 'Suivant →'}</button>
             : <button type="button" onClick={finish} data-testid="ob-finish" className="flex-1 px-4 py-3 rounded-xl bg-emerald-600 text-white text-sm font-black">Commencer</button>}
         </div>
       </div>

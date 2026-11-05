@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.5.2',
+    date: '2026-11-06',
+    title: 'Écrans d’accueil lisibles',
+    items: [
+      'Style néon : les choix sélectionnés et les boutons de l’assistant d’accueil ont un texte sombre sur la couleur du néon (le blanc était illisible).',
+      'Les boutons grisés (pas encore disponibles) sont plus lisibles.',
+    ],
+  },
+  {
     version: '4.5.1',
     date: '2026-11-06',
     title: 'Le grand rond s’anime',

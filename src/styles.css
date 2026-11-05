@@ -131,3 +131,8 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
 @keyframes r2f-hero-wave { 0% { box-shadow: 0 0 0 0 rgb(var(--neon-rgb, 236 72 153) / 0.7), 0 0 30px 6px rgb(var(--neon-rgb, 236 72 153) / 0.6); } 100% { box-shadow: 0 0 0 46px rgb(var(--neon-rgb, 236 72 153) / 0), 0 0 60px 12px rgb(var(--neon-rgb, 236 72 153) / 0); } }
 [data-testid="session-hero"].hero-press { animation: r2f-hero-press 0.5s cubic-bezier(0.3, 0.7, 0.3, 1.2), r2f-hero-wave 0.55s ease-out; }
 .hero-press .hero-cta { transform: scale(0.94); }
+
+/* néon : tout ce qui est REMPLI de la couleur du néon (bleus, cyan, sarcelle, vert, rose…) a un texte sombre ; sinon blanc sur néon = illisible.
+   Pas sur un bouton désactivé (il redevient gris). */
+:root[data-theme="neon"] :is(.bg-sky-500, .bg-sky-600, .bg-sky-700, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-cyan-500, .bg-cyan-600, .bg-cyan-700, .bg-teal-500, .bg-teal-600, .bg-teal-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700, .bg-pink-500, .bg-pink-700, .bg-fuchsia-500, .bg-fuchsia-600, .bg-fuchsia-700):not(:disabled),
+:root[data-theme="neon"] :is(.bg-sky-500, .bg-sky-600, .bg-sky-700, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-cyan-500, .bg-cyan-600, .bg-cyan-700, .bg-teal-500, .bg-teal-600, .bg-teal-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700, .bg-pink-500, .bg-pink-700, .bg-fuchsia-500, .bg-fuchsia-600, .bg-fuchsia-700):not(:disabled) * { color: #111111; }

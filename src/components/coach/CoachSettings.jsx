@@ -88,7 +88,7 @@ export function CoachSettings({
           <p className="text-slate-400">Une séance en plus, juste une fois :</p>
           <div className="flex flex-wrap items-center gap-1.5">
             <input type="date" min={today} value={extraGymInput} onChange={e => setExtraGymInput(e.target.value)} aria-label="Date de la séance en plus" className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
-            <button disabled={!extraGymInput} onClick={() => { updateCoach({ gymExtra: Array.from(new Set([...(coach.gymExtra || []), extraGymInput])).sort(), gymSkips: (coach.gymSkips || []).filter(x => x !== extraGymInput) }); setExtraGymInput(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black">Ajouter</button>
+            <button disabled={!extraGymInput} onClick={() => { updateCoach({ gymExtra: Array.from(new Set([...(coach.gymExtra || []), extraGymInput])).sort(), gymSkips: (coach.gymSkips || []).filter(x => x !== extraGymInput) }); setExtraGymInput(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-400 text-white font-black">Ajouter</button>
             {(coach.gymExtra || []).filter(d => d >= today).map(d => (
               <button key={d} onClick={() => updateCoach({ gymExtra: (coach.gymExtra || []).filter(x => x !== d) })} aria-label={`Retirer la séance en plus du ${coachDayLabel(d)}`} className="px-2 py-1 rounded-lg bg-emerald-600/80 text-white text-xs font-bold">+ {coachDayLabel(d)} ✕</button>
             ))}
@@ -135,7 +135,7 @@ export function CoachSettings({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-slate-400">{sp.cap} exceptionnel :</span>
           <input type="date" value={extraVolleyInput} min={today} onChange={e => setExtraVolleyInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
-          <button disabled={!extraVolleyInput} onClick={() => { updateCoach({ volleyExtra: Array.from(new Set([...(coach.volleyExtra || []), extraVolleyInput])).sort() }); setExtraVolleyInput(''); }} className="px-3 py-1.5 rounded-lg bg-sky-600 disabled:bg-slate-800 disabled:text-slate-600 text-white font-black">Ajouter</button>
+          <button disabled={!extraVolleyInput} onClick={() => { updateCoach({ volleyExtra: Array.from(new Set([...(coach.volleyExtra || []), extraVolleyInput])).sort() }); setExtraVolleyInput(''); }} className="px-3 py-1.5 rounded-lg bg-sky-600 disabled:bg-slate-800 disabled:text-slate-400 text-white font-black">Ajouter</button>
           {(coach.volleyExtra || []).filter(d => d >= today).map(d => (
             <button key={d} onClick={() => updateCoach({ volleyExtra: (coach.volleyExtra || []).filter(x => x !== d) })} className="px-2 py-1 rounded-lg bg-sky-600/80 text-white text-xs font-bold">{sp.icon} {coachDayLabel(d)} ✕</button>
           ))}
@@ -145,7 +145,7 @@ export function CoachSettings({
         <p className="text-xs text-slate-300 font-bold"><Art name="trophy" />Jours de match</p>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <input type="date" value={matchInput} min={today} onChange={e => setMatchInput(e.target.value)} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-white" />
-          <button disabled={!matchInput} onClick={() => { addMatches([matchInput]); setMatchInput(''); }} className="px-3 py-1.5 rounded-lg bg-amber-500 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-black">Ajouter</button>
+          <button disabled={!matchInput} onClick={() => { addMatches([matchInput]); setMatchInput(''); }} className="px-3 py-1.5 rounded-lg bg-amber-500 disabled:bg-slate-800 disabled:text-slate-400 text-slate-950 font-black">Ajouter</button>
         </div>
         <details className="text-xs">
           <summary className="cursor-pointer text-slate-400 font-bold">Ajouter plusieurs matchs d’un coup</summary>

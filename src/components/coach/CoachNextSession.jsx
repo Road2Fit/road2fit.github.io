@@ -96,7 +96,7 @@ export function CoachNextSession({
                     ) : null;
                   })}
                 </select>
-                <button disabled={!addSel} onClick={() => { planAdd([addSel]); setAddSel(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-black">Ajouter</button>
+                <button disabled={!addSel} onClick={() => { planAdd([addSel]); setAddSel(''); }} className="px-3 py-1.5 rounded-lg bg-pink-600 disabled:bg-slate-800 disabled:text-slate-400 text-white text-xs font-black">Ajouter</button>
               </div>
             )}
             {COACH_ARENAS.filter(a => !strengthQuests.some(q => hasArena(q, a))).map(a => (

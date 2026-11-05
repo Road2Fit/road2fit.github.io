@@ -42,7 +42,7 @@ export function AccountModal({ sync, recovery, heroName = '', onRenameHero, onCl
                 autoComplete="off"
                 className="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-bold text-white placeholder:text-slate-600"
               />
-              <button type="submit" disabled={unchanged} data-testid="hero-name-save" className="px-4 py-2.5 rounded-xl text-sm font-black bg-sky-600 text-white disabled:bg-slate-800 disabled:text-slate-600">Enregistrer</button>
+              <button type="submit" disabled={unchanged} data-testid="hero-name-save" className="px-4 py-2.5 rounded-xl text-sm font-black bg-sky-600 text-white disabled:bg-slate-800 disabled:text-slate-400">Enregistrer</button>
             </div>
             <p className="text-xs text-slate-500" data-testid="hero-name-hint">{saved ? '✓ Enregistré : ce nom s’affiche en haut de l’appli et chez tes amis.' : 'Ce nom s’affiche en haut de l’appli et chez les amis qui ont ton code.'}</p>
           </form>
