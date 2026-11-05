@@ -8,6 +8,7 @@ export const PATCH_NOTES = [
     items: [
       'Style néon : les choix sélectionnés et les boutons de l’assistant d’accueil ont un texte sombre sur la couleur du néon (le blanc était illisible).',
       'Les boutons grisés (pas encore disponibles) sont plus lisibles.',
+      'Coach : la page défile tout de suite, les menus ne s’écartent plus du grand rond au début du défilement.',
     ],
   },
   {

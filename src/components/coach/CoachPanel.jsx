@@ -52,21 +52,30 @@ export function CoachPanel({
   // grand rond : toucher le bouton noir fait réagir tout le rond, puis la séance s'ouvre (le temps de voir l'animation)
   const [heroPress, setHeroPress] = useState(false);
   // le grand rond occupe le haut de l'écran : sa zone grandit jusqu'à ce que seul le titre « Prochaine séance » dépasse en bas
+  // ⚠️ Hauteur d'écran FIGÉE (mémorisée par largeur) : sur téléphone la barre d'adresse se cache au premier défilement,
+  // la hauteur change et la zone se recalculait → les menus s'écartaient du rond avant que la page défile.
   useLayoutEffect(() => {
     const fit = () => {
       const z = document.querySelector('.hero-zone');
       const t = document.querySelector('[data-testid="next-session-title"]');
       if (!z) return;
+      if (window.__r2fVhW !== window.innerWidth) { window.__r2fVhW = window.innerWidth; window.__r2fVh = window.innerHeight; }
+      const vh = window.__r2fVh;
+      const nav = document.querySelector('nav[aria-label="Navigation"]');
+      const navH = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().height : 0;
+      const prev = z.style.minHeight;
       z.style.minHeight = '';
       if (!t) return;
-      const nav = document.querySelector('nav[aria-label="Navigation"]');
-      const navTop = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : window.innerHeight;
-      const extra = navTop - 14 - (t.getBoundingClientRect().bottom + window.scrollY);
-      if (extra > 0) z.style.minHeight = `${Math.round(z.getBoundingClientRect().height + extra)}px`;
+      const extra = vh - navH - 14 - (t.getBoundingClientRect().bottom + window.scrollY);
+      const next = extra > 0 ? `${Math.round(z.getBoundingClientRect().height + extra)}px` : '';
+      z.style.minHeight = next || '';
+      if (prev && next && Math.abs(parseFloat(prev) - parseFloat(next)) < 2) z.style.minHeight = prev;
     };
     fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
+    let w = window.innerWidth;
+    const onResize = () => { if (window.innerWidth !== w) { w = window.innerWidth; fit(); } };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   });
   const heroGo = fn => {
     if (heroPress) return;
