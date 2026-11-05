@@ -220,8 +220,32 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     </div>
   ) : null);
 
+  const chooseFeel = level => {
+    setG(prev => {
+      if (level !== 'low') return { ...prev, feel: level };
+      const data = { ...prev.data };
+      prev.items.forEach(x => {
+        const dd = data[x.questId];
+        if (!dd || dd.done.some(Boolean)) return;
+        const st = x.kind === 'load' ? (x.equip === 'Haltères' ? (dd.load < 10 ? 1 : 2) : dd.load < 10 ? 1 : 2.5) : 2.5;
+        const lighter = v => Math.max(0, Math.round((Number(v) || 0) * 0.9 / st) * st);
+        const cut = dd.reps.length > 2 ? 1 : 0; // une série de moins (jamais moins de 2)
+        const keep = arr => (Array.isArray(arr) ? arr.slice(0, arr.length - cut) : arr);
+        data[x.questId] = {
+          ...dd,
+          reps: keep(dd.reps), done: keep(dd.done), kinds: keep(dd.kinds),
+          ...(x.kind === 'load' ? { load: lighter(dd.load), loads: keep(loadsOf(dd)).map(lighter) } : {}),
+          ...(x.kind === 'assisted' ? { assist: (Number(dd.assist) || 0) + 5, assists: keep(assistsOf(dd)).map(a => (Number(a) || 0) + 5) } : {}),
+          ...(x.kind !== 'load' && x.kind !== 'assisted' ? { loads: keep(dd.loads), assists: keep(dd.assists) } : {}),
+        };
+      });
+      return { ...prev, feel: level, data };
+    });
+  };
+
   let screen = 'set';
-  if (g.phase === 'summary') screen = 'summary';
+  if (!g.feel && !Object.values(g.data).some(dd => (dd.done || []).some(Boolean))) screen = 'feel';
+  else if (g.phase === 'summary') screen = 'summary';
   else if (rest) screen = 'rest';
   else if (inWarm) screen = 'warm';
 
@@ -245,6 +269,21 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col px-4 pt-3 pb-4 max-w-md w-full mx-auto">
+        {/* COMMENT TE SENS-TU ? (1re page) */}
+        {screen === 'feel' && (
+          <div className="flex-1 flex flex-col justify-center gap-4" data-testid="guided-feel">
+            <h2 className="text-2xl font-black text-white text-center">Comment te sens-tu aujourd’hui ?</h2>
+            {[['low', 'Cuit', 'tired', 'Séance allégée'], ['ok', 'Normal', 'smile', ''], ['high', 'En forme', 'muscle', '']].map(([lv, lab, art, sub]) => (
+              <button key={lv} type="button" onClick={() => chooseFeel(lv)} data-testid={`feel-${lv}`}
+                className={`w-full py-5 rounded-2xl border-2 flex items-center justify-center gap-3 text-xl font-black ${lv === 'ok' ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-100'}`}>
+                <Art name={art} size={30} bare />
+                <span>{lab}</span>
+                {sub && <span className="text-xs font-bold text-slate-400">{sub}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* REPOS */}
         {screen === 'rest' && (
           <div className="flex-1 flex flex-col" data-testid="guided-rest">

@@ -30,7 +30,7 @@ describe('adapter la suite après une série', () => {
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
-    while (by(h, 'warm-done')) await guidedStep(h);
+    while (by(h, 'warm-done') || by(h, 'feel-ok')) await guidedStep(h);
     const load = () => Number(by(h, 'set-load').textContent.replace(',', '.'));
     const before = load();
     await clickEl(h, h.doc.querySelector('button[aria-label="Répétitions moins"]'));
@@ -44,5 +44,25 @@ describe('adapter la suite après une série', () => {
     await advance(h);
     expect(load()).toBeLessThan(before);
     expect(h.errors).toEqual([]);
+  }, 120000);
+});
+
+describe('comment te sens-tu ? (1re page de la séance)', () => {
+  it('« Cuit » allège la séance : −10 % de charge et une série de moins', async () => {
+    const run = async feel => {
+      const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
+      open.push(h);
+      await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+      const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
+      await clickText(h, lancer.textContent.trim().slice(0, 30));
+      expect(by(h, 'guided-feel')).toBeTruthy();
+      await clickEl(h, by(h, `feel-${feel}`));
+      while (by(h, 'warm-done')) await guidedStep(h);
+      return { load: Number(by(h, 'set-load').textContent.replace(',', '.')), sets: Number(by(h, 'set-label').textContent.match(/\/(\d+)/)[1]) };
+    };
+    const normal = await run('ok');
+    const cuit = await run('low');
+    expect(cuit.load).toBeLessThan(normal.load);
+    expect(cuit.sets).toBe(normal.sets - 1);
   }, 120000);
 });

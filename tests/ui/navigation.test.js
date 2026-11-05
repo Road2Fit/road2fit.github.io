@@ -10,16 +10,13 @@ const nav = h => h.doc.querySelector('nav[aria-label="Navigation"]');
 const bas = (h, texte) => [...nav(h).querySelectorAll('button')].find(b => b.textContent.includes(texte));
 
 describe('navigation', () => {
-  it('barre du bas : 5 entrées, « Suivi » ouvre le poids avec ses sous-onglets', async () => {
+  it('barre du bas : 5 entrées, « Suivi » ouvre le poids (courbes et maxima sont dans la fiche de chaque exercice)', async () => {
     const h = await start();
     expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Suivi', 'Plus']);
     await clickEl(h, bas(h, 'Suivi'));
     expect(pageText(h)).toContain('Poids');
-    const sous = h.doc.querySelector('[aria-label="Sous-onglets"]');
-    expect(sous.textContent).toContain('Courbes');
-    expect(sous.textContent).toContain('Mes maxima');
-    await clickEl(h, [...sous.querySelectorAll('button')].find(b => b.textContent.includes('Mes maxima')));
-    expect(pageText(h)).toContain('Mes maxima');
+    expect(h.doc.querySelector('[data-tab="charts"]')).toBeNull();
+    expect(h.doc.querySelector('[data-tab="maxima"]')).toBeNull();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

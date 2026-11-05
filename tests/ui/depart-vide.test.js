@@ -18,7 +18,7 @@ describe('application neuve (aucune donnée)', () => {
 
   it('chaque onglet s’ouvre sans erreur', async () => {
     const h = await start();
-    for (const onglet of ['Coach', 'Journal', 'Courbes', 'Mes maxima', 'Poids', 'Souvenirs', 'Bilan', 'Trophées', 'Exercices']) {
+    for (const onglet of ['Coach', 'Journal', 'Poids', 'Souvenirs', 'Bilan', 'Trophées', 'Exercices']) {
       await clickText(h, onglet);
     }
     expect(h.errors).toEqual([]);

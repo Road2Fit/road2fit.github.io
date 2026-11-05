@@ -1,7 +1,7 @@
 // Nouvel exercice : charge de départ et séries adaptées aux maxima et au profil de travail.
 import { afterEach, describe, expect, it } from 'vitest';
 import { EXERCISE_CATALOG } from '../../src/data/catalog';
-import { clickEl, clickText, launch, pageText, setInput } from './harness';
+import { clickEl, clickText, launch, pageText, setInput, openCoachDetails } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -52,6 +52,7 @@ describe('ajout par le coach', () => {
   it('l’exercice ajouté part d’une charge adaptée et suit le profil', async () => {
     const h = await start({ workProfile: 'puissance' });
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    await openCoachDetails(h);
     // « + Presse… » / suggestions d'exercices du coach : on ajoute l'exercice d'une arène sans exercice
     const ajout = [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('+ ') && /Presse|Traction|Squat|Rowing|Développé|Curl/.test(b.textContent));
     expect(ajout, 'bouton d’ajout du coach').toBeTruthy();

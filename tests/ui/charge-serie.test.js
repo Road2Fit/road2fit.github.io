@@ -26,6 +26,7 @@ describe('charge modifiable entre deux séries', () => {
     expect(pageText(h)).toContain('Développé Couché Barre');
     const load = () => Number(h.doc.querySelector('[data-testid="set-load"]').textContent.replace(',', '.'));
     const by = (hh, id) => hh.doc.querySelector(`[data-testid="${id}"]`);
+    await guidedStep(h); // comment te sens-tu ?
     await guidedStep(h); // échauffement passé
     const startLoad = load();
     // séries 1 et 2 à la charge proposée (avec le repos entre les deux)

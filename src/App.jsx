@@ -9,10 +9,8 @@ import { CoachBanner } from './components/CoachBanner';
 
 import { getTodayISODate } from './lib/dates';
 import { BilanTab } from './tabs/BilanTab';
-import { ChartsTab } from './tabs/ChartsTab';
 import { DailySummary } from './components/DailySummary';
 import { JournalTab } from './tabs/JournalTab';
-import { MaximaTab } from './tabs/MaximaTab';
 import { LevelUpModal } from './modals/LevelUpModal';
 import { LogSessionModal } from './modals/LogSessionModal';
 import { QuestFormModal } from './modals/QuestFormModal';
@@ -265,6 +263,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
         {/* ONGLET 1 : CARTES DES QUÊTES & OBJECTIFS */}
         {activeTab === 'quests' && (
           <QuestsTab
+setGameState={setGameState}
             arenaLevels={arenaLevels}
             filteredQuests={filteredQuests}
             gameState={gameState}
@@ -288,13 +287,8 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           <JournalTab activeJournalDayObj={activeJournalDayObj} dailyJournalList={dailyJournalList} handleDeleteSessionEntry={handleDeleteSessionEntry} handleEditSessionEntry={handleEditSessionEntry} setSelectedJournalDay={setSelectedJournalDay} />
         )}
 
-        {/* ONGLET 3 : COURBES DE PROGRESSION */}
-        {activeTab === 'charts' && (
-          <ChartsTab activeChartQuest={activeChartQuest} gameState={gameState} openLogModal={log.openLogModal} setSelectedChartQuestId={setSelectedChartQuestId} />
-        )}
 
         {/* ONGLET : 💯 MES MAXIMA */}
-        {activeTab === 'maxima' && <MaximaTab gameState={gameState} setGameState={setGameState} />}
 
         {/* ONGLET 4 : ⚖️ SUIVI DU POIDS */}
         {activeTab === 'weight' && (

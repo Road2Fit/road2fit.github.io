@@ -170,7 +170,7 @@ describe('édition neutre pour les amis', () => {
     open.push(h);
     await advance(h, 300);
     const interdits = /Rondoudou|Grosdoudou|Toudoudou|Grodoudou|Dresseur|Arène|Poké|Pokéball|berceuse|Smash du|Évolution d’Arène/i;
-    for (const onglet of ['Coach', 'Exercices', 'Journal', 'Courbes', 'Mes maxima', 'Poids', 'Souvenirs', 'Bilan', 'Trophées']) {
+    for (const onglet of ['Coach', 'Exercices', 'Journal', 'Poids', 'Souvenirs', 'Bilan', 'Trophées']) {
       await clickText(h, onglet);
       await advance(h, 200);
       { const t = pageText(h).replace('abdos de Rondoudou', ''); const m = t.match(interdits); expect(m && m[0], onglet).toBeNull(); } // (la note de démonstration est une donnée, pas l’interface)

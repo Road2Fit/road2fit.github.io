@@ -366,6 +366,7 @@ const gclick = async (h, el) => { el.dispatchEvent(new h.w.MouseEvent('click', {
 /** Une action dans la séance guidée : série faite, échauffement passé (ou fait si warm: 'do'), repos sauté. Renvoie ce qui a été fait. */
 export async function guidedStep(h, { warm = 'skip' } = {}) {
   if (gq(h, 'guided-summary')) return 'summary';
+  if (gq(h, 'feel-ok')) { await gclick(h, gq(h, 'feel-ok')); return 'feel'; }
   if (gq(h, 'set-done')) { await gclick(h, gq(h, 'set-done')); return 'set'; }
   if (gq(h, 'warm-done')) {
     if (warm === 'do') await gclick(h, gq(h, 'warm-done'));
@@ -392,4 +393,10 @@ export async function openQuestSheet(h, name) {
   if (!t) throw new Error('Exercice introuvable : ' + name);
   await clickEl(h, t);
   return h.doc.querySelector('[data-testid="quest-sheet"]');
+}
+
+/** Déplie le détail de l'avis du coach (notes de la séance, exercices à ajouter pour la compléter). */
+export async function openCoachDetails(h) {
+  const b = [...h.doc.querySelectorAll('button')].find(x => /Voir le détail/.test(x.textContent));
+  if (b) await clickEl(h, b);
 }

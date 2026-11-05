@@ -24,6 +24,7 @@ describe('échauffement avant les séries de travail', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
 
+    if (h.doc.querySelector('[data-testid="feel-ok"]')) await clickEl(h, h.doc.querySelector('[data-testid="feel-ok"]')); // 1re page : comment te sens-tu ?
     // un écran par série d'échauffement (1 ou 2), avant les séries de travail
     const zone = () => h.doc.querySelector('[data-testid="warmup"]');
     expect(zone()).toBeTruthy();
@@ -56,10 +57,11 @@ describe('échauffement avant les séries de travail', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     await advance(h, 300);
-    while (h.doc.querySelector('[data-testid="warm-done"]')) await guidedStep(h);
+    while (h.doc.querySelector('[data-testid="warm-done"]') || h.doc.querySelector('[data-testid="feel-ok"]')) await guidedStep(h);
     // l'animation du mouvement se joue en haut de l'écran de la série, sans rien toucher
     await advance(h, 300);
     expect(h.doc.querySelector('[data-testid="guided-set"] [data-testid="mini-movement"]')).toBeTruthy();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+

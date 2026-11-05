@@ -22,7 +22,8 @@ describe('séance guidée : un écran par série', () => {
     await lancer(h);
     expect(by(h, 'guided')).toBeTruthy();
     expect(h.doc.body.style.overflow).toBe('hidden'); // la page derrière ne défile pas
-    while (by(h, 'warm-done')) await guidedStep(h); // échauffement passé
+    expect(by(h, 'guided-feel')).toBeTruthy(); // 1re page : comment te sens-tu ?
+    while (by(h, 'warm-done') || by(h, 'feel-ok')) await guidedStep(h); // échauffement passé
     expect(by(h, 'set-label').textContent).toContain('Série 1');
     await click(h, by(h, 'set-done'));
     expect(events).toHaveLength(1);
@@ -60,6 +61,7 @@ describe('exercice déjà terminé', () => {
     const h = await launch();
     open.push(h);
     await lancer(h);
+    await guidedStep(h); // comment te sens-tu ?
     // on termine le 1er exercice : toutes ses séries, puis on revient dessus
     const first = h.doc.querySelector('[data-testid="guided"] h2')?.textContent || '';
     for (let k = 0; k < 40; k++) {

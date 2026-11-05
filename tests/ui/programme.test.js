@@ -1,6 +1,6 @@
 // « J'ai déjà un coach » : saisir son programme, le coach de l'appli le suit puis propose la suite.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickEl, clickText, launch, setInput, runGuided } from './harness';
+import { advance, clickEl, clickText, launch, setInput, runGuided, openCoachDetails } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -32,6 +32,7 @@ describe('programme de mon coach', () => {
     expect(by(h, 'program-analysis').textContent).toMatch(/Progression par la charge/);
     // la prochaine séance est celle du coach
     expect(h.doc.body.textContent).toContain('Ton coach'); // badge de chaque exercice de la séance
+    await openCoachDetails(h);
     expect(h.doc.body.textContent).toContain('Programme de ton coach : semaine 1');
     await clickText(h, 'Lancer');
     expect(await runGuided(h)).toBe('summary');
@@ -120,6 +121,7 @@ describe('après la saisie : l’appli prend le relais ?', () => {
     await clickEl(h, by(h, 'preview-takeover'));
     expect(save(h).coach.program.takeOver).toBe(true);
     expect(by(h, 'coach-preview')).toBeNull();
+    await openCoachDetails(h);
     expect(h.doc.body.textContent).toContain('suite que je propose');
     expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(true);
     // la question revient à chaque enregistrement du programme

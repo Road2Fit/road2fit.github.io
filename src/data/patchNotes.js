@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.1',
+    date: '2026-11-05',
+    title: 'Tout sur un exercice au même endroit',
+    items: [
+      'La courbe et le maximum de chaque exercice sont dans sa fiche (touche son logo, puis les boutons courbe et maximum). Les onglets « Courbes » et « Mes maxima » disparaissent.',
+      'Le maximum tient toujours compte de ton effort ressenti, sans case à cocher.',
+      'Prochaine séance : une horloge pour la durée, une flamme pour les calories ; les petits textes sont dans le détail de l’avis du coach.',
+      '« Comment te sens-tu ? » est maintenant la première page de la séance guidée : « Cuit » allège la séance (−10 % de charge, une série de moins).',
+    ],
+  },
+  {
     version: '4.0.1',
     date: '2026-11-05',
     title: 'Tes photos souvenirs reviennent',

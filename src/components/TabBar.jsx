@@ -7,8 +7,6 @@ export const TABS = [
   { id: 'coach', icon: '🧠', art: 'coach', label: 'Coach' },
   { id: 'quests', icon: '🏋️', art: 'dumbbell', label: 'Exercices' },
   { id: 'journal', icon: '📅', art: 'calendar', label: 'Journal' },
-  { id: 'charts', icon: '📈', art: 'chart', label: 'Courbes', group: 'suivi' },
-  { id: 'maxima', icon: '💯', art: 'gauge', label: 'Mes maxima', group: 'suivi' },
   { id: 'weight', icon: '⚖️', art: 'scale', label: 'Poids', group: 'suivi' },
   { id: 'photos', icon: '📸', art: 'camera', label: 'Souvenirs', group: 'plus' },
   { id: 'bilan', icon: '📊', art: 'clipboard', label: 'Bilan', group: 'plus' },

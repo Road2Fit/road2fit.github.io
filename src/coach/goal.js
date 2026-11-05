@@ -20,7 +20,7 @@ export function goalProgress(state, goal, today) {
   const target = Number(goal.target) || 0;
   const out = (current, unit, label) => ({ current, target, unit, label, weeksLeft, pct: target > 0 && current !== null ? Math.max(0, Math.min(100, Math.round((current / target) * 100))) : null });
   if (goal.kind === 'strength' && q) {
-    const est = estimateQuestMax(q, state, { today });
+    const est = estimateQuestMax(q, state, { useRpe: true, today });
     const cur = est && !est.empty && est.estimate ? Math.round(est.estimate * 2) / 2 : null;
     return out(cur, 'kg', cur ? `Max estimé : ${cur} kg${target ? ` sur ${target} kg visés` : ''}` : 'Max estimé après quelques séances');
   }

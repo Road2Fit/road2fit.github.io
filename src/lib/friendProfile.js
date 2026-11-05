@@ -31,7 +31,7 @@ function describeEntry(e) {
 
 /** Maximum lisible d'un exercice : { label, value } ou null s'il n'y a rien à montrer. */
 function describeMax(q, state, today) {
-  const r = estimateQuestMax(q, state, { today });
+  const r = estimateQuestMax(q, state, { useRpe: true, today });
   // record réel saisi à la main (onglet « Mes maxima ») : c'est ce que la personne a rentré, il passe en premier
   const m = (state.maxRecords || {})[q.id];
   if (m) {

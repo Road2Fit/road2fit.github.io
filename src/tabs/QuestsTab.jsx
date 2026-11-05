@@ -1,4 +1,10 @@
 import { useState } from 'react';
+import { QuestChart } from '../components/QuestChart';
+import { MaxCard } from '../components/MaxCard';
+import { MaximaSources } from '../components/MaximaSources';
+import { estimateQuestMax } from '../lib/maxima';
+import { coachStep } from '../coach/settings';
+import { getTodayISODate } from '../lib/dates';
 import { Art } from '../components/Art';
 import { assistText } from '../lib/assist';
 import { ARENA_GROUPS } from '../data/arenas';
@@ -11,11 +17,17 @@ import { cleanText, pick } from '../edition';
 import { arenaLabel, hasArena } from '../data/muscles';
 
 export function QuestsTab({
-  arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
+  arenaLevels = [], filteredQuests, gameState, setGameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
   openLevelUpModal, openLogModal, questFilter, setActiveTab, setQuestFilter,
   setSelectedChartQuestId,
 }) {
-  const [openId, setOpenId] = useState(null);
+  const [openId, setOpenIdRaw] = useState(null);
+  const [showChart, setShowChart] = useState(false);
+  const [showMax, setShowMax] = useState(false);
+  const setOpenId = id => { setOpenIdRaw(id); setShowChart(false); setShowMax(false); };
+  // maximum de l'exercice (effort ressenti toujours pris en compte) et record réel noté à la main
+  const saveRecord = (id, rec) => setGameState && setGameState(prev => ({ ...prev, maxRecords: { ...(prev.maxRecords || {}), [id]: { ...rec, date: getTodayISODate() } } }));
+  const clearRecord = id => setGameState && setGameState(prev => { const { [id]: _r, ...rest } = prev.maxRecords || {}; return { ...prev, maxRecords: rest }; });
   const openQuest = openId ? gameState.quests.find(q => q.id === openId) : null;
   // fiche complète d'un exercice (objectif, progression, noter la séance, geste, courbe, réglages) : dans la fenêtre
   const renderCard = quest => {
@@ -85,16 +97,18 @@ export function QuestsTab({
                     <button type="button" onClick={() => openMovement(quest)} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-slate-200 whitespace-nowrap"><Art name="film" size={16} className="mr-1" />Geste</button>
                   )}
                   <button
-                    onClick={() => {
-                      setOpenId(null);
-                      setSelectedChartQuestId(quest.id);
-                      setActiveTab('charts');
-                    }}
+                    onClick={() => setShowChart(v => !v)}
                     title="Voir la courbe de progression"
                     aria-label="Voir la courbe de progression"
-                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                    aria-pressed={showChart}
+                    data-testid="quest-chart-toggle"
+                    className={`p-2.5 rounded-xl transition ${showChart ? 'bg-pink-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
                   >
                     <Art name="chart" size={18} bare />
+                  </button>
+                  <button type="button" onClick={() => setShowMax(v => !v)} title="Mon maximum" aria-label="Mon maximum" aria-pressed={showMax} data-testid="quest-max-toggle"
+                    className={`p-2.5 rounded-xl transition ${showMax ? 'bg-pink-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
+                    <Art name="gauge" size={18} bare />
                   </button>
                 </div>
 
@@ -396,6 +410,14 @@ export function QuestsTab({
           <div className="relative w-full max-w-lg" onClick={e => e.stopPropagation()} role="dialog" aria-label={openQuest.name} data-testid="quest-sheet">
             <button type="button" onClick={() => setOpenId(null)} aria-label="Fermer" className="absolute -top-11 right-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
             {renderCard(openQuest)}
+            {showMax && (
+              <div className="mt-2 space-y-2" data-testid="quest-max">
+                <MaxCard quest={openQuest} result={estimateQuestMax(openQuest, gameState, { useRpe: true, today: getTodayISODate() })} step={coachStep(openQuest, Number(openQuest.currentValue) || 0)}
+                  onSave={rec => saveRecord(openQuest.id, rec)} onClear={() => clearRecord(openQuest.id)} />
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3"><MaximaSources /></div>
+              </div>
+            )}
+            {showChart && <div className="mt-2 bg-slate-900 border border-slate-800 rounded-2xl p-3" data-testid="quest-chart"><QuestChart quest={openQuest} /></div>}
           </div>
         </div>
       )}

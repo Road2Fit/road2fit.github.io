@@ -181,7 +181,7 @@ describe('séance ratée', () => {
     expect(card.textContent).toContain('mardi 20 octobre');
     await clickEl(h, byTest(h, 'missed-session-start'));
     await advance(h, 300);
-    expect(pageText(h)).toMatch(/Série 1|Terminer la séance|Échauffement/);
+    expect(pageText(h)).toMatch(/Comment te sens-tu|Série 1|Terminer la séance|Échauffement/); // la séance guidée est ouverte
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

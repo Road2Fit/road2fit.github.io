@@ -347,7 +347,7 @@ export function CoachPanel({
       <div className="space-y-4" data-testid="coach-settings-page">
         {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
         {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
-        <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('maxima') : null} />
+        <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs" data-testid="method-style">

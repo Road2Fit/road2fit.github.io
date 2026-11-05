@@ -1,39 +1,8 @@
-import { Plus } from '../icons';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest } from '../lib/quests';
 
-export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelectedChartQuestId }) {
-  return (
-    <div className="space-y-6">
-      <label className="block">
-        <span className="block text-xs font-bold text-slate-400 mb-1">Exercice</span>
-        <select value={activeChartQuest ? activeChartQuest.id : ''} onChange={e => setSelectedChartQuestId(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm font-bold text-white">
-          {gameState.quests.map(q => <option key={q.id} value={q.id}>{q.name} (niv. {q.level || 1})</option>)}
-        </select>
-      </label>
-
-      {activeChartQuest && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <span>{activeChartQuest.icon}</span>
-                <span>{activeChartQuest.name}</span>
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Niveau actuel : Niv. {activeChartQuest.level || 1}
-              </p>
-            </div>
-
-            <button
-              onClick={() => openLogModal(activeChartQuest)}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" /> Ajouter une séance
-            </button>
-          </div>
-
-          {(() => {
-            const history = activeChartQuest.history || [];
+// Courbe de progression d'un exercice (ancien onglet « Courbes », maintenant dans la fiche de l'exercice).
+export function QuestChart({ quest }) {
+            const history = quest.history || [];
             if (history.length === 0) {
               return (
                 <div className="p-8 text-center text-slate-400 text-sm">
@@ -43,8 +12,8 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
             }
 
             const values = history.map(h => Number(h.value) || 0);
-            const goalVal = Number(activeChartQuest.goalValue) || 10;
-            const minVal = Math.min(...values, Number(activeChartQuest.startValue) || 0) * 0.8; // pas de départ à 0 : la courbe reste lisible
+            const goalVal = Number(quest.goalValue) || 10;
+            const minVal = Math.min(...values, Number(quest.startValue) || 0) * 0.8; // pas de départ à 0 : la courbe reste lisible
             const maxVal = Math.max(...values, goalVal, 10) * 1.15;
             const narrow = window.innerWidth < 640;
             const width = narrow ? 340 : 760; // sur téléphone, moins de points étiquetés et des textes à taille réelle
@@ -87,7 +56,7 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                     textAnchor="end"
                     className="fill-amber-400 text-[13px] font-bold"
                   >
-                    Objectif : {goalVal} {activeChartQuest.unit}
+                    Objectif : {goalVal} {quest.unit}
                   </text>
 
                   {history.length > 1 && (
@@ -104,11 +73,11 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                     const cy = getY(h.value);
                     const showLabel = idx === history.length - 1 || (idx % labelStep === 0 && history.length - 1 - idx >= labelStep);
                     const setsArr =
-                      activeChartQuest.type === 'strength'
+                      quest.type === 'strength'
                         ? getSetDetailsArray(
                             h,
-                            activeChartQuest.goalSets || 3,
-                            activeChartQuest.goalReps || 6
+                            quest.goalSets || 3,
+                            quest.goalReps || 6
                           )
                         : [];
                     return (
@@ -125,15 +94,15 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                           textAnchor="middle"
                           className="fill-white text-[13px] font-bold"
                         >
-                          {activeChartQuest.type === 'strength'
+                          {quest.type === 'strength'
                             ? `${
-                                activeChartQuest.unit === 'kg'
+                                quest.unit === 'kg'
                                   ? `${h.value}kg `
                                   : ''
                               }[${formatSetsBreakdown(setsArr)}]`
-                            : `${h.value} ${activeChartQuest.unit}`}
+                            : `${h.value} ${quest.unit}`}
                         </text>}
-                        {showLabel && !narrow && activeChartQuest.unit === 'reps' && !isTimedQuest(activeChartQuest) && (
+                        {showLabel && !narrow && quest.unit === 'reps' && !isTimedQuest(quest) && (
                           <text
                             x={cx}
                             y={cy + 16}
@@ -159,9 +128,4 @@ export function ChartsTab({ activeChartQuest, gameState, openLogModal, setSelect
                 </svg>
               </div>
             );
-          })()}
-        </div>
-      )}
-    </div>
-  );
 }

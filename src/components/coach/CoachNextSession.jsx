@@ -46,28 +46,6 @@ export function CoachNextSession({
         </div>
       )}
 
-      {ov.hasExercises && !preview && (
-        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
-          <p className="text-xs font-bold text-slate-300">Comment te sens-tu aujourd’hui ?</p>
-          <div className="flex flex-wrap gap-1.5">
-            {[['low', 'Cuit', 'tired'], ['ok', 'Normal', 'smile'], ['high', 'En forme', 'muscle']].map(([lv, lab, art]) => {
-              const on = coach.readiness && coach.readiness.date === today && coach.readiness.level === lv;
-              return (
-                <button key={lv} onClick={() => updateCoach({ readiness: on ? null : { date: today, level: lv } })}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${on ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                  <Art name={art} />{lab}
-                </button>
-              );
-            })}
-            {!plan && first && (
-              <button onClick={() => setShortMode(v => !v)}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                <Art name="timer" />Version courte (40 min)
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {!ov.hasExercises && !plan && (
         <div className="text-sm text-slate-300 space-y-2">
@@ -143,15 +121,19 @@ export function CoachNextSession({
             <span className="text-slate-300 font-bold">
               {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
             </span>
-            <span className="text-slate-400">≈ {shownSession.estMin} min · ≈ {shownSession.estKcal} kcal</span>
+            <span className="inline-flex items-center gap-1 text-slate-200 font-bold" title="Durée estimée" data-testid="session-min"><Art name="timer" size={15} bare />{shownSession.estMin} min</span>
+            <span className="inline-flex items-center gap-1 text-slate-200 font-bold" title="Calories estimées" data-testid="session-kcal"><Art name="flame" size={15} bare />{shownSession.estKcal} kcal</span>
+            {!plan && first && !preview && (
+              <button type="button" onClick={() => setShortMode(v => !v)} aria-pressed={shortMode} data-testid="short-mode"
+                className={`px-2 py-0.5 rounded-full border font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
+                <Art name="timer" size={13} bare /> 40 min
+              </button>
+            )}
             {(() => {
               const pf = activeProfile(gameState, shownDate);
               return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
             })()}
           </div>
-          {!preview && shownSession.notes.map((n, i) => (
-            <p key={i} className="text-xs text-sky-300">{n}</p>
-          ))}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
@@ -264,16 +246,6 @@ export function CoachNextSession({
             })}
           </div>
           {/* l'échauffement de chaque exercice est maintenant calculé dans la séance guidée (coach/warmup.js) */}
-          {!plan && !preview && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
-              <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
-              <div className="flex flex-wrap gap-1.5">
-                {shownSession.fillSuggestions.map(c => (
-                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
       {plan && shownSession && shownSession.exercises.length === 0 && (
@@ -293,6 +265,19 @@ export function CoachNextSession({
           <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-xs font-bold text-sky-300">
             {showRating ? '▾ Masquer le détail' : `▸ Voir le détail (${rating.items.length})`}
           </button>
+          {showRating && shownSession && !preview && shownSession.notes.map((n, i) => (
+            <p key={`n${i}`} className="text-xs text-sky-300" data-testid="session-note">{n}</p>
+          ))}
+          {showRating && shownSession && !plan && !preview && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
+              <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
+              <div className="flex flex-wrap gap-1.5">
+                {shownSession.fillSuggestions.map(c => (
+                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
+                ))}
+              </div>
+            </div>
+          )}
           {showRating && (
           <div className="space-y-1.5">
             {rating.items.map((it, i) => (
