@@ -213,6 +213,7 @@ export function App() {
         streakBonusPct={xpBonusPct}
         syncStatus={sync.status}
         trialRank={trialRank}
+        renderWeight={() => <WeightTab gameState={gameState} setGameState={setGameState} {...weight} />}
       />
 
       {/* CONTENU PRINCIPAL */}
@@ -291,9 +292,6 @@ setGameState={setGameState}
         {/* ONGLET : 💯 MES MAXIMA */}
 
         {/* ONGLET 4 : ⚖️ SUIVI DU POIDS */}
-        {activeTab === 'weight' && (
-          <WeightTab gameState={gameState} setGameState={setGameState} {...weight} />
-        )}
 
         {/* ONGLET : BILAN (défis, semaine, records) */}
         {activeTab !== 'photos' && <PhotoReminder gameState={gameState} onGo={() => goToTab('photos')} />}

@@ -7,7 +7,6 @@ export const TABS = [
   { id: 'coach', icon: '🧠', art: 'coach', label: 'Coach' },
   { id: 'quests', icon: '🏋️', art: 'dumbbell', label: 'Exercices' },
   { id: 'journal', icon: '📅', art: 'calendar', label: 'Journal' },
-  { id: 'weight', icon: '⚖️', art: 'scale', label: 'Poids', group: 'suivi' },
   { id: 'photos', icon: '📸', art: 'camera', label: 'Souvenirs', group: 'plus' },
   { id: 'bilan', icon: '📊', art: 'clipboard', label: 'Bilan', group: 'plus' },
   { id: 'trophies', icon: '🏆', art: 'trophy', label: 'Trophées', group: 'plus' },
@@ -61,17 +60,15 @@ export function SubTabs({ activeTab, setActiveTab }) {
 
 // Téléphone : barre fixe en bas de l'écran
 export function BottomNav({ activeTab, moreOpen, onOpenMore, setActiveTab }) {
-  const inSuivi = SUIVI_TABS.some(t => t.id === activeTab);
   const inPlus = PLUS_TABS.some(t => t.id === activeTab);
   const items = [
     { key: 'coach', art: 'coach', label: 'Coach', on: activeTab === 'coach', go: () => setActiveTab('coach') },
     { key: 'quests', art: 'dumbbell', label: 'Exercices', on: activeTab === 'quests', go: () => setActiveTab('quests') },
     { key: 'journal', art: 'calendar', label: 'Journal', on: activeTab === 'journal', go: () => setActiveTab('journal') },
-    { key: 'suivi', art: 'chart', label: 'Suivi', on: inSuivi, go: () => setActiveTab(inSuivi ? activeTab : 'weight') },
     { key: 'plus', art: 'more', label: 'Plus', on: inPlus || moreOpen, go: onOpenMore },
   ];
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-800 grid grid-cols-5 pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-800 grid grid-cols-4 pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">
       {items.map(i => (
         <button key={i.key} onClick={i.go} className={`flex flex-col items-center justify-center gap-0.5 py-2 ${i.on ? 'text-pink-300' : 'text-slate-400'}`}>
           <Art name={i.art} size={26} bare className={i.on ? '' : 'opacity-75'} />

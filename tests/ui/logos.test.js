@@ -22,7 +22,7 @@ describe('logos maison', () => {
     const h = await launch({ storage: { __classic: '1' } });
     open.push(h);
     const vus = new Set();
-    for (const id of ['coach', 'quests', 'journal', 'weight', 'photos', 'bilan', 'trophies', 'friends']) {
+    for (const id of ['coach', 'quests', 'journal', 'photos', 'bilan', 'trophies', 'friends']) {
       await clickEl(h, h.doc.querySelector(`[data-tab="${id}"]`));
       emojisIn(h).forEach(e => vus.add(`${id} : ${e}`));
     }

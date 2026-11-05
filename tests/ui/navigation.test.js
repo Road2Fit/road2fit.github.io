@@ -10,11 +10,13 @@ const nav = h => h.doc.querySelector('nav[aria-label="Navigation"]');
 const bas = (h, texte) => [...nav(h).querySelectorAll('button')].find(b => b.textContent.includes(texte));
 
 describe('navigation', () => {
-  it('barre du bas : 5 entrées, « Suivi » ouvre le poids (courbes et maxima sont dans la fiche de chaque exercice)', async () => {
+  it('barre du bas : 4 entrées ; le poids est dans le profil (icône en haut à gauche)', async () => {
     const h = await start();
-    expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Suivi', 'Plus']);
-    await clickEl(h, bas(h, 'Suivi'));
-    expect(pageText(h)).toContain('Poids');
+    expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Plus']);
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-weight-button"]'));
+    expect(h.doc.querySelector('[data-testid="profile-weight"]')).toBeTruthy();
+    expect(h.doc.querySelector('[data-tab="weight"]')).toBeNull();
     expect(h.doc.querySelector('[data-tab="charts"]')).toBeNull();
     expect(h.doc.querySelector('[data-tab="maxima"]')).toBeNull();
     expect(h.errors).toEqual([]);

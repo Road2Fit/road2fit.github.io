@@ -42,7 +42,7 @@ describe('application', () => {
     const attendus = [
       ['Coach', 'Prochaine séance'],
       ['Journal', 'Journal'],
-      ['Poids', 'Poids'],
+      ['Mon poids', 'Pesée'],
       ['Souvenirs', 'Souvenirs'],
       ['Bilan', 'Bilan'],
       ['Trophées', 'Trophées'],

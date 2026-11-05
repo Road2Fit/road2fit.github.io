@@ -143,6 +143,10 @@ export async function clickText(h, text) {
     const tile = h.doc.querySelector('[data-testid="quest-tile"]');
     if (tile) { await clickEl(h, tile); [el] = findByText(h, text); if (!el) { const x = h.doc.querySelector('[data-testid="quest-sheet"] button[aria-label="Fermer"]'); if (x) await clickEl(h, x); } }
   }
+  if (!el && !h.doc.querySelector('[data-testid="profile-sheet"]')) {
+    const pb = h.doc.querySelector('[data-testid="profile-button"]');
+    if (pb) { await clickEl(h, pb); [el] = findByText(h, text); if (!el) { const x = h.doc.querySelector('[data-testid="profile-sheet"] button[aria-label="Fermer"]'); if (x) await clickEl(h, x); } }
+  }
   if (!el) {
     const more = h.doc.querySelector('button[aria-label="Réglages et données"]');
     if (more) { await clickEl(h, more); [el] = findByText(h, text); }

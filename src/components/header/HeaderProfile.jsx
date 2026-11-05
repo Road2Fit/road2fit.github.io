@@ -1,5 +1,5 @@
 import { Art } from '../Art';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MuscleBodyMap } from '../coach/MuscleBodyMap';
 import { coachBalance } from '../../coach/advice';
 import { getTodayISODate } from '../../lib/dates';
@@ -33,9 +33,16 @@ function AvatarRing({ gameState, hero, pct, size = 52, locked = false }) {
 // Toucher l'icône ouvre le profil : niveau, EXP, rang, épreuve, série et bonus, poids, muscles, récompenses.
 export function HeaderProfile({
   currentStreak, gameState, levelInfo, lifetimeStats, onOpenMore, onOpenRewards, onOpenSync, onOpenTrial,
-  onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank,
+  onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank, renderWeight,
 }) {
   const [open, setOpen] = useState(false);
+  const [showWeight, setShowWeight] = useState(false);
+  // ouvrir directement le suivi du poids depuis ailleurs (événement rondoufit-open-weight)
+  useEffect(() => {
+    const h = () => { setOpen(true); setShowWeight(true); };
+    window.addEventListener('rondoufit-open-weight', h);
+    return () => window.removeEventListener('rondoufit-open-weight', h);
+  }, []);
   const { theme, title } = activeCosmetics(gameState.cosmetics, levelInfo.level);
   const hero = /^Dresseur/i.test(gameState.heroName || '') ? '' : gameState.heroName || ''; // le nom par défaut de l'édition Rondoudou n'est pas un prénom
   const balanceRows = useMemo(() => (open ? coachBalance(gameState, getTodayISODate()).rows : null), [open, gameState.muscleMode, gameState.quests]);
@@ -100,12 +107,14 @@ export function HeaderProfile({
               <span className={`${chip} bg-amber-500/15 text-amber-300 border-amber-500/30`}><Art name="flame" size={15} bare /> Série : {currentStreak} j</span>
               {streakBonusPct > 0 && <span className={`${chip} bg-slate-800 text-amber-200 border-slate-700`}><Art name="bolt" size={14} bare />+{streakBonusPct} % d’EXP</span>}
               <span className={`${chip} bg-slate-800 text-slate-200 border-slate-700`}>{lifetimeStats.totalKcal} kcal au total</span>
-              <button type="button" onClick={() => go('weight')} className={`${chip} bg-slate-800 text-slate-200 border-slate-600`}><Art name="scale" size={15} bare /> {gameState.userWeightKg} kg ➔ {gameState.targetWeightKg} kg</button>
+              <button type="button" onClick={() => setShowWeight(v => !v)} aria-pressed={showWeight} data-testid="profile-weight-toggle" className={`${chip} ${showWeight ? 'bg-pink-600 text-white border-pink-400' : 'bg-slate-800 text-slate-200 border-slate-600'}`}><Art name="scale" size={15} bare /> {gameState.userWeightKg} kg ➔ {gameState.targetWeightKg} kg</button>
               <button type="button" onClick={() => { setOpen(false); onOpenSync(); }} aria-label="Mon compte et ma sauvegarde"
                 className={`${chip} ${syncStatus === 'synced' ? 'bg-slate-800 text-emerald-300 border-slate-700' : syncProblem ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-slate-800 text-amber-300 border-slate-700'}`}>
                 {syncStatus === 'synced' ? '☁️ Sauvegardé' : syncStatus === 'off' ? '⚠️ Non sauvegardé' : syncStatus === 'error' ? '⚠️ Sauvegarde injoignable' : '☁️ …'}
               </button>
             </div>
+
+            {showWeight && renderWeight && <div className="space-y-4" data-testid="profile-weight">{renderWeight()}</div>}
 
             {balanceRows && (
               <button type="button" onClick={() => { window.__r2fCoachPage = 'equilibre'; go('coach'); try { window.dispatchEvent(new CustomEvent('rondoufit-coach-page', { detail: 'equilibre' })); } catch (e) { /* rien */ } }} aria-label="Muscles à travailler" data-testid="profile-balance" className="w-full flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-left">
@@ -116,6 +125,7 @@ export function HeaderProfile({
 
             <div className="grid grid-cols-2 gap-2">
               {trialRank && <button type="button" onClick={() => { setOpen(false); onOpenTrial(); }} className={`py-3 rounded-xl text-sm font-black ${locked ? 'bg-amber-400 text-slate-950 animate-pulse' : 'bg-slate-800 text-slate-100'}`}>🔒 Épreuve de rang</button>}
+              <button type="button" onClick={() => setShowWeight(v => !v)} aria-pressed={showWeight} data-testid="profile-weight-button" className={`py-3 rounded-xl text-sm font-bold ${showWeight ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-100'}`}><Art name="scale" size={16} />Mon poids</button>
               <button type="button" onClick={() => { setOpen(false); onOpenRewards(); }} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="gift" size={16} />Récompenses</button>
               <button type="button" onClick={() => go('bilan')} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="chart" size={16} />Bilan</button>
               <button type="button" onClick={() => go('trophies')} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="trophy" size={16} />Trophées</button>
