@@ -129,7 +129,7 @@ export async function clickEl(h, el) {
 
 /** Déplie les « Pourquoi ? / Ajuster » de la prochaine séance du coach (repliés par défaut). */
 export async function expandCoachDetails(h) {
-  for (const b of [...h.doc.querySelectorAll('button')].filter(x => x.textContent.includes('Pourquoi ? / Ajuster'))) await clickEl(h, b);
+  for (const b of [...h.doc.querySelectorAll('button')].filter(x => x.getAttribute('aria-label') === 'Pourquoi ? / Ajuster' && x.getAttribute('aria-expanded') === 'false')) await clickEl(h, b);
 }
 
 export async function clickText(h, text) {

@@ -52,7 +52,7 @@ describe('forme personnalisée', () => {
     const h = await launch({ openCoach: true });
     open.push(h);
     await advance(h, 300);
-    const why = [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Pourquoi ? / Ajuster'));
+    const why = [...h.doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Pourquoi ? / Ajuster');
     await clickEl(h, why);
     await setInput(h, byTest(h, 'method-select'), 'custom');
     const ed = byTest(h, 'custom-editor');

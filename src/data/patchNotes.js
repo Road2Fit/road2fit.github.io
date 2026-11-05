@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.5',
+    date: '2026-11-06',
+    title: 'Carte ronde et icônes',
+    items: [
+      'La grande carte de ta séance, en haut du Coach, devient un cercle.',
+      'Prochaine séance : touche l’icône pour voir le mouvement, et le crayon pour le « pourquoi » et les réglages de l’exercice (un point orange = modifié par toi).',
+    ],
+  },
+  {
     version: '4.4.3',
     date: '2026-11-06',
     title: 'Fiches d’exercice qui ne défilaient plus',

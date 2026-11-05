@@ -115,7 +115,7 @@ describe('après la saisie : l’appli prend le relais ?', () => {
     expect(by(h, 'coach-preview')).toBeTruthy();
     expect(h.doc.body.textContent).toContain('Aperçu de la séance suivante');
     expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(false);
-    expect(h.doc.body.textContent).not.toContain('Pourquoi ? / Ajuster');
+    expect(h.doc.querySelector('[data-testid="ex-adjust"]')).toBeNull();
     expect(h.doc.body.textContent).not.toContain('Avis du coach');
     // changer d'avis
     await clickEl(h, by(h, 'preview-takeover'));

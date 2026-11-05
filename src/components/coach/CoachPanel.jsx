@@ -260,10 +260,10 @@ export function CoachPanel({
       )}
       {/* GRANDE CARTE DE LA SÉANCE : tout en haut, la prochaine séance et le bouton pour la lancer */}
       {guidedActive && (
-        <section data-hero data-testid="session-hero" className="rounded-2xl bg-pink-600 text-white p-4 space-y-2 shadow-xl">
+        <section data-hero data-testid="session-hero" className="hero-round bg-pink-600 text-white shadow-xl">
           <p className="text-xs font-black uppercase tracking-widest opacity-80">Séance en cours</p>
-          <h2 className="text-4xl font-black leading-none">Reprends où tu en étais</h2>
-          <button type="button" onClick={onResumeGuided} data-testid="resume-guided" className="hero-cta w-full py-3.5 rounded-xl bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+          <h2 className="text-4xl font-black leading-none">Reprends où<br />tu en étais</h2>
+          <button type="button" onClick={onResumeGuided} data-testid="resume-guided" className="hero-cta mt-2 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>Reprendre
           </button>
         </section>
@@ -273,15 +273,15 @@ export function CoachPanel({
         const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
         const line = e => `${e.name} ${e.sets}×${(e.targetReps || [])[0] || ''}${e.kind === 'load' ? ` · ${String(e.load).replace('.', ',')} kg` : ''}`;
         return (
-          <section data-hero data-testid="session-hero" className="rounded-2xl bg-pink-600 text-white p-4 space-y-2 shadow-xl">
-            <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : `Prochaine séance · ${formatDayFr(shownDate)}`}</p>
-            <h2 className="text-4xl font-black leading-none">{title} · {shownSession.estMin} min</h2>
-            <div className="text-sm font-bold opacity-90 space-y-0.5">
+          <section data-hero data-testid="session-hero" className="hero-round bg-pink-600 text-white shadow-xl">
+            <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}</p>
+            <h2 className="text-4xl font-black leading-none">{title}<br />{shownSession.estMin} min</h2>
+            <div className="text-sm font-bold opacity-90 space-y-0.5 max-w-full">
               {shownSession.exercises.slice(0, 2).map(e => <p key={e.questId} className="truncate">{line(e)}</p>)}
               {shownSession.exercises.length > 2 && <p className="opacity-80">+ {shownSession.exercises.length - 2} exercice{shownSession.exercises.length - 2 > 1 ? 's' : ''}</p>}
             </div>
             <button type="button" onClick={() => onStartGuided(sessionToStart)} data-testid={isToday ? 'start-today' : 'start-early'}
-              className="hero-cta w-full py-3.5 rounded-xl bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+              className="hero-cta mt-1 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
               <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>
               {isToday ? 'Lancer' : 'Lancer en avance'}
             </button>

@@ -163,10 +163,15 @@ export function CoachNextSession({
                       )}
                     </div>
                   </div>
-                  <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement (animation)" aria-label="Voir le mouvement" className="mt-1.5 mr-3 text-xs font-bold text-sky-300 underline-offset-2"><Art name="film" />Voir le mouvement</button>
-                  {!preview && <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} className="mt-1.5 text-xs font-bold text-sky-300">
-                    {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
-                  </button>}
+                  {/* deux icônes seules : le mouvement (animation) et le crayon (pourquoi / ajuster) */}
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement" aria-label="Voir le mouvement" className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center"><Art name="film" size={20} bare /></button>
+                    {!preview && <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} title="Pourquoi ? / Ajuster" aria-label="Pourquoi ? / Ajuster" data-testid="ex-adjust"
+                      className={`relative w-10 h-10 rounded-xl border flex items-center justify-center ${openEx[e.questId] ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-700'}`}>
+                      <Art name="pencil" size={20} bare />
+                      {e.manual && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400" title="Modifié par toi" />}
+                    </button>}
+                  </div>
                   {!preview && openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
                   {!preview && openEx[e.questId] && !e.plan && e.restSec > 0 && <p className="text-xs text-slate-400 mt-1">Repos de {restText(e.restSec)} : {restFor({ name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
                   {!preview && openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
