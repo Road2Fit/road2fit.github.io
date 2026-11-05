@@ -401,6 +401,6 @@ export async function openQuestSheet(h, name) {
 
 /** Déplie le détail de l'avis du coach (notes de la séance, exercices à ajouter pour la compléter). */
 export async function openCoachDetails(h) {
-  const b = [...h.doc.querySelectorAll('button')].find(x => /Voir le détail/.test(x.textContent));
+  const b = h.doc.querySelector('[data-testid="coach-rating"] button[aria-expanded="false"]');
   if (b) await clickEl(h, b);
 }

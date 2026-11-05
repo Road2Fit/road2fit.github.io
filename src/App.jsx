@@ -246,6 +246,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
           <SubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
 
+        <div key={activeTab} className="tab-in space-y-4 sm:space-y-6">
         {activeTab === 'coach' && (
           <CoachPanel
             gameState={gameState}
@@ -307,6 +308,7 @@ setGameState={setGameState}
         {activeTab === 'trophies' && (
           <TrophiesTab achStats={achStats} gameState={gameState} onClaimWeekly={handleClaimWeekly} />
         )}
+        </div>
       </main>
 
       {/* MODALE 1 : NOTER UNE SÉANCE */}

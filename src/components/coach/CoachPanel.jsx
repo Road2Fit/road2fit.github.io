@@ -242,7 +242,7 @@ export function CoachPanel({
         ))}
       </nav>
       {page === 'seance' && (
-      <div className="space-y-4">
+      <div className="space-y-4 page-in" key="seance">
       {/* séance prévue ces derniers jours et pas faite : la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
         <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 p-4 space-y-3">
@@ -258,13 +258,36 @@ export function CoachPanel({
           </div>
         </section>
       )}
-      {/* jour de la séance : un gros bouton pour la lancer, tout en haut */}
-      {!guidedActive && !plan && first && first.iso === today && sessionToStart && sessionToStart.exercises.length > 0 && (
-        <button type="button" onClick={() => onStartGuided(sessionToStart)} data-testid="start-today"
-          className="w-full py-5 rounded-2xl bg-pink-600 hover:bg-pink-500 text-white text-lg font-black shadow-xl inline-flex items-center justify-center gap-2">
-          <Art name="dumbbell" size={26} bare />Lancer la séance du jour
-        </button>
+      {/* GRANDE CARTE DE LA SÉANCE : tout en haut, la prochaine séance et le bouton pour la lancer */}
+      {guidedActive && (
+        <section data-hero data-testid="session-hero" className="rounded-2xl bg-pink-600 text-white p-4 space-y-2 shadow-xl">
+          <p className="text-xs font-black uppercase tracking-widest opacity-80">Séance en cours</p>
+          <h2 className="text-4xl font-black leading-none">Reprends où tu en étais</h2>
+          <button type="button" onClick={onResumeGuided} data-testid="resume-guided" className="hero-cta w-full py-3.5 rounded-xl bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>Reprendre
+          </button>
+        </section>
       )}
+      {!guidedActive && !coachOff && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
+        const isToday = shownDate === today;
+        const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
+        const line = e => `${e.name} ${e.sets}×${(e.targetReps || [])[0] || ''}${e.kind === 'load' ? ` · ${String(e.load).replace('.', ',')} kg` : ''}`;
+        return (
+          <section data-hero data-testid="session-hero" className="rounded-2xl bg-pink-600 text-white p-4 space-y-2 shadow-xl">
+            <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : `Prochaine séance · ${formatDayFr(shownDate)}`}</p>
+            <h2 className="text-4xl font-black leading-none">{title} · {shownSession.estMin} min</h2>
+            <div className="text-sm font-bold opacity-90 space-y-0.5">
+              {shownSession.exercises.slice(0, 2).map(e => <p key={e.questId} className="truncate">{line(e)}</p>)}
+              {shownSession.exercises.length > 2 && <p className="opacity-80">+ {shownSession.exercises.length - 2} exercice{shownSession.exercises.length - 2 > 1 ? 's' : ''}</p>}
+            </div>
+            <button type="button" onClick={() => onStartGuided(sessionToStart)} data-testid={isToday ? 'start-today' : 'start-early'}
+              className="hero-cta w-full py-3.5 rounded-xl bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>
+              {isToday ? 'Lancer' : 'Lancer en avance'}
+            </button>
+          </section>
+        );
+      })()}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}
       {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
@@ -317,10 +340,10 @@ export function CoachPanel({
       </div>
       )}
 
-      {page === 'equilibre' && <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />}
+      {page === 'equilibre' && <div className="page-in" key="equilibre"><CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} /></div>}
 
       {page === 'semaine' && (
-      <div className="space-y-4">
+      <div className="space-y-4 page-in" key="semaine">
       {/* EN-TÊTE */}
       <CoachHeader
         coach={coach}
@@ -354,10 +377,10 @@ export function CoachPanel({
       </div>
       )}
 
-      {page === 'objectifs' && <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />}
+      {page === 'objectifs' && <div className="page-in" key="objectifs"><CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} /></div>}
 
       {page === 'reglages' && (
-      <div className="space-y-4" data-testid="coach-settings-page">
+      <div className="space-y-4 page-in" data-testid="coach-settings-page" key="reglages">
         {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
         {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />

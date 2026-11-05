@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.4',
+    date: '2026-11-05',
+    title: 'Nouveau style « néon de salle »',
+    items: [
+      'Nouveau look sombre façon salle de sport, avec une couleur de néon au choix (8 couleurs, en haut de « Plus »). Le style classique reste disponible dans les réglages.',
+      'Toutes les icônes sont redessinées au trait, dans la couleur de ton néon. Le coach a maintenant un cerveau à casquette.',
+      'Une grande carte en haut du Coach montre ta prochaine séance avec le bouton « Lancer ». L’avis du coach affiche sa note dans une jauge.',
+      'Petites animations partout : changement d’onglet, fenêtres, écrans de la séance guidée, chiffres qui rebondissent.',
+      'Séance guidée : les boutons « précédent » et « réduire » utilisent la même flèche.',
+    ],
+  },
+  {
     version: '4.3',
     date: '2026-11-05',
     title: 'Ton poids dans ton profil',

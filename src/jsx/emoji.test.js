@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ART_NAMES } from '../components/Art';
+import { ART_NAMES, LINE_NAMES } from '../components/Art';
 import { EMOJI_ART } from './emoji-map';
 
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
@@ -20,5 +20,8 @@ describe('logos maison', () => {
   });
   it('chaque logo annoncé est dessiné', () => {
     expect(Object.values(EMOJI_ART).filter(n => !ART_NAMES.includes(n))).toEqual([]);
+  });
+  it('chaque logo a sa version au trait (thème néon)', () => {
+    expect(ART_NAMES.filter(n => !LINE_NAMES.includes(n))).toEqual([]);
   });
 });

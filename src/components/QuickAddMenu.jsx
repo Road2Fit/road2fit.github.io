@@ -43,6 +43,7 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
         <button
           onClick={() => setOpen(o => !o)}
           aria-label="Ajouter"
+          data-hero
           title="Ajouter"
           className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl bg-pink-600 transition-transform ${open ? 'rotate-45' : ''}`}
         >

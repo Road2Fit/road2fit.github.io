@@ -45,6 +45,13 @@ export function adaptAfterSet(it, d, done, target, step = 2.5) {
 // Un seul grand bouton pour avancer ; charge et répétitions se règlent avec − / + sur l'écran de la série ;
 // le reste (séries en plus, passer un exercice, abandonner) est dans le menu « ⋯ ». Flèche en haut à gauche : réduire.
 // Pas de défilement : tout tient dans la hauteur de l'écran (100dvh).
+// flèche commune des boutons du haut : la même, tournée (180° = précédent, 90° = réduire)
+const chevron = deg => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ transform: `rotate(${deg}deg)` }}>
+    <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
@@ -203,7 +210,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     <div className="flex items-center justify-between gap-2 bg-slate-900 border border-slate-800 rounded-2xl p-2">
       <button type="button" onClick={onMinus} aria-label={`${label} moins`} className={pm}>−</button>
       <div className="text-center min-w-0">
-        <p className="text-4xl font-black text-white leading-none" data-testid={testId}>{value}</p>
+        <p className="text-4xl font-black text-white leading-none" data-testid={testId}><span key={value} className="num-pop">{value}</span></p>
         <p className="text-xs font-bold text-slate-400 mt-1">{unit}</p>
       </div>
       <button type="button" onClick={onPlus} aria-label={`${label} plus`} className={pm}>+</button>
@@ -281,13 +288,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col h-[100dvh] overflow-hidden" role="dialog" aria-label="Séance guidée" data-testid="guided" style={{ margin: 0 }}>
       {/* barre du haut : réduire, temps, menu */}
       <div className="shrink-0 flex items-center gap-2 px-3 pt-3 pb-2">
-        <button type="button" onClick={goBack} disabled={!canBack} aria-label="Précédent" data-testid="guided-back" className="w-11 h-11 rounded-xl bg-slate-900 text-slate-200 text-2xl font-black flex items-center justify-center disabled:opacity-30">‹</button>
-        <button type="button" onClick={onMinimize} aria-label="Réduire la séance" data-testid="guided-minimize" className="w-11 h-11 rounded-xl bg-slate-900 text-slate-200 text-xl font-black flex items-center justify-center">⌄</button>
+        <button type="button" onClick={goBack} disabled={!canBack} aria-label="Précédent" data-testid="guided-back" className="nav-btn disabled:opacity-30">{chevron(180)}</button>
+        <button type="button" onClick={onMinimize} aria-label="Réduire la séance" data-testid="guided-minimize" className="nav-btn">{chevron(90)}</button>
         <div className="flex-1 min-w-0 text-center">
           <p className="text-xs font-black text-pink-300 uppercase tracking-wider truncate">{screen === 'summary' ? 'Résumé' : `Exercice ${g.idx + 1}/${items.length}`}</p>
           <p className="text-xs text-slate-400">{fmtT(elapsed)}</p>
         </div>
-        <button type="button" onClick={() => setMenu(true)} aria-label="Plus d’options" data-testid="guided-menu" className="w-11 h-11 rounded-xl bg-slate-900 text-slate-200 text-xl font-black">⋯</button>
+        <button type="button" onClick={() => setMenu(true)} aria-label="Plus d’options" data-testid="guided-menu" className="nav-btn"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="5.5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18.5" cy="12" r="2" /></svg></button>
       </div>
       <div className="shrink-0 flex gap-1 px-3">
         {items.map((x, i) => {
@@ -297,7 +304,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
         })}
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col px-4 pt-3 pb-4 max-w-md w-full mx-auto">
+      <div key={screenKey} className="screen-in flex-1 min-h-0 flex flex-col px-4 pt-3 pb-4 max-w-md w-full mx-auto">
         {/* COMMENT TE SENS-TU ? (1re page) */}
         {screen === 'feel' && (
           <div className="flex-1 flex flex-col justify-center gap-4" data-testid="guided-feel">
@@ -357,7 +364,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
               <p className="text-4xl font-black text-amber-100">{warmRows[warmIdx].label}</p>
             </div>
             <div className="space-y-2">
-              <button type="button" onClick={doneWarm} className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-amber-600 active:bg-amber-500')} data-testid="warm-done">Échauffement fait</button>
+              <button type="button" onClick={doneWarm} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-amber-600 active:bg-amber-500')} data-testid="warm-done">Échauffement fait</button>
               <button type="button" onClick={() => patch(it.questId, { wskip: true })} className="w-full py-2 text-sm font-bold text-slate-400">Passer l’échauffement</button>
             </div>
           </div>
@@ -390,7 +397,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             </div>
             {it.timed ? (
               sw ? (
-                <button type="button" onClick={() => doneSet(Math.max(1, Math.round((Date.now() - sw.start) / 1000)))} className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-rose-600')} data-testid="set-done">■ Stop</button>
+                <button type="button" onClick={() => doneSet(Math.max(1, Math.round((Date.now() - sw.start) / 1000)))} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-rose-600')} data-testid="set-done">■ Stop</button>
               ) : (
                 <div className="flex gap-2">
                   <button type="button" onClick={() => doneSet()} className="px-5 py-4 rounded-2xl bg-slate-800 text-slate-100 font-black" data-testid="set-done">Fait</button>
@@ -398,7 +405,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                 </div>
               )
             ) : (
-              <button type="button" onClick={() => doneSet()} className={big} data-testid="set-done">Série faite</button>
+              <button type="button" onClick={() => doneSet()} className={big} data-hero data-testid="set-done">Série faite</button>
             )}
           </div>
         )}
@@ -468,7 +475,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={() => onFinish(g)} className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-emerald-600 active:bg-emerald-500')}>Enregistrer la séance</button>
+              <button type="button" onClick={() => onFinish(g)} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-emerald-600 active:bg-emerald-500')}>Enregistrer la séance</button>
             </div>
           </div>
         )}

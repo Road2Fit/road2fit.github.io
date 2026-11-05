@@ -2,6 +2,7 @@
 // <Art name="flame" /> se place devant un texte ; <Art name="flame" size={28} bare /> seule, sans marge.
 import { setEmojiRenderer } from '../jsx/jsx-runtime';
 import { MORE } from './ArtMore';
+import { LINE } from './ArtLine';
 
 const S = { fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' };
 
@@ -59,18 +60,27 @@ const ICONS = {
 Object.assign(ICONS, MORE);
 
 export const ART_NAMES = Object.keys(ICONS);
+export const LINE_NAMES = Object.keys(LINE);
+
+// Deux dessins dans chaque icône : en couleur (thème classique) et au trait (thème néon, style « duo plein »).
+// styles.css affiche l'un ou l'autre.
+const body = name => {
+  const line = LINE[name];
+  if (!line) return ICONS[name];
+  return <><g className="art-c">{ICONS[name]}</g><g className="art-l">{line}</g></>;
+};
 
 // Logo à la place d'un emoji : même taille que le texte autour
 let emojiKey = 0;
 const EM = '1.15em';
-setEmojiRenderer(name => { emojiKey += 1; return <svg key={`e${emojiKey}`} viewBox="0 0 24 24" width={EM} height={EM} aria-hidden="true" className="inline-block align-[-0.2em] shrink-0">{ICONS[name]}</svg>; });
+setEmojiRenderer(name => { emojiKey += 1; return <svg key={`e${emojiKey}`} viewBox="0 0 24 24" width={EM} height={EM} aria-hidden="true" className="art inline-block align-[-0.2em] shrink-0">{body(name)}</svg>; });
 
 export function Art({ name, size = 18, bare = false, className = '' }) {
   const icon = ICONS[name];
   if (!icon) return null;
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" className={`${bare ? '' : 'inline-block align-[-0.2em] mr-1.5'} shrink-0 ${className}`}>
-      {icon}
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" className={`art ${bare ? '' : 'inline-block align-[-0.2em] mr-1.5'} shrink-0 ${className}`}>
+      {body(name)}
     </svg>
   );
 }

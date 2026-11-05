@@ -246,52 +246,64 @@ export function CoachNextSession({
         <p className="text-xs text-slate-400">Ta séance est vide : ajoute un groupe ou un exercice ci-dessus.</p>
       )}
 
-      {rating && !preview && (
-        <div className={`rounded-xl border p-3 space-y-2 ${rating.score >= 7.5 ? 'bg-emerald-950/20 border-emerald-500/40' : rating.score >= 5 ? 'bg-amber-950/20 border-amber-500/40' : 'bg-rose-950/20 border-rose-500/40'}`}>
-          <div className="flex items-center gap-3">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-black border-2 ${rating.score >= 7.5 ? 'border-emerald-400 text-emerald-300' : rating.score >= 5 ? 'border-amber-400 text-amber-300' : 'border-rose-400 text-rose-300'}`}>
-              {String(rating.score).replace('.', ',')}
-            </div>
-            <div>
-              <p className="font-black text-white text-sm">Avis du coach : {rating.label}</p>
-            </div>
-          </div>
-          <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-xs font-bold text-sky-300">
-            {showRating ? '▾ Masquer le détail' : `▸ Voir le détail (${rating.items.length})`}
-          </button>
-          {showRating && shownSession && !preview && shownSession.notes.map((n, i) => (
-            <p key={`n${i}`} className="text-xs text-sky-300" data-testid="session-note">{n}</p>
-          ))}
-          {showRating && shownSession && !plan && !preview && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
-              <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
-              <div className="flex flex-wrap gap-1.5">
-                {shownSession.fillSuggestions.map(c => (
-                  <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
-                ))}
-              </div>
-            </div>
-          )}
-          {showRating && (
-          <div className="space-y-1.5">
-            {rating.items.map((it, i) => (
-              <div key={i} className="text-xs">
-                <p className={it.level === 'bad' ? 'text-rose-300 font-bold' : it.level === 'warn' ? 'text-amber-300 font-bold' : it.level === 'info' ? 'text-sky-300' : 'text-emerald-300'}>
-                  {it.level === 'bad' ? '⛔' : it.level === 'warn' ? '⚠️' : it.level === 'info' ? 'ℹ️' : '✅'} {it.text}
-                </p>
-                {it.fix && <p className="text-slate-300 ml-5">→ {it.fix}</p>}
-              </div>
+      {rating && !preview && (() => {
+        // avis du coach : une note en grand dans une jauge circulaire, le reste au toucher
+        const tone = rating.score >= 7.5 ? { ring: 'rgb(var(--pink-400))', txt: 'text-pink-300' } : rating.score >= 5 ? { ring: '#f59e0b', txt: 'text-amber-300' } : { ring: '#f43f5e', txt: 'text-rose-300' };
+        const pct = Math.max(0, Math.min(10, Number(rating.score) || 0)) / 10;
+        const C = 2 * Math.PI * 22;
+        const icon = lv => (lv === 'bad' ? 'warn' : lv === 'warn' ? 'warn' : lv === 'info' ? 'bulb' : 'check');
+        return (
+          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-3 space-y-2" data-testid="coach-rating">
+            <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="w-full flex items-center gap-3 text-left">
+              <span className="relative w-14 h-14 shrink-0">
+                <svg viewBox="0 0 50 50" className="w-14 h-14 -rotate-90" aria-hidden="true">
+                  <circle cx="25" cy="25" r="22" fill="none" stroke="rgb(var(--slate-800))" strokeWidth="4" />
+                  <circle cx="25" cy="25" r="22" fill="none" stroke={tone.ring} strokeWidth="4" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
+                </svg>
+                <span className={`absolute inset-0 flex items-center justify-center text-xl font-black ${tone.txt}`} data-testid="coach-rating-score">{String(rating.score).replace('.', ',')}</span>
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-xs font-bold text-slate-400">Avis du coach</span>
+                <span className="block text-lg font-black text-white leading-tight">{rating.label}</span>
+              </span>
+              <span className="text-slate-400 font-black">{showRating ? '▾' : `▸ ${rating.items.length}`}</span>
+            </button>
+            {showRating && shownSession && !preview && shownSession.notes.map((n, i) => (
+              <p key={`n${i}`} className="text-xs text-slate-300" data-testid="session-note">{n}</p>
             ))}
+            {showRating && shownSession && !plan && !preview && shownSession.fillSuggestions && shownSession.fillSuggestions.length > 0 && (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                <p className="text-xs font-bold text-slate-300">Pour compléter cette séance (≈ {shownSession.estMin} min, objectif {shownSession.target} min) :</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {shownSession.fillSuggestions.map(c => (
+                    <button key={c.id} onClick={() => onAddExercise(c.id)} className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">+ {c.name} <span className="text-slate-500">({c.arena})</span></button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {showRating && (
+              <ul className="space-y-1.5">
+                {rating.items.map((it, i) => (
+                  <li key={i} className="flex gap-2 text-xs">
+                    <Art name={icon(it.level)} size={16} bare className="mt-0.5" />
+                    <span className="min-w-0">
+                      <span className={it.level === 'bad' ? 'text-rose-300 font-bold' : it.level === 'warn' ? 'text-amber-300 font-bold' : 'text-slate-200'}>{it.text}</span>
+                      {it.fix && <span className="block text-slate-400">→ {it.fix}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {showRating && <p className="text-xs text-slate-500">Règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : une aide, pas une vérité exacte.</p>}
           </div>
-          )}
-          {showRating && <p className="text-xs text-slate-500">La note applique des règles de bon sens (récupération, volume, équilibre) inspirées des repères ACSM et Schoenfeld : c’est une aide, pas une vérité scientifique exacte.</p>}
-        </div>
-      )}
+        );
+      })()}
 
       {sessionToStart && sessionToStart.exercises.length > 0 && (
         <div className="space-y-1.5">
           <button
             onClick={() => onStartGuided(sessionToStart)}
+            data-hero
             className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm"
           >
             ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
