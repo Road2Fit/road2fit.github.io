@@ -73,40 +73,40 @@ svg.art .art-l .f { fill: currentColor; stroke-width: 0.8; }
 @keyframes r2f-glow { 0%, 100% { box-shadow: 0 0 0 0 rgb(var(--neon-rgb, 236 72 153) / 0); } 50% { box-shadow: 0 0 22px 2px rgb(var(--neon-rgb, 236 72 153) / 0.35); } }
 @keyframes r2f-slide-r { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 /* changement d'onglet ou de page du Coach : fondu + léger glissement */
-.tab-in { animation: r2f-up 0.28s ease-out both; }
+.tab-in { animation: r2f-up 0.28s ease-out backwards; }
 /* cartes d'une page qui apparaissent l'une après l'autre */
-.tab-in > *, .page-in > * { animation: r2f-up 0.32s ease-out both; }
+.tab-in > *, .page-in > * { animation: r2f-up 0.32s ease-out backwards; }
 .tab-in > *:nth-child(2), .page-in > *:nth-child(2) { animation-delay: 0.04s; }
 .tab-in > *:nth-child(3), .page-in > *:nth-child(3) { animation-delay: 0.08s; }
 .tab-in > *:nth-child(4), .page-in > *:nth-child(4) { animation-delay: 0.12s; }
 .tab-in > *:nth-child(n+5), .page-in > *:nth-child(n+5) { animation-delay: 0.16s; }
 /* fenêtres : le fond s'assombrit en fondu, la fenêtre monte */
-.fixed.inset-0 { animation: r2f-fade 0.2s ease-out both; }
-.fixed.inset-0 > div:not([data-testid="guided"] *), .fixed.inset-0 > section { animation: r2f-sheet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
-[data-testid="guided"] { animation: r2f-sheet 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.05) both; }
+.fixed.inset-0 { animation: r2f-fade 0.2s ease-out backwards; }
+.fixed.inset-0 > div:not([data-testid="guided"] *), .fixed.inset-0 > section { animation: r2f-sheet 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards; }
+[data-testid="guided"] { animation: r2f-sheet 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.05) backwards; }
 /* écrans de la séance guidée : chaque écran arrive en glissant */
-.screen-in { animation: r2f-slide-r 0.26s ease-out both; }
+.screen-in { animation: r2f-slide-r 0.26s ease-out backwards; }
 /* chiffre qui change (répétitions, charge) : petit rebond */
 .num-pop { animation: r2f-pop 0.22s ease-out; display: inline-block; }
 /* messages en haut de l'écran */
-.toast-in { animation: r2f-down 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.toast-in { animation: r2f-down 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards; }
 /* boutons : s'enfoncent au toucher, couleurs en transition douce */
 button, a, [role="tab"] { transition: transform 0.12s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease; }
 button:active:not(:disabled) { transform: scale(0.96); }
 /* grande carte de la séance et bouton principal : respiration lumineuse (néon) */
-[data-testid="session-hero"] { animation: r2f-up 0.35s ease-out both, r2f-glow 3.2s ease-in-out 0.6s infinite; }
+[data-testid="session-hero"] { animation: r2f-up 0.35s ease-out backwards, r2f-glow 3.2s ease-in-out 0.6s infinite; }
 /* barre du bas : l'onglet actif grossit un peu */
 nav[aria-label="Navigation"] button svg { transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
 nav[aria-label="Navigation"] button.text-pink-300 svg { transform: translateY(-2px) scale(1.12); }
 /* blocs dépliés (détails) : fondu */
-details[open] > *:not(summary) { animation: r2f-up 0.22s ease-out both; }
+details[open] > *:not(summary) { animation: r2f-up 0.22s ease-out backwards; }
 /* jauges et barres : progression animée */
 svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0.3, 0.8, 0.3, 1); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 /* listes en grille (tuiles d'exercices, jours de la semaine) : apparition en cascade */
-[data-testid="quest-list"] > *, [data-testid^="week-day-"] { animation: r2f-up 0.3s ease-out both; }
+[data-testid="quest-list"] > *, [data-testid^="week-day-"] { animation: r2f-up 0.3s ease-out backwards; }
 [data-testid="quest-list"] > *:nth-child(2n) { animation-delay: 0.04s; }
 [data-testid="quest-list"] > *:nth-child(3n) { animation-delay: 0.08s; }
 [data-testid="quest-list"] > *:nth-child(4n) { animation-delay: 0.12s; }
@@ -118,3 +118,4 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
 
 /* bouton sélectionné (texte plus grand, en majuscules) : l'icône grandit avec le texte */
 :root[data-theme="neon"] button.bg-pink-600:not([data-hero]) svg.art { width: 1.3em; height: 1.3em; }
+

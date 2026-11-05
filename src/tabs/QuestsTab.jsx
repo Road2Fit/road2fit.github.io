@@ -406,7 +406,9 @@ export function QuestsTab({
         </div>
       )}
       {openQuest && (
-        <div className="fixed inset-0 z-[55] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center px-3 pt-14 pb-3 overflow-y-auto" onClick={() => setOpenId(null)}>
+        <div className="fixed inset-0 z-[55] bg-slate-950/80 backdrop-blur-sm overflow-y-auto" onClick={() => setOpenId(null)}>
+          {/* min-h-full + flex à l'intérieur : la fiche reste en bas (ou au centre) mais défile entièrement quand elle est plus haute que l'écran */}
+          <div className="min-h-full flex items-end sm:items-center justify-center px-3 pt-14 pb-3">
           <div className="relative w-full max-w-lg" onClick={e => e.stopPropagation()} role="dialog" aria-label={openQuest.name} data-testid="quest-sheet">
             <button type="button" onClick={() => setOpenId(null)} aria-label="Fermer" className="absolute -top-11 right-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
             {renderCard(openQuest)}
@@ -418,6 +420,7 @@ export function QuestsTab({
               </div>
             )}
             {showChart && <div className="mt-2 bg-slate-900 border border-slate-800 rounded-2xl p-3" data-testid="quest-chart"><QuestChart quest={openQuest} /></div>}
+          </div>
           </div>
         </div>
       )}
