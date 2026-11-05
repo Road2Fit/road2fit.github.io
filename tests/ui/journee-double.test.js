@@ -44,3 +44,21 @@ describe('journée double et séance en plus', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('raccourcis vers le Coach', () => {
+  it('profil → « Équilibre des muscles » ouvre la page Équilibre du Coach ; le jour J, gros bouton « Lancer la séance du jour »', async () => {
+    const h = await launch();
+    open.push(h);
+    await clickEl(h, h.doc.querySelector('[data-tab="journal"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-balance"]'));
+    expect(h.doc.querySelector('[data-testid="coach-page-equilibre"]').getAttribute('aria-selected')).toBe('true');
+    expect(h.doc.querySelector('[data-testid="muscle-map"]')).toBeTruthy();
+    // depuis le Coach déjà ouvert, sur une autre page
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-semaine"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-balance"]'));
+    expect(h.doc.querySelector('[data-testid="coach-page-equilibre"]').getAttribute('aria-selected')).toBe('true');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});

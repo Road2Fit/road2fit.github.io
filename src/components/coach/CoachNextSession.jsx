@@ -123,12 +123,6 @@ export function CoachNextSession({
             </span>
             <span className="inline-flex items-center gap-1 text-slate-200 font-bold" title="Durée estimée" data-testid="session-min"><Art name="timer" size={15} bare />{shownSession.estMin} min</span>
             <span className="inline-flex items-center gap-1 text-slate-200 font-bold" title="Calories estimées" data-testid="session-kcal"><Art name="flame" size={15} bare />{shownSession.estKcal} kcal</span>
-            {!plan && first && !preview && (
-              <button type="button" onClick={() => setShortMode(v => !v)} aria-pressed={shortMode} data-testid="short-mode"
-                className={`px-2 py-0.5 rounded-full border font-bold ${shortMode ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-                <Art name="timer" size={13} bare /> 40 min
-              </button>
-            )}
             {(() => {
               const pf = activeProfile(gameState, shownDate);
               return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
@@ -302,14 +296,6 @@ export function CoachNextSession({
           >
             ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}
           </button>
-          {shownDate !== today && (
-            <p className="text-xs text-slate-500">
-              Prévue le {coachDayLabel(shownDate)}.
-            </p>
-          )}
-          {todayInfo.blocked && (
-            <p className="text-xs text-amber-300">Aujourd’hui est un jour de {todayInfo.isMatch ? 'match' : todayInfo.sport.label} : une séance de muscu en plus est possible, mais garde de l’énergie.</p>
-          )}
         </div>
       )}
     </section>

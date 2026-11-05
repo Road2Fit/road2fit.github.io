@@ -1,5 +1,5 @@
 import { Art } from '../Art';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
@@ -38,7 +38,13 @@ export function CoachPanel({
   gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
   guidedActive, onResumeGuided, onClaimWeekly,
 }) {
-  const [page, setPage] = useState('seance');
+  // page du Coach ; une autre partie de l'appli peut en demander une (événement rondoufit-coach-page, ex. « Équilibre » depuis le profil)
+  const [page, setPage] = useState(() => { const p = typeof window !== 'undefined' && window.__r2fCoachPage; if (p) window.__r2fCoachPage = null; return p || 'seance'; });
+  useEffect(() => {
+    const h = e => { if (e.detail) { window.__r2fCoachPage = null; setPage(e.detail); } };
+    window.addEventListener('rondoufit-coach-page', h);
+    return () => window.removeEventListener('rondoufit-coach-page', h);
+  }, []);
   const today = getTodayISODate();
   const coach = getCoachSettings(gameState);
   const hasGoal = !!(coach.mainGoal && coach.mainGoal.kind);
@@ -251,6 +257,13 @@ export function CoachPanel({
             <button type="button" onClick={() => updateCoach({ missedDismissed: [...(coach.missedDismissed || []), missedSession.iso].slice(-10) })} className="px-4 py-3 rounded-xl bg-slate-800 text-slate-300 text-sm font-bold">Ignorer</button>
           </div>
         </section>
+      )}
+      {/* jour de la séance : un gros bouton pour la lancer, tout en haut */}
+      {!guidedActive && !plan && first && first.iso === today && sessionToStart && sessionToStart.exercises.length > 0 && (
+        <button type="button" onClick={() => onStartGuided(sessionToStart)} data-testid="start-today"
+          className="w-full py-5 rounded-2xl bg-pink-600 hover:bg-pink-500 text-white text-lg font-black shadow-xl inline-flex items-center justify-center gap-2">
+          <Art name="dumbbell" size={26} bare />Lancer la séance du jour
+        </button>
       )}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}

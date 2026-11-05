@@ -36,7 +36,7 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
   }
 
   const canStart = !guidedActive && session && isToday;
-  if (onCoachTab && !guidedActive && !canStart && ov.hasExercises) return null; // rien à lancer : « Prochaine séance » juste en dessous le dit déjà
+  if (onCoachTab && !guidedActive) return null; // dans le Coach : le bouton « Lancer la séance du jour » est dans la page
   return (
     <section className="bg-slate-900 border border-pink-400/50 rounded-2xl p-4 sm:p-5">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">

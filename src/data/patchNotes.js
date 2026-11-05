@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.2.1',
+    date: '2026-11-05',
+    title: 'Prochaine séance épurée',
+    items: [
+      'Le jour de ta séance, un gros bouton « Lancer la séance du jour » en haut du Coach.',
+      'Profil → « Équilibre des muscles » ouvre directement la page Équilibre du Coach.',
+      'Le bouton « 40 min » et les petits textes sous « Lancer » disparaissent : tu adaptes ta séance au début du suivi (« Comment te sens-tu ? »).',
+    ],
+  },
+  {
     version: '4.2',
     date: '2026-11-05',
     title: 'Haltérophilie, HYROX, calisthénie',
