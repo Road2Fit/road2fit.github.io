@@ -1,6 +1,7 @@
 import { Art } from './Art';
 import { assistText } from '../lib/assist';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { playGameSound } from '../lib/sound';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { restText } from '../coach/rest';
@@ -52,7 +53,7 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -284,6 +285,17 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     }
   };
 
+  // tenue chronométrée (gainage…) : le chrono s'arrête tout seul au temps prévu de la série, avec un son et une vibration
+  const holdTarget = it && it.timed && j >= 0 ? Number(d.reps[j]) || 0 : 0;
+  useEffect(() => {
+    if (!sw || !(holdTarget > 0)) return;
+    if (now - sw.start >= holdTarget * 1000) {
+      playGameSound('done', soundEnabled);
+      try { navigator.vibrate && navigator.vibrate([150, 80, 150, 80, 300]); } catch (e) {}
+      doneSet(holdTarget);
+    }
+  });
+
   return (
     <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col h-[100dvh] overflow-hidden" role="dialog" aria-label="Séance guidée" data-testid="guided" style={{ margin: 0 }}>
       {/* barre du haut : réduire, temps, menu */}
@@ -385,7 +397,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
             </div>
             <div className="flex-1 flex flex-col justify-center gap-3">
               {it.timed && sw ? (
-                <p className="text-center text-7xl font-black text-white" data-testid="timed-chrono">{Math.max(0, Math.round((now - sw.start) / 1000))} s</p>
+                <p className="text-center text-7xl font-black text-white" data-testid="timed-chrono">{Math.min(holdTarget || Infinity, Math.max(0, Math.floor((now - sw.start) / 1000)))} s{holdTarget > 0 && <span className="block text-xl text-slate-400 mt-1">sur {holdTarget} s</span>}</p>
               ) : (
                 tune({ label: 'Répétitions', testId: 'set-reps', value: d.reps[j], unit: it.timed ? 'secondes' : 'répétitions',
                   onMinus: () => setReps(j, (Number(d.reps[j]) || 0) - (it.timed ? 5 : 1)), onPlus: () => setReps(j, (Number(d.reps[j]) || 0) + (it.timed ? 5 : 1)) })

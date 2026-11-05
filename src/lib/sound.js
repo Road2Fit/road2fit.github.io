@@ -32,6 +32,10 @@ export function playGameSound(type, enabled = true) {
       makeTone(739.99, now + 0.48, 0.22, 'sine', 0.15);
       makeTone(783.99, now + 0.72, 0.22, 'sine', 0.15);
       makeTone(880.0, now + 0.96, 0.45, 'triangle', 0.18);
+    } else if (type === 'done') {
+      makeTone(880, now, 0.12, 'square', 0.08);
+      makeTone(880, now + 0.18, 0.12, 'square', 0.08);
+      makeTone(1318.5, now + 0.36, 0.35, 'triangle', 0.16);
     } else if (type === 'click') {
       makeTone(680, now, 0.05, 'sine', 0.07);
     }

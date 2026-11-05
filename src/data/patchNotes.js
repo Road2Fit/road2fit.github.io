@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.5.3',
+    date: '2026-11-06',
+    title: 'Chrono du gainage',
+    items: ['Séance guidée : pour une tenue (gainage, planche…), le chrono s’arrête tout seul au temps prévu de la série, avec un petit son et une vibration, puis passe au repos.'],
+  },
+  {
     version: '4.5.2',
     date: '2026-11-06',
     title: 'Écrans d’accueil lisibles',

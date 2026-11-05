@@ -237,7 +237,7 @@ setG={setGuided}
 onFinish={handleFinishGuided}
 onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
-/>
+ soundEnabled={gameState.soundEnabled !== false}/>
 )}
 <RestTimer guidedOpen={!!(guided && guidedOpen)} soundEnabled={gameState.soundEnabled} />
         {/* BARRE D'ONGLETS PRINCIPALE */}
