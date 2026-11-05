@@ -1,6 +1,6 @@
 import { Art } from './Art';
 import { assistText } from '../lib/assist';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { restText } from '../coach/rest';
@@ -246,10 +246,42 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
   else if (rest) screen = 'rest';
   else if (inWarm) screen = 'warm';
 
+  // « Précédent » : chaque changement d'écran garde l'état d'avant ; revenir le restaure (une « Série faite » touchée par
+  // erreur est annulée, un repos reprend là où il en était)
+  const screenKey = `${screen}:${g.idx}:${j}:${warmIdx}`;
+  const hist = useRef({ key: null, snap: null, stack: [], back: false });
+  if (hist.current.key !== screenKey) {
+    const sn = hist.current.snap;
+    const restOver = sn && sn.g.rest && sn.g.rest.endAt && sn.restLeft <= 1; // repos fini tout seul : rien à y revenir
+    if (sn && !hist.current.back && !restOver) hist.current.stack = [...hist.current.stack, sn].slice(-30);
+    hist.current.back = false;
+    hist.current.key = screenKey;
+  }
+  hist.current.snap = { g, restLeft };
+  const canBack = hist.current.stack.length > 0;
+  const goBack = () => {
+    const st = hist.current.stack;
+    if (!st.length) return;
+    const prev = st[st.length - 1];
+    hist.current.stack = st.slice(0, -1);
+    hist.current.back = true;
+    setSw(null);
+    setMenu(false);
+    if (prev.g.rest && prev.restLeft > 0) {
+      const sec = Math.max(5, prev.restLeft);
+      restEvent(sec, prev.g.rest.next || '');
+      setG({ ...prev.g, rest: { ...prev.g.rest, endAt: Date.now() + sec * 1000 } });
+    } else {
+      stopRestEvent();
+      setG({ ...prev.g, rest: null });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col h-[100dvh] overflow-hidden" role="dialog" aria-label="Séance guidée" data-testid="guided" style={{ margin: 0 }}>
       {/* barre du haut : réduire, temps, menu */}
       <div className="shrink-0 flex items-center gap-2 px-3 pt-3 pb-2">
+        <button type="button" onClick={goBack} disabled={!canBack} aria-label="Précédent" data-testid="guided-back" className="w-11 h-11 rounded-xl bg-slate-900 text-slate-200 text-2xl font-black flex items-center justify-center disabled:opacity-30">‹</button>
         <button type="button" onClick={onMinimize} aria-label="Réduire la séance" data-testid="guided-minimize" className="w-11 h-11 rounded-xl bg-slate-900 text-slate-200 text-xl font-black flex items-center justify-center">⌄</button>
         <div className="flex-1 min-w-0 text-center">
           <p className="text-xs font-black text-pink-300 uppercase tracking-wider truncate">{screen === 'summary' ? 'Résumé' : `Exercice ${g.idx + 1}/${items.length}`}</p>

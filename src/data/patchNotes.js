@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.2.2',
+    date: '2026-11-05',
+    title: 'Bouton « précédent » dans la séance',
+    items: ['Séance guidée : un bouton ‹ en haut à gauche ramène à l’écran d’avant (une « Série faite » touchée par erreur est annulée).'],
+  },
+  {
     version: '4.2.1',
     date: '2026-11-05',
     title: 'Prochaine séance épurée',

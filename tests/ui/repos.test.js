@@ -77,3 +77,23 @@ describe('exercice déjà terminé', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });
+
+describe('bouton « Précédent » de la séance guidée', () => {
+  it('revient à l’écran d’avant et annule une « Série faite » touchée par erreur', async () => {
+    const h = await launch();
+    open.push(h);
+    await lancer(h);
+    expect(by(h, 'guided-back').disabled).toBe(true); // 1re page : rien avant
+    while (by(h, 'warm-done') || by(h, 'feel-ok')) await guidedStep(h);
+    expect(by(h, 'set-label').textContent).toContain('Série 1');
+    await click(h, by(h, 'set-done'));
+    expect(by(h, 'guided-rest')).toBeTruthy();
+    await click(h, by(h, 'guided-back'));
+    expect(by(h, 'guided-rest')).toBeNull();
+    expect(by(h, 'set-label').textContent).toContain('Série 1'); // la série 1 est à refaire
+    // encore en arrière : l'écran d'avant (échauffement ou « comment te sens-tu ? »)
+    await click(h, by(h, 'guided-back'));
+    expect(by(h, 'warmup') || by(h, 'guided-feel')).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});
