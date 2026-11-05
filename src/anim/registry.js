@@ -6,6 +6,7 @@ import { assistedDip, beltSquat, deadliftMachine, declineMachine, highRow, pallo
 import { abMachine, hsObliqueCrunch, tgTotalAbdominal, abWheel, cableCrunch, captainChair, crunch, hangingRaise, hollowHold, plankHold } from './scenes-core';
 import { bulgarianSquat, burpee, calfRaise, deadlift, gluteBridge, gluteKickback, goodMorning, hipMachine, hipThrust, legCurl, legExtension, legPress, lunge, mountainClimber, multiHip, squat, stepUp, wallBall, wallSit } from './scenes-legs';
 import { benchPress, dips, fly, machinePress, pullover, pushUp } from './scenes-push';
+import { cleanAndJerk, farmersCarry, frontLever, handstand, jerk, lSit, muscleUp, olyLift, overheadSquat, pistolSquat, plancheHold, sledPull, sledPush } from './scenes-oly';
 
 
 const E = [];
@@ -163,6 +164,42 @@ add('fp_woodchop', 'Bûcheron poulie', woodchop());
 add('fp_pallof', 'Pallof press', pallof());
 
 // ---- Vues supplémentaires (face / dos) là où le profil masque le mouvement ----
+// haltérophilie, HYROX, calisthénie (scenes-oly.js)
+add('wl_clean_jerk', 'Épaulé-jeté', cleanAndJerk());
+add('wl_snatch', 'Arraché', olyLift({ kind: 'snatch' }));
+add('wl_clean', 'Épaulé', olyLift({ kind: 'clean' }));
+add('wl_power_clean', 'Épaulé en puissance', olyLift({ kind: 'power_clean' }));
+add('wl_hang_clean', 'Épaulé suspendu', olyLift({ kind: 'hang_clean' }));
+add('wl_power_snatch', 'Arraché en puissance', olyLift({ kind: 'power_snatch' }));
+add('wl_hang_snatch', 'Arraché suspendu', olyLift({ kind: 'hang_snatch' }));
+add('wl_muscle_snatch', 'Muscle snatch', olyLift({ kind: 'muscle_snatch' }));
+add('wl_push_press', 'Push press', jerk({ kind: 'push_press' }));
+add('wl_push_jerk', 'Jeté poussé', jerk({ kind: 'push_jerk' }));
+add('wl_split_jerk', 'Jeté fente', jerk({ kind: 'split_jerk' }));
+add('wl_overhead_squat', 'Squat bras tendus', overheadSquat({}));
+add('wl_snatch_balance', 'Snatch balance', overheadSquat({ balance: true }));
+add('wl_clean_pull', 'Tirage d’épaulé', olyLift({ kind: 'clean_pull' }));
+add('wl_snatch_pull', 'Tirage d’arraché', olyLift({ kind: 'snatch_pull' }));
+add('wl_high_pull', 'Tirage haut', olyLift({ kind: 'high_pull' }));
+add('hx_sled_push', 'Poussée de traîneau', sledPush());
+add('hx_sled_pull', 'Tirage de traîneau', sledPull());
+add('hx_farmers_carry', 'Marche du fermier', farmersCarry());
+add('hx_sandbag_lunges', 'Fentes sac de sable', lunge({ barbell: true }));
+add('hx_burpee_broad_jump', 'Burpee saut en longueur', burpee());
+add('cal_muscle_up', 'Muscle-up', muscleUp({}));
+add('cal_ring_muscle_up', 'Muscle-up anneaux', muscleUp({ rings: true }));
+add('cal_ring_dips', 'Dips anneaux', dips({}));
+add('cal_hspu', 'Pompes en équilibre', handstand({}));
+add('cal_handstand', 'Équilibre sur les mains', handstand({ hold: true }));
+add('cal_l_sit', 'L-sit', lSit());
+add('cal_front_lever', 'Front lever', frontLever());
+add('cal_planche', 'Planche', plancheHold());
+add('cal_pistol', 'Pistol squat', pistolSquat());
+add('cal_archer_pullup', 'Tractions archer', pullUp({}));
+add('cal_archer_pushup', 'Pompes archer', pushUp({}));
+add('cal_pseudo_planche', 'Pompes pseudo-planche', pushUp({}));
+add('cal_dragon_flag', 'Dragon flag', crunch({ legRaise: true }));
+
 alt(['bench_press', 'fp_incline_barbell', 'fp_decline_barbell'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({}), elbows: 9 });
 alt('fp_close_grip_bench', 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ grip: 16 }), elbows: 2 });
 alt(['fp_db_bench', 'incline_dumbbell'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ tool: 'db', grip: 30 }), elbows: 9 });

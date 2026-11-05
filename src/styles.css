@@ -19,3 +19,6 @@ summary { cursor: pointer; min-height: 32px; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: rgb(var(--pink-500)); border-radius: 9999px; }
+
+/* fenêtres : le défilement reste dans la fenêtre, il ne passe jamais à la page derrière (voir lib/scrollLock.js) */
+.fixed.inset-0 { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }

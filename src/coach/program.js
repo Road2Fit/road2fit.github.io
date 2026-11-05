@@ -49,7 +49,8 @@ export function parseProgramLine(line, quests = [], opts = {}) {
   const STOP = new Set(['kg', 'kilo', 'kilos', 'aide', 'elastique', 'series', 'serie', 'reps', 'sec', 'min', 'avec', 'les', 'des', 'sur', 'top', 'set', 'back', 'off', 'rir', 'rpe', 'derniere', 'singles', 'single', 'standard', 'competition', 'biset', 'poids', 'corps', 'leste', 'lestee', 'lestes', 'lestees']);
   // mots ramenés à leur racine (« assise » = « assis », « haltères » = « haltère », « tractions » = « traction »)
   const stem = w => { let x = w; while (x.length > 4 && /(es|s|e)$/.test(x)) x = x.replace(/(es|s|e)$/, ''); return x; };
-  const words = t => [...new Set((normSearch(String(t).replace(/\([^)]*\)/g, ' ')).match(/[a-z]{3,}/g) || []).filter(w => !STOP.has(w)).map(stem))];
+  // « muscle-up » ne fait qu'un mot (sinon « up » disparaît et le muscle snatch gagne)
+  const words = t => [...new Set((normSearch(String(t).replace(/\([^)]*\)/g, ' ')).replace(/muscle[\s-]?ups?/g, 'muscleup').match(/[a-z]{3,}/g) || []).filter(w => !STOP.has(w)).map(stem))];
   const EQUIP = new Set(['poulie', 'haltere', 'barre', 'machine', 'smith', 'kettlebell', 'corde', 'assis', 'debout', 'allonge', 'incline', 'decline', 'unilateral', 'hammer', 'guidee'].map(stem));
   const lineW = new Set(words(text));
   const lineEq = [...lineW].filter(w => EQUIP.has(w));

@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { startUpdateCheck } from './lib/updateCheck';
+import { startScrollLock } from './lib/scrollLock';
 import { applyUiPrefs, readUiPrefs } from './lib/uiPrefs';
 import { applyEdition } from './edition';
 import './styles.css';
@@ -9,6 +10,8 @@ import './styles.css';
 applyEdition();
 applyUiPrefs(readUiPrefs());
 createRoot(document.getElementById('root')).render(<ErrorBoundary><App /></ErrorBoundary>);
+// fenêtre ouverte : la page derrière ne défile plus (téléphone compris)
+startScrollLock();
 
 // Mode hors ligne : l'application reste utilisable sans réseau (salle de sport) une fois ouverte une première fois.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

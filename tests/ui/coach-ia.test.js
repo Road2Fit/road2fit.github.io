@@ -320,17 +320,17 @@ describe('exercices créés par le coach (catalogue commun)', () => {
 });
 
 describe('programme d’un coach extérieur : exercices inconnus et lest', () => {
-  it('muscle-up inconnu : créé par le coach à l’enregistrement ; dips lestés : lest gardé', async () => {
+  it('exercice inconnu : créé par le coach à l’enregistrement ; dips lestés : lest gardé', async () => {
     const srv = fakeSupabase();
     srv.ai = async (task, body) => {
       if (task !== 'exercise') throw { status: 400, error: 'bad_task' };
-      expect(body.text).toContain('Muscle-up');
+      expect(body.text).toContain('Iron cross');
       return { existing: '', id: 'ai_muscle_up_prog', exercise: { name: 'Muscle-up Prog', category: 'Dos', muscle: 'Dos', muscle2: 'Triceps', unit: 'reps', timed: false, equip: 'Poids du corps', like: 'pullups', start: 2, goal: 6, sets: 3, reps: 3, icon: '🦍', how: '', caution: '' }, reply: 'Ajouté.' };
     };
     const h = await logIn(srv, { aiConsent: true });
     await clickEl(h, byTest(h, 'program-add'));
     const area = h.doc.querySelector('[data-testid="program-text"]');
-    await setInput(h, area, 'Muscle-up lesté top set 1x2 +17,5 kg RIR 2\nDips lestés 3x8-10 +52,5 kg, dernière série RIR 1');
+    await setInput(h, area, 'Iron cross lesté top set 1x2 +17,5 kg RIR 2\nDips lestés 3x8-10 +52,5 kg, dernière série RIR 1');
     expect(h.doc.body.textContent).toContain('le coach le cherchera');
     expect(h.doc.body.textContent).toContain('lest +52,5 kg');
     await clickEl(h, byTest(h, 'program-save'));

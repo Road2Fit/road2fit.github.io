@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.2',
+    date: '2026-11-05',
+    title: 'Haltérophilie, HYROX, calisthénie',
+    items: [
+      'Haltérophilie : épaulé-jeté, arraché, épaulé, versions en puissance et suspendues, push press, jetés, squat bras tendus, snatch balance, tirages (16 exercices), avec animation, conseils et repères (ex. l’arraché vaut environ 80 % de l’épaulé-jeté).',
+      'HYROX : poussée et tirage de traîneau, marche du fermier, fentes sac de sable, burpee saut en longueur, avec les charges de course (open femmes / hommes).',
+      'Calisthénie : muscle-up (barre et anneaux), dips aux anneaux, pompes en équilibre, poirier, L-sit, front lever, planche, pistol squat, tractions et pompes archer, pompes pseudo-planche, dragon flag.',
+      'Fenêtres : la page derrière ne défile plus quand une fenêtre est ouverte (téléphone compris).',
+    ],
+  },
+  {
     version: '4.1',
     date: '2026-11-05',
     title: 'Tout sur un exercice au même endroit',

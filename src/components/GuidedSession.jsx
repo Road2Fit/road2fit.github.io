@@ -60,12 +60,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel }) {
     req();
     const onVis = () => { if (document.visibilityState === 'visible') req(); };
     document.addEventListener('visibilitychange', onVis);
-    // la page derrière ne défile plus pendant la séance
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // la page derrière ne défile plus : géré pour toute l'appli par lib/scrollLock.js
     return () => {
       document.removeEventListener('visibilitychange', onVis);
-      document.body.style.overflow = prev;
       try { lock && lock.release(); } catch (e) {}
     };
   }, []);

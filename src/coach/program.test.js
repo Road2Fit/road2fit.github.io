@@ -92,8 +92,11 @@ describe('programme réel d’un ami (lest, muscle-up, noms précis)', () => {
     expect(r('Traction lestée back-off 3x8 +42,5 kg RIR 2, dernière série RIR 0-1')).toMatchObject({ catalogId: 'pullups', assist: -42.5 });
     expect(r('Curl biceps poulie (biset) 2x10-15 22,5 kg RIR 0-1').catalogId).toBe('fp_cable_curl');
     expect(r('Mollets machine assise 3x12-15 30 kg RIR 0-1').catalogId).toBe('fp_calf_seated');
-    expect(r('Muscle-up technique 3x2 poids de corps')).toMatchObject({ ok: false, name: 'Muscle-up technique' });
-    expect(r('Muscle-up lesté top set 1x2 +17,5 kg RIR 2')).toMatchObject({ ok: false, name: 'Muscle-up lesté' });
+    // le muscle-up est maintenant dans le catalogue (calisthénie, 05/11/2026)
+    expect(r('Muscle-up technique 3x2 poids de corps').ok).toBe(false); // « technique » : nom pas assez couvert, le coach intelligent vérifiera
+    expect(r('Muscle-up 3x3')).toMatchObject({ ok: true, catalogId: 'cal_muscle_up' }); // pas le muscle snatch
+    expect(r('Muscle-up lesté top set 1x2 +17,5 kg RIR 2')).toMatchObject({ ok: true, catalogId: 'cal_muscle_up', assist: -17.5 });
+    expect(r('Croix de fer anneaux 3x3s').ok).toBe(false); // exercice inconnu
     expect(r('Isométrie lockout traction 2x5s +50 kg').ok).toBe(false); // des secondes sur un exercice en répétitions : autre exercice
     expect(r('Rowing appui poitrine 3x8-12 85 kg, dernière série RIR 1').uncertain).toBe(true);
     expect(r('Développé couché 3x8-10 70 kg').uncertain).toBe(false);
