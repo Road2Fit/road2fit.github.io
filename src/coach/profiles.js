@@ -19,7 +19,7 @@ export const PROFILES = {
     sets: 4, setsAccessory: 3,
     pctStart: 85, pctText: '85 à 93 %',
     restCompound: 210, restAccessory: 150,
-    restText: '2 min 30 à 3 min 30',
+    restText: '2 min 45 à 4 min selon l’exercice',
     summary: 'Charges lourdes, peu de répétitions, longs repos. Pour gagner en force maximale.',
   },
   hypertrophie: {
@@ -30,7 +30,7 @@ export const PROFILES = {
     sets: 4, setsAccessory: 3,
     pctStart: 72, pctText: '67 à 80 %',
     restCompound: 120, restAccessory: 75,
-    restText: '1 min 15 à 2 min',
+    restText: '1 min 15 à 3 min 30 selon l’exercice',
     summary: 'Charges modérées, 8 à 12 répétitions proches de l’échec. Pour prendre du volume musculaire.',
   },
   endurance: {
@@ -41,7 +41,7 @@ export const PROFILES = {
     sets: 3, setsAccessory: 3,
     pctStart: 58, pctText: '50 à 65 %',
     restCompound: 75, restAccessory: 45,
-    restText: '45 s à 1 min 15',
+    restText: '1 min à 1 min 30',
     summary: 'Charges légères, beaucoup de répétitions, repos courts. Pour tenir l’effort plus longtemps.',
   },
 };

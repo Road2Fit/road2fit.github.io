@@ -1,4 +1,5 @@
 import { PROFILES } from './profiles';
+import { restFor } from './rest';
 import { assistChangeText, assistText, nextAssistDown } from '../lib/assist';
 import { normalizeForProgress } from './methods';
 import { decideProfileTarget } from './profileTarget';
@@ -170,11 +171,17 @@ export function computeExerciseTarget(q, opts = {}) {
 
   return {
     questId: q.id, catalogId: q.catalogId, name: q.name, icon: q.icon, arena, kind, compound,
-    restSec: pr ? pr.restSec : compound ? 150 : 90, sets, targetReps: reps, goalReps: pr ? pr.hi : R,
+    // repos calculé pour CET exercice et cette charge (coach/rest.js) ; profil endurance : repos courts voulus (≤ 90 s, ACSM 2009)
+    restSec: restOf(q, arena, reps, T, compound, opts.profile), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
     profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
     load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, suggested
   };
 }
+
+const restOf = (q, arena, reps, timed, compound, profile) => {
+  const sec = restFor({ name: q.name, reps: Math.min(...reps.map(Number).filter(n => n > 0), 99), timed, compound, arena }).sec;
+  return profile === 'endurance' ? Math.min(90, sec) : sec;
+};
 
 // Répartition des exercices de l'utilisateur dans N séances « corps entier »
 export function composeTemplates(quests, N) {

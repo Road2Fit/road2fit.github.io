@@ -70,11 +70,11 @@ describe('profils : objectif d’un exercice', () => {
     expect(t.change).toBe('new');
     const h = computeExerciseTarget(bench([]), { today: TODAY, profile: 'hypertrophie', maxRecords: { q_b: { kg: 100 } } });
     expect(h.load).toBe(72.5); // 72 % arrondis au pas de 2,5 kg
-    expect(h.restSec).toBe(120);
+    expect(h.restSec).toBe(180); // 8 reps sur un gros exercice : 3 min (Schoenfeld 2016)
     const e = computeExerciseTarget(curl([]), { today: TODAY, profile: 'endurance' });
     expect(e.sets).toBe(3);
     expect(e.targetReps).toEqual([15, 15, 15]);
-    expect(e.restSec).toBe(45); // exercice d'appoint
+    expect(e.restSec).toBe(60); // petit muscle, charge légère : jamais moins de 60 s
   });
 
   it('dans la fourchette : +1 répétition par série, puis charge supérieure en haut de la fourchette', () => {

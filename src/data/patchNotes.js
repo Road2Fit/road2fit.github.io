@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '3.9.2',
+    date: '2026-11-05',
+    title: 'Des repos adaptés à chaque exercice',
+    items: [
+      'Le repos se calcule pour chaque exercice selon la charge et le nombre de muscles sollicités : par exemple 3 min pour des tractions à 8 répétitions, 4 min pour un squat lourd, 1 min 15 pour un curl.',
+      'D’après les revues scientifiques : plus long pour les charges lourdes et les gros exercices, au moins 1 min partout.',
+      'Le repos de chaque exercice s’affiche dans la prochaine séance, avec sa raison dans « Pourquoi ? / Ajuster ».',
+    ],
+  },
+  {
     version: '3.9.1',
     date: '2026-11-04',
     title: 'L’échauffement compte',

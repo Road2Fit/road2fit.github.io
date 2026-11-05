@@ -8,6 +8,7 @@ import { COACH_CHANGE_BADGES, coachFmt } from '../../coach/labels';
 import { PROFILES, activeProfile } from '../../coach/profiles';
 import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
+import { restFor, restText } from '../../coach/rest';
 
 import { card } from './ui';
 import { CustomSetsEditor } from './CustomSetsEditor';
@@ -175,6 +176,7 @@ export function CoachNextSession({
                         </p>
                       )}
                       <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
+                      {!e.plan && e.restSec > 0 && <p className="text-xs text-slate-400" data-testid="rest-chip">Repos {restText(e.superset && e.superset.first ? 15 : e.restSec)}{e.superset && e.superset.first ? ' (puis l’autre exercice du superset)' : ''}</p>}
                     </div>
                     <div className="shrink-0 flex items-center gap-1">
                       <span className={`px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
@@ -193,6 +195,7 @@ export function CoachNextSession({
                     {openEx[e.questId] ? '▾ Masquer' : '▸ Pourquoi ? / Ajuster'}{e.manual && !openEx[e.questId] ? ' · modifié par toi' : ''}
                   </button>}
                   {!preview && openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
+                  {!preview && openEx[e.questId] && !e.plan && e.restSec > 0 && <p className="text-xs text-slate-400 mt-1">Repos de {restText(e.restSec)} : {restFor({ name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
                   {!preview && openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
                   {!preview && openEx[e.questId] && setMethod && (() => {
                     const q = gameState.quests.find(x => x.id === e.questId) || {};
@@ -276,7 +279,7 @@ export function CoachNextSession({
             </div>
           )}
           <p className="text-xs text-slate-500">
-            Repos conseillé : 2 min 30 sur les exercices principaux, 1 min 30 sur les exercices d’appoint (ACSM 2009).
+            Repos adapté à chaque exercice : plus long quand la charge est lourde et l’exercice sollicite beaucoup de muscles (jusqu’à 3-4 min), plus court sur les petits muscles (au moins 1 min). Repères : Grgic 2018, Schoenfeld 2016, Singer 2024.
           </p>
         </>
       )}
