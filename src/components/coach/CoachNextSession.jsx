@@ -30,7 +30,7 @@ export function CoachNextSession({
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-black text-white"><Art name="dumbbell" />{preview ? 'Aperçu de la séance suivante' : 'Prochaine séance'} {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
+        <h3 className="font-black text-white" data-testid="next-session-title"><Art name="dumbbell" />{preview ? 'Aperçu de la séance suivante' : 'Prochaine séance'} {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
         {!plan && ov.hasExercises && !preview && (
           <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
         )}

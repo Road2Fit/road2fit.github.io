@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.5.1',
+    date: '2026-11-06',
+    title: 'Le grand rond s’anime',
+    items: [
+      'Quand tu touches « Lancer » ou « Reprendre », tout le rond s’enfonce, rebondit et lance une onde de lumière avant d’ouvrir la séance.',
+      'Le rond occupe tout le haut de l’écran : en dessous, seul le titre « Prochaine séance » dépasse.',
+    ],
+  },
+  {
     version: '4.5',
     date: '2026-11-06',
     title: 'Carte ronde et icônes',

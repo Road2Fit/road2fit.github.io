@@ -1,5 +1,5 @@
 import { Art } from '../Art';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
@@ -49,6 +49,33 @@ export function CoachPanel({
   const coach = getCoachSettings(gameState);
   const hasGoal = !!(coach.mainGoal && coach.mainGoal.kind);
   const [showSources, setShowSources] = useState(false);
+  // grand rond : toucher le bouton noir fait réagir tout le rond, puis la séance s'ouvre (le temps de voir l'animation)
+  const [heroPress, setHeroPress] = useState(false);
+  // le grand rond occupe le haut de l'écran : sa zone grandit jusqu'à ce que seul le titre « Prochaine séance » dépasse en bas
+  useLayoutEffect(() => {
+    const fit = () => {
+      const z = document.querySelector('.hero-zone');
+      const t = document.querySelector('[data-testid="next-session-title"]');
+      if (!z) return;
+      z.style.minHeight = '';
+      if (!t) return;
+      const nav = document.querySelector('nav[aria-label="Navigation"]');
+      const navTop = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : window.innerHeight;
+      const extra = navTop - 14 - (t.getBoundingClientRect().bottom + window.scrollY);
+      if (extra > 0) z.style.minHeight = `${Math.round(z.getBoundingClientRect().height + extra)}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  });
+  const heroGo = fn => {
+    if (heroPress) return;
+    let quick = false;
+    try { quick = /jsdom/i.test(navigator.userAgent) || window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { quick = true; }
+    if (quick) { fn(); return; }
+    setHeroPress(true);
+    setTimeout(() => { setHeroPress(false); fn(); }, 520);
+  };
   const [matchInput, setMatchInput] = useState('');
   const [serie, setSerie] = useState({ dow: 0, from: today, to: addDaysISO(today, 364) });
   const [addSel, setAddSel] = useState('');
@@ -260,32 +287,32 @@ export function CoachPanel({
       )}
       {/* GRANDE CARTE DE LA SÉANCE : tout en haut, la prochaine séance et le bouton pour la lancer */}
       {guidedActive && (
-        <section data-hero data-testid="session-hero" className="hero-round bg-pink-600 text-white shadow-xl">
+        <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
           <p className="text-xs font-black uppercase tracking-widest opacity-80">Séance en cours</p>
           <h2 className="text-4xl font-black leading-none">Reprends où<br />tu en étais</h2>
-          <button type="button" onClick={onResumeGuided} data-testid="resume-guided" className="hero-cta mt-2 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+          <button type="button" onClick={() => heroGo(onResumeGuided)} data-testid="resume-guided" className="hero-cta mt-2 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>Reprendre
           </button>
-        </section>
+        </section></div>
       )}
       {!guidedActive && !coachOff && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
         const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
         const line = e => `${e.name} ${e.sets}×${(e.targetReps || [])[0] || ''}${e.kind === 'load' ? ` · ${String(e.load).replace('.', ',')} kg` : ''}`;
         return (
-          <section data-hero data-testid="session-hero" className="hero-round bg-pink-600 text-white shadow-xl">
+          <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
             <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}</p>
             <h2 className="text-4xl font-black leading-none">{title}<br />{shownSession.estMin} min</h2>
             <div className="text-sm font-bold opacity-90 space-y-0.5 max-w-full">
               {shownSession.exercises.slice(0, 2).map(e => <p key={e.questId} className="truncate">{line(e)}</p>)}
               {shownSession.exercises.length > 2 && <p className="opacity-80">+ {shownSession.exercises.length - 2} exercice{shownSession.exercises.length - 2 > 1 ? 's' : ''}</p>}
             </div>
-            <button type="button" onClick={() => onStartGuided(sessionToStart)} data-testid={isToday ? 'start-today' : 'start-early'}
+            <button type="button" onClick={() => heroGo(() => onStartGuided(sessionToStart))} data-testid={isToday ? 'start-today' : 'start-early'}
               className="hero-cta mt-1 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
               <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>
               {isToday ? 'Lancer' : 'Lancer en avance'}
             </button>
-          </section>
+          </section></div>
         );
       })()}
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />

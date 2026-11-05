@@ -120,7 +120,14 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
 :root[data-theme="neon"] button.bg-pink-600:not([data-hero]) svg.art { width: 1.3em; height: 1.3em; }
 
 
-/* grande carte de la séance en ROND (essai) : un cercle centré, contenu centré */
-.hero-round { width: min(88vw, 340px); aspect-ratio: 1 / 1; margin-left: auto; margin-right: auto; border-radius: 9999px; padding: 2.6rem 2.4rem 3rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; overflow: hidden; }
-.hero-round p.truncate { max-width: 15rem; margin-left: auto; margin-right: auto; }
-.hero-round .hero-cta { font-size: 1.15rem; padding: 0.7rem 1.4rem; white-space: nowrap; }
+/* grande carte de la séance en ROND : un grand cercle qui occupe le haut de l'écran (on voit juste le titre « Prochaine séance » en dessous) */
+.hero-zone { display: flex; align-items: center; justify-content: center; }
+.hero-round { width: min(calc(100vw - 1.5rem), 420px); aspect-ratio: 1 / 1; border-radius: 9999px; padding: 2.8rem 2.6rem 3.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; text-align: center; overflow: hidden; position: relative; }
+.hero-round h2 { font-size: 2.6rem; }
+.hero-round p.truncate { max-width: 16rem; margin-left: auto; margin-right: auto; }
+.hero-round .hero-cta { font-size: 1.2rem; padding: 0.75rem 1.5rem; white-space: nowrap; }
+/* toucher du bouton noir : tout le rond s'enfonce, rebondit, puis une onde lumineuse part du bord */
+@keyframes r2f-hero-press { 0% { transform: scale(1); } 30% { transform: scale(0.9); } 65% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes r2f-hero-wave { 0% { box-shadow: 0 0 0 0 rgb(var(--neon-rgb, 236 72 153) / 0.7), 0 0 30px 6px rgb(var(--neon-rgb, 236 72 153) / 0.6); } 100% { box-shadow: 0 0 0 46px rgb(var(--neon-rgb, 236 72 153) / 0), 0 0 60px 12px rgb(var(--neon-rgb, 236 72 153) / 0); } }
+[data-testid="session-hero"].hero-press { animation: r2f-hero-press 0.5s cubic-bezier(0.3, 0.7, 0.3, 1.2), r2f-hero-wave 0.55s ease-out; }
+.hero-press .hero-cta { transform: scale(0.94); }
