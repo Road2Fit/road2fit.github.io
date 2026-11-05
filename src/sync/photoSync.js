@@ -6,7 +6,9 @@
 //  - modifiée d'un seul côté → copiée ; des deux côtés → la plus récente gagne ;
 //  - supprimée d'un côté (elle était connue à la dernière synchro) → supprimée aussi de l'autre.
 // Sécurités : un appareil neuf (sans photo ni mémoire de synchro) ne supprime jamais rien ;
-// si les photos de l'appareil ont disparu d'un coup (navigateur vidé), on les retélécharge au lieu de les supprimer sur le serveur.
+// si les photos de l'appareil ont disparu d'un coup (navigateur vidé), on les retélécharge au lieu de les supprimer sur le serveur ;
+// avec `local.deleted()` (liste des photos supprimées volontairement ici), seule une photo de cette liste est supprimée du
+// serveur : une photo perdue par le navigateur, même si d'autres restent ou si une nouvelle a été prise, est retéléchargée.
 
 const DIR = 'photos';
 
@@ -36,6 +38,7 @@ export async function syncPhotos(cfg, ports) {
   // Photos de l'appareil disparues d'un coup alors qu'on en connaissait beaucoup : stockage vidé, pas suppression voulue.
   if (Object.keys(localIdx).length === 0 && Object.keys(meta).length > 0) meta = {};
 
+  const deletedSet = ports.local.deleted ? new Set(await ports.local.deleted()) : null;
   const save = () => ports.setMeta(meta);
   const cfgFor = id => ({ ...cfg, path: fileOf(id) });
   const download = async id => {
@@ -90,8 +93,12 @@ export async function syncPhotos(cfg, ports) {
         await upload(id, null); // nouvelle photo
       }
     } else if (inRemote) {
-      if (m) {
+      // absente d'ici : supprimée volontairement (liste des suppressions) → on la supprime du serveur ;
+      // sinon le navigateur a perdu l'image → on la retélécharge (jamais de perte)
+      const userDeleted = deletedSet ? deletedSet.has(id) : !!m;
+      if (m && userDeleted) {
         await ports.api.deleteFile(cfgFor(id), remote.get(id), 'Photo supprimée'); // supprimée ici
+        if (ports.local.forgetDeleted) ports.local.forgetDeleted(id);
         delete meta[id];
         save();
         stats.removedRemote++;

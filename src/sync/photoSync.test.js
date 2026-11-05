@@ -141,3 +141,57 @@ describe('synchronisation des photos', () => {
     expect(repo.files.has('photos/ph_ok.json')).toBe(true);
   });
 });
+
+describe('photos perdues par le navigateur (cas réel du 05/11/2026)', () => {
+  // appareil réel : l'index des photos peut être faux, la liste des suppressions volontaires est tenue à part
+  function realDevice(repo) {
+    const photos = new Map();
+    const deleted = new Set();
+    let m = null;
+    return {
+      photos, deleted,
+      add(id) { photos.set(id, { id, date: '2026-10-21', img: 'data:image/jpeg;base64,AAAA', createdAt: 1, updatedAt: ++clock }); },
+      userDelete(id) { photos.delete(id); deleted.add(id); },
+      lose(id) { photos.delete(id); }, // le navigateur a vidé l'image
+      sync() {
+        return syncPhotos({}, {
+          api: repo.api,
+          local: {
+            index: async () => Object.fromEntries([...photos].map(([id, p]) => [id, p.updatedAt])),
+            get: async id => photos.get(id) || null,
+            put: async p => { photos.set(p.id, p); },
+            del: async id => { photos.delete(id); },
+            deleted: async () => [...deleted],
+            forgetDeleted: id => { deleted.delete(id); },
+          },
+          getMeta: () => m,
+          setMeta: x => { m = JSON.parse(JSON.stringify(x)); },
+        });
+      },
+    };
+  }
+
+  it('anciennes photos perdues + une nouvelle prise aujourd’hui : rien n’est supprimé du serveur, tout revient', async () => {
+    const repo = fakeRepo();
+    const tel = realDevice(repo);
+    ['ph_a', 'ph_b', 'ph_c', 'ph_d'].forEach(id => tel.add(id));
+    await tel.sync();
+    ['ph_a', 'ph_b', 'ph_c', 'ph_d'].forEach(id => tel.lose(id));
+    tel.add('ph_today');
+    const r = await tel.sync();
+    expect(r.removedRemote).toBe(0);
+    expect(repo.files.size).toBe(5);
+    expect([...tel.photos.keys()].sort()).toEqual(['ph_a', 'ph_b', 'ph_c', 'ph_d', 'ph_today']);
+  });
+
+  it('une photo supprimée volontairement l’est aussi sur le serveur', async () => {
+    const repo = fakeRepo();
+    const tel = realDevice(repo);
+    tel.add('ph_a'); tel.add('ph_b');
+    await tel.sync();
+    tel.userDelete('ph_a');
+    expect(await tel.sync()).toMatchObject({ removedRemote: 1 });
+    expect(repo.files.has('photos/ph_a.json')).toBe(false);
+    expect(tel.deleted.size).toBe(0);
+  });
+});

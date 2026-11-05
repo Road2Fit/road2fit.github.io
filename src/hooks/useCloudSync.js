@@ -67,6 +67,8 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
         get: id => PhotoDB.get(id),
         put: p => PhotoDB.put(p, { remote: true }),
         del: id => PhotoDB.del(id, { remote: true }),
+        deleted: () => PhotoDB.deleted(),
+        forgetDeleted: id => PhotoDB.forgetDeleted(id),
       },
       getMeta: store.readPhotoMetaAccount,
       setMeta: store.writePhotoMetaAccount,

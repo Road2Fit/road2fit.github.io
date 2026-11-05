@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.0.1',
+    date: '2026-11-05',
+    title: 'Tes photos souvenirs reviennent',
+    items: [
+      'Si le téléphone a effacé des photos de sa mémoire, l’appli les retélécharge maintenant depuis ta sauvegarde en ligne (elles n’étaient pas perdues).',
+      'Sécurité : seule une photo que tu supprimes toi-même est retirée de la sauvegarde.',
+    ],
+  },
+  {
     version: '4.0',
     date: '2026-11-05',
     title: 'Une appli plus simple et plus fluide',

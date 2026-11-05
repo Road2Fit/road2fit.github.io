@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 const INDEX_KEY = 'rondoufit:photoIdx';
 const readIdx = () => { try { return JSON.parse(localStorage.getItem(INDEX_KEY) || 'null'); } catch (e) { return null; } };
 const writeIdx = idx => { try { localStorage.setItem(INDEX_KEY, JSON.stringify(idx)); } catch (e) {} };
+const DELETED_KEY = 'rondoufit:photoDeleted';
 // 'rondoufit-photos' : l'affichage doit se rafraîchir ; 'rondoufit-photos-local' : l'utilisateur a changé quelque chose (à envoyer).
 const notify = remote => {
   window.dispatchEvent(new Event('rondoufit-photos'));
@@ -16,15 +17,16 @@ const notify = remote => {
 export const PhotoDB = {
   _db: null,
   _mem: [],
+  // index { id: updatedAt } refait d'après les photos vraiment présentes sur l'appareil (jamais d'après une copie gardée à part)
   async index() {
-    let idx = readIdx();
-    if (!idx) {
-      idx = {};
-      for (const p of await this.all()) idx[p.id] = p.updatedAt || p.createdAt || 0;
-      writeIdx(idx);
-    }
+    const idx = {};
+    for (const p of await this.all()) if (p && p.id && p.img) idx[p.id] = p.updatedAt || p.createdAt || 0;
+    writeIdx(idx);
     return idx;
   },
+  // photos supprimées volontairement sur cet appareil (seules celles-ci sont supprimées du serveur)
+  deleted() { try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'); } catch (e) { return []; } },
+  forgetDeleted(id) { try { localStorage.setItem(DELETED_KEY, JSON.stringify(this.deleted().filter(x => x !== id))); } catch (e) { /* rien */ } },
   async get(id) {
     return (await this.all()).find(p => p.id === id) || null;
   },
@@ -52,7 +54,7 @@ export const PhotoDB = {
   // remote = true : photo reçue de la sauvegarde en ligne (on garde sa date de modification et on ne la renvoie pas)
   async put(photo, { remote = false } = {}) {
     const p = remote ? photo : { ...photo, updatedAt: Date.now() };
-    const idx = (await this.index()) || {};
+    const idx = readIdx() || {};
     idx[p.id] = p.updatedAt || p.createdAt || 0;
     writeIdx(idx);
     try {
@@ -66,7 +68,8 @@ export const PhotoDB = {
     notify(remote);
   },
   async del(id, { remote = false } = {}) {
-    const idx = (await this.index()) || {};
+    if (!remote) { try { localStorage.setItem(DELETED_KEY, JSON.stringify([...new Set([...this.deleted(), id])].slice(-200))); } catch (e) { /* rien */ } }
+    const idx = readIdx() || {};
     delete idx[id];
     writeIdx(idx);
     try {
