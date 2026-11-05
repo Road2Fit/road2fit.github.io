@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.4.2',
+    date: '2026-11-05',
+    title: 'Icônes à la bonne taille',
+    items: ['Sur un bouton sélectionné (texte plus grand, en majuscules), l’icône grandit avec le texte.'],
+  },
+  {
     version: '4.4.1',
     date: '2026-11-05',
     title: 'Icônes qui disparaissaient',
