@@ -113,9 +113,6 @@ export function EntryEditor({ entry, onCancel, onSave, quest }) {
         <input type="text" value={note} onChange={e => setNote(e.target.value)} className={`${field} text-left`} />
       </div>
 
-      <p className="text-xs text-slate-500">
-        Les calories et le résumé sont recalculés, et le coach repart de ces valeurs pour la prochaine séance. L’EXP déjà gagnée ne change pas.
-      </p>
       <div className="flex gap-2">
         <button type="submit" className="px-4 py-2 rounded-xl font-black text-xs bg-pink-600 hover:bg-pink-500 text-white">Enregistrer la correction</button>
         <button type="button" onClick={onCancel} className="px-4 py-2 rounded-xl font-bold text-xs bg-slate-800 text-slate-300 hover:text-white">Annuler</button>

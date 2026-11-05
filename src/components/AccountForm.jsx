@@ -30,7 +30,6 @@ export function AccountForm({ sync, recovery = null, onDone }) {
       <div className="space-y-3" data-testid="account-connected">
         <p className="text-sm text-slate-300">Connecté : <strong className="text-white" data-testid="account-email">{sync.user.email}</strong></p>
         <p className={`text-sm font-bold ${sync.status === 'synced' ? 'text-emerald-300' : 'text-amber-300'}`} data-testid="account-status">{status}</p>
-        <p className="text-xs text-slate-500">Tes données sont copiées automatiquement dans ton espace personnel : change de téléphone, reconnecte-toi avec le même e-mail et tout revient. Tes photos souvenirs sont sauvegardées aussi.</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy} onClick={() => run(async () => { await sync.signOut(); setMsg({ ok: true, text: 'Déconnecté. Tes données restent sur ce téléphone.' }); })} className={`${btn} bg-slate-800 border border-slate-600 text-white`} data-testid="account-signout">Me déconnecter</button>
           {onDone && <button type="button" onClick={onDone} className={`${btn} bg-sky-600 text-white`}>OK</button>}
@@ -124,7 +123,6 @@ function Versions({ sync }) {
       <button type="button" onClick={() => { const o = !open; setOpen(o); if (o && !list) load(); }} className="text-xs font-bold text-sky-300 underline" data-testid="versions-toggle">{open ? 'Masquer les versions précédentes' : 'Versions précédentes de ma sauvegarde'}</button>
       {open && (
         <div className="space-y-1.5">
-          <p className="text-xs text-slate-500">Le serveur garde automatiquement une copie de ta sauvegarde (une toutes les 8 h environ, les 21 dernières) et personne ne peut les supprimer depuis l’appli. Utile si des données ont été effacées par erreur : restaurer une version remplace tes données actuelles (une copie de sécurité est gardée sur cet appareil).</p>
           {busy && <p className="text-xs text-slate-400">Chargement…</p>}
           {list && list.length === 0 && <p className="text-xs text-slate-400">Aucune version précédente pour l’instant (la première apparaît après ta prochaine modification).</p>}
           {(list || []).map(v => (

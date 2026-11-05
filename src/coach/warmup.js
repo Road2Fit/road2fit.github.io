@@ -45,7 +45,7 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
       const load = Math.max(step, coachRound(W * p.pct, step));
       if (load >= W) continue; // jamais aussi lourd que le travail
       if (out.length && out[out.length - 1].load >= load) continue;
-      out.push({ load, reps: p.reps, restSec: p.restSec, label: `${p.reps} reps à ${load} kg` });
+      out.push({ load, reps: p.reps, restSec: p.restSec, label: `${p.reps} reps à ${String(load).replace(".", ",")} kg` });
     }
     return out;
   }
@@ -56,7 +56,7 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
     const A = A0;
     const assist = A + 10;
     const reps = Math.max(3, Math.round(firstWork * 0.5));
-    return [{ assist, reps, restSec: 45, label: `${reps} reps avec ${assist} kg d’aide` }];
+    return [{ assist, reps, restSec: 45, label: `${reps} reps avec ${String(assist).replace(".", ",")} kg d’aide` }];
   }
 
   // poids du corps

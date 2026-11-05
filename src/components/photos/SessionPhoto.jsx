@@ -30,7 +30,6 @@ export function SessionPhoto({ date, label, highlight }) {
           🖼️ Choisir une photo
         </PhotoAddButton>
       </div>
-      <p className="text-xs text-slate-500">Elle sera placée dans ton calendrier 📸 Souvenirs.</p>
     </div>
   );
 }

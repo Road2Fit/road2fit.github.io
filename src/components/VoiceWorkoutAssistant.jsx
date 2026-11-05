@@ -354,9 +354,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               )}
               {aiMsg && <span className={aiState === 'error' ? 'text-amber-200' : 'text-slate-300'}>{aiMsg}</span>}
             </div>
-          ) : (
-            <p className="text-xs text-slate-500">Astuce : active le coach intelligent (onglet Coach) pour une dictée qui comprend toutes les formulations.</p>
-          )}
+          ) : null}
 
           {micStatusMsg && (
             <div className="text-xs bg-slate-950/90 border border-amber-500/40 text-amber-200 px-3 py-2 rounded-xl">

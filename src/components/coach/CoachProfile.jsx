@@ -78,7 +78,6 @@ export function CoachProfile({ coach, state, today, updateCoach, w0 }) {
             <button disabled={seq.length <= 1} onClick={() => setSeq(seq.slice(0, -1))} className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 font-bold disabled:opacity-40">− Retirer le dernier</button>
             <button onClick={() => updateCoach({ cycleProfiles: [], workProfile: active.id || 'auto' })} className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 font-bold">Même profil tout le temps</button>
           </div>
-          <p className="text-xs text-slate-500">Après le dernier cycle de la liste, on recommence au premier. La semaine allégée de fin de cycle garde le profil du cycle.</p>
         </div>
       )}
 
@@ -92,9 +91,6 @@ export function CoachProfile({ coach, state, today, updateCoach, w0 }) {
         >
           Un profil différent à chaque cycle
         </button>
-      )}
-      {!w0.cycle && (
-        <p className="text-xs text-slate-500">Astuce : active un cycle d’entraînement ci-dessous pour pouvoir choisir un profil différent à chaque cycle.</p>
       )}
 
       <details className="text-xs text-slate-400">

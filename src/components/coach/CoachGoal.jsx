@@ -41,7 +41,6 @@ export function CoachGoal({ gameState, setGameState }) {
     return (
       <section className="rounded-2xl border border-slate-700 bg-slate-900 p-4 space-y-3" data-testid="coach-goal">
         <h3 className="font-black text-white"><Art name="target" />{goal ? 'Changer mon objectif' : 'Ton objectif'}</h3>
-        {!editing && <p className="text-xs text-slate-300">Donne un but au coach : il adapte tes séances (formes de séries, séries en plus) d’après ce que disent les études.</p>}
         {!editing ? (
           <button type="button" onClick={() => setEditing(true)} data-testid="goal-add" className="w-full py-2.5 rounded-xl bg-pink-600 text-white text-sm font-black">Choisir mon objectif</button>
         ) : (

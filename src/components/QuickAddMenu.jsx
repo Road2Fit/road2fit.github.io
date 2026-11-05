@@ -1,7 +1,7 @@
 import { Art } from './Art';
 import { useEffect, useRef, useState } from 'react';
 
-// Bouton « + » flottant : les actions de saisie rapide au même endroit (au pouce)
+// Boutons flottants : micro (dicter sa séance) au-dessus du « + » (saisie rapide), même taille, au pouce
 export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
   const [open, setOpen] = useState(false);
   // Il s'efface quand on descend (pour ne cacher aucun bouton) et revient dès qu'on remonte
@@ -29,11 +29,16 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
       <div className={`fixed right-4 bottom-20 md:bottom-6 z-40 flex flex-col items-end gap-2 transition-transform duration-200 ${hidden && !open ? 'translate-x-24' : ''}`}>
         {open && (
           <div className="flex flex-col items-end gap-2">
-            {item('Dicter ma séance', 'mic', onVoice, 'Dicter toute ma séance à la voix')}
             {item('Nouvel exercice', 'dumbbell', onExercise)}
             {item('Activité (course, sport…)', 'runner', onCourse)}
             {item('Minuteur de repos', 'timer', onTimer)}
           </div>
+        )}
+        {!open && onVoice && (
+          <button type="button" onClick={onVoice} aria-label="Dicter ma séance" title="Dicter ma séance" data-testid="fab-voice"
+            className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl bg-slate-800 border border-slate-600">
+            <Art name="mic" size={28} bare />
+          </button>
         )}
         <button
           onClick={() => setOpen(o => !o)}

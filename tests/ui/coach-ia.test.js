@@ -25,6 +25,9 @@ async function logIn(srv, extra = {}) {
   });
   open.push(h);
   await advance(h, 600);
+  // « Parle à ton coach » est un bouton qui ouvre la fenêtre de discussion
+  const b = h.doc.querySelector('[data-testid="coach-chat-open"]');
+  if (b) await clickEl(h, b);
   return h;
 }
 const waitFor = async (h, fn, tries = 40) => { for (let i = 0; i < tries && !fn(); i++) await advance(h, 100); return fn(); };
@@ -201,7 +204,7 @@ describe('raconte ton passé', () => {
       };
     };
     const h = await logIn(srv, { aiConsent: true });
-    const fold = [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach'));
+    const fold = h.doc.querySelector('[data-testid="coach-page-reglages"]');
     await clickEl(h, fold);
     expect(byTest(h, 'coach-past')).toBeTruthy();
     await setInput(h, byTest(h, 'past-text'), 'Je fais de la muscu depuis cinq ans, 100 kg pour 3 au développé couché, soulevé de terre 160.');

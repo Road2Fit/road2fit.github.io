@@ -109,7 +109,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'you' && (
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">Toi</h2>
-            <p className="text-xs text-slate-400">Sert à estimer tes dépenses de calories et à adapter les conseils.</p>
             <div className="flex gap-2"><Toggle on={a.sex === 'm'} onClick={() => patch({ sex: 'm' })}>Homme</Toggle><Toggle on={a.sex === 'f'} onClick={() => patch({ sex: 'f' })}>Femme</Toggle></div>
             <div className="grid grid-cols-3 gap-2">
               <div><label className={label} htmlFor="ob-age">Âge</label><input id="ob-age" inputMode="numeric" value={a.age} onChange={e => patch({ age: e.target.value })} className={field} placeholder="30" /></div>
@@ -123,7 +122,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'goal' && (
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">Ton objectif principal</h2>
-            <p className="text-xs text-slate-400">Il choisit ton « profil de travail » (nombre de répétitions, charges, repos). Tu pourras le changer dans l’onglet Coach.</p>
             <div className="space-y-2 pt-1" data-testid="muscle-mode-choice">
               <h3 className="text-base font-black text-white pt-2">Comment suivre tes muscles ?</h3>
               <button type="button" onClick={() => patch({ muscleMode: 'simple' })} aria-pressed={a.muscleMode === 'simple'} data-testid="mode-simple" className={`${chip(a.muscleMode === 'simple')} w-full text-left`}>
@@ -158,7 +156,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'ex' && (
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">{a.level === 'beginner' ? 'Tes premiers exercices' : 'Ce que tu as déjà fait'}</h2>
-            {a.level === 'beginner' && <p className="text-xs text-slate-400">Le coach a choisi pour toi des machines simples à régler, une par grand mouvement. Décoche ce que tu ne veux pas ; il proposera des charges prudentes et les ajustera après tes premières séances.</p>}
             {a.level === 'advanced' && <p className="text-xs text-slate-400">Coche les exercices que tu as déjà pratiqués et indique ta meilleure série récente : « 80 kg pour 5 répétitions » (1 répétition = ton maximum). Le coach part de là, sans programme de débutant.</p>}
             {expert && <p className="text-xs text-slate-400">Pour chaque exercice pratiqué : ta meilleure série (et sa date) et ta séance type actuelle (séries × répétitions × charge). Le coach repart de ta séance type.</p>}
             {a.level !== 'beginner' && <OnboardingPast sync={sync} weightKg={a.weightKg} onConsent={() => setGameState(prev => ({ ...prev, aiConsent: true }))} onResult={fromStory} />}
@@ -208,7 +205,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'expert' && (
           <section className="space-y-3" data-testid="ob-expert">
             <h2 className="text-xl font-black text-white">Ton entraînement en détail</h2>
-            <p className="text-xs text-slate-400">Tout est facultatif. Le coach s’en sert pour ton volume, tes formes de séries, tes cycles et ce qu’il doit éviter.</p>
             <ExpertFields exp={a.experience} onChange={setXp} />
             <ExperienceSources />
           </section>
@@ -217,14 +213,12 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'sport' && (
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">Un sport régulier ?</h2>
-            <p className="text-xs text-slate-400">Choisis ton sport, puis ses jours habituels : le coach évitera de te faire travailler les jambes la veille, gardera de l’énergie le jour J, comptera ton endurance et te proposera une préparation adaptée à ce sport. Tu pourras aussi ajouter tes matchs (onglet Coach).</p>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Sport">
               <Toggle on={!a.sport} onClick={() => patch({ sport: '', sportDays: [] })} testid="sport-none">Aucun</Toggle>
               {SPORTS.map(s => <Toggle key={s.id} on={a.sport === s.id} onClick={() => patch({ sport: s.id })} testid={`sport-${s.id}`}>{s.icon} {s.cap}</Toggle>)}
             </div>
             {a.sport && <p className="text-xs text-slate-300">Jours habituels de {sportInfo(a.sport).label} :</p>}
             {a.sport && <div className="flex flex-wrap gap-2">{DAYS.map(([d, n]) => <Toggle key={d} on={a.sportDays.includes(d)} onClick={() => toggleDay('sportDays', d)} testid={`sportday-${d}`}>{n}</Toggle>)}</div>}
-            <p className="text-xs text-slate-500">Tes autres activités (vélo, natation, randonnée…) s’ajoutent ensuite avec le bouton « + » → « Activité annexe ».</p>
           </section>
         )}
 
@@ -233,7 +227,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
             <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
             <p className="text-sm text-slate-300">Crée un compte (e-mail + mot de passe) : tes données sont alors <strong>sauvegardées automatiquement</strong> dans ton espace personnel, et tu les retrouves en te reconnectant sur n’importe quel téléphone.</p>
             <AccountForm sync={sync} />
-            <p className="text-xs text-slate-500">Tu peux le faire plus tard (⚙️ → Mon compte), mais sans compte tes données ne sont que sur ce téléphone.</p>
           </section>
         )}
 
@@ -249,7 +242,6 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
               {a.sport && <li>{sportInfo(a.sport).icon} {sportInfo(a.sport).cap} pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}
               <li>{sync.configured ? 'Sauvegarde automatique réglée' : '⚠️ Sauvegarde automatique non réglée : tes données ne sont que sur ce téléphone'}</li>
             </ul>
-            <p className="text-xs text-slate-400">Ouvre l’onglet Coach pour voir ta première séance. Tout se modifie ensuite dans les onglets Coach, Exercices et Mes maxima.</p>
           </section>
         )}
 

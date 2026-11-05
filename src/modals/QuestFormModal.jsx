@@ -52,7 +52,6 @@ export function QuestFormModal({
                       {formSwapNote && <p className="text-xs text-emerald-200 bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-2">{formSwapNote}</p>}
                       {swapOpen && (
                         <div className="space-y-1.5">
-                          <p className="text-xs text-slate-400">Tous les exercices du muscle choisi sont listés. Avec un exercice qui se mesure pareil (charge en kg avec charge en kg, etc.), ta charge, ton objectif et tes séances sont conservés. Les autres sont marqués « Autre unité ».</p>
                           <ExercisePicker value={formCatalogId} onSelect={handleReplaceExercise} accept={c => c.type === formType} compat={isSwapCompatible} onSelectOther={c => setSwapOther(c)} allowCustom={false} />
                           {swapOther && (
                             <div className="text-xs text-amber-200 bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 space-y-1.5" data-testid="swap-other">
@@ -145,7 +144,7 @@ export function QuestFormModal({
                           </button>
                         ))}
                       </div>
-                      {!canChangeMeasure && <p className="text-xs text-slate-500">Cet exercice a déjà des séances enregistrées : sa mesure ne peut plus changer. Pour une autre mesure, ajoute-le comme nouvel exercice.</p>}
+                      {!canChangeMeasure && <p className="text-xs text-slate-500">Mesure figée : l’exercice a déjà des séances.</p>}
                     </div>
                   )}
                   </div>

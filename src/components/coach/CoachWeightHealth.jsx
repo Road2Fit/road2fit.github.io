@@ -64,7 +64,6 @@ export function CoachWeightHealth({
             ) : (
               <p>Tu as atteint ou dépassé ton poids cible : pour le maintenir, vise environ <b>{nutrition.tdee} kcal/jour</b>.</p>
             )}
-            <p className="text-xs text-slate-500">Estimation (formule de Mifflin-St Jeor, marge d’erreur d’environ 10 à 15 %) : ajuste selon l’évolution réelle de ta balance sur 2 à 3 semaines. Ce n’est pas un avis médical.</p>
           </div>
         )}
       </div>
@@ -84,9 +83,6 @@ export function CoachWeightHealth({
           <p className="text-slate-500">Repère général : adapte-le avec un professionnel de santé si besoin.</p>
         </div>
       </div>
-      <p className="text-xs text-slate-500">
-        Conseil cardio : en phase de perte de poids, vise 150 à 250 minutes d’endurance par semaine ; {sportInfo(coach.sport).poss} compte. Une marche inclinée ou un vélo en intensité modérée un jour sans muscu est une bonne option (ACSM 2009).
-      </p>
     </section>
   );
 }

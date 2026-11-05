@@ -176,7 +176,6 @@ export function MovementPreview({ initial = null }) {
                 ? <span className="text-xs font-bold text-emerald-300" data-testid="flag-done">✔ Merci, c’est noté : je corrigerai cette animation.</span>
                 : <button type="button" onClick={() => { flagAnimation({ animId: id, view: 'side', name: mv.name }); setFlagged(f => ({ ...f, [id]: true })); }} className="px-2 py-1 rounded-lg border border-slate-700 bg-slate-950 text-xs font-bold text-slate-300">Cette animation est fausse</button>}
             </div>
-            <p className="text-xs text-slate-500">En rouge, les muscles qui travaillent : l’intensité suit l’effort. « Trajet » montre le chemin à respecter (le cercle est le départ, la flèche le sens de l’effort) et un fantôme pâle de la position visée. Fais glisser la barre pour voir chaque position.</p>
 
             {info ? (
               <div className="space-y-3 pt-1">

@@ -139,6 +139,10 @@ export async function clickText(h, text) {
     const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
     if (fab) { await clickEl(h, fab); [el] = findByText(h, text); }
   }
+  if (!el && !h.doc.querySelector('[data-testid="quest-sheet"]')) {
+    const tile = h.doc.querySelector('[data-testid="quest-tile"]');
+    if (tile) { await clickEl(h, tile); [el] = findByText(h, text); if (!el) { const x = h.doc.querySelector('[data-testid="quest-sheet"] button[aria-label="Fermer"]'); if (x) await clickEl(h, x); } }
+  }
   if (!el) {
     const more = h.doc.querySelector('button[aria-label="Réglages et données"]');
     if (more) { await clickEl(h, more); [el] = findByText(h, text); }
@@ -354,4 +358,38 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
     return { id, session: session(email, id) };
   };
   return srv;
+}
+
+// ---- Séance guidée plein écran (un écran = une série) ----
+const gq = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
+const gclick = async (h, el) => { el.dispatchEvent(new h.w.MouseEvent('click', { bubbles: true })); await advance(h); };
+/** Une action dans la séance guidée : série faite, échauffement passé (ou fait si warm: 'do'), repos sauté. Renvoie ce qui a été fait. */
+export async function guidedStep(h, { warm = 'skip' } = {}) {
+  if (gq(h, 'guided-summary')) return 'summary';
+  if (gq(h, 'set-done')) { await gclick(h, gq(h, 'set-done')); return 'set'; }
+  if (gq(h, 'warm-done')) {
+    if (warm === 'do') await gclick(h, gq(h, 'warm-done'));
+    else await gclick(h, [...gq(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
+    return 'warm';
+  }
+  if (gq(h, 'guided-next')) { await gclick(h, gq(h, 'guided-next')); return 'next'; }
+  return 'none';
+}
+/** Va jusqu'au résumé de la séance guidée ; `onScreen(h)` est appelé avant chaque action. */
+export async function runGuided(h, { warm = 'skip', onScreen, max = 200 } = {}) {
+  for (let k = 0; k < max; k++) {
+    if (onScreen) await onScreen(h);
+    const r = await guidedStep(h, { warm });
+    if (r === 'summary' || r === 'none') return r;
+  }
+  return 'max';
+}
+
+/** Ouvre la fiche d'un exercice (onglet Exercices : la liste ne montre que logo + nom). */
+export async function openQuestSheet(h, name) {
+  const tiles = [...h.doc.querySelectorAll('[data-testid="quest-tile"]')];
+  const t = name ? tiles.find(x => (x.getAttribute('aria-label') || '').includes(name)) : tiles[0];
+  if (!t) throw new Error('Exercice introuvable : ' + name);
+  await clickEl(h, t);
+  return h.doc.querySelector('[data-testid="quest-sheet"]');
 }

@@ -35,7 +35,6 @@ export function RewardsModal({ gameState, levelInfo, onClose, setGameState }) {
         <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
           <div>
             <h3 className="text-base font-black text-white">🎁 Récompenses de niveau</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Tu es niveau {level}. Plus tu montes, plus tu débloques de façons de personnaliser {pick('Rondoudou', 'l’appli')}.</p>
           </div>
           <button type="button" onClick={onClose} className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white shrink-0">
             <X className="w-4 h-4" />

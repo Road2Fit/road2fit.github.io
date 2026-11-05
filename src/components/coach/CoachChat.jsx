@@ -29,7 +29,7 @@ const historyForAi = msgs => msgs.filter(m => !m.error).map(m => ({
 }));
 
 /** « Parle à ton coach » : discussion en langage courant avec le coach intelligent, qui peut régler l'appli après accord. */
-export function CoachChat({ gameState, setGameState, overview }) {
+function CoachChatBody({ gameState, setGameState, overview }) {
   const status = aiStatus(gameState);
   const [msgs, setMsgs] = useState(readChat);
   const [text, setText] = useState('');
@@ -50,7 +50,6 @@ export function CoachChat({ gameState, setGameState, overview }) {
         <span className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shrink-0"><Art name="coach" size={28} bare /></span>
         <div className="min-w-0 flex-1">
           <h3 className="font-black text-white">Parle à ton coach</h3>
-          <p className="text-xs text-slate-300">Dis-lui ce que tu veux en langage courant : il t’explique et règle l’appli pour toi.</p>
         </div>
       </div>
       {children}
@@ -216,5 +215,29 @@ export function CoachChat({ gameState, setGameState, overview }) {
         </ul>
       )}
     </div>
+  );
+}
+
+// « Parle à ton coach » : un simple bouton ; la discussion s'ouvre dans une fenêtre (gardée sur l'appareil entre deux ouvertures).
+export function CoachChat(props) {
+  const [open, setOpen] = useState(false);
+  if (aiStatus(props.gameState) === 'no_service') return null;
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} data-testid="coach-chat-open"
+        className="w-full flex items-center gap-3 rounded-2xl border border-pink-400/50 bg-slate-900 px-4 py-3 text-left">
+        <span className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0"><Art name="coach" size={26} bare /></span>
+        <span className="flex-1 font-black text-white">Parle à ton coach</span>
+        <span className="text-slate-400 font-black">›</span>
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center px-3 pt-14 pb-4 overflow-y-auto" onClick={() => setOpen(false)}>
+          <div className="relative w-full max-w-xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Parle à ton coach">
+            <button type="button" onClick={() => setOpen(false)} aria-label="Fermer" className="absolute -top-11 right-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
+            <CoachChatBody {...props} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

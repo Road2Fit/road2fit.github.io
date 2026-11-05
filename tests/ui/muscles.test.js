@@ -31,8 +31,10 @@ describe('suivi des muscles : deux modes', () => {
     const close = h.doc.querySelector('button[aria-label="Fermer"]');
     if (close) await clickEl(h, close);
     await advance(h, 300);
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
     const t = pageText(h);
     for (const m of ['Biceps', 'Triceps', 'Quadriceps']) expect(t, m).toContain(m);
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-sheet"] button[aria-label="Fermer"]'));
     // retour au mode simple
     await clickEl(h, h.doc.querySelector('button[aria-label="Réglages et données"]'));
     await clickEl(h, byTest(h, 'toggle-muscle-mode'));
@@ -89,7 +91,7 @@ describe('bilan du coach en mode optimisé', () => {
     await advance(h, 400);
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await advance(h, 1000);
-    await clickText(h, 'Réglages et détails du coach');
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-equilibre"]'));
     expect(byTest(h, 'muscle-map')).toBeTruthy();
     expect(pageText(h)).toContain('Équilibre des groupes musculaires');
     expect(byTest(h, 'toggle-sources')).toBeNull(); // replié : le schéma seul
@@ -106,6 +108,7 @@ describe('bilan du coach en mode optimisé', () => {
     await advance(h, 400);
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await advance(h, 1000);
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-equilibre"]'));
     const map = byTest(h, 'muscle-map');
     expect(map).toBeTruthy();
     const titles = [...map.querySelectorAll('ellipse title')].map(t => t.textContent);
@@ -120,15 +123,17 @@ describe('bilan du coach en mode optimisé', () => {
 });
 
 describe('mini silhouette en haut de page', () => {
-  it('présente à côté de la barre d’EXP dans les deux modes', async () => {
+  it('dans le profil (toucher l’icône en haut à gauche), dans les deux modes', async () => {
     const opt = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, muscleMode: 'optimized' }) } });
     open.push(opt);
     await advance(opt, 400);
+    await clickEl(opt, opt.doc.querySelector('[data-testid="profile-button"]'));
     expect(byTest(opt, 'muscle-map-mini')).toBeTruthy();
     expect(byTest(opt, 'muscle-map')).toBeNull();
     const sim = await launch({ storage: { ...NEUTRAL, rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }) } });
     open.push(sim);
     await advance(sim, 400);
+    await clickEl(sim, sim.doc.querySelector('[data-testid="profile-button"]'));
     expect(byTest(sim, 'muscle-map-mini')).toBeTruthy();
     expect(opt.errors).toEqual([]);
   }, TIMEOUT);

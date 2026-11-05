@@ -118,13 +118,12 @@ export function PhotoCalendar({ gameState }) {
             );
           })}
         </div>
-        <p className="text-xs text-slate-500">🔴 = séance faite sans photo · touche un jour pour voir ou ajouter un souvenir.</p>
+        <p className="text-xs text-slate-500">🔴 = séance sans photo</p>
         <div className="flex flex-wrap gap-2">
           <button onClick={exportPng} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold">🖼️ Télécharger le calendrier du mois</button>
           <button onClick={exportJson} className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold">💾 Sauvegarder les photos</button>
           <label className="px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold cursor-pointer">📥 Restaurer<input type="file" accept="application/json,.json" onChange={importJson} className="hidden" /></label>
         </div>
-        <p className="text-xs text-slate-500">Les photos restent sur cet appareil (hors synchro Google). Pense à « Sauvegarder les photos » de temps en temps.</p>
       </div>
 
       {openDay && (

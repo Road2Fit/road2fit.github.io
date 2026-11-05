@@ -41,7 +41,7 @@ export function CoachNextSession({
 
       {preview && (
         <div className="bg-slate-950 border border-violet-500/50 rounded-xl p-3 space-y-2" data-testid="coach-preview">
-          <p className="text-xs text-slate-300">Le programme de ton coach est fini et tu as choisi de <b>continuer sans l’appli</b> : le coach est en retrait. Voici seulement ce qu’il t’aurait proposé, pour info.</p>
+          <p className="text-xs text-slate-300">Tu continues sans l’appli : aperçu de ce que le coach aurait proposé.</p>
           {onTakeOver && <button type="button" onClick={onTakeOver} data-testid="preview-takeover" className="px-3 py-2 rounded-lg bg-pink-600 text-white text-xs font-black">Finalement, aide-moi pour la suite</button>}
         </div>
       )}
@@ -66,9 +66,6 @@ export function CoachNextSession({
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-500">
-            Si tu es cuit (mauvaise nuit, jambes lourdes), la séance que tu lances aujourd’hui est allégée : −10 % de charge et une série de moins. Cette réponse ne vaut que pour aujourd’hui.{tiredToday ? ' ✅ Pris en compte pour la séance guidée du jour.' : ''}
-          </p>
         </div>
       )}
 
@@ -251,7 +248,6 @@ export function CoachNextSession({
                           ))}
                           {!opt.own.length && !opt.catalog.length && <span className="text-xs text-slate-500">Aucun équivalent disponible.</span>}
                         </div>
-                        <p className="text-xs text-slate-500">Le remplacement transforme la séance en séance personnalisée (tu peux revenir à la proposition du coach).</p>
                       </div>
                     );
                   })()}
@@ -278,9 +274,6 @@ export function CoachNextSession({
               </div>
             </div>
           )}
-          <p className="text-xs text-slate-500">
-            Repos adapté à chaque exercice : plus long quand la charge est lourde et l’exercice sollicite beaucoup de muscles (jusqu’à 3-4 min), plus court sur les petits muscles (au moins 1 min). Repères : Grgic 2018, Schoenfeld 2016, Singer 2024.
-          </p>
         </>
       )}
       {plan && shownSession && shownSession.exercises.length === 0 && (
@@ -295,7 +288,6 @@ export function CoachNextSession({
             </div>
             <div>
               <p className="font-black text-white text-sm">Avis du coach : {rating.label}</p>
-              <p className="text-xs text-slate-400">Note sur 10 pour cette séance, à ce jour.</p>
             </div>
           </div>
           <button type="button" onClick={() => setShowRating(v => !v)} aria-expanded={showRating} className="text-xs font-bold text-sky-300">
@@ -327,7 +319,7 @@ export function CoachNextSession({
           </button>
           {shownDate !== today && (
             <p className="text-xs text-slate-500">
-              Prévue le {coachDayLabel(shownDate)}.{plan ? '' : ` Si tu la fais aujourd’hui, le coach adapte les exercices à la journée${todayInfo.legsOk ? '' : ` (pas de jambes : ${todayInfo.legsWhy})`}.`}
+              Prévue le {coachDayLabel(shownDate)}.
             </p>
           )}
           {todayInfo.blocked && (

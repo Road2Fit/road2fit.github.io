@@ -5,7 +5,7 @@ import { clickText, expandCoachDetails, launch, pageText, setInput, clickEl } fr
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
-const start = async () => { const h = await launch(); open.push(h); await clickEl(h, h.doc.querySelector('[data-tab="coach"]')); await clickText(h, 'Réglages et détails du coach'); return h; };
+const start = async () => { const h = await launch(); open.push(h); await clickEl(h, h.doc.querySelector('[data-tab="coach"]')); await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]')); return h; };
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const section = h => [...h.doc.querySelectorAll('section')].find(s => s.querySelector('h3') && s.querySelector('h3').textContent.includes('Profil de travail'));
 
@@ -22,7 +22,8 @@ describe('profil de travail', () => {
     expect(saved(h).coach.workProfile).toBe('puissance');
     const t = pageText(h);
     expect(t).toContain('3 à 5'); // fiche du profil
-    expect(t).toContain('Puissance'); // pastille dans la prochaine séance
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-seance"]'));
+    expect(pageText(h)).toContain('Puissance'); // pastille dans la prochaine séance
     await expandCoachDetails(h);
     expect(pageText(h)).toContain('Profil Puissance'); // explications de chaque exercice
     expect(h.errors).toEqual([]);
@@ -30,7 +31,6 @@ describe('profil de travail', () => {
 
   it('un profil différent à chaque cycle', async () => {
     const h = await start();
-    expect(pageText(h)).toContain('active un cycle d’entraînement');
     await clickText(h, 'Cycle de 4 semaines');
     await setInput(h, section(h).querySelector('select'), 'hypertrophie');
     await clickText(h, 'Un profil différent à chaque cycle');

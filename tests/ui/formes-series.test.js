@@ -1,7 +1,7 @@
 // Formes de séries (pyramides, dégressives…) dans la prochaine séance et la séance guidée ; objectif donné au coach.
 import { afterEach, describe, expect, it } from 'vitest';
 import { DEMO_STATE } from './demo';
-import { advance, clickEl, launch, setInput } from './harness';
+import { advance, clickEl, launch, setInput, runGuided } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -19,13 +19,10 @@ describe('formes de séries', () => {
     expect(chips).toContain('Série dégressive');
     const start = [...h.doc.querySelectorAll('button')].find(b => /Lancer cette séance guidée|Lancer ma séance/.test(b.textContent));
     await clickEl(h, start);
-    for (let k = 0; k < 6 && !/Série dégressive/.test(byTest(h, 'guided-method')?.textContent || ''); k++) {
-      const next = [...h.doc.querySelectorAll('button')].find(b => /Exercice suivant|Suivant/.test(b.textContent));
-      if (!next) break;
-      await clickEl(h, next);
-    }
-    expect(byTest(h, 'guided-method').textContent).toContain('Série dégressive');
-    expect(h.doc.body.textContent).toContain('Dégressive 1');
+    // on avance (séries faites, repos sautés) jusqu'à l'exercice en série dégressive
+    let seen = '';
+    await runGuided(h, { onScreen: async () => { if (/Série dégressive/.test(byTest(h, 'guided-method')?.textContent || '')) seen += byTest(h, 'set-label').textContent + ' '; } });
+    expect(seen).toContain('Dégressive 1');
     expect(h.errors).toEqual([]);
   }, 120000);
 
@@ -40,7 +37,7 @@ describe('formes de séries', () => {
     await advance(h, 300);
     expect(saved(h).coach.mainGoal).toMatchObject({ kind: 'strength', questId: 'q_squat_3x6', target: 100 });
     expect(byTest(h, 'coach-goal')).toBeNull(); // rempli : il quitte le haut de la page pour les réglages
-    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach')));
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     const card = byTest(h, 'coach-goal').textContent;
     expect(card).toContain('Squat Barre');
     expect(card).toContain('Comment le coach t’y emmène');

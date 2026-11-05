@@ -61,9 +61,6 @@ export function XpProgress({ gameState, levelInfo }) {
           <p className="font-black text-pink-300">{Math.min(earnedToday, DAILY_FULL_XP)} / {DAILY_FULL_XP} EXP à plein tarif</p>
         </div>
       </div>
-      <p className="text-xs text-slate-500">
-        Les dates sont une estimation d’après ton rythme récent. Au-delà de {DAILY_FULL_XP} EXP gagnées dans la journée, l’EXP des séances ne compte plus qu’à moitié.
-      </p>
     </section>
   );
 }

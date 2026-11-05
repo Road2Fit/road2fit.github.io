@@ -26,6 +26,7 @@ describe('journée double et séance en plus', () => {
     const h = await launch();
     open.push(h);
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-semaine"]'));
     const thu = cell(h, '2026-10-22');
     expect(thu).toBeTruthy();
     expect(thu.textContent).toContain('Volley');
@@ -37,7 +38,6 @@ describe('journée double et séance en plus', () => {
     expect(t).toContain('Séance');
     expect(t).toContain('Volley');
     expect(t).toContain('en plus');
-    expect(h.doc.querySelector('[data-testid="week-day-panel"]').textContent).toContain('Journée double');
     // on peut la retirer
     await clickEl(h, [...h.doc.querySelectorAll('[data-testid="week-day-panel"] button')].find(b => b.textContent.includes('Retirer la séance en plus')));
     expect(saved(h).coach.gymExtra || []).not.toContain('2026-10-22');

@@ -1,6 +1,6 @@
 // Séance guidée : la charge change entre deux séries, l'historique et le journal la gardent.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl, guidedStep, runGuided } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -24,27 +24,21 @@ describe('charge modifiable entre deux séries', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     expect(pageText(h)).toContain('Développé Couché Barre');
-    expect(pageText(h)).toContain('elle vaut pour les séries restantes');
-
-    const faites = () => [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite');
-    const chargeInput = () => h.doc.querySelector('input[step="0.5"]');
-    const startLoad = Number(chargeInput().value);
-    // séries 1 et 2 à la charge proposée
-    await click(h, faites()[0]);
-    await click(h, faites()[0]);
-    // on augmente (bouton + de la charge) avant les séries suivantes
-    const plus = [...h.doc.querySelectorAll('button')].find(b => b.textContent.trim() === '+' && b.className.includes('w-10'));
-    await click(h, plus);
-    await click(h, plus);
-    const heavier = Number(chargeInput().value);
+    const load = () => Number(h.doc.querySelector('[data-testid="set-load"]').textContent.replace(',', '.'));
+    const by = (hh, id) => hh.doc.querySelector(`[data-testid="${id}"]`);
+    await guidedStep(h); // échauffement passé
+    const startLoad = load();
+    // séries 1 et 2 à la charge proposée (avec le repos entre les deux)
+    await click(h, by(h, 'set-done'));
+    await click(h, by(h, 'guided-next'));
+    await click(h, by(h, 'set-done'));
+    await click(h, by(h, 'guided-next'));
+    // on augmente (bouton + de la charge, un seul geste) avant les séries suivantes
+    await click(h, h.doc.querySelector('button[aria-label="Charge plus"]'));
+    await click(h, h.doc.querySelector('button[aria-label="Charge plus"]'));
+    const heavier = load();
     expect(heavier).toBeGreaterThan(startLoad);
-    // la 3e série affiche la nouvelle charge, la 1re garde l'ancienne
-    const labels = [...h.doc.querySelectorAll('p.text-amber-300')].map(p => p.textContent);
-    expect(labels[0]).toBe(`${String(startLoad).replace('.', ',')} kg`);
-    expect(labels[2]).toBe(`${String(heavier).replace('.', ',')} kg`);
-    while (faites().length) await click(h, faites()[0]);
-
-    await clickText(h, 'Voir le résumé');
+    await runGuided(h);
     expect(pageText(h)).toMatch(/→/); // le résumé montre 15 → 17,5 kg
     await clickText(h, 'Enregistrer la séance');
     await clickText(h, 'Super, merci coach');

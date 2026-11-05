@@ -82,7 +82,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
             <span className="shrink-0 text-xs font-bold text-slate-400 bg-slate-800 rounded-full px-2 py-0.5">{compat && !compat(c) ? `Autre unité : ${unitLabel(c)}` : c.equip || (c.type === 'cardio' ? 'Cardio' : c.unit === 'kg' ? 'Charge' : 'Poids du corps')}</span>
           </button>
         ))}
-        {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat{allowCustom ? '. Créez un exercice personnalisé ci-dessous.' : ' parmi les exercices de même type.'}</p>}
+        {results.length === 0 && <p className="text-xs text-slate-400 p-2">Aucun résultat</p>}
         {onCreateAi && query.trim().length >= 3 && results.length < 3 && (
           <button type="button" onClick={createAi} disabled={aiBusy} data-testid="picker-ai-create" className="w-full text-left px-2.5 py-2 rounded-lg text-sm text-sky-300 hover:bg-slate-800 font-bold">
             {aiBusy ? 'Le coach crée l’exercice…' : `Créer « ${query.trim()} » avec le coach (ajouté au catalogue de tout le monde)`}

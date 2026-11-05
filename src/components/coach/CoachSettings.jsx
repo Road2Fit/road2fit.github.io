@@ -38,13 +38,10 @@ export function CoachSettings({
               </button>
             ))}
           </div>
-        ) : (
-          <p className="text-xs text-slate-500">Le coach place les trois séances sur tes créneaux et choisit l’ordre pour que les mêmes muscles aient au moins 48 h de repos (jambes jamais la veille d’un volley ou d’un match).</p>
-        )}
+        ) : null}
       </div>
       <div className="space-y-2 text-xs">
         <p className="text-slate-300 font-bold"><Art name="calendar" />Mes créneaux de salle</p>
-        <p className="text-xs text-slate-500">Coche les jours où tu peux aller à la salle et indique les horaires. Le coach ne propose des séances que ces jours-là et adapte leur durée au créneau. Sans aucun créneau, tous les jours sans volley ni match sont utilisables.</p>
         <div className="space-y-1.5">
           {[1, 2, 3, 4, 5, 6, 0].map(dow => {
             const sl = (coach.gymSlots || {})[dow];
@@ -106,7 +103,6 @@ export function CoachSettings({
             {n === 0 ? 'Libre' : `${n} min`}
           </button>
         ))}
-        <span className="text-xs text-slate-500 w-full">Le coach complète chaque séance proposée (séries, puis exercices de tes objectifs) pour tenir cette durée. Estimation : échauffement 5 min + séries et repos.</span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <label className="text-slate-300 font-bold mr-1" htmlFor="coach-sport">Mon sport régulier :</label>
@@ -125,7 +121,6 @@ export function CoachSettings({
       </div>
       <div className="space-y-2">
         <p className="text-xs text-slate-300 font-bold">{sp.icon} Pas {sp.de} (ou {sp.label} en plus)</p>
-        <p className="text-xs text-slate-500">Touche un jour d’entraînement habituel pour dire que tu n’as pas {sp.label} ce jour-là : le coach te laisse alors faire des jambes la veille et planifier la muscu ce jour-là.</p>
         <div className="flex flex-wrap gap-1.5">
           {upcomingVolley.map(d => {
             const skipped = (coach.volleySkips || []).includes(d);
@@ -165,7 +160,6 @@ export function CoachSettings({
             <input type="date" value={serie.to} onChange={e => setSerie({ ...serie, to: e.target.value })} className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white" />
             <button onClick={addSeries} className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 font-bold">Ajouter</button>
           </div>
-          <p className="text-xs text-slate-500 mt-1">Tu peux ensuite retirer les dates sans match une par une.</p>
         </details>
         {matchList.length === 0 ? (
           <p className="text-xs text-slate-500">Aucun match à venir enregistré.</p>

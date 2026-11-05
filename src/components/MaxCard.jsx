@@ -142,7 +142,6 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500">Prédiction de Riegel : fiable surtout pour des distances proches de celle de la base.</p>
         </div>
       )}
 
@@ -178,7 +177,6 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500 mt-2">Repères NSCA : le nombre de répétitions possibles varie d’une personne et d’un exercice à l’autre (±2).</p>
         </details>
       )}
     </div>

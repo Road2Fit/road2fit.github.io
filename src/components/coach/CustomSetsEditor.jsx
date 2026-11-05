@@ -18,7 +18,6 @@ export function CustomSetsEditor({ e, onSave, onCancel }) {
   return (
     <div className="mt-2 rounded-xl border border-violet-500/50 bg-violet-950/20 p-3 space-y-2" data-testid="custom-editor">
       <p className="text-xs font-black text-violet-200">Ta forme personnalisée</p>
-      <p className="text-xs text-slate-400">Règle chaque série comme tu veux. Le coach la retient : aux prochaines séances il reprend la même forme, avec des charges qui suivent ta progression.</p>
       <div className="space-y-2">
         {rows.map((r, i) => (
           <div key={i} className="rounded-lg bg-slate-950 border border-slate-800 p-2 space-y-1.5" data-testid="custom-row">

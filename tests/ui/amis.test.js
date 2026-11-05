@@ -188,7 +188,7 @@ describe('édition neutre pour les amis', () => {
     await advance(h, 300);
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await advance(h, 300);
-    await clickEl(h, [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Réglages et détails du coach')));
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     await advance(h, 300);
     expect(byTest(h, 'sport-evidence').textContent).toContain('Preuves mitigées');
     await clickEl(h, byTest(h, 'sport-sources-toggle'));

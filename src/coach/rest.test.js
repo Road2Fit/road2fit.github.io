@@ -18,6 +18,8 @@ describe('repos selon l’exercice et la charge', () => {
     expect(sec('Élévations Latérales', 15)).toBe(60);
     expect(sec('Mollets à la Presse', 20, { compound: true })).toBe(60);
     expect(sec('Leg Extension', 10, { compound: false })).toBe(105);
+    expect(sec('Crunchs Abdominaux au Sol', 8)).toBeLessThanOrEqual(90); // abdos : jamais plus d'1 min 30
+    expect(sec('Crunch Machine', 15, { arena: 'Abdominaux' })).toBe(60);
   });
   it('exercice tenu : 1 min ; texte lisible', () => {
     expect(sec('Gainage Planche', 45, { timed: true })).toBe(60);

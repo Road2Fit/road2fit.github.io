@@ -2,6 +2,19 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.0',
+    date: '2026-11-05',
+    title: 'Une appli plus simple et plus fluide',
+    items: [
+      'Séance guidée en plein écran : un écran par série, avec l’animation du mouvement en haut, puis un écran de repos. Un seul bouton pour avancer ; la flèche en haut à gauche réduit la séance.',
+      'Série trop dure ou trop facile (2 reps de moins, 3 de plus) : pendant le repos, le coach propose d’ajuster la charge de la suite, d’un geste.',
+      'Coach : des pages séparées (Séance, Semaine, Objectifs, Équilibre, Réglages) au lieu d’une longue page.',
+      'Exercices : juste les logos et les noms ; un toucher ouvre la fiche complète. Objectif atteint : une coupe apparaît, touche-la pour valider le niveau suivant.',
+      'En haut : seulement ton icône, entourée de ta jauge d’EXP ; touche-la pour voir ton profil (niveau, rang, série, bonus, récompenses).',
+      '« Parle à ton coach » devient un bouton qui ouvre la discussion ; micro rond au-dessus du « + » pour dicter ta séance ; beaucoup moins de petits textes.',
+    ],
+  },
+  {
     version: '3.9.2',
     date: '2026-11-05',
     title: 'Des repos adaptés à chaque exercice',

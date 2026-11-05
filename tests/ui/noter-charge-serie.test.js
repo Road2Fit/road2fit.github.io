@@ -1,6 +1,6 @@
 // « Noter séance » : charge (ou aide) différente selon la série.
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickEl, clickText, findByText, launch, pageText, setInput } from './harness';
+import { clickEl, clickText, findByText, launch, pageText, setInput , openQuestSheet } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -23,8 +23,8 @@ const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 async function ouvrir(nomExercice) {
   const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
   open.push(h);
-  // le bouton « Noter la séance » de la carte de cet exercice
-  const carte = [...h.doc.querySelectorAll('div.rounded-2xl')].filter(d => d.textContent.includes(nomExercice) && [...d.querySelectorAll('button')].some(b => b.textContent.includes('Noter la séance'))).pop();
+  // le bouton « Noter la séance » de la fiche de cet exercice
+  const carte = await openQuestSheet(h, nomExercice);
   await clickEl(h, [...carte.querySelectorAll('button')].find(b => b.textContent.includes('Noter la séance')));
   return h;
 }

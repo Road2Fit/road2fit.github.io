@@ -1,6 +1,6 @@
 // Séance guidée : chaque exercice commence par 1 à 2 séries d'échauffement, jamais enregistrées.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl, guidedStep, runGuided } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -24,23 +24,18 @@ describe('échauffement avant les séries de travail', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
 
+    // un écran par série d'échauffement (1 ou 2), avant les séries de travail
     const zone = () => h.doc.querySelector('[data-testid="warmup"]');
     expect(zone()).toBeTruthy();
     expect(zone().textContent).toContain('Échauffement');
-    expect(zone().textContent).toContain('compté dans les calories');
-    const lignes = zone().querySelectorAll('button');
-    expect(lignes.length).toBeGreaterThanOrEqual(1);
-    expect(lignes.length).toBeLessThanOrEqual(2);
-
-    await click(h, lignes[0]);
-    expect(zone().textContent).toContain('✓ Fait');
+    let warms = 0;
+    while (zone() && warms < 3) { await click(h, h.doc.querySelector('[data-testid="warm-done"]')); warms++; await click(h, h.doc.querySelector('[data-testid="guided-next"]')); }
+    expect(warms).toBeGreaterThanOrEqual(1);
+    expect(warms).toBeLessThanOrEqual(2);
     // les séries de travail ne sont pas touchées
-    const faites = () => [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite');
-    expect(faites().length).toBeGreaterThanOrEqual(2);
-    const nb = faites().length;
-    while (faites().length) await click(h, faites()[0]);
-
-    await clickText(h, 'Voir le résumé');
+    const nb = Number(h.doc.querySelector('[data-testid="set-label"]').textContent.match(/\/(\d+)/)[1]);
+    expect(nb).toBeGreaterThanOrEqual(2);
+    expect(await runGuided(h)).toBe('summary');
     await clickText(h, 'Enregistrer la séance');
     await clickText(h, 'Super, merci coach');
     const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');
@@ -54,16 +49,17 @@ describe('échauffement avant les séries de travail', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('la séance guidée montre une petite animation du mouvement, masquable', async () => {
+  it('la séance guidée montre l’animation du mouvement pendant la série', async () => {
     const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
     open.push(h);
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     await advance(h, 300);
-    expect(h.doc.querySelector('[data-testid="mini-movement"]')).toBeTruthy();
-    await clickText(h, 'Masquer l’aperçu');
-    expect(h.doc.querySelector('[data-testid="mini-movement"]')).toBeNull();
+    while (h.doc.querySelector('[data-testid="warm-done"]')) await guidedStep(h);
+    // l'animation du mouvement se joue en haut de l'écran de la série, sans rien toucher
+    await advance(h, 300);
+    expect(h.doc.querySelector('[data-testid="guided-set"] [data-testid="mini-movement"]')).toBeTruthy();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

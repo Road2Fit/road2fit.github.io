@@ -1,6 +1,6 @@
 // « J'ai déjà un coach » : saisir son programme, le coach de l'appli le suit puis propose la suite.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickEl, clickText, launch, setInput } from './harness';
+import { advance, clickEl, clickText, launch, setInput, runGuided } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -34,10 +34,7 @@ describe('programme de mon coach', () => {
     expect(h.doc.body.textContent).toContain('Ton coach'); // badge de chaque exercice de la séance
     expect(h.doc.body.textContent).toContain('Programme de ton coach : semaine 1');
     await clickText(h, 'Lancer');
-    for (const b of [...h.doc.querySelectorAll('button')].filter(x => x.textContent.trim() === 'Faite')) await clickEl(h, b);
-    await clickText(h, 'Exercice suivant');
-    for (const b of [...h.doc.querySelectorAll('button')].filter(x => x.textContent.trim() === 'Faite')) await clickEl(h, b);
-    await clickText(h, 'Voir le résumé');
+    expect(await runGuided(h)).toBe('summary');
     await clickText(h, 'Enregistrer la séance');
     await advance(h, 500);
     expect(Object.keys(save(h).coach.program.log)).toEqual(['w0:s0']);
@@ -66,7 +63,7 @@ describe('« Tu as déjà un coach ? » : réponse non', () => {
     await clickEl(h, by(h, 'program-no'));
     expect(save(h).coach.noCoach).toBe(true);
     expect(by(h, 'program-intro')).toBeNull();
-    await clickText(h, 'Réglages et détails du coach');
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     expect(by(h, 'program-intro')).toBeTruthy(); // dans les réglages
     expect(by(h, 'program-no')).toBeNull();
     await clickText(h, 'Remettre cet encadré en haut du Coach');

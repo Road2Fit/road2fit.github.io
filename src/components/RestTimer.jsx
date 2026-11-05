@@ -41,7 +41,9 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
   const fmt = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
   const running = !!endAt;
   // pendant une séance guidée : en bas à droite ; sinon seulement s'il tourne ou s'il est ouvert, à gauche pour laisser la place au bouton « + »
-  if (!guidedOpen && !running && !open) return null;
+  // séance guidée ouverte : elle affiche son propre écran de repos (ce minuteur ne fait que sonner et vibrer)
+  if (guidedOpen) return null;
+  if (!running && !open) return null;
   return (
     <div className={`fixed flex flex-col gap-2 ${guidedOpen ? 'z-[62] bottom-[72px] inset-x-0 px-4 py-2 items-stretch bg-slate-950 border-t border-slate-800' : 'z-40 bottom-20 md:bottom-6 left-4 items-start'}`}>
       {open && (

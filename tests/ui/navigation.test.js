@@ -36,11 +36,11 @@ describe('navigation', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('bouton « + » : course, exercice, dictée, minuteur', async () => {
+  it('bouton « + » : course, exercice, minuteur (la dictée a son micro juste au-dessus)', async () => {
     const h = await start();
     const fab = h.doc.querySelector('button[aria-label="Ajouter"]');
     await clickEl(h, fab);
-    for (const t of ['Activité (course, sport…)', 'Nouvel exercice', 'Dicter ma séance', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
+    for (const t of ['Activité (course, sport…)', 'Nouvel exercice', 'Minuteur de repos']) expect(pageText(h), t).toContain(t);
     // ordre du menu : Objectif / Exercice d'abord, Activité annexe ensuite
     const ordre = [...h.doc.querySelectorAll('button')].map(b => b.textContent.trim());
     expect(ordre.findIndex(x => x.includes('Nouvel exercice'))).toBeLessThan(ordre.findIndex(x => x.includes('Activité (course, sport…)')));
@@ -50,15 +50,19 @@ describe('navigation', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('le Coach garde ses réglages repliés, et les ouvre à la demande', async () => {
+  it('le Coach a des pages indépendantes : un bouton n’affiche que sa page', async () => {
     const h = await start();
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     expect(pageText(h)).toContain('Prochaine séance');
+    expect(pageText(h)).not.toContain('Ma semaine');
     expect(pageText(h)).not.toContain('Cycle d’entraînement');
-    expect(pageText(h)).not.toContain('Sources scientifiques');
-    await clickText(h, 'Réglages et détails du coach');
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-semaine"]'));
+    expect(pageText(h)).toContain('Ma semaine');
+    expect(pageText(h)).not.toContain('Prochaine séance');
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     expect(pageText(h)).toContain('Cycle d’entraînement');
     expect(pageText(h)).toContain('Sources scientifiques');
+    expect(pageText(h)).not.toContain('Ma semaine');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

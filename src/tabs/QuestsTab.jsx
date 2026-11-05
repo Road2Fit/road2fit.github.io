@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Art } from '../components/Art';
 import { assistText } from '../lib/assist';
 import { ARENA_GROUPS } from '../data/arenas';
@@ -8,70 +9,16 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { cleanText, pick } from '../edition';
 import { arenaLabel, hasArena } from '../data/muscles';
-import { VoiceCallout } from '../components/VoiceCallout';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
   openLevelUpModal, openLogModal, questFilter, setActiveTab, setQuestFilter,
   setSelectedChartQuestId,
 }) {
-  return (
-    <div className="space-y-4">
-      {gameState.quests.length > 0 && <VoiceCallout compact testId="voice-callout-quests" />}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1" role="group" aria-label="Filtrer par muscle">
-        <button
-          onClick={() => setQuestFilter('all')}
-          className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-            questFilter === 'all'
-              ? 'bg-pink-600 text-white'
-              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-          }`}
-        >
-          {pick('Toutes les Arènes', 'Tous les groupes')} ({gameState.quests.length})
-        </button>
-        {ARENA_GROUPS.filter(g => questFilter === g.id || gameState.quests.some(q => hasArena(q, g.id))).map(g => (
-          <button
-            key={g.id}
-            onClick={() => setQuestFilter(g.id)}
-            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-              questFilter === g.id
-                ? 'bg-pink-600 text-white'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-            }`}
-          >
-            {g.icon} {g.label}
-          </button>
-        ))}
-      </div>
-
-      {gameState.quests.length === 0 ? (
-        <div className="bg-slate-900/70 border border-pink-500/30 rounded-2xl p-8 text-center space-y-3">
-          <p className="text-4xl">👋</p>
-          <p className="text-lg font-black text-white">Bienvenue !</p>
-          <p className="text-sm text-slate-300">Ajoute ton premier exercice : le coach te proposera ensuite tes séances, avec les charges et les répétitions.</p>
-          <button
-            onClick={openCreateQuestModal}
-            className="px-4 py-2.5 rounded-xl text-sm font-black bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Ajouter mon premier exercice
-          </button>
-          <p className="text-xs text-slate-500">Astuce : le bouton « + » en bas à droite permet aussi de dicter une séance ou d’ajouter une course.</p>
-        </div>
-      ) : filteredQuests.length === 0 ? (
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
-          <p className="text-sm font-bold text-slate-300">
-            Aucun exercice actif dans cette catégorie.
-          </p>
-          <button
-            onClick={openCreateQuestModal}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" /> Ajouter un exercice
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-          {filteredQuests.map(quest => {
+  const [openId, setOpenId] = useState(null);
+  const openQuest = openId ? gameState.quests.find(q => q.id === openId) : null;
+  // fiche complète d'un exercice (objectif, progression, noter la séance, geste, courbe, réglages) : dans la fenêtre
+  const renderCard = quest => {
             const evalState = evaluateQuestProgress(quest);
             const lastEntry =
               quest.history && quest.history.length > 0
@@ -123,14 +70,14 @@ export function QuestsTab({
                 </div>
 
                 {evalState.isBossDefeated && (
-                  <button type="button" onClick={() => openLevelUpModal(quest)} className="mt-3 w-full py-2.5 px-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 bg-amber-400 text-slate-950">
+                  <button type="button" onClick={() => { setOpenId(null); openLevelUpModal(quest); }} className="mt-3 w-full py-2.5 px-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 bg-amber-400 text-slate-950">
                     <Art name="crown" size={18} bare />
                     <span>Objectif atteint ! Passer au niveau {questLevel + 1}</span>
                   </button>
                 )}
 
                 <div className="mt-3 flex items-center gap-2">
-                  <button onClick={() => openLogModal(quest)} className="flex-1 px-3.5 py-2.5 rounded-xl font-bold text-sm bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center gap-1.5 transition">
+                  <button onClick={() => { setOpenId(null); openLogModal(quest); }} className="flex-1 px-3.5 py-2.5 rounded-xl font-bold text-sm bg-pink-600 hover:bg-pink-500 text-white flex items-center justify-center gap-1.5 transition">
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>Noter la séance</span>
                   </button>
@@ -139,6 +86,7 @@ export function QuestsTab({
                   )}
                   <button
                     onClick={() => {
+                      setOpenId(null);
                       setSelectedChartQuestId(quest.id);
                       setActiveTab('charts');
                     }}
@@ -150,7 +98,7 @@ export function QuestsTab({
                   </button>
                 </div>
 
-                <details className="mt-2 group">
+                <details className="mt-2 group" open>
                   <summary className="text-xs font-bold text-slate-400 py-1.5"><Art name="gear" size={15} className="mr-1" />Détails et réglages</summary>
                   {quest.type === 'strength' ? (
                     <div className="mt-4 bg-slate-950/80 border border-slate-800/90 rounded-xl p-3.5 space-y-3">
@@ -350,23 +298,105 @@ export function QuestsTab({
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {!evalState.isBossDefeated && (
-                      <button type="button" onClick={() => openLevelUpModal(quest)} className="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300">
+                      <button type="button" onClick={() => { setOpenId(null); openLevelUpModal(quest); }} className="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300">
                         <Art name="crown" size={18} bare />
                         <span>Valider l’objectif et passer au niveau {questLevel + 1}</span>
                       </button>
                     )}
-                    <button onClick={() => openEditQuestModal(quest)} title="Ajuster l'objectif" className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition">
+                    <button onClick={() => { setOpenId(null); openEditQuestModal(quest); }} title="Ajuster l'objectif" className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition">
                       <Sliders className="w-3.5 h-3.5" />
                       <span>Ajuster</span>
                     </button>
-                    <button onClick={() => handleDeleteQuest(quest.id)} title="Supprimer cet exercice" aria-label="Supprimer cet exercice" className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 transition">
+                    <button onClick={() => { setOpenId(null); handleDeleteQuest(quest.id); }} title="Supprimer cet exercice" aria-label="Supprimer cet exercice" className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 transition">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </details>
               </div>
             );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1" role="group" aria-label="Filtrer par muscle">
+        <button
+          onClick={() => setQuestFilter('all')}
+          className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+            questFilter === 'all'
+              ? 'bg-pink-600 text-white'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          {pick('Toutes les Arènes', 'Tous les groupes')} ({gameState.quests.length})
+        </button>
+        {ARENA_GROUPS.filter(g => questFilter === g.id || gameState.quests.some(q => hasArena(q, g.id))).map(g => (
+          <button
+            key={g.id}
+            onClick={() => setQuestFilter(g.id)}
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              questFilter === g.id
+                ? 'bg-pink-600 text-white'
+                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            {g.icon} {g.label}
+          </button>
+        ))}
+      </div>
+
+      {gameState.quests.length === 0 ? (
+        <div className="bg-slate-900/70 border border-pink-500/30 rounded-2xl p-8 text-center space-y-3">
+          <p className="text-4xl">👋</p>
+          <p className="text-lg font-black text-white">Bienvenue !</p>
+          <p className="text-sm text-slate-300">Ajoute ton premier exercice : le coach te proposera ensuite tes séances, avec les charges et les répétitions.</p>
+          <button
+            onClick={openCreateQuestModal}
+            className="px-4 py-2.5 rounded-xl text-sm font-black bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Ajouter mon premier exercice
+          </button>
+        </div>
+      ) : filteredQuests.length === 0 ? (
+        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+          <p className="text-sm font-bold text-slate-300">
+            Aucun exercice actif dans cette catégorie.
+          </p>
+          <button
+            onClick={openCreateQuestModal}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Ajouter un exercice
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2" data-testid="quest-list">
+          {filteredQuests.map(quest => {
+            const done = evaluateQuestProgress(quest).isBossDefeated;
+            return (
+              <div key={quest.id} className="relative">
+                <button type="button" onClick={() => setOpenId(quest.id)} data-testid="quest-tile" aria-label={quest.name}
+                  className={`w-full h-full flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 min-h-[6.5rem] text-center ${done ? 'bg-slate-900 border-amber-400/70' : 'bg-slate-900/90 border-slate-800 hover:border-slate-600'}`}>
+                  <span className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-2xl">{quest.icon}</span>
+                  <span className="text-sm font-bold text-white leading-tight line-clamp-2">{quest.name}</span>
+                </button>
+                {/* objectif atteint (record battu) : une coupe ; la toucher ouvre la validation du niveau suivant */}
+                {done && (
+                  <button type="button" onClick={() => openLevelUpModal(quest)} aria-label={`Valider le record : ${quest.name}`} data-testid="quest-record"
+                    className="tap-free absolute -top-2 -right-2 w-10 h-10 rounded-full bg-amber-400 border-2 border-slate-950 flex items-center justify-center shadow-lg animate-pulse">
+                    <Art name="trophy" size={22} bare />
+                  </button>
+                )}
+              </div>
+            );
           })}
+        </div>
+      )}
+      {openQuest && (
+        <div className="fixed inset-0 z-[55] bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center px-3 pt-14 pb-3 overflow-y-auto" onClick={() => setOpenId(null)}>
+          <div className="relative w-full max-w-lg" onClick={e => e.stopPropagation()} role="dialog" aria-label={openQuest.name} data-testid="quest-sheet">
+            <button type="button" onClick={() => setOpenId(null)} aria-label="Fermer" className="absolute -top-11 right-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
+            {renderCard(openQuest)}
+          </div>
         </div>
       )}
     </div>

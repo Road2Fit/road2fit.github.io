@@ -25,10 +25,8 @@ export function VoiceCallout({ compact = false, testId = 'voice-callout' }) {
         <span className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center shrink-0"><Art name="mic" size={32} bare /></span>
         <div className="min-w-0">
           <h3 className="font-black text-white">Dicte ta séance</h3>
-          <p className="text-xs text-slate-300">Le plus rapide : dis toute ta séance d’une traite, même approximativement.</p>
         </div>
       </div>
-      <p className="text-xs text-slate-400 italic">« Développé couché 4 fois 8 à 60 kilos, tractions élastique 10 kilos 6 6 5, footing 4,5 km »</p>
       <button type="button" onClick={openVoice} className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm inline-flex items-center justify-center gap-2">
         <Art name="mic" size={20} bare />Dicter ma séance
       </button>

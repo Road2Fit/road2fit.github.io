@@ -41,7 +41,6 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
     return (
       <section className={card} data-testid="program-intro">
         <h3 className="font-black text-white"><Art name="clipboard" />Tu as déjà un coach ?</h3>
-        <p className="text-sm text-slate-300">Saisis le programme qu’il t’a donné (ou dicte-le) : je le suis séance après séance, puis je te propose la suite dans la même logique.</p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setEditing(true)} data-testid="program-add" className={`${btn} bg-pink-600 text-white`}>Ajouter le programme de mon coach</button>
           {/* « Non » : l'encadré quitte le haut du Coach et se range dans les réglages */}
@@ -74,9 +73,7 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
       {asking && (
         <div ref={askRef} className="rounded-xl border-2 border-pink-400 bg-pink-950/30 p-3 space-y-2" data-testid="program-takeover" role="group" aria-label="L’appli prend le relais ?">
           <p className="text-sm font-black text-white">Programme enregistré ✅ Et pour la suite, l’appli prend le relais ?</p>
-          <p className="text-xs text-slate-300"><b>Oui</b> : après {total > 1 ? `les ${total} semaines` : 'la semaine'} de ton coach, je te propose la suite dans la même logique, séance après séance.</p>
-          <p className="text-xs text-slate-300"><b>Non</b> : tu gardes ton coach ou tu continues seul. Je me mets en retrait et je te montre seulement un aperçu de la séance que j’aurais proposée.</p>
-          <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => answer(true)} data-testid="takeover-yes" className={`${btn} bg-pink-600 text-white flex-1`}>Oui, aide-moi pour la suite</button>
             <button type="button" onClick={() => answer(false)} data-testid="takeover-no" className={`${btn} bg-slate-800 border border-slate-600 text-slate-100 flex-1`}>Non, je continue sans l’appli</button>
           </div>
@@ -231,14 +228,12 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-lg font-black text-white"><Art name="clipboard" size={22} />Programme de mon coach</h3>
-            <p className="text-xs text-slate-400">Une ligne par exercice : nom, séries × répétitions, charge. Ex. « Squat 4x8 60kg », « Tractions 3x6 aide 10kg », « Planche 3x45s », « Curl 12 10 8 ».</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg bg-slate-800 text-slate-400 shrink-0"><X className="w-4 h-4" /></button>
         </div>
         {aiOn && (
           <div className="bg-slate-950 border border-pink-500/40 rounded-xl p-3 space-y-2" data-testid="program-ai">
             <p className="text-sm font-black text-white"><Art name="sparkle" size={18} />Le plus simple : colle ou dicte le programme tel quel</p>
-            <p className="text-xs text-slate-400">Message de ton coach, tableau copié, notes, ou dis-le à l’oral (« lundi, squat 4 séries de 8 à 60 kilos… »). Le coach intelligent le range en semaines et en séances.</p>
             <textarea value={paste} onChange={e => setPaste(e.target.value)} rows={4} placeholder={'Lundi : squat 4x8 à 60, développé couché 4x8 à 50…\nJeudi : soulevé de terre 3x5…\n+2,5 kg chaque semaine pendant 4 semaines'} className={field} aria-label="Programme collé tel quel" data-testid="program-paste" />
             <div className="flex gap-2">
               <button type="button" onClick={speech.toggle} data-testid="program-mic" className={`px-4 h-11 rounded-xl flex items-center justify-center gap-1.5 shrink-0 text-sm font-bold text-white ${speech.listening ? 'bg-rose-600 animate-pulse' : 'bg-slate-800'}`}><Art name="mic" size={20} bare />{speech.listening ? 'Stop' : 'Dicter'}</button>
@@ -257,7 +252,6 @@ function ProgramEditor({ gameState, setGameState, onClose }) {
           <button type="button" onClick={copyWeek} data-testid="program-copy-week" className="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-800 text-emerald-300">+ Semaine (copie de la dernière)</button>
           {weeks.length > 1 && <button type="button" onClick={() => { setWeeks(ws => ws.filter((_, i) => i !== wi)); setWi(Math.max(0, wi - 1)); }} className="px-3 py-1.5 rounded-full text-xs font-bold text-rose-300">Supprimer la semaine {wi + 1}</button>}
         </div>
-        <p className="text-xs text-slate-500">Saisis seulement ce que ton coach t’a donné : s’il a prévu une progression (charges qui montent, répétitions en plus, semaine allégée), copie la semaine et change les chiffres. Je m’en servirai pour la suite.</p>
         {week.sessions.map((s, si) => {
           const lines = s.text.split('\n').map(l => l.trim()).filter(Boolean);
           const parsed = lines.map(l => parseProgramLine(l, gameState.quests));

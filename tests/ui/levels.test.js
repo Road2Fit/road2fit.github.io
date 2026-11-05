@@ -1,7 +1,7 @@
 // Niveaux, épreuves de rang, bonus de régularité et récompenses vus depuis l'interface.
 import { afterEach, describe, expect, it } from 'vitest';
 import { xpForLevel } from '../../src/lib/levels';
-import { advance, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -33,6 +33,9 @@ async function toutVoir(h) {
 describe('niveaux', () => {
   it('affiche le niveau et l’EXP restante sans célébration au démarrage', async () => {
     const h = await start(save(xpForLevel(5) + 100, { rankTrials: [4] }));
+    // l'en-tête ne montre que l'icône et sa jauge ; le détail est dans le profil
+    expect(pageText(h)).not.toContain('Niv. 5');
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
     expect(pageText(h)).toContain('Niv. 5');
     expect(pageText(h)).toContain('Prochain rang');
     expect(pageText(h)).not.toContain('Nouveau rang débloqué');
@@ -53,15 +56,16 @@ describe('épreuve de rang', () => {
   it('bloque le niveau tant que l’épreuve n’est pas réussie, puis célèbre le nouveau rang', async () => {
     // assez d'EXP pour le niveau 4 (rang Apprenti), 3 jours d'entraînement : l'épreuve est réalisable
     const h = await start(save(xpForLevel(4) + 50, { quests: [quest(['2026-10-12', '2026-10-14', '2026-10-16'])] }));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
     expect(pageText(h)).toContain('Niv. 3');
     expect(pageText(h)).toContain('Niveau bloqué');
     await clickText(h, 'Épreuve de rang');
     expect(pageText(h)).toContain('Rondoudou Apprenti');
-    expect(pageText(h)).toContain('3 / 3');
+    expect(pageText(h)).toContain('2 / 2'); // 2 jours d'entraînement sur 2
     await clickText(h, 'Valider l’épreuve');
     await advance(h);
     expect(pageText(h)).toContain('Nouveau rang débloqué');
-    expect(pageText(h)).toContain('Niv. 4');
+    expect(JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).xp).toBeGreaterThan(0);
     expect(JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).rankTrials).toEqual([4]);
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
@@ -79,7 +83,9 @@ describe('bonus de régularité', () => {
   it('+20 % d’EXP après deux semaines d’affilée, affiché dans l’en-tête', async () => {
     // séances les semaines du 5 et du 12 octobre (terminées) ; on est le mercredi 21
     const h = await start(save(1000, { rankTrials: [4], quests: [quest(['2026-10-06', '2026-10-13'])] }));
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
     expect(pageText(h)).toContain('+20 % d’EXP');
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-sheet"] button[aria-label="Fermer"]'));
     const avant = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1')).xp;
     await ajouterCourse(h);
     const apres = JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));

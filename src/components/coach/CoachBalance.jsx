@@ -54,9 +54,6 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
       </div>
       {optimized ? (
         <div className="text-xs text-slate-500 space-y-1">
-          <p>
-            Repères adaptés à ton objectif{profileLabel ? ` (${profileLabel})` : ''}{balance.beginner ? ' et à ton niveau (débutant : moins de 12 semaines de suivi)' : ''}. Un exercice à deux muscles compte une série pour le principal et une demi-série pour l’autre.
-          </p>
           <button type="button" onClick={() => setShowSources(v => !v)} className="underline text-slate-400" data-testid="toggle-sources">
             {showSources ? 'Masquer' : 'Voir'} les études derrière ces repères
           </button>

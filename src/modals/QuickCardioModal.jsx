@@ -35,7 +35,6 @@ export function QuickCardioModal({
             <Footprints className="w-6 h-6 text-emerald-400" />
             <div>
               <h3 className="text-base font-black text-white">Ajouter une activité annexe</h3>
-              <p className="text-xs text-slate-400">Sport collectif, plein air, cardio, course ou marche : s’ajoute au bilan calorique et au Journal</p>
             </div>
           </div>
           <button onClick={() => setQuickCardioModalOpen(false)} className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">

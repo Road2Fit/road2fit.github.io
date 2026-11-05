@@ -40,6 +40,8 @@ export function restFor({ name = '', reps = 10, timed = false, compound, arena =
   if (lower && r <= 12) sec += 30; // squat, soulevé de terre, presse : très exigeants pour tout le corps
   if (small) sec -= r <= 8 ? 15 : 30; // petits muscles, isolation : récupération plus rapide
   sec = Math.min(big ? 300 : 180, Math.max(60, round15(sec)));
+  // abdos et gainage : petits muscles qui récupèrent vite, charge légère → 1 min à 1 min 30, jamais plus
+  if (/crunch|abdo|gainage|planche|releve|obliques|roue/.test(n) || /abdo|oblique/i.test(arena)) sec = Math.min(sec, 90);
 
   const heavy = r <= 5 ? 'charge lourde' : r <= 8 ? 'charge assez lourde' : r <= 12 ? 'charge modérée' : 'charge légère';
   const kind = lower ? 'gros exercice de jambes' : big ? 'exercice qui sollicite plusieurs muscles' : small ? 'petit muscle' : 'exercice d’isolation';

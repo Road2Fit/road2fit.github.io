@@ -40,8 +40,8 @@ export function FriendsTab({ friends, onOpenAccount }) {
     return (
       <section className={card} data-testid="friends-intro">
         <h3 className="font-black text-white">Amis</h3>
-        <p className="text-sm text-slate-300">Reçois un code à 7 caractères à donner à tes amis. Celui qui le saisit peut voir ton profil : prénom ou pseudo, rang, niveau, dernière séance, maxima et liste d’exercices.</p>
-        <p className="text-xs text-slate-400">Jamais ton poids, tes photos ni tes notes. Tu peux couper le partage ou changer de code quand tu veux. Rien n’est partagé tant que tu n’as pas activé.</p>
+        <p className="text-sm text-slate-300">Tes amis verront : prénom ou pseudo, rang, niveau, dernière séance, maxima et liste d’exercices.</p>
+        <p className="text-xs text-slate-400">Jamais ton poids, tes photos ni tes notes.</p>
         <button type="button" data-testid="friends-enable" onClick={friends.enable} className="px-4 py-2 rounded-xl bg-pink-600 text-white text-sm font-black">Activer les amis</button>
       </section>
     );
@@ -66,7 +66,6 @@ export function FriendsTab({ friends, onOpenAccount }) {
     <div className="space-y-4" data-testid="friends-tab">
       <section className={card}>
         <h3 className="font-black text-white"><Art name="friends" />Mon code d’ami</h3>
-        <p className="text-xs text-slate-400">Donne ce code à quelqu’un : s’il le saisit, il pourra voir ton profil (prénom ou pseudo, rang, niveau, dernière séance, maxima, exercices). Jamais ton poids, tes photos ni tes notes.</p>
         <div className="flex items-center gap-3 flex-wrap">
           <span data-testid="my-code" className="font-mono text-3xl font-black tracking-[0.3em] text-pink-300 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2">{friends.code || '·······'}</span>
           <button type="button" onClick={copy} disabled={!friends.code} className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-sm font-bold text-white">{copied ? '✓ Copié' : 'Copier'}</button>

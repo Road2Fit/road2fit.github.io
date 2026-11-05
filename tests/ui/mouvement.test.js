@@ -1,6 +1,6 @@
 // « Voir le mouvement » : animation, trajet, conseils, depuis les exercices, le Coach, la séance guidée et Noter séance.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickEl, clickText, findByText, launch, pageText } from './harness';
+import { advance, clickEl, clickText, findByText, launch, pageText, openQuestSheet } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -12,6 +12,7 @@ const boutons = h => [...h.doc.querySelectorAll('button[aria-label="Voir le mouv
 describe('voir le mouvement', () => {
   it('depuis une carte d’exercice : animation, trajet, conseils', async () => {
     const h = await start();
+    await openQuestSheet(h);
     await clickEl(h, boutons(h)[0]);
     const d = dialog(h);
     expect(d).toBeTruthy();
@@ -25,6 +26,7 @@ describe('voir le mouvement', () => {
 
   it('l’animation avance, se met en pause et se règle avec la barre', async () => {
     const h = await start();
+    await openQuestSheet(h);
     await clickEl(h, boutons(h)[0]);
     const svgBefore = dialog(h).querySelector('svg').innerHTML;
     await advance(h, 1500);

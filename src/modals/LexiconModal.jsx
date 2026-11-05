@@ -14,7 +14,7 @@ export function LexiconModal({ onClose }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-black text-white">Lexique de la salle</h3>
-            <p className="text-xs text-slate-400">{SLANG.length} mots et abréviations de la musculation. L’appli et le coach les comprennent quand tu dictes, écris un programme ou cherches un exercice.</p>
+            <p className="text-xs text-slate-400">{SLANG.length} mots compris par l’appli et le coach.</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer" className="shrink-0 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
         </div>

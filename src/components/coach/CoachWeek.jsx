@@ -124,17 +124,10 @@ export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, s
                   : <button type="button" onClick={() => addSport(selDay.iso)} className={`${btn} bg-sky-700 border-sky-500 text-white`}>{sport.icon} + {sport.cap} ce jour</button>
               )}
             </div>
-            <p className="text-[11px] text-slate-400">
-              Une séance en plus s’ajoute juste ce jour-là : le reste de ta semaine ne bouge pas.
-              {(isSport || selDay.sportKind === 'match') ? ` Journée double : le coach retire les jambes ce jour-là pour garder tes jambes fraîches.` : !selDay.legsOk ? ` Pas de jambes ce jour-là (${selDay.legsWhy}).` : ''}
-            </p>
           </div>
         );
       })()}
 
-      <p className="text-xs text-slate-500">
-        Touche un jour pour ajouter une séance en plus ou ton sport (un même jour peut avoir les deux). Les séances habituelles sont espacées d’au moins 2 jours (≈ 48 h de récupération). Pas de jambes un jour {sport.de} ou la veille, ni à moins de 48 h ou le lendemain d’un match.
-      </p>
     </section>
   );
 }

@@ -13,12 +13,10 @@ import { evaluateQuestProgress } from '../../lib/progress';
 import { CoachAdvice } from './CoachAdvice';
 import { CoachBalance } from './CoachBalance';
 import { CoachCycle } from './CoachCycle';
-import { Fold } from './Fold';
 import { CoachProfile } from './CoachProfile';
 import { CoachHeader } from './CoachHeader';
 import { CoachNextSession } from './CoachNextSession';
 import { CoachProgram } from './CoachProgram';
-import { VoiceCallout } from '../VoiceCallout';
 import { CoachChat } from './CoachChat';
 import { CoachGoal } from './CoachGoal';
 import { customFromSets } from '../../coach/methods';
@@ -34,10 +32,13 @@ import { CoachWeightHealth } from './CoachWeightHealth';
 import { sportInfo } from '../../data/sports';
 import { arenaOf } from '../../data/muscles';
 
+const COACH_PAGES = [['seance', 'Séance', 'dumbbell'], ['semaine', 'Semaine', 'calendar'], ['objectifs', 'Objectifs', 'target'], ['equilibre', 'Équilibre', 'scale'], ['reglages', 'Réglages', 'gear']];
+
 export function CoachPanel({
   gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
   guidedActive, onResumeGuided, onClaimWeekly,
 }) {
+  const [page, setPage] = useState('seance');
   const today = getTodayISODate();
   const coach = getCoachSettings(gameState);
   const hasGoal = !!(coach.mainGoal && coach.mainGoal.kind);
@@ -227,14 +228,15 @@ export function CoachPanel({
 
   return (
     <div className="space-y-4" data-testid="coach-panel">
-      {/* SOMMAIRE : la page est longue, on saute directement à une partie */}
-      <nav aria-label="Sommaire du Coach" className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4">
-        {[['coach-seance', 'Séance', 'dumbbell'], ['coach-semaine', 'Semaine', 'calendar'], ['coach-objectifs', 'Objectifs', 'target'], ['coach-equilibre', 'Équilibre', 'scale'], ['coach-reglages', 'Réglages', 'gear']].map(([id, label, art]) => (
-          <button key={id} type="button" onClick={() => { const el = document.getElementById(id); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="shrink-0 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white whitespace-nowrap"><Art name={art} size={15} className="mr-1" />{label}</button>
+      {/* PAGES DU COACH : un bouton = une page, rien d'autre à l'écran */}
+      <nav aria-label="Pages du Coach" className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4" role="tablist">
+        {COACH_PAGES.map(([id, label, art]) => (
+          <button key={id} type="button" role="tab" aria-selected={page === id} data-testid={`coach-page-${id}`} onClick={() => { setPage(id); try { window.scrollTo({ top: 0 }); } catch (e) { /* rien */ } }}
+            className={`shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap ${page === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'}`}><Art name={art} size={15} className="mr-1" />{label}</button>
         ))}
       </nav>
-      <div className="lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start space-y-4 lg:space-y-0">
-      <div id="coach-seance" className="scroll-mt-3 space-y-4">
+      {page === 'seance' && (
+      <div className="space-y-4">
       {/* séance prévue ces derniers jours et pas faite : la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
         <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 p-4 space-y-3">
@@ -242,7 +244,6 @@ export function CoachPanel({
             <span className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shrink-0"><Art name="calendar" size={26} bare /></span>
             <div className="min-w-0">
               <h3 className="font-black text-white">Séance de {formatDayFr(missedSession.iso)} pas faite</h3>
-              <p className="text-xs text-slate-300">Pas grave : fais-la aujourd’hui, le coach décale la suite de ton planning.</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -254,7 +255,6 @@ export function CoachPanel({
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}
       {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
-      <VoiceCallout compact testId="voice-callout-coach" />
       {/* « Tu as déjà un coach ? » : rangé dans les réglages si la personne a répondu non (et sans programme) */}
       {!(coach.noCoach && !coach.program) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
       {/* PROCHAINE SÉANCE */}
@@ -301,14 +301,13 @@ export function CoachPanel({
         updateCoach={updateCoach}
       />
 
-      {/* ÉQUILIBRE : juste sous la prochaine séance (ordinateur et téléphone), grande silhouette et explications */}
-      <div id="coach-equilibre" className="scroll-mt-3">
-      <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />
       </div>
+      )}
 
-      </div>
+      {page === 'equilibre' && <CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} />}
+
+      {page === 'semaine' && (
       <div className="space-y-4">
-      <div id="coach-semaine" className="scroll-mt-3 space-y-4">
       {/* EN-TÊTE */}
       <CoachHeader
         coach={coach}
@@ -340,16 +339,12 @@ export function CoachPanel({
       />
 
       </div>
-      <div id="coach-objectifs" className="scroll-mt-3">
-      {/* OBJECTIFS */}
-      <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />
+      )}
 
-      </div>
-      </div>
-      </div>
-      <div id="coach-reglages" className="scroll-mt-3">
-      {/* RÉGLAGES ET DÉTAILS (repliés par défaut) */}
-      <Fold title="⚙️ Réglages et détails du coach" subtitle={`Niveau, profil de travail, cycle, matchs, poids, ${sportInfo(coach.sport).label}, sources`}>
+      {page === 'objectifs' && <CoachObjectives gameState={gameState} onAddExercise={onAddExercise} questRows={questRows} />}
+
+      {page === 'reglages' && (
+      <div className="space-y-4" data-testid="coach-settings-page">
         {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
         {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('maxima') : null} />
@@ -357,15 +352,12 @@ export function CoachPanel({
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs" data-testid="method-style">
           <h3 className="text-sm font-black text-white"><Art name="sparkle" />Forme des séries</h3>
-          <p className="text-slate-400">Selon les études (conseillé) : séries classiques, car à volume égal aucune autre forme ne fait plus de muscle. Le coach n’en change que lorsqu’une étude montre un intérêt pour toi : séance courte (séries dégressives et supersets, même résultat en moins de temps) ou objectif de répétitions (repos-pause).</p>
-          <p className="text-slate-400">Variée (à ta demande) : le coach alterne pyramides, série lourde + séries allégées, dégressives, repos-pause, myo-reps, séries fractionnées, supersets, pour le plaisir de varier (pas plus efficace). Classique : toujours des séries fixes. Tu peux aussi simplement le demander au coach intelligent.</p>
           <div className="flex flex-wrap gap-2">
             {[['evidence', 'Selon les études'], ['variety', 'Variée'], ['classic', 'Classique']].map(([id, lab]) => {
               const cur = ['variety', 'classic'].includes(coach.methodStyle) ? coach.methodStyle : 'evidence';
               return <button key={id} type="button" data-testid={`method-style-${id}`} onClick={() => updateCoach({ methodStyle: id })} aria-pressed={cur === id} className={`px-3 py-1.5 rounded-lg font-black border ${cur === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>{lab}</button>;
             })}
           </div>
-          <p className="text-slate-500">Une forme précise pour un exercice : « Pourquoi ? / Ajuster » sous l’exercice, dans la prochaine séance.</p>
         </div>
 
         {/* PROFIL DE TRAVAIL */}
@@ -417,8 +409,8 @@ export function CoachPanel({
 
         {/* SOURCES */}
         <CoachSources setShowSources={setShowSources} showSources={showSources} />
-      </Fold>
       </div>
+      )}
     </div>
   );
 }

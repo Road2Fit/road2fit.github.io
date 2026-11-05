@@ -1,6 +1,6 @@
 // Parcours complets de l'application dans un faux navigateur.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickEl, clickText, findByText, launch, monkey, pageText } from './harness';
+import { advance, clickEl, clickText, findByText, launch, monkey, pageText, runGuided } from './harness';
 
 const open = [];
 const start = async opts => { const h = await launch(opts); open.push(h); return h; };
@@ -24,10 +24,9 @@ describe('application', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('le micro est une action du bouton « + » qui ouvre la dictée', async () => {
+  it('le micro au-dessus du « + » ouvre la dictée', async () => {
     const h = await start();
-    await clickEl(h, h.doc.querySelector('button[aria-label="Ajouter"]'));
-    const micro = [...h.doc.querySelectorAll('button')].find(b => b.title === 'Dicter toute ma séance à la voix');
+    const micro = h.doc.querySelector('[data-testid="fab-voice"]');
     expect(micro).toBeTruthy();
     await clickEl(h, micro);
     expect(pageText(h)).toContain('Micro Magique de Rondoudou');
@@ -48,7 +47,7 @@ describe('application', () => {
       ['Souvenirs', 'Souvenirs'],
       ['Bilan', 'Bilan'],
       ['Trophées', 'Trophées'],
-      ['Exercices', 'Noter la séance'],
+      ['Exercices', 'Développé'],
     ];
     for (const [onglet, texte] of attendus) {
       await clickText(h, onglet);
@@ -63,15 +62,7 @@ describe('application', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     expect(lancer, 'bouton de lancement').toBeTruthy();
     await clickText(h, lancer.textContent.trim().slice(0, 30));
-    for (let i = 0; i < 14 && !findByText(h, 'Résumé de la séance').length; i++) {
-      for (const b of [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite')) {
-        b.dispatchEvent(new h.w.MouseEvent('click', { bubbles: true }));
-        await advance(h);
-      }
-      const [suite] = [...findByText(h, 'Voir le résumé'), ...findByText(h, 'Exercice suivant')];
-      if (!suite) break;
-      await clickText(h, suite.textContent.trim().slice(0, 30));
-    }
+    expect(await runGuided(h)).toBe('summary');
     await clickText(h, 'Enregistrer la séance');
     expect(pageText(h)).toContain('Bilan de la séance');
     await clickText(h, 'Super, merci coach');

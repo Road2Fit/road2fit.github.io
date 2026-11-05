@@ -1,6 +1,6 @@
 // Séance guidée : ressenti (1 à 10) noté exercice par exercice, enregistré dans l'historique.
 import { afterEach, describe, expect, it } from 'vitest';
-import { advance, clickText, findByText, launch, pageText, clickEl } from './harness';
+import { advance, clickText, findByText, launch, pageText, clickEl, runGuided } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -21,25 +21,16 @@ describe('ressenti par exercice', () => {
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
 
-    // exercice 1 : toutes les séries faites, ressenti 9
-    const noms = [];
-    for (let i = 0; i < 12 && !findByText(h, 'Résumé de la séance').length; i++) {
-      noms.push(h.doc.querySelector('h2').textContent);
-      for (const b of [...h.doc.querySelectorAll('button')].filter(b => b.textContent.trim() === 'Faite')) {
-        b.dispatchEvent(new h.w.MouseEvent('click', { bubbles: true }));
-        await advance(h);
+    // le ressenti se donne pendant le repos qui suit la dernière série d'un exercice : 9 pour le 1er, 4 pour le 2e
+    let asked = 0;
+    await runGuided(h, { onScreen: async () => {
+      const row = h.doc.querySelector('[data-testid="guided-rpe"]');
+      if (row && h.doc.querySelector('[data-testid="guided-rest"]') && asked < 2 && !row.querySelector('.bg-violet-600')) {
+        await clickEl(h, row.querySelector(`button[aria-label="Ressenti ${asked === 0 ? 9 : 4} sur 10"]`));
+        asked++;
       }
-      if (i === 0) {
-        expect(pageText(h)).toContain('Ressenti sur cet exercice');
-        expect(pageText(h)).toContain('Pas noté : le ressenti global');
-        await (async () => { feltButton(h, 9).dispatchEvent(new h.w.MouseEvent('click', { bubbles: true })); await advance(h); })();
-        expect(pageText(h)).toContain('9/10 : Presque au maximum');
-      }
-      if (i === 1) { feltButton(h, 4).dispatchEvent(new h.w.MouseEvent('click', { bubbles: true })); await advance(h); }
-      const [suite] = [...findByText(h, 'Voir le résumé'), ...findByText(h, 'Exercice suivant')];
-      if (!suite) break;
-      await clickText(h, suite.textContent.trim().slice(0, 30));
-    }
+    } });
+    expect(asked).toBe(2);
     expect(pageText(h)).toContain('ressenti 9/10');
     expect(pageText(h)).toContain('ressenti 4/10');
     // ressenti global 8 pour les exercices sans note
