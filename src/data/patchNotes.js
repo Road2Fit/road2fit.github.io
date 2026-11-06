@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.6',
+    date: '2026-11-06',
+    title: 'Le grand rond en tube néon',
+    items: [
+      'Style néon : le grand rond du Coach a un intérieur sombre et un contour qui brille comme un tube néon, avec des ondes qui partent de son bord.',
+      'La durée de la séance est sous « Séance du jour », le rond tient entier dans l’écran, même sur un petit téléphone.',
+    ],
+  },
+  {
     version: '4.5.4',
     date: '2026-11-06',
     title: 'Les muscles de la séance dans le rond',

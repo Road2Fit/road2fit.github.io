@@ -121,8 +121,8 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
 
 
 /* grande carte de la séance en ROND : un grand cercle qui occupe le haut de l'écran (on voit juste le titre « Prochaine séance » en dessous) */
-.hero-zone { display: flex; align-items: center; justify-content: center; }
-.hero-round { width: min(calc(100vw - 1.5rem), 420px); aspect-ratio: 1 / 1; border-radius: 9999px; padding: 2.8rem 2.6rem 3.2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; text-align: center; overflow: hidden; position: relative; }
+.hero-zone { display: flex; align-items: center; justify-content: center; overflow-x: clip; padding: 1.5rem 0; }
+.hero-round { width: min(calc(100vw - 3.5rem), 400px); height: min(calc(100vw - 3.5rem), 400px); flex-shrink: 0; border-radius: 9999px; padding: 1.2rem 1.8rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; text-align: center; position: relative; }
 .hero-round h2 { font-size: 2.6rem; }
 .hero-round p.truncate { max-width: 16rem; margin-left: auto; margin-right: auto; }
 .hero-round .hero-cta { font-size: 1.2rem; padding: 0.75rem 1.5rem; white-space: nowrap; }
@@ -136,3 +136,24 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
    Pas sur un bouton désactivé (il redevient gris). */
 :root[data-theme="neon"] :is(.bg-sky-500, .bg-sky-600, .bg-sky-700, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-cyan-500, .bg-cyan-600, .bg-cyan-700, .bg-teal-500, .bg-teal-600, .bg-teal-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700, .bg-pink-500, .bg-pink-700, .bg-fuchsia-500, .bg-fuchsia-600, .bg-fuchsia-700):not(:disabled),
 :root[data-theme="neon"] :is(.bg-sky-500, .bg-sky-600, .bg-sky-700, .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-cyan-500, .bg-cyan-600, .bg-cyan-700, .bg-teal-500, .bg-teal-600, .bg-teal-700, .bg-emerald-500, .bg-emerald-600, .bg-emerald-700, .bg-pink-500, .bg-pink-700, .bg-fuchsia-500, .bg-fuchsia-600, .bg-fuchsia-700):not(:disabled) * { color: #111111; }
+
+/* ---- Grand rond en néon : « tube néon » (intérieur sombre, contour qui brille avec un cœur clair) + ondes qui s'éloignent en boucle ---- */
+:root[data-theme="neon"] .hero-round.bg-pink-600 { background-color: #121212; color: #ffffff; border: 4px solid var(--neon);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.75), inset 0 0 22px rgb(var(--neon-rgb) / 0.35), 0 0 18px 2px rgb(var(--neon-rgb) / 0.55); }
+:root[data-theme="neon"] .hero-round.bg-pink-600 * { color: #ffffff; }
+:root[data-theme="neon"] .hero-round.bg-pink-600 > p:first-child { color: var(--neon); opacity: 1; }
+:root[data-theme="neon"] .hero-round.bg-pink-600 [data-testid="session-muscles"] { color: var(--neon); }
+:root[data-theme="neon"] .hero-round .hero-cta, :root[data-theme="neon"] .hero-round .hero-cta * { background-color: var(--neon); color: #111111; }
+:root[data-theme="neon"] [data-testid="session-hero"].hero-round:not(.hero-press) { animation: r2f-up 0.35s ease-out backwards, r2f-tube 3.2s ease-in-out 0.4s infinite; }
+@keyframes r2f-tube {
+  0%, 100% { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.75), inset 0 0 22px rgb(var(--neon-rgb) / 0.35), 0 0 18px 2px rgb(var(--neon-rgb) / 0.55); }
+  50% { box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.9), inset 0 0 30px rgb(var(--neon-rgb) / 0.5), 0 0 30px 6px rgb(var(--neon-rgb) / 0.75); }
+}
+/* ondes : deux anneaux qui partent du bord et s'effacent, décalés */
+:root[data-theme="neon"] .hero-round::before, :root[data-theme="neon"] .hero-round::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 9999px; border: 2px solid var(--neon); pointer-events: none; z-index: -1;
+  animation: r2f-wave-out 3s ease-out infinite; }
+:root[data-theme="neon"] .hero-round::after { animation-delay: 1.5s; }
+@keyframes r2f-wave-out { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.09); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { :root[data-theme="neon"] .hero-round::before, :root[data-theme="neon"] .hero-round::after { display: none; } }
+:root[data-theme="neon"] .hero-round.bg-pink-600 [data-testid="session-muscles"] * { color: var(--neon); }

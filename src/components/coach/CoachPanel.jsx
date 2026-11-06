@@ -310,10 +310,10 @@ export function CoachPanel({
         const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
         return (
           <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
-            <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}</p>
-            <h2 className="text-4xl font-black leading-none">{title}<br />{shownSession.estMin} min</h2>
+            <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}<br />{shownSession.estMin} min</p>
+            <h2 className="text-4xl font-black leading-none">{title}</h2>
             {/* schéma du corps : les muscles travaillés pendant la séance (même dessin que la page Équilibre) */}
-            <div className="w-48 max-w-full">
+            <div className="w-36 max-w-full">
               <MuscleBodyMap worked={shownSession.exercises.flatMap(e => { const q = (gameState.quests || []).find(x => x.id === e.questId); return q ? [fineGroupOf(q), secondGroupOf(q)].filter(Boolean) : []; })} />
             </div>
             <button type="button" onClick={() => heroGo(() => onStartGuided(sessionToStart))} data-testid={isToday ? 'start-today' : 'start-early'}
