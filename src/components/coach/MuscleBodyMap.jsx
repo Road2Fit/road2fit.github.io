@@ -27,7 +27,9 @@ const BACK = {
   Mollets: [[153, 162, 6, 16], [177, 162, 6, 16]],
 };
 
-export function MuscleBodyMap({ rows, mini = false }) {
+// `worked` (liste de muscles) : mode « séance » du grand rond — muscles travaillés pleins, les autres pâles, en couleur du texte (currentColor)
+export function MuscleBodyMap({ rows = [], mini = false, worked = null }) {
+  if (worked) return <WorkedMap worked={new Set(worked)} />;
   const byArena = {};
   rows.forEach(r => { byArena[r.arena] = r; });
   const rowOf = a => byArena[a] || byArena[coarseOf(a)];
@@ -62,5 +64,24 @@ export function MuscleBodyMap({ rows, mini = false }) {
         <span><i className="inline-block w-2.5 h-2.5 rounded-sm mr-1" style={{ background: COLORS.none }} />pas travaillé</span>
       </div>}
     </div>
+  );
+}
+
+function WorkedMap({ worked }) {
+  const on = a => worked.has(a) || worked.has(coarseOf(a));
+  const draw = shapes => Object.entries(shapes).flatMap(([a, list]) =>
+    list.map(([cx, cy, rx, ry], i) => (
+      <ellipse key={a + i} cx={cx} cy={cy} rx={rx} ry={ry} fill="currentColor" fillOpacity={on(a) ? 0.95 : 0.16} data-on={on(a) ? '1' : undefined} />
+    ))
+  );
+  return (
+    <svg viewBox="0 0 220 180" className="w-full h-auto" role="img" aria-label="Muscles travaillés pendant la séance, vue de face et de dos" data-testid="session-muscles">
+      <circle cx="55" cy="16" r="11" fill="currentColor" fillOpacity="0.3" />
+      <circle cx="165" cy="16" r="11" fill="currentColor" fillOpacity="0.3" />
+      <rect x="46" y="28" width="18" height="8" rx="3" fill="currentColor" fillOpacity="0.3" />
+      <rect x="156" y="28" width="18" height="8" rx="3" fill="currentColor" fillOpacity="0.3" />
+      {draw(FRONT)}
+      {draw(BACK)}
+    </svg>
   );
 }

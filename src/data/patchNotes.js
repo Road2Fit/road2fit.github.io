@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.5.4',
+    date: '2026-11-06',
+    title: 'Les muscles de la séance dans le rond',
+    items: ['Le grand rond du Coach montre le schéma du corps (face et dos) avec les muscles travaillés pendant la séance, à la place de la liste des exercices.'],
+  },
+  {
     version: '4.5.3',
     date: '2026-11-06',
     title: 'Chrono du gainage',

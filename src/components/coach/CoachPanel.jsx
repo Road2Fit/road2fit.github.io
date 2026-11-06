@@ -30,7 +30,8 @@ import { CoachVolley } from './CoachVolley';
 import { CoachWeek } from './CoachWeek';
 import { CoachWeightHealth } from './CoachWeightHealth';
 import { sportInfo } from '../../data/sports';
-import { arenaOf } from '../../data/muscles';
+import { arenaOf, fineGroupOf, secondGroupOf } from '../../data/muscles';
+import { MuscleBodyMap } from './MuscleBodyMap';
 
 const COACH_PAGES = [['seance', 'Séance', 'dumbbell'], ['semaine', 'Semaine', 'calendar'], ['objectifs', 'Objectifs', 'target'], ['equilibre', 'Équilibre', 'scale'], ['reglages', 'Réglages', 'gear']];
 
@@ -307,14 +308,13 @@ export function CoachPanel({
       {!guidedActive && !coachOff && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
         const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
-        const line = e => `${e.name} ${e.sets}×${(e.targetReps || [])[0] || ''}${e.kind === 'load' ? ` · ${String(e.load).replace('.', ',')} kg` : ''}`;
         return (
           <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
             <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}</p>
             <h2 className="text-4xl font-black leading-none">{title}<br />{shownSession.estMin} min</h2>
-            <div className="text-sm font-bold opacity-90 space-y-0.5 max-w-full">
-              {shownSession.exercises.slice(0, 2).map(e => <p key={e.questId} className="truncate">{line(e)}</p>)}
-              {shownSession.exercises.length > 2 && <p className="opacity-80">+ {shownSession.exercises.length - 2} exercice{shownSession.exercises.length - 2 > 1 ? 's' : ''}</p>}
+            {/* schéma du corps : les muscles travaillés pendant la séance (même dessin que la page Équilibre) */}
+            <div className="w-48 max-w-full">
+              <MuscleBodyMap worked={shownSession.exercises.flatMap(e => { const q = (gameState.quests || []).find(x => x.id === e.questId); return q ? [fineGroupOf(q), secondGroupOf(q)].filter(Boolean) : []; })} />
             </div>
             <button type="button" onClick={() => heroGo(() => onStartGuided(sessionToStart))} data-testid={isToday ? 'start-today' : 'start-early'}
               className="hero-cta mt-1 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
