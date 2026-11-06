@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.6.2',
+    date: '2026-11-06',
+    title: 'Nouvelle icône néon',
+    items: [
+      'Nouvelle icône de l’appli : un haltère en tube néon sur fond noir (onglet du navigateur et appli installée).',
+      'Préparation de l’appli Android : le site la reconnaît, elle s’ouvre en plein écran sans barre d’adresse.',
+    ],
+  },
+  {
     version: '4.6.1',
     date: '2026-11-06',
     title: 'Road2Fit en haut sur téléphone',

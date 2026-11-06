@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.road2fit.twa",
+        "sha256_cert_fingerprints": ["AE:7F:7F:6C:46:D9:C9:7A:E0:5D:8F:EF:31:EC:E6:CD:23:89:2E:BB:F1:12:94:AA:21:19:F2:44:39:83:E2:E5"]
+      }
+    }]

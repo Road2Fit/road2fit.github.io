@@ -178,6 +178,12 @@ Bouton « 🎬 Mouvement » sur les cartes d'exercice, dans la séance guidée, 
 - Les données (localStorage / IndexedDB) sont par ORIGINE (gab1point0.github.io), pas par chemin : elles restent là après le renommage ; seuls le service worker et l'icône installée sont à refaire sur la nouvelle adresse. Projet Supabase renommé « Road2Fit » ; sa « Site URL » et ses « Redirect URLs » pointent sur la nouvelle adresse.
 - Les clés internes `rondoufit:*` / `rondoudou_save_v1` ne changent JAMAIS (elles contiennent les données).
 
+## Appli Android (TWA, 06/11/2026)
+- APK / AAB générés par Gabin sur pwabuilder.com (Trusted Web Activity) : coquille qui ouvre https://road2fit.github.io/ en plein écran, donc chaque publication du site arrive aussi dans l'appli. Paquet `io.github.road2fit.twa`.
+- `public/.well-known/assetlinks.json` (copié tel quel dans dist, publié par upload-pages-artifact@v3 qui garde les dossiers cachés) : empreinte SHA-256 de la clé de signature de Gabin. Sans ce fichier valide, une barre d'adresse s'affiche en haut de l'appli. Ne pas le supprimer ; s'il change de clé, remplacer l'empreinte.
+- La clé de signature (fichier du zip PWABuilder) est chez Gabin, jamais dans le dépôt. Pour refaire l'APK (nouvelle icône, nom…), réutiliser LA MÊME clé dans PWABuilder.
+- Icône : « haltère néon » (tube vert citron + cœur clair + halo, fond noir), générée par `node tools/make-neutral-icons.mjs` (public/neutral/ : favicons, 192, 512, maskable avec marge de zone sûre, apple-touch ; manifeste fond et thème #0d0d0d).
+
 ## Hébergement (déménagement du 29/10/2026)
 - Pour ne plus montrer le pseudo personnel dans le lien, le dépôt est dans l'organisation GitHub gratuite **road2fit** : `road2fit/road2fit.github.io` (dépôt public ; GitHub Pages par Actions) → adresse **https://road2fit.github.io/** (à la racine, plus de chemin). Lien privé Rondoudou : **https://road2fit.github.io/?rondoudou**. Anciennes adresses `gab1point0.github.io/Rondoufit/` et `/Road2Fit/` : mortes. `git remote` : `https://github.com/road2fit/road2fit.github.io.git`.
 - ⚠️ Le stockage du navigateur (localStorage, IndexedDB, service worker) est par ORIGINE : changer de domaine repart de zéro côté appareil ; tout vient du compte Supabase (se reconnecter). Supabase : « Site URL » et « Redirect URLs » doivent être l'adresse courante.
