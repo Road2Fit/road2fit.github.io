@@ -12,8 +12,10 @@ export function CoachObjectives({ gameState, onAddExercise, questRows }) {
       <div className="grid gap-2 sm:grid-cols-2">
         {questRows.map(r => {
           const t = r.target;
-          const next = t.kind === 'load' ? `${coachFmt(t.load)} kg × ${t.goalReps}` : t.kind === 'assisted' ? `${assistText(t.assist)} × ${t.goalReps}` : `${t.goalReps} ${t.timed ? 's' : 'reps'}`;
-          const eta = r.eta.done ? 'Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : 'Estimation après 3 séances';
+          // même cible que la prochaine séance (séries × répétitions de cette séance), pas le haut de la fourchette
+          const reps = (t.targetReps || [])[0] || t.goalReps;
+          const next = `${t.sets} × ${reps}${t.timed ? ' s' : ''}${t.kind === 'load' ? ` à ${coachFmt(t.load)} kg` : t.kind === 'assisted' ? ` · ${assistText(t.assist)}` : ''}`;
+          const eta = r.eta.done ? 'Atteint' : r.eta.days ? `≈ ${coachDateFR(r.eta.date)} (≈ +${coachFmt(r.eta.perWeek)}/sem.)` : r.eta.stalled ? 'Rythme actuel trop lent pour estimer' : '';
           const sugg = r.plateau ? coachSuggestExercises(gameState, r.arena, 2) : [];
           return (
             <div key={r.q.id} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
@@ -25,7 +27,7 @@ export function CoachObjectives({ gameState, onAddExercise, questRows }) {
                 <div className="h-full bg-pink-500" style={{ width: `${r.progress}%` }} />
               </div>
               <p className="text-xs text-slate-300 mt-1.5">Prochaine cible : <b>{next}</b></p>
-              <p className="text-xs text-slate-400">Objectif final : {eta}</p>
+              {eta && <p className="text-xs text-slate-400">Objectif final : {eta}</p>}
               {r.plateau && (
                 <div className="mt-2 text-xs bg-amber-950/30 border border-amber-500/40 rounded-lg p-2 text-amber-100 space-y-1">
                   <p>⚠️ <b>Stagnation</b> sur les 3 dernières séances. Idées : une semaine allégée, une variante de l’exercice, et un contrôle du sommeil et des protéines.</p>

@@ -2,6 +2,7 @@ import { Art } from './Art';
 import { assistText } from '../lib/assist';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { playGameSound } from '../lib/sound';
+import { isBarbell, platesText } from '../lib/plates';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { restText } from '../coach/rest';
@@ -53,11 +54,12 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [sw, setSw] = useState(null); // chrono d'une tenue : { start }
+  const [swapOpen, setSwapOpen] = useState(false); // liste « machine prise »
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
@@ -105,9 +107,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
 
   const startRest = (sec, next, extra = {}) => {
     restEvent(sec, next);
-    setG(prev => ({ ...prev, rest: { endAt: Date.now() + sec * 1000, total: sec, next }, ...extra }));
+    setG(prev => ({ ...prev, rest: { endAt: Date.now() + sec * 1000, total: sec, next }, pr: null, ...extra }));
   };
-  const skipRest = () => { stopRestEvent(); setG(prev => ({ ...prev, rest: null, adapt: null })); };
+  const skipRest = () => { stopRestEvent(); setG(prev => ({ ...prev, rest: null, adapt: null, pr: null })); };
   const adapt = g.adapt && it && g.adapt.questId === it.questId ? g.adapt : null;
   const applyAdapt = () => {
     if (!adapt) return;
@@ -138,12 +140,24 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     if (!it || j < 0) return;
     const reps = repsOverride !== undefined ? d.reps.map((r, k) => (k === j ? repsOverride : r)) : d.reps;
     const done = d.done.map((x, k) => (k === j ? true : x));
-    const data = { ...g.data, [it.questId]: { ...d, reps, done } };
+    // record battu sur cette série ? (seulement s'il y a déjà un historique) : fêté sur l'écran de repos
+    let pr = null;
+    const b = d.best;
+    const nr = Number(reps[j]) || 0;
+    let best = b;
+    if (b && nr > 0) {
+      if (it.kind === 'load') { const l = Number(loadsOf(d)[j]) || 0; const e = l * (1 + nr / 30); if (b.e1rm > 0 && e > b.e1rm + 0.05) { pr = `${coachFmt(l)} kg × ${nr}`; best = { ...b, e1rm: e }; } }
+      else if (it.timed) { if (b.sec > 0 && nr > b.sec) { pr = `${nr} s`; best = { ...b, sec: nr }; } }
+      else if ((Number(assistsOf(d)[j]) || 0) === 0 && b.reps > 0 && nr > b.reps) { pr = `${nr} reps`; best = { ...b, reps: nr }; }
+    }
+    if (pr) { playGameSound('xp', soundEnabled); try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} }
+    const prX = pr ? { pr: { questId: it.questId, text: pr } } : {};
+    const data = { ...g.data, [it.questId]: { ...d, reps, done, best } };
     setSw(null);
     // séance finie : résumé
     if (items.every(x => (data[x.questId].done || []).every(Boolean))) {
       stopRestEvent();
-      setG(prev => ({ ...prev, data, rest: null, phase: 'summary', rpeFor: it.questId }));
+      setG(prev => ({ ...prev, data, rest: null, phase: 'summary', rpeFor: it.questId, ...prX }));
       return;
     }
     // superset : on passe à l'autre exercice de la paire
@@ -152,7 +166,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
       const pd = data[px.questId];
       const pj = pd.done.findIndex(v => !v);
       setG(prev => ({ ...prev, data }));
-      startRest(it.superset.first ? 15 : it.restSec, `Superset : ${px.name} · ${setText(px, pd, pj)}`, { idx: partnerIdx });
+      startRest(it.superset.first ? 15 : it.restSec, `Superset : ${px.name} · ${setText(px, pd, pj)}`, { idx: partnerIdx, ...prX });
       return;
     }
     const nj = done.findIndex(v => !v);
@@ -160,13 +174,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
       setG(prev => ({ ...prev, data }));
       // série trop dure ou trop facile : le coach propose d'ajuster la suite (un geste sur l'écran de repos)
       const adapt = plan ? null : adaptAfterSet(it, d, Number(reps[j]) || 0, Number(it.targetReps && it.targetReps[j] !== undefined ? it.targetReps[j] : it.goalReps) || 0, step);
-      startRest(restAfter(j), `${plan ? setLabel(nj) : `Série ${nj + 1}/${done.length}`} · ${setText(it, data[it.questId], nj)}`, { adapt: adapt ? { ...adapt, questId: it.questId } : null });
+      startRest(restAfter(j), `${plan ? setLabel(nj) : `Série ${nj + 1}/${done.length}`} · ${setText(it, data[it.questId], nj)}`, { adapt: adapt ? { ...adapt, questId: it.questId } : null, ...prX });
       return;
     }
     // exercice fini : repos, puis exercice suivant ; le ressenti se donne pendant le repos
     const n = nextExerciseIdx(g.idx, data);
     setG(prev => ({ ...prev, data }));
-    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId });
+    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId, ...prX });
   };
   const doneWarm = () => {
     const w = warmRows[warmIdx];
@@ -308,6 +322,10 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
         </div>
         <button type="button" onClick={() => setMenu(true)} aria-label="Plus d’options" data-testid="guided-menu" className="nav-btn"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="5.5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18.5" cy="12" r="2" /></svg></button>
       </div>
+      {/* exercice changé (machine prise) : on peut revenir en arrière tant qu'aucune série n'est faite */}
+      {it && d && g.swap && g.swap.newId === it.questId && !d.done.some(Boolean) && screen !== 'summary' && (
+        <button type="button" onClick={onUndoSwap} className="tap-free shrink-0 mx-auto -mt-1 mb-1 text-xs text-slate-500 underline underline-offset-2" data-testid="swap-undo">↺ Revenir à {g.swap.item.name}</button>
+      )}
       <div className="shrink-0 flex gap-1 px-3">
         {items.map((x, i) => {
           const dd = g.data[x.questId];
@@ -336,6 +354,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
         {screen === 'rest' && (
           <div className="flex-1 flex flex-col" data-testid="guided-rest">
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
+              {g.pr && <div className="num-pop text-center" data-testid="guided-pr"><p className="text-lg font-black text-amber-300"><Art name="trophy" size={22} />Nouveau record !</p><p className="text-xs text-slate-400">{(items.find(x => x.questId === g.pr.questId) || {}).name} · {g.pr.text}</p></div>}
               <p className="text-sm font-black text-emerald-300 uppercase tracking-wider">Repos</p>
               <div className="relative w-52 h-52">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
@@ -406,6 +425,15 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 onMinus: () => setLoad(Math.max(0, Math.round((d.load - step) * 100) / 100)), onPlus: () => setLoad(Math.round((d.load + step) * 100) / 100) })}
               {it.kind === 'assisted' && !sw && tune({ label: 'Lest', testId: 'guided-assist', value: assistsOf(d)[j] === 0 ? '0' : coachFmt(-assistsOf(d)[j]), unit: assistsOf(d)[j] > 0 ? 'kg · aide élastique' : assistsOf(d)[j] < 0 ? 'kg · lest' : 'poids du corps',
                 onMinus: () => setAssist(d.assist + 2.5), onPlus: () => setAssist(d.assist - 2.5) })}
+              {it.kind === 'load' && !sw && isBarbell(it.name) && platesText(loadsOf(d)[j]) && (
+                <p className="text-center text-xs text-slate-500 -mt-1" data-testid="set-plates">Disques : {platesText(loadsOf(d)[j])}</p>
+              )}
+              {d.prev && !sw && (() => {
+                const k = Math.min(j, d.prev.reps.length - 1);
+                const r = d.prev.reps[k];
+                const extra = it.kind === 'load' ? ` à ${coachFmt(d.prev.loads[k])} kg` : it.kind === 'assisted' && Number(d.prev.assists[k]) ? ` · ${assistText(d.prev.assists[k])}` : '';
+                return <p className="text-center text-xs text-slate-500" data-testid="set-prev">La dernière fois : {r} {it.timed ? 's' : 'reps'}{extra}</p>;
+              })()}
             </div>
             {it.timed ? (
               sw ? (
@@ -507,6 +535,21 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                   <button type="button" onClick={skipExercise} className="py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">Passer l’exercice ▶</button>
                 </div>
                 <button type="button" onClick={() => { setMenu(false); openMovement({ catalogId: it.catalogId, name: it.name }); }} className="w-full py-3 rounded-xl bg-slate-800 text-sky-200 font-bold text-sm"><Art name="film" />Voir le mouvement</button>
+                {!d.done.some(Boolean) && <button type="button" onClick={() => setSwapOpen(v => !v)} aria-expanded={swapOpen} className="w-full py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm" data-testid="swap-open"><Art name="repeat" />Machine prise ? Changer d’exercice</button>}
+                {swapOpen && !d.done.some(Boolean) && (() => {
+                  const list = swapChoices(it.questId);
+                  return (
+                    <div className="space-y-1.5" data-testid="swap-list">
+                      {list.length === 0 && <p className="text-xs text-slate-400 text-center">Aucun exercice équivalent pour ce muscle.</p>}
+                      {list.map(c => (
+                        <button key={c.questId || c.catalogId} type="button" onClick={() => { setSwapOpen(false); setMenu(false); onSwap(it.questId, c); }}
+                          className="w-full py-2.5 px-3 rounded-xl bg-slate-950 border border-slate-700 text-left text-sm font-bold text-slate-100" data-testid="swap-choice">
+                          {c.name}{c.isNew && <span className="text-xs text-slate-500"> · nouveau</span>}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
                 {it.reason && <details className="text-xs text-slate-400"><summary className="font-bold text-slate-300 py-1">Pourquoi cet objectif ?</summary><p className="mt-1">{it.reason}</p>{plan && <p className="mt-1">{(METHODS[it.method] || {}).how}</p>}</details>}
               </>
             )}

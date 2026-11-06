@@ -24,11 +24,21 @@ export { COACH_ARENAS };
 export const COACH_DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
 // Types de séance du mode « 3 séances » : full body, jambes, haut du corps
+// groups : familles de muscles travaillées (deux séances de suite ne doivent pas en partager une)
 export const COACH_TYPES = {
-  FB: { id: 'FB', label: 'Full body', legs: true, upper: true, get arenas() { return typeArenas('FB'); } },
-  LEGS: { id: 'LEGS', label: 'Jambes', legs: true, upper: false, get arenas() { return typeArenas('LEGS'); } },
-  UPPER: { id: 'UPPER', label: 'Haut du corps', legs: false, upper: true, get arenas() { return typeArenas('UPPER'); } }
+  FB: { id: 'FB', label: 'Full body', legs: true, upper: true, groups: ['push', 'pull', 'legs'], get arenas() { return typeArenas('FB'); } },
+  LEGS: { id: 'LEGS', label: 'Jambes', legs: true, upper: false, groups: ['legs'], get arenas() { return typeArenas('LEGS'); } },
+  UPPER: { id: 'UPPER', label: 'Haut du corps', legs: false, upper: true, groups: ['push', 'pull'], get arenas() { return typeArenas('UPPER'); } },
+  PUSH: { id: 'PUSH', label: 'Poussée', side: 'push', legs: false, upper: true, groups: ['push'], get arenas() { return typeArenas('PUSH'); } },
+  PULL: { id: 'PULL', label: 'Tirage', side: 'pull', legs: false, upper: true, groups: ['pull'], get arenas() { return typeArenas('PULL'); } }
 };
+/** Rotation des séances quand on s'entraîne 4 fois ou plus par semaine (split) : haut / bas, puis poussée / tirage / jambes.
+ *  Repères : Schoenfeld 2016 (chaque muscle 2 fois par semaine), répartition classique haut-bas et push-pull-legs. */
+export function coachSplitRotation(n) {
+  if (n >= 6) return ['PUSH', 'PULL', 'LEGS', 'PUSH', 'PULL', 'LEGS'];
+  if (n === 5) return ['PUSH', 'PULL', 'LEGS', 'UPPER', 'LEGS'];
+  return ['UPPER', 'LEGS', 'UPPER', 'LEGS'];
+}
 
 export const COACH_TYPE_ORDER = ['FB', 'LEGS', 'UPPER'];
 

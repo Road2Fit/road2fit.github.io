@@ -8,7 +8,9 @@ import { applyMethods } from './methodChoice';
 import { planMinutes } from './methods';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
-import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, typeArenas } from '../data/muscles';
+import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, pushPullSide, typeArenas } from '../data/muscles';
+// poussée / tirage : un exercice du mauvais côté (curl un jour de poussée…) est écarté
+const sideOk = (side, q) => { if (!side) return true; const s = pushPullSide(arenaOf(q), q.name); return !s || s === side; };
 
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
 function coachEstimateMin(exercises) {
@@ -33,6 +35,7 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
       if (ex.some(e => e.questId === q.id)) return false;
       const a = arenaOf(q);
       if (opts.allowedArenas && !opts.allowedArenas.includes(a)) return false;
+      if (!sideOk(opts.side, q)) return false;
       if (isLegArena(a) && !legsAllowed) return false;
       return arenaCount(a) < (arenaTier(a) === 1 ? 2 : 1);
     });
@@ -172,8 +175,12 @@ function coachBuildSession(state, templateIdx, di, opts = {}) {
 
 // Nombre maximal d'exercices par groupe dans une séance typée (mode simple : comme avant ; mode optimisé : un par petit muscle, deux pour les gros)
 function typedCaps(type) {
-  if (!isOptimized()) return type === 'LEGS' ? { Jambes: 3, Abdominaux: 1 } : type === 'UPPER' ? { Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 } : { Jambes: 2, Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 };
-  const big = type === 'LEGS' ? ['Quadriceps', 'Ischio-jambiers'] : type === 'UPPER' ? ['Dos', 'Pectoraux'] : [];
+  if (!isOptimized()) {
+    if (type === 'PUSH') return { Pectoraux: 3, 'Épaules & Bras': 2, Abdominaux: 1 };
+    if (type === 'PULL') return { Dos: 3, 'Épaules & Bras': 2, Abdominaux: 1 };
+    return type === 'LEGS' ? { Jambes: 3, Abdominaux: 1 } : type === 'UPPER' ? { Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 } : { Jambes: 2, Dos: 2, Pectoraux: 2, 'Épaules & Bras': 2, Abdominaux: 1 };
+  }
+  const big = type === 'LEGS' ? ['Quadriceps', 'Ischio-jambiers'] : type === 'UPPER' ? ['Dos', 'Pectoraux'] : type === 'PUSH' ? ['Pectoraux', 'Épaules'] : type === 'PULL' ? ['Dos'] : [];
   const caps = {};
   typeArenas(type).forEach(a => { caps[a] = big.includes(a) ? 2 : 1; });
   return caps;
@@ -183,7 +190,8 @@ function typedCaps(type) {
 function coachTypedQuests(state, type, legsOk) {
   const arenas = COACH_TYPES[type].arenas;
   const caps = typedCaps(type);
-  const qs = (state.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
+  const side = COACH_TYPES[type].side;
+  const qs = (state.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode' && sideOk(side, q));
   const lastDate = q => { const es = coachRealEntries(q); return es.length ? es[es.length - 1].date : ''; };
   const out = [];
   COACH_ARENAS.filter(a => arenas.includes(a) && (legsOk || !isLegArena(a))).forEach(a => {
@@ -205,7 +213,7 @@ function coachBuildTypedSession(state, type, di, opts = {}) {
   }
   if (tp === 'FB' && !di.legsOk) notes.push(`Pas d'exercices de jambes (${di.legsWhy}) pour garder les jambes fraîches.`);
   const quests = coachTypedQuests(state, tp, di.legsOk);
-  const r = coachAssemble(state, quests, di, opts, notes, COACH_TYPES[tp].arenas.filter(a => !isLegArena(a) || di.legsOk));
+  const r = coachAssemble(state, quests, di, { ...opts, side: COACH_TYPES[tp].side }, notes, COACH_TYPES[tp].arenas.filter(a => !isLegArena(a) || di.legsOk));
   return { templateIdx: -1, templateId: COACH_TYPES[tp].label, type: tp, typeLabel: COACH_TYPES[tp].label, date: di.iso, ...r };
 }
 

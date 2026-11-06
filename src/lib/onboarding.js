@@ -27,6 +27,14 @@ export const GOALS = [
   { id: 'nsp', label: 'Je ne sais pas : laisse le coach décider', icon: '🤷', profile: 'auto' },
 ];
 
+function goalFromOnboarding(id, w, target, today) {
+  if (id === 'force') return { kind: 'strength', text: 'Devenir plus fort', createdAt: today };
+  if (id === 'muscle') return { kind: 'muscle', text: 'Prendre du muscle', createdAt: today };
+  if (id === 'endurance') return { kind: 'reps', text: 'Tenir plus longtemps', createdAt: today };
+  if (id === 'forme') return Math.abs(target - w) >= 1 ? { kind: 'weight', text: `Poids : ${target} kg`, target, startWeight: w, createdAt: today } : { kind: 'general', text: 'Rester en forme', createdAt: today };
+  return null;
+}
+
 /** L'assistant s'affiche tout seul seulement pour une appli neuve de l'édition neutre. */
 export const needsOnboarding = state =>
   !state.onboarded && !(state.quests && state.quests.length) && !(state.weightHistory && state.weightHistory.length) && !(Number(state.xp) > 0);
@@ -55,6 +63,8 @@ export function applyOnboarding(prev, a, today) {
     sessionsPerWeek: sessions,
     sessionMinutes: Math.max(20, Math.min(150, Number(a.sessionMinutes) || 60)),
     workProfile: goal.profile,
+    // l'objectif choisi ici devient aussi l'objectif du coach (sinon le Coach le redemandait aussitôt)
+    mainGoal: prev.coach && prev.coach.mainGoal ? prev.coach.mainGoal : goalFromOnboarding(goal.id, w, target, today),
     sport: a.sport || '',
     volleyDays: (a.sportDays || []).map(Number).sort(),
     gymSlots: gymDays.reduce((o, d) => ({ ...o, [d]: { start: '18:00', end: '19:30' } }), {}),
@@ -124,7 +134,24 @@ export function addKnownExercises(state, exercises, today, { known = false, fact
       else startV = Math.max(1, Math.round(wReps * factor));
       setDetails = Array(wSets).fill(unit === 'reps' ? startV : wReps);
     }
-    const assist = unit === 'reps' ? Number(c.defaultStartAssistance) || 0 : 0;
+    // aide élastique de départ : on la garde tant que la personne ne peut pas faire, SANS aide, des séries complètes
+    // de la cible (ex. 3 tractions max → aide pour faire de vraies séries de 8 à 12 et progresser).
+    // Poids du corps seulement si son maximum dépasse la cible d'au moins 2 répétitions (10 max pour des séries de 8) ;
+    // lest déclaré : départ lesté (aide négative), un peu réduit par prudence.
+    const lest = num(ex.lest);
+    let assist = unit === 'reps' ? Number(c.defaultStartAssistance) || 0 : 0;
+    if (unit === 'reps' && reps >= (Number(gReps) || 8) + 2) assist = 0;
+    // avec l'aide : de vraies séries de la cible (pas 70 % d'un maximum de 3)
+    if (unit === 'reps' && assist > 0 && reps > 1 && !(lest > 0)) {
+      startV = Math.max(startV, Number(gReps) || 8);
+      setDetails = Array(gSets).fill(startV);
+    }
+    if (unit === 'reps' && lest > 0 && reps >= 1) {
+      const step = 2.5;
+      assist = -Math.max(0, Math.floor((lest * factor * 0.85) / step) * step);
+      startV = Math.max(1, Math.round(reps * 0.7));
+      setDetails = Array(gSets).fill(startV);
+    }
     const quest = {
       id,
       catalogId: c.id,

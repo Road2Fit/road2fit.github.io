@@ -43,7 +43,8 @@ export function coachMissed(state, today) {
     msgs.push(`Tu n’as pas fait de séance depuis lundi (jour libre : ${coachDayLabel(pastFree[0].iso)}). Pas grave : le coach a recalé ta semaine à partir d’aujourd’hui.`);
   }
   if (wk.shortfall > 0) {
-    msgs.push(`Il reste ${wk.remaining} séance(s) à faire cette semaine mais seulement ${wk.planned.length} créneau(x) libre(s) avec ${sportInfo(coach.sport).poss} et tes matchs. Tu peux en reporter une, ou lancer la version courte de 40 minutes.`);
+    const withSport = (coach.volleyDays || []).length > 0 || (coach.matchDates || []).length > 0;
+    msgs.push(`Il reste ${wk.remaining} séance(s) à faire cette semaine mais seulement ${wk.planned.length} créneau(x) libre(s)${withSport ? ` avec ${sportInfo(coach.sport).poss} et tes matchs` : ''}. Tu peux en reporter une, ou ajouter un jour de salle dans « Ma semaine ».`);
   }
   return msgs;
 }

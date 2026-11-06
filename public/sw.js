@@ -53,3 +53,12 @@ self.addEventListener('fetch', (event) => {
     ),
   );
 });
+
+// notification « Repos terminé » touchée : on revient sur l'appli déjà ouverte (ou on l'ouvre)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    const c = list.find((w) => 'focus' in w);
+    return c ? c.focus() : self.clients.openWindow('./');
+  }));
+});

@@ -69,7 +69,7 @@ export const VOICE_DICTIONARY = [
   },
   {
     id: 'barbell_row',
-    name: 'Rowing Barre Bustes Penché',
+    name: 'Rowing Barre Buste Penché',
     category: 'Dos',
     type: 'strength',
     unit: 'kg',

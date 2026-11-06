@@ -9,7 +9,7 @@ import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
+export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenCsvImport, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
@@ -104,6 +104,10 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
           <button onClick={close(() => importInputRef.current && importInputRef.current.click())} className={row} title="Importer une sauvegarde (JSON)">
             <Art name="download" size={22} bare />
             <span>Importer une sauvegarde</span>
+          </button>
+          <button onClick={close(onOpenCsvImport)} className={row} data-testid="open-csv-import">
+            <Art name="chart" size={22} bare />
+            <span>Importer depuis Hevy ou Strong</span>
           </button>
           </div>
         <div className="pt-1 mt-2 border-t border-slate-800 space-y-2">

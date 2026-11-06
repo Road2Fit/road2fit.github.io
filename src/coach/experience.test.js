@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_STATE } from '../../tests/ui/demo';
 import { applyMethods } from './methodChoice';
 import { detrainFactor, entriesBeforeMethods, experienceCoachPatch, isBeginnerForVolume, personalBand } from './experience';
-import { applyOnboarding } from '../lib/onboarding';
+import { addKnownExercises, applyOnboarding } from '../lib/onboarding';
 import { INITIAL_STATE } from '../data/initialState';
 
 const E = { questId: 'q_squat_3x6', catalogId: 'squat', name: 'Squat', kind: 'load', load: 80, assist: 0, sets: 3, targetReps: [6, 6, 6], restSec: 150, arena: 'Jambes', compound: true };
@@ -51,5 +51,30 @@ describe('niveau déclaré', () => {
     expect(a.quests[0].known).toBe(true);
     expect(b.quests[0].startValue).toBeLessThan(a.quests[0].startValue * 0.85);
     expect(b.coach.experience).toMatchObject({ level: 'advanced', breakMonths: 18 });
+  });
+});
+
+describe('tractions et dips déclarés à l’accueil', () => {
+  const base = { ...INITIAL_STATE, quests: [], userWeightKg: 80 };
+  it('quelqu’un qui fait déjà 10 tractions ne reçoit pas d’aide élastique', () => {
+    const s = addKnownExercises(base, [{ catalogId: 'pullups', reps: '10' }], '2026-11-06', { known: true });
+    const q = s.quests.find(x => x.catalogId === 'pullups');
+    expect(q.currentAssistanceKg).toBe(0);
+    expect(q.setDetails[0]).toBe(7);
+  });
+  it('avec un lest déclaré, l’exercice démarre lesté (aide négative), un peu sous le lest déclaré', () => {
+    const s = addKnownExercises(base, [{ catalogId: 'pullups', reps: '6', lest: '20' }], '2026-11-06', { known: true });
+    const q = s.quests.find(x => x.catalogId === 'pullups');
+    expect(q.currentAssistanceKg).toBe(-15);
+  });
+  it('quelqu’un qui ne fait que 3 tractions garde une aide, pour faire de vraies séries de la cible', () => {
+    const s = addKnownExercises(base, [{ catalogId: 'pullups', reps: '3' }], '2026-11-06', { known: true });
+    const q = s.quests.find(x => x.catalogId === 'pullups');
+    expect(q.currentAssistanceKg).toBeGreaterThan(0);
+    expect(q.setDetails[0]).toBe(q.goalReps);
+  });
+  it('sans répétitions déclarées (débutant) : l’aide du catalogue reste', () => {
+    const s = addKnownExercises(base, [{ catalogId: 'pullups' }], '2026-11-06');
+    expect(s.quests[0].currentAssistanceKg).toBeGreaterThan(0);
   });
 });

@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.7',
+    date: '2026-11-06',
+    title: 'Pour ceux qui s’entraînent souvent',
+    items: [
+      '4 séances par semaine ou plus : le coach passe en haut / bas du corps (4), puis poussée / tirage / jambes (5 et 6), au lieu de n’en prévoir que 2.',
+      'Séance guidée : « La dernière fois » sous chaque série, les disques à mettre sur la barre, un record fêté dès qu’il tombe, et « Machine prise ? » dans le menu ⋯ pour changer d’exercice (annulable).',
+      'Notification « Repos terminé » quand le téléphone est verrouillé ou l’appli en arrière-plan.',
+      'Plus → Importer depuis Hevy ou Strong : récupère ton historique d’une autre appli.',
+      'Accueil : aide élastique gardée tant que tu ne fais pas sans aide des séries complètes (tractions, dips), lest possible si tu en fais déjà avec ; l’objectif n’est plus redemandé, une seule cible par exercice.',
+    ],
+  },
+  {
     version: '4.6.2',
     date: '2026-11-06',
     title: 'Nouvelle icône néon',

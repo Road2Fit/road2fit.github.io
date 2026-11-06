@@ -45,7 +45,7 @@ export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, s
           <p className="text-xs text-slate-400 mb-1.5">
             Semaine du {w.weekStart.slice(8, 10)}/{w.weekStart.slice(5, 7)}
             {w.matchInWeek ? ' · match' : ''}
-            {w.shortfall > 0 ? ` · ${w.shortfall} séance(s) à reporter (pas assez de jours libres espacés de 48 h)` : ''}
+            {w.shortfall > 0 ? ` · ${w.shortfall} séance(s) à reporter (${w.split ? 'pas assez de jours de salle libres' : 'pas assez de jours libres espacés de 48 h'})` : ''}
           </p>
           <div className="grid grid-cols-7 gap-1.5">
             {w.days.map(d => {

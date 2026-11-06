@@ -1,5 +1,5 @@
 import { coachCycleInfo, coachIsDeloadWeek } from './cycle';
-import { COACH_TYPES, COACH_TYPE_ORDER, coachDaysBetween, coachDow, coachTimeToMin, getCoachSettings } from './settings';
+import { COACH_TYPES, COACH_TYPE_ORDER, coachDaysBetween, coachDow, coachSplitRotation, coachTimeToMin, getCoachSettings } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
@@ -79,11 +79,13 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
   const extras = days.filter(d => extraSet.has(d) && d >= today && !strengthDays.has(d));
   const cand = info.filter(i => i.iso >= today && i.avail && !strengthDays.has(i.iso) && !extraSet.has(i.iso));
   const trio = coach.splitMode === 'trio';
+  // 4 séances ou plus : plus de full body (48 h entre deux séances = 2 à 3 séances max), mais un split haut / bas ou poussée / tirage / jambes
+  const split = !trio && (Number(coach.sessionsPerWeek) || 0) >= 4;
   let planned = [];
   const plannedTypes = {};
   let remaining;
 
-  if (!trio) {
+  if (!trio && !split) {
     remaining = Math.max(0, coach.sessionsPerWeek - doneDays.filter(d => !extraSet.has(d)).length);
     const fixed = [...doneDays, ...(lastBefore ? [lastBefore] : []), ...prior.map(p => p.iso)];
     // plus grand nombre de séances (≤ objectif) espacées d'au moins 2 jours (≈ 48 h de repos)
@@ -119,20 +121,33 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       else if (m.legs) doneTypes.push('LEGS');
       else if (m.upper) doneTypes.push('UPPER');
     });
-    const needed = COACH_TYPE_ORDER.filter(t => !doneTypes.includes(t));
-    remaining = Math.min(needed.length, Math.max(0, 3 - doneDays.filter(d => !extraSet.has(d)).length));
+    let needed;
+    if (split) {
+      // rotation de la semaine moins les séances déjà faites (une séance faite retire le type qui lui ressemble le plus)
+      needed = coachSplitRotation(Number(coach.sessionsPerWeek));
+      doneTypes.forEach(t => {
+        const i = needed.indexOf(t) >= 0 ? needed.indexOf(t) : needed.findIndex(x => COACH_TYPES[x].groups.some(g => COACH_TYPES[t].groups.includes(g)));
+        if (i >= 0) needed.splice(i, 1);
+      });
+      remaining = Math.min(needed.length, Math.max(0, Number(coach.sessionsPerWeek) - doneDays.filter(d => !extraSet.has(d)).length));
+    } else {
+      needed = COACH_TYPE_ORDER.filter(t => !doneTypes.includes(t));
+      remaining = Math.min(needed.length, Math.max(0, 3 - doneDays.filter(d => !extraSet.has(d)).length));
+    }
     const fixedM = [
       ...doneDays.map(d => coachDayMuscles(state, d)),
       ...(lastBefore ? [coachDayMuscles(state, lastBefore)] : []),
       ...prior
     ];
+    const groupsOf = m => (m.groups ? m.groups : [...(m.legs ? ['legs'] : []), ...(m.upper ? ['push', 'pull'] : [])]);
     const okWith = (t, d, other) => {
       const g = Math.abs(coachDaysBetween(other.iso, d));
       if (g >= 2) return true;
       if (g === 0) return false;
       const ci = cand.find(c => c.iso === d);
-      const legsEff = COACH_TYPES[t].legs && ci.legsOk;
-      return !((legsEff && other.legs) || (COACH_TYPES[t].upper && other.upper));
+      const mine = COACH_TYPES[t].groups.filter(x => x !== 'legs' || ci.legsOk);
+      const theirs = groupsOf(other);
+      return !mine.some(x => theirs.includes(x));
     };
     let best = null;
     for (let k = Math.min(remaining, cand.length); k >= 0 && !best; k--) {
@@ -150,7 +165,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
             }, 0);
             const fbBonus = chosen.some(c => c.t === 'FB' && cand.find(x => x.iso === c.d).legsOk) ? 5 : 0;
             const idxPen = chosen.reduce((sum, c) => sum + coachDaysBetween(weekStart, c.d) * 0.3, 0);
-            score = minGap * 100 + slotScore + fbBonus - idxPen;
+            score = (split ? Math.min(minGap, 1) : minGap) * 100 + slotScore + fbBonus - idxPen;
           }
           if (!best || score > best.score) best = { chosen: chosen.slice(), score };
           return;
@@ -161,9 +176,9 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
         cand.forEach(ci => {
           if (chosen.some(c => c.d === ci.iso)) return;
           if (t === 'LEGS' && !ci.legsOk) return;
-          const m = { iso: ci.iso, legs: COACH_TYPES[t].legs && ci.legsOk, upper: COACH_TYPES[t].upper };
+          const m = { iso: ci.iso, groups: COACH_TYPES[t].groups.filter(x => x !== 'legs' || ci.legsOk) };
           if (!fixedM.every(f => okWith(t, ci.iso, f))) return;
-          if (!chosen.every(c => okWith(t, ci.iso, { iso: c.d, legs: COACH_TYPES[c.t].legs && cand.find(x => x.iso === c.d).legsOk, upper: COACH_TYPES[c.t].upper }))) return;
+          if (!chosen.every(c => okWith(t, ci.iso, { iso: c.d, groups: COACH_TYPES[c.t].groups.filter(x => x !== 'legs' || cand.find(y => y.iso === c.d).legsOk) }))) return;
           if (!chosen.every(c => okWith(c.t, c.d, m))) return;
           rec(ti + 1, [...chosen, { t, d: ci.iso }]);
         });
@@ -181,7 +196,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
   const shortfall = Math.max(0, remaining - planned.filter(d => !extraSet.has(d)).length);
   const matchInWeek = days.some(d => (coach.matchDates || []).includes(d));
   return {
-    weekStart, coach, matchInWeek, remaining, shortfall, trio, plannedTypes,
+    weekStart, coach, matchInWeek, remaining, shortfall, trio, split, plannedTypes,
     deload: coachIsDeloadWeek(coach, weekStart),
     cycle: coachCycleInfo(coach, weekStart),
     days: info.map(i => ({

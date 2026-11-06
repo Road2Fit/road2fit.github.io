@@ -188,7 +188,11 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
                       </div>
                     )}
                     {on && a.level !== 'beginner' && c.unit === 'reps' && (
-                      <div className="mt-2"><label className={label}>Maximum de répétitions d’affilée</label><input inputMode="numeric" value={v.reps || ''} onChange={e => setEx(c.id, { reps: e.target.value })} className={field} placeholder="12" /></div>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <div><label className={label}>Maximum de répétitions d’affilée</label><input inputMode="numeric" value={v.reps || ''} onChange={e => setEx(c.id, { reps: e.target.value })} className={field} placeholder="12" data-testid={`reps-${c.id}`} /></div>
+                        {/* lest (tractions, dips…) : facultatif, ces répétitions sont alors faites avec la charge ajoutée */}
+                        {Number(c.defaultStartAssistance) > 0 && <div><label className={label}>Avec un lest ? (kg)</label><input inputMode="decimal" value={v.lest || ''} onChange={e => setEx(c.id, { lest: e.target.value })} className={field} placeholder="0" data-testid={`lest-${c.id}`} /></div>}
+                      </div>
                     )}
                   </div>
                 );

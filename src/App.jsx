@@ -51,6 +51,7 @@ import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
 import { OnboardingModal } from './modals/OnboardingModal';
 import { LexiconModal } from './modals/LexiconModal';
+import { ImportCsvModal } from './modals/ImportCsvModal';
 import './data/sharedExercises'; // catalogue commun (exercices créés par le coach) : copie locale chargée tout de suite
 import { useSharedExercises } from './hooks/useSharedExercises';
 import { needsOnboarding } from './lib/onboarding';
@@ -89,6 +90,7 @@ export function App() {
   const { toast, triggerToast, dismissToast } = useToast();
   const [obOpen, setObOpen] = useState(false);
   const [lexOpen, setLexOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   useEffect(() => { setQuestFilter('all'); }, [gameState.muscleMode]); // les groupes changent avec le mode : on repart de « tous »
   const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
   useEffect(() => { // « Me connecter » depuis le coach intelligent
@@ -154,7 +156,7 @@ export function App() {
   });
 
   const {
-    guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap,
+    guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap, swapChoices, swapExercise, undoSwap,
   } = useGuidedSession({
     gameState, openLevelUpModal: levelUp.openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
   });
@@ -237,7 +239,10 @@ setG={setGuided}
 onFinish={handleFinishGuided}
 onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
- soundEnabled={gameState.soundEnabled !== false}/>
+ soundEnabled={gameState.soundEnabled !== false}
+swapChoices={swapChoices}
+onSwap={swapExercise}
+onUndoSwap={undoSwap}/>
 )}
 <RestTimer guidedOpen={!!(guided && guidedOpen)} soundEnabled={gameState.soundEnabled} />
         {/* BARRE D'ONGLETS PRINCIPALE */}
@@ -355,6 +360,7 @@ setGameState={setGameState}
           onGoTab={goToTab}
           onOpenOnboarding={() => setObOpen(true)}
           onOpenLexicon={() => setLexOpen(true)}
+          onOpenCsvImport={() => setCsvOpen(true)}
           onOpenSync={openSync}
           onReset={() => setConfirmResetOpen(true)}
           onRestore={handleRestoreSafetyCopy}
@@ -375,6 +381,7 @@ setGameState={setGameState}
       {accountOpen && <AccountModal sync={sync} recovery={recovery} heroName={gameState.heroName} onRenameHero={name => setGameState(prev => ({ ...prev, heroName: name }))} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
       {lexOpen && <LexiconModal onClose={() => setLexOpen(false)} />}
+      {csvOpen && <ImportCsvModal gameState={gameState} setGameState={setGameState} triggerToast={triggerToast} onClose={() => setCsvOpen(false)} />}
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />
       )}

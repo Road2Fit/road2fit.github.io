@@ -1,4 +1,10 @@
 import { coachSessionRecap } from '../coach/advice';
+import { coachKind, coachRealEntries } from '../coach/settings';
+import { computeExerciseTarget } from '../coach/targets';
+import { profileOpts } from '../coach/profiles';
+import { EXERCISE_CATALOG } from '../data/catalog';
+import { fineGroupOf } from '../data/muscles';
+import { makeQuestFromCatalog } from '../lib/questFactory';
 import { calculateStrengthCalories, warmupCalories } from '../lib/calories';
 import { warmupSets } from '../coach/warmup';
 import { getTodayISODate } from '../lib/dates';
@@ -28,22 +34,37 @@ export function useGuidedSession({
     } catch (e) {}
   }, [guided]);
 
+  // séance précédente de l'exercice (affichée discrètement sous chaque série : « La dernière fois : … »)
+  const prevOf = questId => {
+    const q = (gameState.quests || []).find(x => x.id === questId);
+    const es = q ? coachRealEntries(q) : [];
+    const last = es[es.length - 1];
+    if (!last || !Array.isArray(last.setDetails) || !last.setDetails.length) return null;
+    const reps = last.setDetails;
+    return { date: last.date, reps, loads: Array.isArray(last.setLoads) ? last.setLoads : reps.map(() => Number(last.value) || 0), assists: Array.isArray(last.setAssists) ? last.setAssists : reps.map(() => Number(last.assistanceKg) || 0) };
+  };
+
+// meilleures performances de l'exercice (pour fêter un record pendant la séance) : 1RM estimé (Epley), répétitions au poids du corps, secondes tenues
+  const bestOf = questId => {
+    const q = (gameState.quests || []).find(x => x.id === questId);
+    const es = q ? coachRealEntries(q) : [];
+    if (!es.length) return null;
+    let e1rm = 0; let reps = 0; let sec = 0;
+    es.forEach(h => (h.setDetails || []).forEach((r, i) => {
+      const n = Number(r) || 0;
+      const l = Array.isArray(h.setLoads) ? Number(h.setLoads[i]) || 0 : Number(h.value) || 0;
+      const as = Array.isArray(h.setAssists) ? Number(h.setAssists[i]) || 0 : Number(h.assistanceKg) || 0;
+      if (q.unit === 'kg') e1rm = Math.max(e1rm, l * (1 + n / 30));
+      else if (isTimedQuest(q)) sec = Math.max(sec, n);
+      else if (as === 0) reps = Math.max(reps, n);
+    }));
+    return { e1rm, reps, sec };
+  };
+
   const startGuided = session => {
     if (!session || !session.exercises.length) return;
     const data = {};
-    session.exercises.forEach(e => {
-      // forme de séries (pyramide, dégressive…) : charge, aide et type de chaque série viennent du détail e.plan
-      const plan = Array.isArray(e.plan) && e.plan.length ? e.plan : null;
-      data[e.questId] = {
-        reps: plan ? plan.map(p => p.reps) : e.targetReps.slice(),
-        loads: plan ? plan.map(p => p.load || 0) : e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
-        assists: plan ? plan.map(p => p.assist || 0) : e.targetReps.map(() => e.assist || 0), // aide de chaque série
-        kinds: plan ? plan.map(p => p.kind) : null,
-        done: (plan || e.targetReps).map(() => false),
-        load: e.load || 0,
-        assist: e.assist || 0
-      };
-    });
+    session.exercises.forEach(e => { data[e.questId] = dataFor(e); });
     setGuided({
       startedAt: Date.now(),
       templateId: session.templateId,
@@ -56,6 +77,75 @@ export function useGuidedSession({
       programKey: session.program ? session.program.key : null,
     });
     setGuidedOpen(true);
+  };
+
+  // forme de séries (pyramide, dégressive…) : charge, aide et type de chaque série viennent du détail e.plan
+  const dataFor = e => {
+      const plan = Array.isArray(e.plan) && e.plan.length ? e.plan : null;
+      return {
+        reps: plan ? plan.map(p => p.reps) : e.targetReps.slice(),
+        loads: plan ? plan.map(p => p.load || 0) : e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
+        assists: plan ? plan.map(p => p.assist || 0) : e.targetReps.map(() => e.assist || 0), // aide de chaque série
+        kinds: plan ? plan.map(p => p.kind) : null,
+        done: (plan || e.targetReps).map(() => false),
+        load: e.load || 0,
+        assist: e.assist || 0,
+        prev: prevOf(e.questId),
+        best: bestOf(e.questId),
+      };
+  };
+
+  // ---- « Machine prise » : changer l'exercice en cours pour un équivalent (même muscle, même façon de mesurer), annulable ----
+  const swapChoices = questId => {
+    if (!guided) return [];
+    const it = guided.items.find(x => x.questId === questId);
+    const q = (gameState.quests || []).find(x => x.id === questId);
+    if (!it || !q) return [];
+    const muscle = fineGroupOf(q);
+    const inSession = new Set(guided.items.map(x => x.questId));
+    const mine = (gameState.quests || []).filter(x => x.type === 'strength' && x.goalMode !== 'free_mode' && !inSession.has(x.id) && fineGroupOf(x) === muscle && coachKind(x) === coachKind(q) && !!x.timed === !!q.timed)
+      .map(x => ({ questId: x.id, name: x.name }));
+    const known = new Set((gameState.quests || []).map(x => x.catalogId));
+    const fromCatalog = EXERCISE_CATALOG.filter(c => c.type === 'strength' && !known.has(c.id) && c.unit === q.unit && fineGroupOf({ catalogId: c.id, name: c.name, category: c.category, type: 'strength' }) === muscle)
+      .slice(0, Math.max(0, 5 - mine.length))
+      .map(c => ({ catalogId: c.id, name: c.name, isNew: true }));
+    return [...mine, ...fromCatalog].slice(0, 5);
+  };
+  const swapExercise = (questId, choice) => {
+    if (!guided || !choice) return;
+    const idx = guided.items.findIndex(x => x.questId === questId);
+    if (idx < 0) return;
+    const today = getTodayISODate();
+    let quest = choice.questId ? (gameState.quests || []).find(x => x.id === choice.questId) : null;
+    let added = null;
+    if (!quest && choice.catalogId) {
+      const c = EXERCISE_CATALOG.find(x => x.id === choice.catalogId);
+      if (!c) return;
+      quest = makeQuestFromCatalog(c, gameState, today, 'ajouté pendant la séance (machine prise)').quest;
+      added = quest.id;
+      setGameState(prev => ({ ...prev, quests: [...prev.quests, quest] }));
+    }
+    if (!quest) return;
+    const e = computeExerciseTarget(quest, { ...profileOpts(gameState, today), today });
+    const old = guided.items[idx];
+    setGuided(prev => {
+      const items = prev.items.slice();
+      items[idx] = e;
+      return { ...prev, items, data: { ...prev.data, [e.questId]: dataFor(e) }, rest: null, swap: { at: idx, item: old, data: prev.data[old.questId], newId: e.questId, added } };
+    });
+  };
+  const undoSwap = () => {
+    if (!guided || !guided.swap) return;
+    const sw = guided.swap;
+    setGuided(prev => {
+      const items = prev.items.slice();
+      items[sw.at] = sw.item;
+      const data = { ...prev.data, [sw.item.questId]: sw.data };
+      delete data[sw.newId];
+      return { ...prev, items, data, swap: null, idx: sw.at };
+    });
+    // exercice créé pour l'occasion et jamais fait : on le retire
+    if (sw.added) setGameState(prev => ({ ...prev, quests: prev.quests.filter(q => q.id !== sw.added || coachRealEntries(q).length > 0) }));
   };
 
   const handleFinishGuided = g => {
@@ -137,5 +227,5 @@ export function useGuidedSession({
 
   const [recap, setRecap] = useState(null);
 
-  return { guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap };
+  return { guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap, swapChoices, swapExercise, undoSwap };
 }

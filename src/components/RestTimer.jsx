@@ -1,6 +1,7 @@
 import { Art } from './Art';
 import { useEffect, useState } from 'react';
 import { playGameSound } from '../lib/sound';
+import { askRestNotifyOnce, notifyRestEnd } from '../lib/restNotify';
 
 export function RestTimer({ guidedOpen = false, soundEnabled }) {
   const [open, setOpen] = useState(false);
@@ -17,6 +18,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
         clearInterval(id);
         setEndAt(null);
         playGameSound('boss', soundEnabled);
+        notifyRestEnd(next); // appli pas à l'écran : notification du téléphone
         try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
       }
     }, 250);
@@ -29,6 +31,7 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
     const h = e => {
       const d = e.detail;
       start(Number(d && typeof d === 'object' ? d.sec : d) || 90);
+      askRestNotifyOnce();
       setNext(d && typeof d === 'object' && d.next ? d.next : '');
     };
     const o = () => setOpen(true);

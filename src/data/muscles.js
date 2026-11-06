@@ -137,6 +137,8 @@ export const coreArenas = () => (mode === 'optimized' ? ['Quadriceps', 'Ischio-j
 /** Groupes de chaque type de séance (full body / jambes / haut du corps) selon le mode. */
 export function typeArenas(type) {
   const fine = mode === 'optimized';
+  if (type === 'PUSH') return fine ? ['Pectoraux', 'Épaules', 'Triceps', 'Abdominaux'] : ['Pectoraux', 'Épaules & Bras', 'Abdominaux'];
+  if (type === 'PULL') return fine ? ['Dos', 'Biceps', 'Avant-bras', 'Lombaires', 'Obliques'] : ['Dos', 'Épaules & Bras', 'Abdominaux'];
   if (type === 'LEGS') return fine ? ['Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Hanches', 'Abdominaux', 'Obliques'] : ['Jambes', 'Abdominaux'];
   if (type === 'UPPER') return fine ? ['Dos', 'Pectoraux', 'Épaules', 'Biceps', 'Triceps', 'Avant-bras', 'Lombaires', 'Abdominaux', 'Obliques'] : ['Dos', 'Pectoraux', 'Épaules & Bras', 'Abdominaux'];
   return fine ? COACH_FINE_ORDER.filter(a => arenaTier(a) < 3) : [...COACH_SIMPLE]; // full body : grands muscles ; les petits (mollets, avant-bras, obliques…) tournent entre les séances
