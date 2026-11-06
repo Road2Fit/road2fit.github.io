@@ -56,9 +56,13 @@ export function HeaderProfile({
         <button type="button" onClick={() => setOpen(true)} aria-label="Mon profil" data-testid="profile-button" className="tap-free rounded-full">
           <AvatarRing gameState={gameState} hero={hero} pct={levelInfo.progressPct} locked={locked} />
         </button>
-        <h1 className="flex-1 min-w-[4rem] truncate text-lg sm:text-2xl font-black tracking-tight bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">
-          {pick('From Grosdoudou to Rondoudou', hero || 'Road2Fit')}
-        </h1>
+        {/* prénom puis niveau, juste à côté (le nom long se raccourcit, le niveau reste visible) */}
+        <div className="flex-1 min-w-[4rem] flex items-baseline gap-2">
+          <h1 className="min-w-0 truncate text-lg sm:text-2xl font-black tracking-tight bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200 bg-clip-text text-transparent">
+            {pick('From Grosdoudou to Rondoudou', hero || 'Road2Fit')}
+          </h1>
+          {NEUTRAL && hero && <span className="shrink-0 text-xs sm:text-sm font-black text-pink-300" data-testid="header-level">Niv. {levelInfo.level}</span>}
+        </div>
         {NEUTRAL && hero && <span className="shrink-0 text-sm sm:text-base font-black text-slate-300" data-testid="app-title">Road2Fit</span>}
         {syncProblem && (
           <button type="button" onClick={syncStatus === 'error' ? onRetrySync : onOpenSync} aria-label="Mon compte et ma sauvegarde"

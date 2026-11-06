@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.7.1',
+    date: '2026-11-06',
+    title: 'Ton niveau en haut',
+    items: ['Ton niveau s’affiche à côté de ton prénom, en haut de l’écran.'],
+  },
+  {
     version: '4.7',
     date: '2026-11-06',
     title: 'Pour ceux qui s’entraînent souvent',
