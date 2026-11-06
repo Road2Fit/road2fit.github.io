@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.6.1',
+    date: '2026-11-06',
+    title: 'Road2Fit en haut sur téléphone',
+    items: ['Sur téléphone, « Road2Fit » réapparaît en haut à côté de l’engrenage. Le badge de sauvegarde n’y montre plus que ⚠ pour laisser la place à ton prénom.'],
+  },
+  {
     version: '4.6',
     date: '2026-11-06',
     title: 'Le grand rond en tube néon',
