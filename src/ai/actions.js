@@ -8,7 +8,7 @@ import { METHODS, methodFits } from '../coach/methods';
 import { GOAL_KINDS } from '../coach/goal';
 import { COACH_ARENAS } from '../coach/settings';
 import { fromAiDay } from './context';
-import { CARDIO_GOALS, CARDIO_KINDS, getCardioSettings } from '../coach/cardio';
+import { CARDIO_GOALS, CARDIO_KINDS, getCardioSettings, vdotFrom } from '../coach/cardio';
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const MINUTES = [0, 45, 60, 75, 90];
@@ -166,6 +166,7 @@ export function normalizeAction(a, state, today) {
       const m = inRange(x.minutes, 15, 120);
       if (m !== null) o.minutes = nearest([20, 30, 45, 60, 75, 90], m);
       if (typeof x.runner === 'boolean') o.runner = x.runner;
+      if (vdotFrom(x.refKm, x.refMin)) o.ref = { km: Number(x.refKm), min: Math.round(Number(x.refMin) * 100) / 100 };
       if (Object.keys(o).length) args = o;
       break;
     }

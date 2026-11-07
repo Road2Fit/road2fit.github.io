@@ -2,11 +2,53 @@
 import { useState } from 'react';
 import { Art } from '../Art';
 import { card } from './ui';
-import { CARDIO_GOALS, CARDIO_KINDS, cardioGoalFromMain, getCardioSettings, hrMax } from '../../coach/cardio';
+import { CARDIO_GOALS, CARDIO_KINDS, RUN_PACES, cardioGoalFromMain, getCardioSettings, hrMax, paceText, runRef, speedAt, vdotFrom } from '../../coach/cardio';
 import { CARDIO_SOURCES } from '../../data/cardioSources';
 import { getCoachSettings } from '../../coach/settings';
+import { formatDayFr, getTodayISODate } from '../../lib/dates';
 
 const chip = on => `px-3 py-1.5 rounded-lg text-xs font-black border ${on ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`;
+
+// « 28:30 » → 28,5 min ; « 1:52:00 » → 112 ; « 30 » → 30
+export function parseTime(txt) {
+  const parts = String(txt || '').trim().split(/[:'h ]+/).filter(Boolean).map(Number);
+  if (!parts.length || parts.some(n => !Number.isFinite(n) || n < 0)) return 0;
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return parts[0] + parts[1] / 60;
+  return parts[0] * 60 + parts[1] + parts[2] / 60;
+}
+const fmtTime = min => { const s = Math.round(min * 60); const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const r = s % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}` : `${m}:${String(r).padStart(2, '0')}`; };
+const kmh = v => String(v).replace('.', ',');
+
+/** Temps de référence en course → vitesses d'entraînement (Daniels). */
+function RunReference({ gameState, c, set }) {
+  const [km, setKm] = useState(c.ref ? Number(c.ref.km) : 5);
+  const [time, setTime] = useState(c.ref ? fmtTime(c.ref.min) : '');
+  const ref = runRef(gameState, getTodayISODate());
+  const min = parseTime(time);
+  const ok = !!vdotFrom(km, min);
+  const zone = p => `${kmh(speedAt(ref.vdot, p[0]))}-${kmh(speedAt(ref.vdot, p[1]))} km/h (${paceText(speedAt(ref.vdot, p[1]))} à ${paceText(speedAt(ref.vdot, p[0]))})`;
+  return (
+    <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950 p-3" data-testid="run-ref">
+      <p className="text-slate-300 font-bold">Ton temps de référence en course</p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {[1, 3, 5, 10, 21.1].map(d => <button key={d} type="button" data-testid={`ref-km-${d}`} aria-pressed={km === d} onClick={() => setKm(d)} className={chip(km === d)}>{kmh(d)} km</button>)}
+        <input type="text" inputMode="numeric" placeholder="28:30" value={time} onChange={e => setTime(e.target.value)} data-testid="ref-time" aria-label="Temps (minutes:secondes)" className="w-24 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white font-bold" />
+        <button type="button" data-testid="ref-save" disabled={!ok} onClick={() => set({ ref: { km, min: Math.round(min * 100) / 100 } })} className={`${chip(ok)} disabled:opacity-40`}>OK</button>
+        {c.ref && <button type="button" onClick={() => { set({ ref: null }); setTime(''); }} className="text-slate-500 underline">effacer</button>}
+      </div>
+      {ref ? (
+        <div className="text-slate-300 space-y-0.5" data-testid="run-paces">
+          <p className="text-slate-500">{ref.source === 'history' ? `D’après ta course du ${formatDayFr(ref.date)} : ${kmh(ref.km)} km en ${fmtTime(ref.min)}.` : `${kmh(ref.km)} km en ${fmtTime(ref.min)}.`}</p>
+          <p>Facile : <b className="text-white">{zone(RUN_PACES.easy)}</b></p>
+          <p>Fractionné : <b className="text-white">{zone(RUN_PACES.hard)}</b></p>
+        </div>
+      ) : (
+        <p className="text-slate-500">Une course récente (même un footing chronométré) donne tes vitesses. Sans elle, le coach te guide au souffle.</p>
+      )}
+    </div>
+  );
+}
 
 export const setCardio = (setGameState, patch) =>
   setGameState(prev => {
@@ -71,6 +113,7 @@ export function CoachCardio({ gameState, setGameState }) {
               <button type="button" data-testid="cardio-runner-no" aria-pressed={!c.runner} onClick={() => set({ runner: false })} className={chip(!c.runner)}>Pas encore</button>
             </div>
           )}
+          {c.kinds.includes('run') && <RunReference gameState={gameState} c={c} set={set} />}
           {hrMax(age) && <p className="text-slate-400">Fréquence cardiaque max estimée : <b className="text-slate-200">{hrMax(age)}</b> battements/min (Tanaka 2001).</p>}
           <CardioSourcesList />
         </div>

@@ -34,7 +34,7 @@ export const CARDIO_KINDS = [
 ];
 const kindOf = id => CARDIO_KINDS.find(k => k.id === id) || CARDIO_KINDS[0];
 
-const DEFAULTS = { on: false, asked: false, goal: 'health', kinds: ['walk'], perWeek: 2, minutes: 30, runner: false };
+const DEFAULTS = { on: false, asked: false, goal: 'health', kinds: ['walk'], perWeek: 2, minutes: 30, runner: false, ref: null };
 
 export function getCardioSettings(state) {
   const c = getCoachSettings(state).cardio || {};
@@ -69,6 +69,77 @@ export function zoneText(zone, age) {
   const m = hrMax(age);
   return m ? `${Math.round((m * z.pct[0]) / 100)}-${Math.round((m * z.pct[1]) / 100)} battements/min · ${z.talk}` : z.talk;
 }
+
+// ---- Allures de course (sans montre cardio) ----
+// Daniels et Gilbert 1979 (« Oxygen Power ») : coût en oxygène de la course VO2 = −4,60 + 0,182258 v + 0,000104 v² (v en m/min)
+// et part de la VO2max tenue pendant une course de t minutes ; le rapport des deux = VDOT (« VO2max de course »).
+// Allures d'entraînement de Daniels : facile = 59-74 % de la VDOT, fractionné (I) vers 98 %.
+const vo2Cost = v => -4.6 + 0.182258 * v + 0.000104 * v * v;
+const fracFor = t => 0.8 + 0.1894393 * Math.exp(-0.012778 * t) + 0.2989558 * Math.exp(-0.1932605 * t);
+/** VDOT d'une performance (distance en km, temps en minutes) ; null hors de 1 à 42,2 km ou d'une vitesse plausible. */
+export function vdotFrom(km, min) {
+  const d = Number(km), t = Number(min);
+  if (!(d >= 1 && d <= 42.2 && t > 0)) return null;
+  const v = (d * 1000) / t;
+  if (v < 100 || v > 400) return null; // 6 à 24 km/h
+  return Math.round((vo2Cost(v) / fracFor(t)) * 10) / 10;
+}
+/** Vitesse (km/h) qui coûte la fraction `frac` de la VDOT. */
+export function speedAt(vdot, frac) {
+  const a = 0.000104, b = 0.182258, c = -(4.6 + frac * vdot);
+  return Math.round(((-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a)) * 0.06 * 10) / 10;
+}
+/** « 6'23/km » */
+export function paceText(kmh) {
+  if (!(kmh > 0)) return '';
+  const s = Math.round(3600 / kmh);
+  return `${Math.floor(s / 60)}'${String(s % 60).padStart(2, '0')}/km`;
+}
+export const RUN_PACES = { easy: [0.62, 0.70], runwalk: [0.59, 0.65], hard: [0.94, 0.98] };
+const isRun = q => q && q.type === 'cardio' && ['run', 'interval', 'trail'].includes(q.cardioMode);
+const measured = e => Number(e.distanceKm) > 0 && Number(e.durationMin) > 0 && !e.estimated && !/estimés/.test(String(e.note || ''));
+
+/** Référence de course : temps déclaré (Réglages → Cardio) ou meilleure course mesurée des 120 derniers jours. */
+export function runRef(state, today) {
+  const c = getCardioSettings(state);
+  let best = null;
+  const dec = c.ref && vdotFrom(c.ref.km, c.ref.min);
+  if (dec) best = { vdot: dec, source: 'declared', km: Number(c.ref.km), min: Number(c.ref.min) };
+  const from = today ? addDaysISO(today, -120) : '';
+  getAllEntries(state).forEach(e => {
+    if (!isRun(e.quest) || !measured(e) || (from && e.date < from)) return;
+    const v = vdotFrom(e.distanceKm, e.durationMin);
+    if (v && (!best || v > best.vdot)) best = { vdot: v, source: 'history', km: Number(e.distanceKm), min: Number(e.durationMin), date: e.date };
+  });
+  return best;
+}
+/** Vitesse de marche habituelle (marches mesurées), 5,5 km/h par défaut. */
+export function walkSpeed(state) {
+  const sp = getAllEntries(state).filter(e => e.quest.type === 'cardio' && e.quest.cardioMode === 'walk' && measured(e)).map(e => (e.distanceKm * 60) / e.durationMin).filter(v => v >= 3.5 && v <= 8);
+  if (!sp.length) return 5.5;
+  sp.sort((a, b) => a - b);
+  return Math.round(sp[Math.floor(sp.length / 2)] * 10) / 10;
+}
+
+// Consigne d'une étape : vitesse et allure (course avec référence), cadence de pas (marche : 100 pas/min = intensité modérée,
+// Tudor-Locke 2019), sinon effort ressenti sur 10 et test de la parole (valides, Reed et Pipe 2014).
+function stepTarget(step, kind, ref, walkV) {
+  const span = (a, b) => ({ speed: [a, b], text: `${String(a).replace('.', ',')}-${String(b).replace('.', ',')} km/h (${paceText(b)} à ${paceText(a)})` });
+  if (kind === 'run') {
+    if (step.zone === 'calm' || step.zone === 'rest') return { ...span(5, 6), cue: step.zone === 'rest' ? 'marche ou trottine pour récupérer' : 'marche rapide', mid: 5.5 };
+    const p = step.zone === 'hard' ? RUN_PACES.hard : step.run ? RUN_PACES.runwalk : RUN_PACES.easy;
+    if (!ref) return step.zone === 'hard' ? { cue: 'effort 8 sur 10 : tu ne peux dire que quelques mots', mid: 10 } : { cue: 'allure où tu peux parler en phrases (sur tapis : essaie 7 à 8 km/h)', mid: 7.5 };
+    const a = speedAt(ref.vdot, p[0]), b = speedAt(ref.vdot, p[1]);
+    return { ...span(a, b), cue: step.zone === 'hard' ? 'dur mais régulier, la même vitesse aux 4 efforts' : 'tu peux parler en phrases', mid: (a + b) / 2 };
+  }
+  if (kind === 'walk') {
+    if (step.zone === 'calm') return { ...span(Math.max(3.5, r1(walkV - 1)), r1(walkV - 0.5)), cue: 'marche tranquille', mid: walkV - 0.75 };
+    return { ...span(r1(walkV), r1(walkV + 0.5)), cue: 'au moins 100 pas par minute (25 pas en 15 s)', mid: walkV + 0.25 };
+  }
+  const rpe = { calm: 'effort 2 sur 10', rest: 'effort 2-3 sur 10, tu reprends ton souffle', easy: 'effort 3-4 sur 10 : tu peux parler en phrases', hard: 'effort 8 sur 10 : seulement quelques mots' };
+  return { cue: rpe[step.zone] || rpe.easy };
+}
+const fmtKm = km => String(Math.round(km * 10) / 10).replace('.', ',');
 
 // ---- Le cœur comme un muscle : minutes « cœur » par semaine ----
 // Intensité d'une activité d'après sa dépense enregistrée (calories NETTES, donc MET brut = kcal / (kg × h) + 1) :
@@ -179,7 +250,7 @@ const TYPE_LABEL = { easy: 'Endurance facile', long: 'Sortie longue', interval: 
 const TYPE_WHY = {
   easy: 'Le gros du travail du cœur se fait à allure facile (Stöggl 2014) ; chaque minute compte pour ton repère de la semaine (OMS 2020).',
   long: 'Une sortie plus longue par semaine fait progresser l’endurance ; elle reste à allure facile.',
-  interval: '4 × 4 min à 90-95 % de ta FC max : c’est ce qui a le plus amélioré la VO2max (Helgerud 2007), et pour la perte de poids il fait autant que le continu en moins de temps (Wewege 2017).',
+  interval: '4 efforts de 4 min, durs mais réguliers : c’est ce qui a le plus amélioré la VO2max (Helgerud 2007), et pour la perte de poids il fait autant que le continu en moins de temps (Wewege 2017). En course, la vitesse vient de ton temps de référence (allure « I » de Daniels).',
   runwalk: 'Alternance course / marche pour commencer sans te blesser (comme le programme NHS Couch to 5K) : le coach allonge la course toutes les 3 séances réussies.',
 };
 
@@ -220,10 +291,18 @@ export function cardioSession(state, type, iso, k = 0) {
   if (kind === 'run' && !canRun(state) && tp !== 'interval') tp = 'runwalk';
   const minutes = tp === 'long' ? Math.round(c.minutes * 1.5) : c.minutes;
   const stage = tp === 'runwalk' ? runwalkStage(state) : 0;
-  const steps = stepsFor(tp, minutes, stage).map(s => ({ ...s, min: r1(s.min) }));
+  const ref = kind === 'run' ? runRef(state, iso) : null;
+  const walkV = walkSpeed(state);
+  const steps = stepsFor(tp, minutes, stage).map(s => {
+    const target = stepTarget(s, kind, ref, walkV);
+    const km = target.mid && ['run', 'walk'].includes(kind) ? (target.mid * s.min) / 60 : 0;
+    return { ...s, min: r1(s.min), target, km: Math.round(km * 100) / 100 };
+  });
   const total = Math.round(steps.reduce((s, x) => s + x.min, 0));
+  const distanceKm = Math.round(steps.reduce((s, x) => s + x.km, 0) * 10) / 10;
   const K = kindOf(kind);
   return {
+    ref, distanceKm, distanceText: distanceKm ? `≈ ${fmtKm(distanceKm)} km` : '',
     iso, type: tp, kind, stage, catalogId: K.catalogId, icon: K.icon,
     title: tp === 'runwalk' ? TYPE_LABEL.runwalk : `${TYPE_LABEL[tp]} · ${K.label.toLowerCase()}`,
     minutes: total, steps, why: TYPE_WHY[tp],
@@ -299,7 +378,7 @@ export function applyCardioSession(state, session, { durationMin, distanceKm, rp
   let estimated = false;
   if (usesDist && dist <= 0) {
     // allure moyenne de la séance : marche pendant les pauses de l'alternance, plus vite pendant les efforts
-    const speedOf = s => (s.zone === 'calm' || s.zone === 'rest' ? (session.kind === 'run' ? 5 : (K.speed || 5.5) * 0.8) : s.zone === 'hard' ? (K.speed || 8.5) * 1.25 : session.type === 'runwalk' && s.run ? 7.5 : K.speed || 5.5);
+    const speedOf = s => (s.target && s.target.mid && ['run', 'walk'].includes(session.kind) ? s.target.mid : s.zone === 'calm' || s.zone === 'rest' ? (session.kind === 'run' ? 5 : (K.speed || 5.5) * 0.8) : s.zone === 'hard' ? (K.speed || 8.5) * 1.25 : session.type === 'runwalk' && s.run ? 7.5 : K.speed || 5.5);
     const planned = session.steps.reduce((s, x) => s + x.min, 0) || dur;
     dist = Math.round(session.steps.reduce((s, x) => s + speedOf(x) * x.min / 60, 0) * (dur / planned) * 100) / 100;
     estimated = true;
@@ -308,7 +387,7 @@ export function applyCardioSession(state, session, { durationMin, distanceKm, rp
   const value = cat.unit === 'min' ? dur : dist;
   const entry = {
     id: `h_cardio_${Date.now()}`,
-    date, value, durationMin: dur, ...(cat.unit === 'km' ? { distanceKm: dist } : {}), rpe, calories, goalBeaten: false,
+    date, value, durationMin: dur, ...(cat.unit === 'km' ? { distanceKm: dist } : {}), ...(estimated ? { estimated: true } : {}), rpe, calories, goalBeaten: false,
     cardioPlan: { type: session.type, stage: session.stage || 0, kind: session.kind },
     note: `${session.title} (coach)${cat.unit === 'km' ? ` : ${dist} km${estimated ? ' estimés' : ''} en ${dur} min` : ` : ${dur} min`}`,
   };
@@ -334,5 +413,7 @@ export function cardioLine(state, today) {
   const hb = heartBalance(state, today);
   const base = `Cœur (cardio) : ${hb.week.points} min « cœur » cette semaine (modéré ${hb.week.moderate} min, intense ${hb.week.vigorous} min), moyenne ${hb.avg}/sem., repère ${hb.band.good}.`;
   if (!c.on) return `${base} Cardio du coach : désactivé.`;
-  return `${base} Cardio du coach : objectif ${(CARDIO_GOALS.find(g => g.id === c.goal) || {}).label}, ${c.perWeek} séance(s) de ${c.minutes} min, activités ${c.kinds.map(k => kindOf(k).label).join(', ')}, ${canRun(state) ? 'court déjà 20 min' : `alternance course/marche palier ${runwalkStage(state) + 1}/${RUNWALK_STAGES.length}`}.`;
+  const ref = runRef(state, today);
+  const refTxt = ref ? ` Référence course : ${ref.km} km en ${Math.round(ref.min * 10) / 10} min (VDOT ${ref.vdot}, facile ${speedAt(ref.vdot, RUN_PACES.easy[0])}-${speedAt(ref.vdot, RUN_PACES.easy[1])} km/h, fractionné ${speedAt(ref.vdot, RUN_PACES.hard[0])}-${speedAt(ref.vdot, RUN_PACES.hard[1])} km/h).` : ' Pas de temps de référence en course.';
+  return `${base}${refTxt} Cardio du coach : objectif ${(CARDIO_GOALS.find(g => g.id === c.goal) || {}).label}, ${c.perWeek} séance(s) de ${c.minutes} min, activités ${c.kinds.map(k => kindOf(k).label).join(', ')}, ${canRun(state) ? 'court déjà 20 min' : `alternance course/marche palier ${runwalkStage(state) + 1}/${RUNWALK_STAGES.length}`}.`;
 }

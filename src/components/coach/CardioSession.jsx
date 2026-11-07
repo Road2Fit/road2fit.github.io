@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Art } from '../Art';
 import { EXERCISE_CATALOG } from '../../data/catalog';
-import { ZONES, zoneText } from '../../coach/cardio';
+import { ZONES, hrMax, zoneText } from '../../coach/cardio';
 import { getCoachSettings } from '../../coach/settings';
 import { playGameSound } from '../../lib/sound';
 
@@ -70,7 +70,7 @@ export function CardioSession({ session, gameState, startAtEnd = false, onClose,
         <div className="flex items-center gap-3">
           <button type="button" onClick={close} aria-label="Fermer" className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-black">✕</button>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cardio · {session.minutes} min</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cardio · {session.minutes} min{session.distanceText ? ` · ${session.distanceText}` : ''}</p>
             <h2 className="text-lg font-black text-white truncate">{session.title}</h2>
           </div>
         </div>
@@ -82,9 +82,11 @@ export function CardioSession({ session, gameState, startAtEnd = false, onClose,
               <p className="text-sm font-bold text-slate-400">Étape {idx + 1}/{steps.length}</p>
               <h3 className="text-3xl font-black text-white">{step.label}</h3>
               <p className="text-6xl font-black text-white tabular-nums" data-testid="cardio-left">{mmss(left)}</p>
-              <p className={`text-sm font-bold ${ZONE_TONE[step.zone]}`}>{ZONES[step.zone].label} · {zoneText(step.zone, age)}</p>
+              {step.target && step.target.text && <p className={`text-xl font-black ${ZONE_TONE[step.zone]}`} data-testid="cardio-speed">{step.target.text}</p>}
+              <p className={`text-sm font-bold ${ZONE_TONE[step.zone]}`}>{ZONES[step.zone].label} · {step.target ? step.target.cue : ZONES[step.zone].talk}{step.km ? ` · ≈ ${String(Math.round(step.km * 10) / 10).replace('.', ',')} km` : ''}</p>
+              {hrMax(age) && <p className="text-xs text-slate-500">Avec une montre : {zoneText(step.zone, age).split(' · ')[0]}</p>}
             </section>
-            {next && <p className="text-center text-sm text-slate-400">Ensuite : <b className="text-slate-200">{next.label}</b> ({next.min} min)</p>}
+            {next && <p className="text-center text-sm text-slate-400">Ensuite : <b className="text-slate-200">{next.label}</b> ({next.min} min{next.target && next.target.speed ? `, ${String(next.target.speed[0]).replace('.', ',')}-${String(next.target.speed[1]).replace('.', ',')} km/h` : ''})</p>}
             <div className="grid grid-cols-2 gap-2">
               <button type="button" data-testid="cardio-pause" onClick={() => (paused ? update({ paused: run.paused + (Date.now() - run.pausedAt), pausedAt: null }) : update({ pausedAt: Date.now() }))} className="py-3 rounded-xl bg-slate-800 text-white font-black">{paused ? 'Reprendre' : 'Pause'}</button>
               <button type="button" data-testid="cardio-skip" onClick={() => update({ skip: run.skip + Math.max(0, left) })} className="py-3 rounded-xl bg-slate-800 text-white font-black">Étape suivante</button>

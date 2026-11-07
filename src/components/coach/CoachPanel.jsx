@@ -338,7 +338,7 @@ export function CoachPanel({
       {cardioMsg && <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-200" data-testid="cardio-saved" onClick={() => setCardioMsg('')}><Art name="heart" />{cardioMsg}</p>}
       {!guidedActive && cardioToday && !muscuToday && (
         <div className="hero-zone"><section data-hero data-testid="cardio-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
-          <p className="text-xs font-black uppercase tracking-widest opacity-80">Cardio du jour<br />{cardioToday.minutes} min</p>
+          <p className="text-xs font-black uppercase tracking-widest opacity-80">Cardio du jour<br />{cardioToday.minutes} min{cardioToday.distanceText ? ` · ${cardioToday.distanceText}` : ''}</p>
           <h2 className="text-3xl font-black leading-none">{cardioToday.title.split(' · ')[0]}</h2>
           <div className="w-36 max-w-full"><MuscleBodyMap worked={cardioWorked(cardioToday)} /></div>
           <button type="button" onClick={() => heroGo(() => setCardioRun({ session: cardioToday }))} data-testid="cardio-start"
@@ -371,7 +371,7 @@ export function CoachPanel({
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 flex items-center gap-3" data-testid="cardio-next">
           <span className="w-11 h-11 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={26} bare /></span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min</p>
+            <p className="text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</p>
             <p className="text-sm font-black text-white leading-tight">{cardioNext.title}</p>
           </div>
           <button type="button" data-testid="cardio-next-start" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>

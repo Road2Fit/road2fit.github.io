@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.8.1',
+    date: '2026-11-07',
+    title: 'Cardio : ta vitesse et ta distance',
+    items: [
+      'Chaque étape du cardio donne la vitesse à tenir (km/h et minutes au km) et la distance à faire, plus besoin de montre cardio.',
+      'Course : donne un temps récent (ex. 5 km en 28:30) dans Réglages → Cardio, ou laisse le coach le lire dans tes courses notées ; il en tire ta vitesse facile et ta vitesse de fractionné.',
+      'Marche : vitesse et au moins 100 pas par minute (25 pas en 15 secondes).',
+    ],
+  },
+  {
     version: '4.8',
     date: '2026-11-07',
     title: 'Le coach entraîne aussi ton cœur',

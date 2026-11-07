@@ -101,3 +101,47 @@ describe('enregistrement', () => {
     expect(entryHeart({ ...entry, quest: q }, 80).level).not.toBe('light');
   });
 });
+
+describe('vitesses à adopter (sans montre cardio)', () => {
+  it('VDOT de Daniels : 5 km en 30 min ≈ 30, allure facile vers 7-8 km/h', async () => {
+    const { vdotFrom, speedAt, paceText, RUN_PACES } = await import('./cardio');
+    const v = vdotFrom(5, 30);
+    expect(v).toBeGreaterThan(29);
+    expect(v).toBeLessThan(32);
+    expect(speedAt(v, RUN_PACES.easy[0])).toBeGreaterThan(6.8);
+    expect(speedAt(v, RUN_PACES.easy[1])).toBeLessThan(8.2);
+    expect(speedAt(v, RUN_PACES.hard[1])).toBeGreaterThan(9.5);
+    expect(paceText(10)).toBe("6'00/km");
+    expect(vdotFrom(0.5, 3)).toBe(null);
+  });
+  it('séance de course avec référence : vitesse, allure et distance par étape', () => {
+    const s = base({ on: true, goal: 'endurance', perWeek: 2, kinds: ['run'], runner: true, ref: { km: 5, min: 25 } });
+    const ses = cardioSession(s, 'easy', MONDAY);
+    const main = ses.steps.find(x => x.zone === 'easy');
+    expect(main.target.speed[0]).toBeGreaterThan(7.5);
+    expect(main.target.text).toMatch(/km\/h \(\d'\d\d\/km à \d'\d\d\/km\)/);
+    expect(main.km).toBeGreaterThan(2);
+    expect(ses.distanceText).toMatch(/^≈ \d/);
+    const iv = cardioSession(s, 'interval', MONDAY).steps.find(x => x.zone === 'hard');
+    expect(iv.target.speed[0]).toBeGreaterThan(main.target.speed[1]);
+  });
+  it('la meilleure course mesurée sert de référence ; une distance estimée non', async () => {
+    const { runRef } = await import('./cardio');
+    const s = base({ on: true, kinds: ['run'], runner: true });
+    s.quests = [{ id: 'r', catalogId: 'running_endurance', type: 'cardio', unit: 'km', cardioMode: 'run', history: [
+      { id: 'a', date: '2026-11-01', distanceKm: 6, durationMin: 36 },
+      { id: 'b', date: '2026-11-02', distanceKm: 8, durationMin: 36, estimated: true },
+    ] }];
+    expect(runRef(s, MONDAY)).toMatchObject({ source: 'history', km: 6 });
+  });
+  it('marche : vitesse et au moins 100 pas par minute', () => {
+    const ses = cardioSession(base({ on: true, kinds: ['walk'] }), 'easy', MONDAY);
+    const main = ses.steps.find(x => x.zone === 'easy');
+    expect(main.target.cue).toContain('100 pas');
+    expect(main.target.speed).toEqual([5.5, 6]);
+  });
+  it('course sans référence : guidée au souffle', () => {
+    const ses = cardioSession(base({ on: true, kinds: ['run'], runner: true }), 'easy', MONDAY);
+    expect(ses.steps.find(x => x.zone === 'easy').target.cue).toContain('parler');
+  });
+});
