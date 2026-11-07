@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.8',
+    date: '2026-11-07',
+    title: 'Le coach entraîne aussi ton cœur',
+    items: [
+      'Cardio à la demande : marche, course, vélo, rameur ou elliptique, selon ton objectif (perdre du poids, améliorer ton cardio, santé du cœur). À activer sur la page Séance ou dans Réglages → Cardio.',
+      'Séances guidées avec minuteur : échauffement, efforts, récupération, son et vibration à chaque étape. Pour débuter la course : alternance course / marche qui s’allonge toute seule.',
+      'Les séances sont placées dans ta semaine autour de la muscu et du sport, et leurs calories comptent dans les calories du jour.',
+      'Page Équilibre : ton cœur est suivi comme un muscle (minutes de la semaine, repère de l’OMS).',
+      'Tu peux aussi demander du cardio ou du running au coach dans la discussion.',
+    ],
+  },
+  {
     version: '4.7.1',
     date: '2026-11-06',
     title: 'Ton niveau en haut',

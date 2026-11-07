@@ -3,6 +3,9 @@
 // (bras et épaules = « Épaules & Bras », obliques = abdominaux, lombaires = dos, tout le bas du corps = jambes).
 import { coarseOf } from '../../data/muscles';
 const COLORS = { none: '#334155', low: '#f43f5e', mid: '#fbbf24', good: '#10b981', high: '#a78bfa' };
+// le cœur, entraîné comme un muscle (coach/cardio.js) : dessiné sur la poitrine, côté gauche de la personne
+const HEART_D = 'M12 20.8S3.2 15.6 3.2 9.2c0-2.8 2.1-4.9 4.7-4.9 1.8 0 3.2 1 4.1 2.4.9-1.4 2.3-2.4 4.1-2.4 2.6 0 4.7 2.1 4.7 4.9 0 6.4-8.8 11.6-8.8 11.6Z';
+const Heart = props => <path d={HEART_D} transform="translate(56.5 40) scale(0.55)" {...props} />;
 
 // [cx, cy, rx, ry] par muscle ; deux vues
 const FRONT = {
@@ -28,7 +31,7 @@ const BACK = {
 };
 
 // `worked` (liste de muscles) : mode « séance » du grand rond — muscles travaillés pleins, les autres pâles, en couleur du texte (currentColor)
-export function MuscleBodyMap({ rows = [], mini = false, worked = null }) {
+export function MuscleBodyMap({ rows = [], mini = false, worked = null, heart = null }) {
   if (worked) return <WorkedMap worked={new Set(worked)} />;
   const byArena = {};
   rows.forEach(r => { byArena[r.arena] = r; });
@@ -53,6 +56,7 @@ export function MuscleBodyMap({ rows = [], mini = false, worked = null }) {
         <rect x="156" y="28" width="18" height="8" rx="3" fill="#475569" />
         {draw(FRONT)}
         {draw(BACK)}
+        {heart && <Heart fill={COLORS[heart.status] || COLORS.none} stroke="#0f172a" strokeWidth="2" data-testid="map-heart"><title>{`Cœur : ${heart.week.points} min cette semaine`}</title></Heart>}
         {!mini && <text x="55" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Face</text>}
         {!mini && <text x="165" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Dos</text>}
       </svg>
@@ -82,6 +86,7 @@ function WorkedMap({ worked }) {
       <rect x="156" y="28" width="18" height="8" rx="3" fill="currentColor" fillOpacity="0.3" />
       {draw(FRONT)}
       {draw(BACK)}
+      {worked.has('Cœur') && <Heart fill="currentColor" fillOpacity="0.95" data-on="1" data-testid="session-heart" />}
     </svg>
   );
 }

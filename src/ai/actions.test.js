@@ -189,3 +189,14 @@ describe('formes de séries et objectif via le coach intelligent', () => {
     expect(it.summary).toContain('Série dégressive');
   });
 });
+
+describe('action cardio du coach intelligent', () => {
+  it('active le cardio avec des réglages valides, refuse le reste', () => {
+    const a = normalizeAction(act('cardio', { on: true, goal: 'weight', kinds: ['run', 'trampoline'], perWeek: 9, minutes: 33, runner: false }), S, today);
+    expect(a.args).toEqual({ on: true, goal: 'weight', kinds: ['run'], minutes: 30, runner: false });
+    const state = applyActions(S, [a], today);
+    expect(state.coach.cardio).toMatchObject({ on: true, goal: 'weight', kinds: ['run'], minutes: 30, asked: true });
+    expect(coachContext(state, today)).toContain('Cardio du coach : objectif Perdre du poids');
+    expect(normalizeAction(act('cardio', { goal: 'yoga' }), S, today)).toBe(null);
+  });
+});

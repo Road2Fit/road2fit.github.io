@@ -8,6 +8,7 @@ import { METHODS, methodFits } from '../coach/methods';
 import { GOAL_KINDS } from '../coach/goal';
 import { COACH_ARENAS } from '../coach/settings';
 import { fromAiDay } from './context';
+import { CARDIO_GOALS, CARDIO_KINDS, getCardioSettings } from '../coach/cardio';
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const MINUTES = [0, 45, 60, 75, 90];
@@ -154,6 +155,20 @@ export function normalizeAction(a, state, today) {
       args = g;
       break;
     }
+    case 'cardio': {
+      // séances de cardio proposées par le coach (marche, course, vélo, rameur, elliptique)
+      const o = {};
+      if (typeof x.on === 'boolean') o.on = x.on;
+      if (CARDIO_GOALS.some(g => g.id === x.goal)) o.goal = x.goal;
+      if (Array.isArray(x.kinds)) { const k = [...new Set(x.kinds.filter(v => CARDIO_KINDS.some(c => c.id === v)))]; if (k.length) o.kinds = k; }
+      const n = inRange(x.perWeek, 1, 5);
+      if (n !== null) o.perWeek = Math.round(n);
+      const m = inRange(x.minutes, 15, 120);
+      if (m !== null) o.minutes = nearest([20, 30, 45, 60, 75, 90], m);
+      if (typeof x.runner === 'boolean') o.runner = x.runner;
+      if (Object.keys(o).length) args = o;
+      break;
+    }
     default:
       return null;
   }
@@ -166,6 +181,7 @@ function defaultLabel(type, args, state) {
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
+  if (type === 'cardio') return args.on === false ? 'Arrêter le cardio du coach' : 'Régler le cardio du coach';
   return 'Changer un réglage du coach';
 }
 
@@ -263,6 +279,10 @@ export function applyAction(state, a, today) {
       const w = (state.weightHistory || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).pop();
       return withCoach({ mainGoal: { ...x, createdAt: today, ...(x.kind === 'weight' ? { startWeight: w ? Number(w.weightKg) : Number(state.userWeightKg) || undefined } : {}) } });
     }
+    case 'cardio': {
+      const cur = getCardioSettings(state);
+      return withCoach({ cardio: { ...cur, ...x, on: x.on === undefined ? true : x.on, asked: true } });
+    }
     default:
       return state;
   }
@@ -271,7 +291,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */

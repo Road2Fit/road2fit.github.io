@@ -10,7 +10,7 @@ import { MuscleBodyMap } from './MuscleBodyMap';
 
 const COLOR = { good: 'bg-emerald-500', mid: 'bg-amber-400', low: 'bg-rose-500', high: 'bg-violet-400' };
 
-export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
+export function CoachBalance({ balance, heart = null, gameState, lowRows, onAddExercise }) {
   const [showSources, setShowSources] = useState(false);
   const [details, setDetails] = useState(false); // par défaut : le schéma seul, le détail se déroule au clic
   const optimized = isOptimized();
@@ -19,7 +19,7 @@ export function CoachBalance({ balance, gameState, lowRows, onAddExercise }) {
   return (
     <section className={card}>
       <h3 className="font-black text-white"><Art name="scale" />Équilibre des {pick('arènes', 'groupes musculaires')} <span className="text-xs text-slate-400 font-semibold">(séries par semaine, moyenne sur 4 semaines)</span></h3>
-      <MuscleBodyMap rows={balance.rows} />
+      <MuscleBodyMap rows={balance.rows} heart={heart} />
       <button type="button" onClick={() => setDetails(v => !v)} aria-expanded={details} data-testid="balance-details" className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100">
         {details ? '▾ Masquer le détail' : `▸ Voir le détail par groupe${lowRows.length || alerts.length ? ' et les conseils' : ''}`}
       </button>

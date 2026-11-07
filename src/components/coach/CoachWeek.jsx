@@ -8,7 +8,16 @@ const uniq = list => Array.from(new Set(list)).sort();
 // « Ma semaine » : chaque jour peut cumuler la muscu ET le sport (journée double). Toucher un jour (à venir) ouvre ses
 // réglages : séance de muscu en plus juste ce jour-là (coach.gymExtra, sans changer le reste de la semaine), salle annulée
 // (coach.gymSkips), sport en plus ou annulé (coach.volleyExtra / volleySkips).
-export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, sport, today, updateCoach }) {
+export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, plan, plannedMap, sport, today, updateCoach }) {
+  // cardio du coach : séance prévue ou faite ce jour-là (le cœur se travaille comme un muscle)
+  const cardioOf = iso => {
+    for (const cw of cardioWeeks) {
+      if ((cw.done || []).some(d => d.iso === iso)) return { done: true, label: 'Cardio' };
+      const s = (cw.sessions || []).find(x => x.iso === iso);
+      if (s) return { done: false, label: `${s.minutes} min` };
+    }
+    return null;
+  };
   const [sel, setSel] = useState(null);
   const allDays = ov.weeks.flatMap(w => w.days);
   const selDay = allDays.find(d => d.iso === sel) || null;
@@ -52,6 +61,7 @@ export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, s
               const g = gymOf(d);
               const sp = d.sportKind === 'match' ? { icon: '🏆', label: 'Match' } : d.sportKind ? { icon: sport.icon, label: sport.cap } : null;
               const both = g && sp;
+              const cd = cardioOf(d.iso);
               const tone = g && g.done ? 'border-emerald-500/50 bg-emerald-950/20'
                 : both ? 'border-pink-500/60 bg-gradient-to-b from-pink-950/30 to-sky-950/40'
                 : g ? 'border-pink-500/60 bg-pink-950/20'
@@ -87,7 +97,13 @@ export function CoachWeek({ coach = {}, dayShort, first, ov, plan, plannedMap, s
                       <span className="text-[9px] font-bold text-slate-100 break-words">{sp.label}</span>
                     </span>
                   )}
-                  {!g && !sp && (
+                  {cd && (
+                    <span className="flex flex-col items-center leading-tight" data-testid={`week-cardio-${d.iso}`}>
+                      <span className="text-sm">{cd.done ? '✅' : '❤️'}</span>
+                      <span className="text-[9px] font-bold text-rose-200">{cd.label}</span>
+                    </span>
+                  )}
+                  {!g && !sp && !cd && (
                     <span className="flex flex-col items-center leading-tight">
                       <span className="text-sm">😴</span>
                       <span className="text-[9px] font-bold text-slate-300">{d.skipped ? 'Annulée' : 'Repos'}</span>

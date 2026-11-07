@@ -32,6 +32,16 @@ import { CoachWeightHealth } from './CoachWeightHealth';
 import { sportInfo } from '../../data/sports';
 import { arenaOf, fineGroupOf, secondGroupOf } from '../../data/muscles';
 import { MuscleBodyMap } from './MuscleBodyMap';
+import { applyCardioSession, cardioPlanWeek, heartBalance } from '../../coach/cardio';
+import { CardioInvite, CoachCardio, CoachHeart } from './CoachCardio';
+import { CardioSession, savedCardioRun } from './CardioSession';
+import { EXERCISE_CATALOG } from '../../data/catalog';
+import { calculateCardioCalories } from '../../lib/calories';
+import { computeXp } from '../../lib/xp';
+import { playGameSound } from '../../lib/sound';
+
+// muscles allumés dans le grand rond pour une séance de cardio : le cœur, plus les jambes (et le dos au rameur)
+const cardioWorked = s => ['Cœur', 'Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets', 'Jambes', ...(s.kind === 'rower' ? ['Dos'] : [])];
 
 const COACH_PAGES = [['seance', 'Séance', 'dumbbell'], ['semaine', 'Semaine', 'calendar'], ['objectifs', 'Objectifs', 'target'], ['equilibre', 'Équilibre', 'scale'], ['reglages', 'Réglages', 'gear']];
 
@@ -171,6 +181,24 @@ export function CoachPanel({
   };
 
   const first = ov.first;
+  // CARDIO : séances de la semaine placées autour de la muscu (coach/cardio.js) ; le cœur suivi comme un muscle
+  const cardioWeeks = useMemo(() => ov.weeks.map(w => cardioPlanWeek(gameState, w.weekStart, today, w.days.filter(d => d.gym).map(d => d.iso))), [ov, gameState.coach, gameState.quests, today]);
+  const cardioToday = cardioWeeks[0].sessions.find(x => x.iso === today) || null;
+  const cardioNext = cardioWeeks.flatMap(w => w.sessions).find(x => x.iso >= today) || null;
+  const heart = useMemo(() => heartBalance(gameState, today), [gameState.quests, gameState.coach, today]);
+  const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
+  const [cardioMsg, setCardioMsg] = useState('');
+  const saveCardio = (session, res) => {
+    const r = applyCardioSession(gameState, session, { ...res, date: today, catalog: EXERCISE_CATALOG, calc: calculateCardioCalories });
+    const kcal = r.entry ? r.entry.calories : 0;
+    setGameState(prev => {
+      const r2 = applyCardioSession(prev, session, { ...res, date: today, catalog: EXERCISE_CATALOG, calc: calculateCardioCalories });
+      return { ...r2.state, ...computeXp(prev, 85 + Math.round(kcal * 0.15), today, 'session').patch };
+    });
+    playGameSound('xp', gameState.soundEnabled !== false);
+    setCardioRun(null);
+    setCardioMsg(`Cardio enregistré : ${kcal} kcal, ajoutées aux calories du jour.`);
+  };
   const plannedMap = {};
   ov.plannedAll.forEach(p => { plannedMap[p.iso] = p; });
   const w0 = ov.weeks[0];
@@ -199,6 +227,7 @@ export function CoachPanel({
     if (ov.program) return programSession(gameState, { ...ov.program, date: today }); // séance du programme faite en avance
     return coachBuildPlanned(gameState, first, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek, tired: tiredToday, minutes: shortMode ? 40 : undefined });
   })();
+  const muscuToday = !coachOff && !!(shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && shownDate === today);
   // Édition du plan personnalisé (mises à jour fonctionnelles pour éviter les écrasements)
   const patchPlan = fn =>
     setGameState(prev => {
@@ -305,7 +334,20 @@ export function CoachPanel({
           </button>
         </section></div>
       )}
-      {!guidedActive && !coachOff && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
+      {cardioRun && <CardioSession session={cardioRun.session} startAtEnd={!!cardioRun.atEnd} gameState={gameState} onClose={() => setCardioRun(null)} onSave={res => saveCardio(cardioRun.session, res)} />}
+      {cardioMsg && <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-200" data-testid="cardio-saved" onClick={() => setCardioMsg('')}><Art name="heart" />{cardioMsg}</p>}
+      {!guidedActive && cardioToday && !muscuToday && (
+        <div className="hero-zone"><section data-hero data-testid="cardio-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
+          <p className="text-xs font-black uppercase tracking-widest opacity-80">Cardio du jour<br />{cardioToday.minutes} min</p>
+          <h2 className="text-3xl font-black leading-none">{cardioToday.title.split(' · ')[0]}</h2>
+          <div className="w-36 max-w-full"><MuscleBodyMap worked={cardioWorked(cardioToday)} /></div>
+          <button type="button" onClick={() => heroGo(() => setCardioRun({ session: cardioToday }))} data-testid="cardio-start"
+            className="hero-cta mt-1 px-7 py-3 rounded-full bg-slate-950 text-pink-400 text-xl font-black inline-flex items-center justify-center gap-2">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg>Lancer
+          </button>
+        </section></div>
+      )}
+      {!guidedActive && !coachOff && !(cardioToday && !muscuToday) && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
         const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
         return (
@@ -324,6 +366,19 @@ export function CoachPanel({
           </section></div>
         );
       })()}
+      {/* cardio : prochaine séance (ou celle du jour, après la muscu), puis l'invitation tant que la personne n'a pas répondu */}
+      {cardioNext && !(cardioNext === cardioToday && !muscuToday) && (
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 flex items-center gap-3" data-testid="cardio-next">
+          <span className="w-11 h-11 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={26} bare /></span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min</p>
+            <p className="text-sm font-black text-white leading-tight">{cardioNext.title}</p>
+          </div>
+          <button type="button" data-testid="cardio-next-start" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>
+          <button type="button" data-testid="cardio-next-done" onClick={() => setCardioRun({ session: cardioNext, atEnd: true })} aria-label="Déjà faite" className="w-10 h-10 rounded-full bg-slate-800 text-emerald-300 inline-flex items-center justify-center shrink-0"><Art name="check" size={18} bare /></button>
+        </section>
+      )}
+      <CardioInvite gameState={gameState} setGameState={setGameState} />
       <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
       {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}
       {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
@@ -376,7 +431,7 @@ export function CoachPanel({
       </div>
       )}
 
-      {page === 'equilibre' && <div className="page-in" key="equilibre"><CoachBalance balance={balance} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} /></div>}
+      {page === 'equilibre' && <div className="page-in space-y-4" key="equilibre"><CoachHeart heart={heart} gameState={gameState} setGameState={setGameState} /><CoachBalance balance={balance} heart={heart} gameState={gameState} lowRows={lowRows} onAddExercise={onAddExercise} /></div>}
 
       {page === 'semaine' && (
       <div className="space-y-4 page-in" key="semaine">
@@ -407,6 +462,7 @@ export function CoachPanel({
         ov={ov}
         plan={plan}
         plannedMap={plannedMap}
+        cardioWeeks={cardioWeeks}
         today={today}
       />
 
@@ -419,6 +475,7 @@ export function CoachPanel({
       <div className="space-y-4 page-in" data-testid="coach-settings-page" key="reglages">
         {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
         {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
+        <CoachCardio gameState={gameState} setGameState={setGameState} />
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
