@@ -214,8 +214,13 @@ export function parseSpokenWorkout(rawText, existingQuests = [], userWeightKg = 
       const hourMatch = seg.match(/(\d+(?:\.\d+)?)\s*(?:heure|heures|h\b)/i);
       
       let parsedMin = 0;
-      if (hourMatch) parsedMin += Number(hourMatch[1]) * 60;
-      if (minMatch) parsedMin += Number(minMatch[1]);
+      // « 1h30 », « 1 heure 30 », « 1 h et quart », « 2 heures et demie »
+      const hm = seg.match(/(\d+)\s*(?:h|heures?)\s*(?:et\s*)?(\d{1,2})\b(?!\s*(?:km|kilom|min|sec))/i);
+      const half = seg.match(/(\d+)\s*(?:h|heures?)\s*et\s*(demie?|quart)/i);
+      if (half) parsedMin += Number(half[1]) * 60 + (/quart/i.test(half[2]) ? 15 : 30);
+      else if (hm && !minMatch) parsedMin += Number(hm[1]) * 60 + Number(hm[2]);
+      else if (hourMatch) parsedMin += Number(hourMatch[1]) * 60;
+      if (minMatch && !half) parsedMin += Number(minMatch[1]);
       
       const dist = kmMatch ? Number(kmMatch[1]) : (isTimeOnly ? 0 : (Number(anchor.quest?.currentValue) || 5));
       const dur = parsedMin > 0 ? parsedMin : (isTimeOnly ? (Number(anchor.quest?.currentValue) || 60) : Math.round(dist * 6));

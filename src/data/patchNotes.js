@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.9',
+    date: '2026-11-07',
+    title: 'Noter une séance oubliée',
+    items: [
+      'Dictée : dis « hier », « avant-hier », « mardi », « il y a 3 jours » ou « le 3 novembre » et la séance est notée à ce jour-là (la date s’affiche avant de valider, tu peux la changer).',
+      'Dictée : « 1h30 » ou « 2 heures et demie » sont bien compris.',
+      'Journal sur téléphone : toucher un jour ouvre son résumé dans une fenêtre.',
+    ],
+  },
+  {
     version: '4.8.3',
     date: '2026-11-07',
     title: 'Cardio bien visible dans ta semaine',

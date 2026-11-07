@@ -6,7 +6,8 @@ import { isTimedCatalog } from '../lib/quests';
 import { stripAccents } from '../lib/text';
 import { parseSpokenWorkout } from '../voice/parser';
 import { computeXp, xpNote } from '../lib/xp';
-import { getTodayISODate } from '../lib/dates';
+import { formatDayFr, getTodayISODate } from '../lib/dates';
+import { spokenDate } from '../voice/spokenDate';
 import { pick } from '../edition';
 import { arenaOf } from '../data/muscles';
 import { aiStatus, callAi } from '../ai/client';
@@ -39,6 +40,12 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   const aiOn = aiStatus(gameState) === 'ok';
 
   const combinedText = (spokenText + (interimText ? ' ' + interimText : '')).trim();
+  // date de la séance : dite dans la phrase (« hier », « avant-hier », « lundi », « le 5 novembre »), sinon le jour choisi ;
+  // la personne peut la changer avant de valider
+  const [dateOverride, setDateOverride] = useState('');
+  const today = getTodayISODate();
+  const spoken = spokenDate(combinedText, today);
+  const entryDate = dateOverride || (spoken && spoken.date) || selectedDate || today;
   const textRef = useRef('');
   textRef.current = spokenText.trim();
 
@@ -163,7 +170,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
         const newHistoryEntry = item.type === 'cardio'
           ? {
               id: `h_voice_${Date.now()}_${Math.random()}`,
-              date: selectedDate,
+              date: entryDate,
               value: item.unit === 'min' ? item.durationMin : item.distanceKm,
               durationMin: item.durationMin,
               elevationM: 0,
@@ -174,7 +181,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
             }
           : {
               id: `h_voice_${Date.now()}_${Math.random()}`,
-              date: selectedDate,
+              date: entryDate,
               value: item.weightKg,
               sets: item.setDetails.length,
               reps: Math.max(...item.setDetails),
@@ -253,7 +260,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
     playGameSound('boss', gameState.soundEnabled);
     triggerToast(
       `${editableItems.length} exercice(s) validé(s) d'un coup !`,
-      `+${totalKcalGain} kcal ajoutées au bilan du ${selectedDate}` +
+      `+${totalKcalGain} kcal ajoutées au bilan du ${formatDayFr(entryDate)}` +
         (createdNames.length ? ` • ${createdNames.length} nouvel(s) objectif(s) ajouté(s)` : '') +
         (newArenas.length ? ` • ${pick('Arène débloquée', 'Groupe musculaire ajouté')} : ${newArenas.join(', ')}` : '') +
         xpNote(award),
@@ -262,6 +269,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
     );
     setSpokenText('');
     setInterimText('');
+    setDateOverride('');
     setEditableItems([]);
     setMicStatusMsg('');
     aiTextRef.current = '';
@@ -367,6 +375,12 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               <p className="text-xs font-black uppercase tracking-wider text-emerald-300">
                 Synthèse de ta séance ({editableItems.length} exercice(s) détecté(s)) :
               </p>
+              <label className="flex flex-wrap items-center gap-2 text-sm text-slate-200" data-testid="voice-date">
+                <Art name="calendar" size={16} />
+                <span className="font-bold">{entryDate === today ? 'Aujourd’hui' : formatDayFr(entryDate)}</span>
+                {spoken && !dateOverride && entryDate !== today && <span className="text-xs text-emerald-300">(« {spoken.phrase} »)</span>}
+                <input type="date" value={entryDate} max={today} onChange={e => setDateOverride(e.target.value && e.target.value <= today ? e.target.value : '')} data-testid="voice-date-input" aria-label="Date de la séance" className="ml-auto rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-white" />
+              </label>
               <div className="space-y-2">
                 {editableItems.map(item => (
                   <div
