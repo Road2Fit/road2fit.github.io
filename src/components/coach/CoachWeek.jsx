@@ -67,6 +67,7 @@ export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, p
                 : g ? 'border-pink-500/60 bg-pink-950/20'
                 : d.sportKind === 'match' ? 'border-amber-500/50 bg-amber-950/20'
                 : sp ? 'border-sky-500/40 bg-sky-950/20'
+                : cd ? (cd.done ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-rose-500/60 bg-rose-950/25')
                 : 'border-slate-800 bg-slate-950';
               const canEdit = d.iso >= today && !!updateCoach;
               return (
@@ -75,7 +76,7 @@ export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, p
                   type="button"
                   disabled={!canEdit}
                   onClick={() => setSel(sel === d.iso ? null : d.iso)}
-                  aria-label={`${coachDayLabel(d.iso)} : ${[g && `muscu (${g.label})`, sp && sp.label].filter(Boolean).join(' et ') || 'repos'}`}
+                  aria-label={`${coachDayLabel(d.iso)} : ${[g && `muscu (${g.label})`, sp && sp.label, cd && 'cardio'].filter(Boolean).join(' et ') || 'repos'}`}
                   aria-pressed={sel === d.iso}
                   data-testid={`week-day-${d.iso}`}
                   className={`rounded-lg border p-1 text-center flex flex-col items-center gap-0.5 min-w-0 ${tone} ${d.iso === today ? 'ring-2 ring-pink-400' : ''} ${sel === d.iso ? 'outline outline-2 outline-white' : ''}`}

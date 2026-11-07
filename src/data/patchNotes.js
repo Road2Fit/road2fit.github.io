@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.8.3',
+    date: '2026-11-07',
+    title: 'Cardio bien visible dans ta semaine',
+    items: ['« Ma semaine » : les jours de cardio sont encadrés (rose, vert une fois faits) ; seuls les jours de repos restent gris.'],
+  },
+  {
     version: '4.8.2',
     date: '2026-11-07',
     title: 'Tes jours de cardio',
