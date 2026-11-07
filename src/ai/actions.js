@@ -166,6 +166,7 @@ export function normalizeAction(a, state, today) {
       const m = inRange(x.minutes, 15, 120);
       if (m !== null) o.minutes = nearest([20, 30, 45, 60, 75, 90], m);
       if (typeof x.runner === 'boolean') o.runner = x.runner;
+      if (Array.isArray(x.days)) o.days = dayList(x.days) || [];
       if (vdotFrom(x.refKm, x.refMin)) o.ref = { km: Number(x.refKm), min: Math.round(Number(x.refMin) * 100) / 100 };
       if (Object.keys(o).length) args = o;
       break;

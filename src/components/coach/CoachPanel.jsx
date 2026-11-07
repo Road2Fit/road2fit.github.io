@@ -65,26 +65,32 @@ export function CoachPanel({
   // le grand rond occupe le haut de l'écran : sa zone grandit jusqu'à ce que seul le titre « Prochaine séance » dépasse en bas
   // ⚠️ Hauteur d'écran FIGÉE (mémorisée par largeur) : sur téléphone la barre d'adresse se cache au premier défilement,
   // la hauteur change et la zone se recalculait → les menus s'écartaient du rond avant que la page défile.
+  // ⚠️ Position du titre mesurée par rapport au HAUT DU CORPS de la page, pas avec window.scrollY : quand une fenêtre est
+  // ouverte, lib/scrollLock.js fige le corps (position fixe, décalé vers le haut) et scrollY vaut 0 → l'ancienne mesure
+  // croyait le titre tout en haut et gonflait la zone (rond isolé au milieu d'un grand vide, surtout vu sur PC).
+  // Sur ordinateur (pas d'écran tactile), la hauteur suit la fenêtre (pas de barre d'adresse qui bouge).
   useLayoutEffect(() => {
+    const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
     const fit = () => {
       const z = document.querySelector('.hero-zone');
       const t = document.querySelector('[data-testid="next-session-title"]');
       if (!z) return;
-      if (window.__r2fVhW !== window.innerWidth) { window.__r2fVhW = window.innerWidth; window.__r2fVh = window.innerHeight; }
+      if (!touch || window.__r2fVhW !== window.innerWidth) { window.__r2fVhW = window.innerWidth; window.__r2fVh = window.innerHeight; }
       const vh = window.__r2fVh;
       const nav = document.querySelector('nav[aria-label="Navigation"]');
       const navH = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().height : 0;
       const prev = z.style.minHeight;
       z.style.minHeight = '';
       if (!t) return;
-      const extra = vh - navH - 14 - (t.getBoundingClientRect().bottom + window.scrollY);
+      const titleBottom = t.getBoundingClientRect().bottom - document.body.getBoundingClientRect().top;
+      const extra = Math.min(vh * 0.6, vh - navH - 14 - titleBottom);
       const next = extra > 0 ? `${Math.round(z.getBoundingClientRect().height + extra)}px` : '';
       z.style.minHeight = next || '';
       if (prev && next && Math.abs(parseFloat(prev) - parseFloat(next)) < 2) z.style.minHeight = prev;
     };
     fit();
-    let w = window.innerWidth;
-    const onResize = () => { if (window.innerWidth !== w) { w = window.innerWidth; fit(); } };
+    let w = window.innerWidth, h = window.innerHeight;
+    const onResize = () => { if (window.innerWidth !== w || (!touch && window.innerHeight !== h)) { w = window.innerWidth; h = window.innerHeight; fit(); } };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   });

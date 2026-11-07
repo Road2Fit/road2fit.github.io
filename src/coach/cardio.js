@@ -15,7 +15,7 @@
 // ==========================================================================
 import { addDaysISO, getWeekStart } from '../lib/dates';
 import { getAllEntries } from '../lib/quests';
-import { coachDayInfo } from './planning';
+import { coachDayInfo, coachPlanWeek } from './planning';
 import { coachDaysBetween, getCoachSettings } from './settings';
 
 export const CARDIO_GOALS = [
@@ -34,7 +34,7 @@ export const CARDIO_KINDS = [
 ];
 const kindOf = id => CARDIO_KINDS.find(k => k.id === id) || CARDIO_KINDS[0];
 
-const DEFAULTS = { on: false, asked: false, goal: 'health', kinds: ['walk'], perWeek: 2, minutes: 30, runner: false, ref: null };
+const DEFAULTS = { on: false, asked: false, goal: 'health', kinds: ['walk'], perWeek: 2, minutes: 30, runner: false, ref: null, days: [] };
 
 export function getCardioSettings(state) {
   const c = getCoachSettings(state).cardio || {};
@@ -44,6 +44,8 @@ export function getCardioSettings(state) {
   out.perWeek = Math.max(1, Math.min(6, Number(out.perWeek) || 2));
   out.minutes = Math.max(15, Math.min(120, Number(out.minutes) || 30));
   if (!CARDIO_GOALS.some(g => g.id === out.goal)) out.goal = 'health';
+  // jours de la semaine choisis pour le cardio (0 = dimanche … 6 = samedi) ; vide = le coach choisit
+  out.days = [...new Set((Array.isArray(out.days) ? out.days : []).map(Number).filter(d => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
   return out;
 }
 
@@ -340,7 +342,8 @@ export function cardioPlanWeek(state, weekStart, today, gymDays = []) {
     if (i >= 0) types.splice(i, 1);
   }));
   const gym = new Set(gymDays);
-  const cand = days.filter(d => d >= today && !doneMap[d]).map(d => ({ iso: d, info: coachDayInfo(d, coach) })).filter(x => !x.info.isMatch && !x.info.isVolley);
+  // jours choisis par la personne : seulement eux (le cardio n'est alors jamais mis ailleurs)
+  const cand = days.filter(d => d >= today && !doneMap[d]).map(d => ({ iso: d, info: coachDayInfo(d, coach) })).filter(x => !x.info.isMatch && !x.info.isVolley && (!c.days.length || c.days.includes(x.info.dow)));
   const chosen = [];
   const taken = [...done.map(d => d.iso)];
   // fractionné et sortie longue d'abord (ils ont le plus de contraintes)
@@ -415,5 +418,13 @@ export function cardioLine(state, today) {
   if (!c.on) return `${base} Cardio du coach : désactivé.`;
   const ref = runRef(state, today);
   const refTxt = ref ? ` Référence course : ${ref.km} km en ${Math.round(ref.min * 10) / 10} min (VDOT ${ref.vdot}, facile ${speedAt(ref.vdot, RUN_PACES.easy[0])}-${speedAt(ref.vdot, RUN_PACES.easy[1])} km/h, fractionné ${speedAt(ref.vdot, RUN_PACES.hard[0])}-${speedAt(ref.vdot, RUN_PACES.hard[1])} km/h).` : ' Pas de temps de référence en course.';
-  return `${base}${refTxt} Cardio du coach : objectif ${(CARDIO_GOALS.find(g => g.id === c.goal) || {}).label}, ${c.perWeek} séance(s) de ${c.minutes} min, activités ${c.kinds.map(k => kindOf(k).label).join(', ')}, ${canRun(state) ? 'court déjà 20 min' : `alternance course/marche palier ${runwalkStage(state) + 1}/${RUNWALK_STAGES.length}`}.`;
+  const DN = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  const daysTxt = c.days.length ? ` Jours de cardio choisis : ${c.days.map(d => `${DN[d]} (${d === 0 ? 7 : d})`).join(', ')}.` : ' Jours de cardio : choisis par l’appli (de préférence sans muscu ni sport).';
+  let nextTxt = '';
+  try {
+    const ws = getWeekStart(today);
+    const up = [0, 7].flatMap(k => { const w0 = addDaysISO(ws, k); const wk = coachPlanWeek(state, w0, today); return cardioPlanWeek(state, w0, today, wk.days.filter(d => d.gym).map(d => d.iso)).sessions; }).slice(0, 6);
+    nextTxt = ` Prochaines séances de cardio prévues par l'appli avec ces réglages : ${up.length ? up.map(s => `${DN[new Date(`${s.iso}T00:00:00`).getDay()]} ${s.iso} (${s.title}, ${s.minutes} min)`).join(', ') : 'aucune'}.`;
+  } catch (e) { /* rien */ }
+  return `${base}${refTxt}${daysTxt}${nextTxt} Cardio du coach : objectif ${(CARDIO_GOALS.find(g => g.id === c.goal) || {}).label}, ${c.perWeek} séance(s) de ${c.minutes} min, activités ${c.kinds.map(k => kindOf(k).label).join(', ')}, ${canRun(state) ? 'court déjà 20 min' : `alternance course/marche palier ${runwalkStage(state) + 1}/${RUNWALK_STAGES.length}`}.`;
 }

@@ -200,3 +200,16 @@ describe('action cardio du coach intelligent', () => {
     expect(normalizeAction(act('cardio', { goal: 'yoga' }), S, today)).toBe(null);
   });
 });
+
+describe('action cardio : jours', () => {
+  it('jours au format 1-7 de l’IA → jours de l’appli, et le contexte les liste', () => {
+    const a = normalizeAction(act('cardio', { days: [1, 2, 3, 6] }), S, today);
+    expect(a.args.days).toEqual([1, 2, 3, 6]);
+    const st = applyActions(S, [a], today);
+    expect(st.coach.cardio.days).toEqual([1, 2, 3, 6]);
+    const ctx = coachContext(st, today);
+    expect(ctx).toContain('Jours de cardio choisis : lundi (1), mardi (2), mercredi (3), samedi (6)');
+    expect(ctx).toMatch(/Prochaines séances de cardio prévues par l'appli avec ces réglages : (lundi|mardi|mercredi|samedi)/);
+    expect(normalizeAction(act('cardio', { days: [7] }), S, today).args.days).toEqual([0]);
+  });
+});

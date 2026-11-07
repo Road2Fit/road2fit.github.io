@@ -106,6 +106,14 @@ export function CoachCardio({ gameState, setGameState }) {
             <span className="text-slate-400 font-bold w-20">Durée</span>
             {[20, 30, 45, 60].map(n => <button key={n} type="button" data-testid={`cardio-min-${n}`} aria-pressed={c.minutes === n} onClick={() => set({ minutes: n })} className={chip(c.minutes === n)}>{n} min</button>)}
           </div>
+          <div className="flex items-center gap-1.5 flex-wrap" data-testid="cardio-days">
+            <span className="text-slate-400 font-bold w-20">Jours</span>
+            {[1, 2, 3, 4, 5, 6, 0].map(d => {
+              const on = c.days.includes(d);
+              return <button key={d} type="button" data-testid={`cardio-day-${d}`} aria-pressed={on} onClick={() => set({ days: on ? c.days.filter(x => x !== d) : [...c.days, d] })} className={`${chip(on)} w-10 px-0`}>{['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][d]}</button>;
+            })}
+            <span className="text-slate-500">{c.days.length ? 'seulement ces jours' : 'aucun : le coach choisit'}</span>
+          </div>
           {c.kinds.includes('run') && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-slate-300 font-bold">Tu cours déjà 20 min sans t’arrêter ?</span>

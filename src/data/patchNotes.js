@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.8.2',
+    date: '2026-11-07',
+    title: 'Tes jours de cardio',
+    items: [
+      'Réglages → Cardio : choisis les jours de ton cardio ; le coach ne le met plus que ces jours-là. Tu peux aussi le demander dans « Parle à ton coach ».',
+      'Ordinateur : le grand rond de la séance ne se retrouve plus isolé au milieu d’un grand vide après avoir ouvert une fenêtre.',
+    ],
+  },
+  {
     version: '4.8.1',
     date: '2026-11-07',
     title: 'Cardio : ta vitesse et ta distance',

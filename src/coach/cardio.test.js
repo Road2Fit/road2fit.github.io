@@ -145,3 +145,13 @@ describe('vitesses à adopter (sans montre cardio)', () => {
     expect(ses.steps.find(x => x.zone === 'easy').target.cue).toContain('parler');
   });
 });
+
+describe('jours de cardio choisis', () => {
+  it('seulement lundi, mardi, mercredi, samedi : jamais dimanche ni jeudi', () => {
+    const s = base({ on: true, goal: 'health', perWeek: 3, kinds: ['walk'], days: [1, 2, 3, 6] }, { volleyDays: [4] });
+    const w = cardioPlanWeek(s, MONDAY, MONDAY, ['2026-11-11']);
+    const dows = w.sessions.map(x => new Date(`${x.iso}T00:00:00`).getDay());
+    expect(w.sessions).toHaveLength(3);
+    dows.forEach(d => expect([1, 2, 3, 6]).toContain(d));
+  });
+});
