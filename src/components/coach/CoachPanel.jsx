@@ -89,7 +89,9 @@ export function CoachPanel({
       z.style.removeProperty('--hero-d');
       if (!t) return;
       // page Séance sans défiler : si elle dépasse, le rond rapetisse (jamais sous 210 px) ; sinon la zone s'étire et le rond est centré
-      const endB = () => t.getBoundingClientRect().bottom - document.body.getBoundingClientRect().top;
+      // ⚠️ position de MISE EN PAGE (offsetTop), pas getBoundingClientRect : en revenant sur l'onglet, l'animation d'arrivée
+      // (translateY) décalait la mesure vers le bas → zone trop petite, « Parle à ton coach » remontait jusqu'au rafraîchissement
+      const endB = () => { let y = t.offsetHeight; for (let e = t; e && e !== document.body; e = e.offsetParent) y += e.offsetTop; return y; };
       // ce qui reste sous la fin de la page (marges, place de la barre du bas) : mesuré quand la page dépasse l'écran
       const sh = document.body.scrollHeight;
       const tail = sh > vh + 1 ? Math.max(navH + 10, sh - endB()) : navH + 10;
@@ -106,10 +108,12 @@ export function CoachPanel({
       if (prev && next && Math.abs(parseFloat(prev) - parseFloat(next)) < 2) z.style.minHeight = prev;
     };
     fit();
+    // sécurité : on recalcule une fois les animations d'arrivée finies
+    const again = setTimeout(fit, 600);
     let w = window.innerWidth, h = window.innerHeight;
     const onResize = () => { if (window.innerWidth !== w || (!touch && window.innerHeight !== h)) { w = window.innerWidth; h = window.innerHeight; fit(); } };
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    return () => { clearTimeout(again); window.removeEventListener('resize', onResize); };
   });
   const heroGo = fn => {
     if (heroPress) return;
