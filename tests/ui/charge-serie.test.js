@@ -27,7 +27,7 @@ describe('charge modifiable entre deux séries', () => {
     const load = () => Number(h.doc.querySelector('[data-testid="set-load"]').textContent.replace(',', '.'));
     const by = (hh, id) => hh.doc.querySelector(`[data-testid="${id}"]`);
     await guidedStep(h); // comment te sens-tu ?
-    await guidedStep(h); // échauffement passé
+    while (by(h, 'warm-done')) await guidedStep(h); // échauffement passé (aucun ici : 15 kg < barre seule)
     const startLoad = load();
     // séries 1 et 2 à la charge proposée (avec le repos entre les deux)
     await click(h, by(h, 'set-done'));

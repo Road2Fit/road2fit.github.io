@@ -1,5 +1,6 @@
 import { coachRound, coachStep } from './settings';
 import { coarseOf } from '../data/muscles';
+import { BAR_KG, isBarbell } from '../lib/plates';
 
 // Échauffement d'un exercice de la séance guidée : 1 ou 2 séries légères avant les séries de travail.
 //  - charge : montée progressive vers la charge de travail (pourcentages usuels : ~50 % × 8, puis 70-80 % × 3-5),
@@ -30,6 +31,7 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
     const W = Number(loadNow !== undefined ? loadNow : item.load) || 0;
     if (!(W > 0)) return [];
     const step = coachStep({ catalogId: '', name: item.name }, W);
+    const barbell = isBarbell(item.name);
     const heavy = firstWork <= 6 || item.profile === 'puissance';
     const plan = [];
     if (!warm && W >= 15 && (item.compound || W >= 40)) {
@@ -42,7 +44,8 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
     }
     const out = [];
     for (const p of plan) {
-      const load = Math.max(step, coachRound(W * p.pct, step));
+      // barre olympique : jamais sous la barre seule (20 kg)
+      const load = Math.max(barbell ? BAR_KG : step, coachRound(W * p.pct, step));
       if (load >= W) continue; // jamais aussi lourd que le travail
       if (out.length && out[out.length - 1].load >= load) continue;
       out.push({ load, reps: p.reps, restSec: p.restSec, label: `${p.reps} reps à ${String(load).replace(".", ",")} kg` });

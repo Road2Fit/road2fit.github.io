@@ -393,6 +393,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               <h2 className="text-2xl font-black text-white">{it.name}</h2>
               <p className="text-sm font-black text-amber-300 uppercase tracking-wider"><Art name="flame" />Échauffement {warmRows.length > 1 ? `${warmIdx + 1}/${warmRows.length}` : ''}</p>
               <p className="text-4xl font-black text-amber-100">{warmRows[warmIdx].label}</p>
+              {it.kind === 'load' && isBarbell(it.name) && platesText(warmRows[warmIdx].load) && (
+                <p className="text-sm text-slate-400" data-testid="warm-plates">Disques : {platesText(warmRows[warmIdx].load)}</p>
+              )}
             </div>
             <div className="space-y-2">
               <button type="button" onClick={doneWarm} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-amber-600 active:bg-amber-500')} data-testid="warm-done">Échauffement fait</button>

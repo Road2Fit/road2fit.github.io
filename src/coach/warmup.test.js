@@ -16,6 +16,14 @@ describe('échauffement de la séance guidée', () => {
     expect(w[1].load).toBeLessThan(80);
   });
 
+  it('barre olympique : jamais sous la barre seule (20 kg), pas de doublon', () => {
+    const w = warmupSets(load({ load: 30 }), []);
+    expect(w.every(s => s.load >= 20)).toBe(true);
+    expect(w[0].load).toBe(20);
+    const h = warmupSets(load({ name: 'Curl Haltères', compound: false, load: 16 }), []);
+    expect(h[0].load).toBeLessThan(20); // haltères : pas concerné
+  });
+
   it('travail lourd (≤ 6 reps ou profil Puissance) : plus proche de la charge, moins de reps', () => {
     const w = warmupSets(load({ targetReps: [4, 4, 4], goalReps: 4, profile: 'puissance' }), []);
     expect(w.map(x => x.reps)).toEqual([8, 3]);

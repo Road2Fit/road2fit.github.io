@@ -29,6 +29,8 @@ describe('échauffement avant les séries de travail', () => {
     const zone = () => h.doc.querySelector('[data-testid="warmup"]');
     expect(zone()).toBeTruthy();
     expect(zone().textContent).toContain('Échauffement');
+    // barre olympique : les disques à mettre de chaque côté sont indiqués aussi à l'échauffement
+    expect(h.doc.querySelector('[data-testid="warm-plates"]').textContent).toMatch(/Disques : .*(de chaque côté|barre seule)/);
     let warms = 0;
     while (zone() && warms < 3) { await click(h, h.doc.querySelector('[data-testid="warm-done"]')); warms++; await click(h, h.doc.querySelector('[data-testid="guided-next"]')); }
     expect(warms).toBeGreaterThanOrEqual(1);

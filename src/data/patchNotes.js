@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.9.2',
+    date: '2026-11-08',
+    title: 'Disques à l’échauffement',
+    items: [
+      'Séance guidée : à l’échauffement d’un exercice à la barre, l’appli dit aussi quels disques mettre de chaque côté.',
+      'L’échauffement à la barre ne descend jamais sous la barre seule (20 kg).',
+    ],
+  },
+  {
     version: '4.9.1',
     date: '2026-11-08',
     title: 'Dictée sur Android',
