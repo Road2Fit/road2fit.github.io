@@ -77,10 +77,10 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
     const q = byId[e.questId] || {};
     let ex = e;
     // objectif « plus de muscle » sur un groupe : une série de plus sur ses exercices (relation dose-réponse, Schoenfeld 2017)
-    if (goal && goal.kind === 'muscle' && goal.arena && e.arena === goal.arena && !deload && ex.sets < 6) {
+    if (goal && goal.kind === 'muscle' && goal.arena && e.arena === goal.arena && !deload && ex.sets < 6 && !e.manualSets) {
       ex = { ...ex, sets: ex.sets + 1, targetReps: [...ex.targetReps, ex.targetReps[ex.targetReps.length - 1]] };
       goalBoost = true;
-    } else if (prio.includes(e.arena) && !deload && ex.sets < 6) {
+    } else if (prio.includes(e.arena) && !deload && ex.sets < 6 && !e.manualSets) {
       // muscle prioritaire déclaré (expert) : une série de plus
       ex = { ...ex, sets: ex.sets + 1, targetReps: [...ex.targetReps, ex.targetReps[ex.targetReps.length - 1]] };
       prioBoost.add(e.arena);

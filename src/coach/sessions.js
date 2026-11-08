@@ -236,7 +236,7 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
       reduceSets: !!opts.matchWeek && isLegArena(arenaOf(q))
     });
     const want = opts.sets && Number(opts.sets[q.id]);
-    if (!deloadOn && want > e.sets && want <= 8) {
+    if (!deloadOn && !e.manualSets && want > e.sets && want <= 8) {
       while (e.sets < want) { e.sets += 1; e.targetReps.push(e.targetReps[e.targetReps.length - 1]); }
     }
     return e;

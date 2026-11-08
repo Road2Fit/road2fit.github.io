@@ -117,3 +117,65 @@ export function CardioSession({ session, gameState, startAtEnd = false, onClose,
     </div>
   );
 }
+
+// ---------- Résumé d'une séance de cardio (toucher la carte « Cardio » du Coach) : ce qu'on va faire, étape par étape ----------
+const minTxt = m => (m >= 1 ? `${String(Math.round(m * 10) / 10).replace('.', ',')} min` : `${Math.round(m * 60)} s`);
+const baseLabel = l => String(l || '').replace(/\s*\d+\s*\/\s*\d+\s*$/, ''); // « Effort 2/4 » → « Effort »
+const sameStep = (a, b) => a && b && baseLabel(a.label) === baseLabel(b.label) && a.min === b.min && a.zone === b.zone;
+/** Regroupe les répétitions : « 4 × (4 min effort + 3 min récupération) ». */
+export function groupSteps(steps) {
+  const out = [];
+  let i = 0;
+  while (i < steps.length) {
+    let done = false;
+    for (const len of [2, 1]) {
+      let k = 1;
+      while (i + (k + 1) * len <= steps.length && steps.slice(i, i + len).every((s, j) => sameStep(s, steps[i + k * len + j]))) k++;
+      if (k > 1) {
+        // effort + récupération répétés, le dernier effort sans récupération après : « 4 fois », sans récup après le dernier
+        const tail = len === 2 && sameStep(steps[i + k * len], steps[i]);
+        out.push({ times: k + (tail ? 1 : 0), steps: steps.slice(i, i + len), noLastRest: tail });
+        i += k * len + (tail ? 1 : 0); done = true; break;
+      }
+    }
+    if (!done) { out.push({ times: 1, steps: [steps[i]] }); i++; }
+  }
+  return out;
+}
+
+export function CardioSummary({ session, onClose, onStart }) {
+  const groups = groupSteps(session.steps || []);
+  return (
+    <div className="fixed inset-0 !mt-0 z-[70] bg-slate-950/85 overflow-y-auto" onClick={onClose} data-testid="cardio-summary">
+      <div className="min-h-full flex items-end sm:items-center justify-center px-2 pt-10 pb-2">
+        <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-4 space-y-3" onClick={e => e.stopPropagation()} role="dialog" aria-label={session.title}>
+          <button type="button" onClick={onClose} aria-label="Fermer" className="absolute top-3 right-3 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
+          <div className="pr-10">
+            <p className="text-xs font-black text-pink-300 uppercase tracking-wider"><Art name="heart" size={14} bare /> Cardio</p>
+            <h3 className="text-2xl font-black text-white leading-tight">{session.title}</h3>
+            <p className="text-sm font-bold text-slate-300 mt-0.5">{session.minutes} min{session.distanceText ? ` · ${session.distanceText}` : ''}</p>
+          </div>
+          <ol className="space-y-1.5" data-testid="cardio-summary-steps">
+            {groups.map((g, i) => (
+              <li key={i} className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                {g.times > 1 && <p className="text-xs font-black text-amber-300 mb-0.5">{g.times} fois{g.noLastRest ? ' (pas de récupération après le dernier)' : ''} :</p>}
+                {g.steps.map((s, j) => (
+                  <div key={j} className="flex items-baseline gap-2">
+                    <span className="text-sm font-black text-white w-16 shrink-0">{minTxt(s.min)}</span>
+                    <span className="min-w-0">
+                      <span className={`text-sm font-bold ${ZONE_TONE[s.zone] || 'text-slate-200'}`}>{g.times > 1 ? baseLabel(s.label) : s.label}</span>
+                      {s.target && s.target.text && <span className="block text-xs text-slate-300">{s.target.text}{s.km ? ` · ≈ ${String(Math.round(s.km * 10) / 10).replace('.', ',')} km` : ''}</span>}
+                      {s.target && s.target.cue && <span className="block text-xs text-slate-500">{s.target.cue}</span>}
+                    </span>
+                  </div>
+                ))}
+              </li>
+            ))}
+          </ol>
+          {session.why && <p className="text-xs text-slate-400">{session.why}</p>}
+          <button type="button" onClick={onStart} data-key className="w-full py-3.5 rounded-xl bg-pink-600 text-white text-lg font-black" data-testid="cardio-summary-start">Lancer</button>
+        </div>
+      </div>
+    </div>
+  );
+}

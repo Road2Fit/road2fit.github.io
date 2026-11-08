@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sessionFocus } from '../../coach/focus';
 import { Art } from '../Art';
 import { COACH_TYPES, coachDayLabel } from '../../coach/settings';
 import { card } from './ui';
@@ -29,7 +30,8 @@ export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, p
     if (d.gym === 'planned') {
       if (plan && first && d.iso === first.iso) return null; // remplacée par la séance personnalisée
       const p = plannedMap[d.iso];
-      const label = d.type ? COACH_TYPES[d.type].label : p && ov.templates[p.templateIdx] ? `Séance ${ov.templates[p.templateIdx].id}` : 'Muscu';
+      const tf = p && ov.templates[p.templateIdx] ? sessionFocus(ov.templates[p.templateIdx].quests) : null;
+      const label = d.type ? COACH_TYPES[d.type].label : tf ? tf.label : p && ov.templates[p.templateIdx] ? `Séance ${ov.templates[p.templateIdx].id}` : 'Muscu';
       return { icon: '💪', label };
     }
     return null;

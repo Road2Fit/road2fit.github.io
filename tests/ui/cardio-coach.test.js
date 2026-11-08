@@ -23,7 +23,14 @@ describe('coach cardio', () => {
     expect(saved(h).coach.cardio.on).toBe(true);
     const startBtn = q(h, 'cardio-start') || q(h, 'cardio-next-start');
     expect(startBtn).toBeTruthy();
-    await clickEl(h, startBtn);
+    if (q(h, 'cardio-next-open')) {
+      // la carte « Cardio » ouvre d'abord le résumé de la séance, qu'on lance de là
+      await clickEl(h, q(h, 'cardio-next-open'));
+      expect(q(h, 'cardio-summary')).toBeTruthy();
+      expect(q(h, 'cardio-summary-steps').textContent).toContain('Échauffement');
+      await clickEl(h, q(h, 'cardio-summary-start'));
+      expect(q(h, 'cardio-summary')).toBeNull();
+    } else await clickEl(h, startBtn);
     await advance(h, 300);
     expect(q(h, 'cardio-session')).toBeTruthy();
     expect(q(h, 'cardio-step').textContent).toContain('Échauffement');

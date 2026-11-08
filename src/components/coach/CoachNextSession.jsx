@@ -9,6 +9,7 @@ import { PROFILES, activeProfile } from '../../coach/profiles';
 import { COACH_ARENAS, coachDayLabel } from '../../coach/settings';
 import { coachSuggestExercises } from '../../coach/suggest';
 import { restFor, restText } from '../../coach/rest';
+import { sessionFocus } from '../../coach/focus';
 
 import { card } from './ui';
 import { CustomSetsEditor } from './CustomSetsEditor';
@@ -116,7 +117,12 @@ export function CoachNextSession({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {preview && <span className="px-2.5 py-1 rounded-full bg-violet-600 text-white font-black">Aperçu</span>}
             <span className="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">
-              {plan ? 'Séance perso' : shownSession.type ? `Séance ${shownSession.typeLabel}` : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId} · corps entier`}
+              {(() => {
+                const fc = sessionFocus(shownSession.exercises);
+                if (shownSession.program && !plan) return shownSession.templateId;
+                const side = shownSession.type === 'PUSH' || shownSession.type === 'PULL' ? ` · ${shownSession.typeLabel.toLowerCase()}` : '';
+                return fc ? `${fc.label}${side}` : plan ? 'Séance perso' : `Séance ${shownSession.typeLabel || shownSession.templateId}`;
+              })()}
             </span>
             <span className="text-slate-300 font-bold">
               {shownDate === today ? 'Aujourd’hui' : coachDayLabel(shownDate)}
@@ -135,47 +141,32 @@ export function CoachNextSession({
               const ru = e.timed ? 's' : 'reps';
               // forme de séries : détail série par série (« 12 × 50 · 10 × 55 · 8 × 60 kg »)
               const planTxt = e.plan ? e.plan.map(p => `${p.reps}${e.kind === 'load' ? ` × ${coachFmt(p.load)}` : e.kind === 'assisted' ? ` (${assistText(p.assist)})` : ''}`).join(' · ') + (e.kind === 'load' ? ' kg' : '') : '';
-              const repsTxt = e.plan ? planTxt : uniform ? `${e.sets} × ${e.targetReps[0]} ${ru}` : `${e.sets} séries : ${e.targetReps.join(' - ')} ${ru}`;
+              // court pour tenir sur une ligne : « 4 × 8 à 57,5 kg », « 9-9-8-9 à 45 kg », « 3 × 12 reps »
+              const unitTxt = e.kind === 'load' && !e.timed ? '' : ` ${ru}`;
+              const repsTxt = e.plan ? planTxt : uniform ? `${e.sets} × ${e.targetReps[0]}${unitTxt}` : `${e.targetReps.join('-')}${unitTxt}`;
+              const restShort = sec => `${Math.floor(sec / 60)}’${sec % 60 ? String(sec % 60).padStart(2, '0') : ''}`;
               const loadTxt = e.plan ? '' : e.kind === 'load' ? ` à ${coachFmt(e.load)} kg` : e.kind === 'assisted' ? ` · ${assistText(e.assist)}` : '';
               return (
-                <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+                <div key={e.questId} className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" data-testid="next-ex">
+                  {/* deux lignes : nom, puis séries · charge · repos ; tout le reste est sous le crayon */}
+                  <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
                       <p className="font-extrabold text-white text-sm truncate">{e.icon} {e.name}</p>
-                      {(e.plan || e.superset) && (
-                        <p className="flex flex-wrap gap-1 my-0.5" data-testid="method-chip">
-                          {e.plan && <span className="px-2 py-0.5 rounded-full bg-violet-900/60 border border-violet-500/50 text-xs font-bold text-violet-200">{(METHODS[e.method] || {}).label}</span>}
-                          {e.superset && <span className="px-2 py-0.5 rounded-full bg-sky-900/60 border border-sky-500/50 text-xs font-bold text-sky-200">Superset {e.superset.id}</span>}
-                        </p>
-                      )}
-                      <p className="text-pink-300 font-black text-sm">{repsTxt}{loadTxt}</p>
-                      {!e.plan && e.restSec > 0 && <p className="text-xs text-slate-400" data-testid="rest-chip">Repos {restText(e.superset && e.superset.first ? 15 : e.restSec)}{e.superset && e.superset.first ? ' (puis l’autre exercice du superset)' : ''}</p>}
+                      <p className="text-sm flex items-center gap-1 min-w-0 whitespace-nowrap overflow-hidden" data-testid="ex-line2">
+                        <span className="shrink-0 inline-flex" title={b[1]} aria-label={b[1]} data-testid="change-badge">{b[0]}</span>
+                        <span className="text-pink-300 font-black truncate min-w-0" data-testid={e.plan ? 'method-chip' : undefined}>{e.plan ? `${(METHODS[e.method] || {}).label} · ${e.sets} séries` : `${repsTxt}${loadTxt}`}</span>
+                        {e.superset && <span className="shrink-0 text-sky-300 font-bold">· sup. {e.superset.id}</span>}
+                        {!e.plan && e.restSec > 0 && <span className="shrink-0 inline-flex items-center gap-0.5 text-slate-400" data-testid="rest-chip" title={`Repos ${restText(e.superset && e.superset.first ? 15 : e.restSec)}`}>· <Art name="timer" size={13} bare />{restShort(e.superset && e.superset.first ? 15 : e.restSec)}</span>}
+                      </p>
                     </div>
-                    <div className="shrink-0 flex items-center gap-1">
-                      <span className={`px-2 py-0.5 rounded-full border text-xs font-bold ${b[2]}`}>{b[0]} {b[1]}</span>
-                      {!preview && <button onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} title="Remplacer cet exercice" className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">🔄</button>}
-                      {plan && (
-                        <>
-                          <button onClick={() => planMove(e.questId, -1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▲</button>
-                          <button onClick={() => planMove(e.questId, 1)} className="w-7 h-7 rounded-lg bg-slate-800 text-slate-200 text-xs font-black">▼</button>
-                          <button onClick={() => planRemove(e.questId)} className="w-7 h-7 rounded-lg bg-rose-900/60 text-rose-200 text-xs font-black">✕</button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* deux icônes seules : le mouvement (animation) et le crayon (pourquoi / ajuster) */}
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement" aria-label="Voir le mouvement" className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center"><Art name="film" size={20} bare /></button>
-                    {!preview && <button type="button" onClick={() => toggleEx(e.questId)} aria-expanded={!!openEx[e.questId]} title="Pourquoi ? / Ajuster" aria-label="Pourquoi ? / Ajuster" data-testid="ex-adjust"
-                      className={`relative w-10 h-10 rounded-xl border flex items-center justify-center ${openEx[e.questId] ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-700'}`}>
-                      <Art name="pencil" size={20} bare />
+                    <button type="button" onClick={() => openMovement({ catalogId: e.catalogId, name: e.name })} title="Voir le mouvement" aria-label="Voir le mouvement" className="tap-free shrink-0 w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center"><Art name="film" size={18} bare /></button>
+                    {!preview && <button type="button" onClick={() => { toggleEx(e.questId); if (openEx[e.questId] && swapFor === e.questId) setSwapFor(null); }} aria-expanded={!!openEx[e.questId]} title="Pourquoi ? / Ajuster" aria-label="Pourquoi ? / Ajuster" data-testid="ex-adjust"
+                      className={`tap-free relative shrink-0 w-9 h-9 rounded-xl border flex items-center justify-center ${openEx[e.questId] ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-700'}`}>
+                      <Art name="pencil" size={18} bare />
                       {e.manual && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400" title="Modifié par toi" />}
                     </button>}
                   </div>
-                  {!preview && openEx[e.questId] && <p className="text-xs text-slate-400 mt-1">{e.reason}</p>}
-                  {!preview && openEx[e.questId] && !e.plan && e.restSec > 0 && <p className="text-xs text-slate-400 mt-1">Repos de {restText(e.restSec)} : {restFor({ name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
-                  {!preview && openEx[e.questId] && e.methodWhy && <p className="text-xs text-violet-200 mt-1">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
-                  {!preview && openEx[e.questId] && setMethod && (() => {
+                  {!preview && openEx[e.questId] && (() => {
                     const q = gameState.quests.find(x => x.id === e.questId) || {};
                     const hasCustom = Array.isArray(q.coachCustom) && q.coachCustom.length > 0;
                     // « Personnalisée » : ouvre le réglage série par série (déjà réglée : on la reprend tout de suite)
@@ -184,37 +175,58 @@ export function CoachNextSession({
                       setCustomFor(null);
                       setMethod(e.questId, id);
                     };
+                    const pmBtn = 'tap-free w-10 h-10 rounded-xl bg-slate-800 border border-slate-600 text-lg font-black text-white active:bg-slate-700';
+                    const stepper = (label, value, minus, plus, testId) => (
+                      <div className="flex items-center justify-between gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2 py-1.5">
+                        <span className="text-xs font-bold text-slate-400 w-20">{label}</span>
+                        <button type="button" onClick={minus} aria-label={`${label} moins`} className={pmBtn}>−</button>
+                        <span className="flex-1 text-center text-base font-black text-white" data-testid={testId}>{value}</span>
+                        <button type="button" onClick={plus} aria-label={`${label} plus`} className={pmBtn}>+</button>
+                      </div>
+                    );
+                    const act = 'tap-free py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs font-bold text-slate-100 flex flex-col items-center gap-0.5 disabled:opacity-40';
+                    const idx = shownSession.exercises.findIndex(x => x.questId === e.questId);
+                    const last = shownSession.exercises.length - 1;
                     return (
-                      <>
-                        <label className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
-                          <select value={customFor === e.questId ? 'custom' : q.coachMethod || 'auto'} onChange={ev => pickMethod(ev.target.value)} data-testid="method-select" className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white">
-                            <option value="auto">Le coach choisit</option>
-                            {METHOD_IDS.filter(id => methodFits(id, e)).map(id => <option key={id} value={id}>{METHODS[id].label}</option>)}
-                          </select>
-                          {q.coachMethod === 'custom' && customFor !== e.questId && <button type="button" onClick={() => setCustomFor(e.questId)} className="px-2 py-1 rounded-lg bg-violet-900/60 border border-violet-500/50 text-violet-100" data-testid="custom-edit">Modifier mes séries</button>}
-                        </label>
+                      <div className="mt-2 space-y-2" data-testid="ex-panel">
+                        {/* Tu décides : charge (ou aide), répétitions, séries */}
+                        {e.kind === 'load' && !e.plan && stepper('Charge', `${coachFmt(e.load)} kg`, () => adjustTarget(e, 'easier'), () => adjustTarget(e, 'harder'), 'adj-load')}
+                        {e.kind === 'assisted' && !e.plan && (e.assist < 0
+                          ? stepper('Lest', `+${coachFmt(-e.assist)} kg`, () => adjustTarget(e, 'easier'), () => adjustTarget(e, 'harder'), 'adj-assist')
+                          : stepper('Aide', `${coachFmt(e.assist)} kg`, () => adjustTarget(e, 'harder'), () => adjustTarget(e, 'easier'), 'adj-assist'))}
+                        {!e.plan && stepper(e.timed ? 'Secondes' : 'Répétitions', uniform ? e.targetReps[0] : e.targetReps.join(' - '), () => adjustTarget(e, 'lessReps'), () => adjustTarget(e, 'moreReps'), 'adj-reps')}
+                        {stepper('Séries', e.sets, () => adjustTarget(e, 'lessSets'), () => adjustTarget(e, 'moreSets'), 'adj-sets')}
+                        {e.plan && <p className="text-xs text-pink-200 font-bold">{planTxt}</p>}
+                        {setMethod && (
+                          <label className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
+                            <select value={customFor === e.questId ? 'custom' : q.coachMethod || 'auto'} onChange={ev => pickMethod(ev.target.value)} data-testid="method-select" className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white">
+                              <option value="auto">Le coach choisit</option>
+                              {METHOD_IDS.filter(id => methodFits(id, e)).map(id => <option key={id} value={id}>{METHODS[id].label}</option>)}
+                            </select>
+                            {q.coachMethod === 'custom' && customFor !== e.questId && <button type="button" onClick={() => setCustomFor(e.questId)} className="px-2 py-1 rounded-lg bg-violet-900/60 border border-violet-500/50 text-violet-100" data-testid="custom-edit">Modifier mes séries</button>}
+                          </label>
+                        )}
                         {customFor === e.questId && setCustom && (
                           <CustomSetsEditor e={e} onCancel={() => setCustomFor(null)} onSave={rows => { setCustom(e, rows); setCustomFor(null); }} />
                         )}
-                      </>
+                        {e.manual && (
+                          <button type="button" onClick={() => adjustTarget(e, 'reset')} className="w-full py-2 rounded-xl bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200" data-testid="adj-reset">
+                            <Art name="repeat" />Revenir à la proposition du coach
+                          </button>
+                        )}
+                        {/* changer, monter / descendre, retirer */}
+                        <div className={`grid gap-1.5 ${plan ? 'grid-cols-4' : 'grid-cols-1'}`}>
+                          <button type="button" onClick={() => setSwapFor(swapFor === e.questId ? null : e.questId)} aria-expanded={swapFor === e.questId} className={act} data-testid="ex-swap"><Art name="repeat" size={16} bare />Changer</button>
+                          {plan && <button type="button" onClick={() => planMove(e.questId, -1)} disabled={idx <= 0} className={act} data-testid="ex-up"><span aria-hidden="true">▲</span>Monter</button>}
+                          {plan && <button type="button" onClick={() => planMove(e.questId, 1)} disabled={idx >= last} className={act} data-testid="ex-down"><span aria-hidden="true">▼</span>Descendre</button>}
+                          {plan && <button type="button" onClick={() => planRemove(e.questId)} className={`${act} !text-rose-300 !border-rose-500/50`} data-testid="ex-remove"><span aria-hidden="true">✕</span>Retirer</button>}
+                        </div>
+                        <p className="text-xs text-slate-400"><span className="font-bold text-slate-300">{b[1]} : </span>{e.reason}</p>
+                        {!e.plan && e.restSec > 0 && <p className="text-xs text-slate-400">Repos de {restText(e.restSec)} : {restFor({ name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
+                        {e.methodWhy && <p className="text-xs text-violet-200">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
+                      </div>
                     );
                   })()}
-                  {!preview && openEx[e.questId] && (
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                    <span className="text-slate-500 font-bold">Tu décides :</span>
-                    <button onClick={() => adjustTarget(e, 'easier')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
-                      {e.kind === 'load' ? 'Plus léger' : e.kind === 'assisted' ? 'Plus d’aide' : '🔽 1 rép de moins'}
-                    </button>
-                    <button onClick={() => adjustTarget(e, 'harder')} className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 font-bold text-slate-100">
-                      {e.kind === 'load' ? 'Plus lourd' : e.kind === 'assisted' ? 'Moins d’aide' : '🔼 1 rép de plus'}
-                    </button>
-                    {e.manual && (
-                      <button onClick={() => adjustTarget(e, 'reset')} className="px-2 py-1 rounded-lg bg-violet-900/50 hover:bg-violet-800/60 border border-violet-500/40 font-bold text-violet-200">
-                        <Art name="repeat" />Proposition du coach
-                      </button>
-                    )}
-                  </div>
-                  )}
                   {swapFor === e.questId && (() => {
                     const opt = coachSwapOptions(gameState, e.questId, shownSession.exercises.map(x => x.questId));
                     return (

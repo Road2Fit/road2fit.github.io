@@ -1,6 +1,7 @@
 import { Art } from '../Art';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
+import { sessionFocus } from '../../coach/focus';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
@@ -34,7 +35,7 @@ import { arenaOf, fineGroupOf, secondGroupOf } from '../../data/muscles';
 import { MuscleBodyMap } from './MuscleBodyMap';
 import { applyCardioSession, cardioPlanWeek, heartBalance } from '../../coach/cardio';
 import { CardioInvite, CoachCardio, CoachHeart } from './CoachCardio';
-import { CardioSession, savedCardioRun } from './CardioSession';
+import { CardioSession, CardioSummary, savedCardioRun } from './CardioSession';
 import { EXERCISE_CATALOG } from '../../data/catalog';
 import { calculateCardioCalories } from '../../lib/calories';
 import { computeXp } from '../../lib/xp';
@@ -192,6 +193,7 @@ export function CoachPanel({
   const cardioToday = cardioWeeks[0].sessions.find(x => x.iso === today) || null;
   const cardioNext = cardioWeeks.flatMap(w => w.sessions).find(x => x.iso >= today) || null;
   const heart = useMemo(() => heartBalance(gameState, today), [gameState.quests, gameState.coach, today]);
+  const [cardioPeek, setCardioPeek] = useState(null); // résumé d'une séance de cardio avant de la lancer
   const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
   const [cardioMsg, setCardioMsg] = useState('');
   const saveCardio = (session, res) => {
@@ -281,9 +283,14 @@ export function CoachPanel({
         }
         const n = coachRealEntries(q).length;
         const cur = q.coachOverride && q.coachOverride.entries === n ? q.coachOverride : {};
-        const dir = action === 'harder' ? 1 : -1;
+        const dir = action === 'harder' || action === 'moreSets' || action === 'moreReps' ? 1 : -1;
         const next = { ...cur, entries: n };
-        if (e.kind === 'load') {
+        if (action === 'moreSets' || action === 'lessSets') {
+          next.sets = Math.max(1, Math.min(10, (Number(e.sets) || 3) + dir));
+        } else if (action === 'moreReps' || action === 'lessReps') {
+          if (Math.min(...e.targetReps) + dir < 1) return q;
+          next.repsDelta = (cur.repsDelta || 0) + dir * (e.timed ? 5 : 1);
+        } else if (e.kind === 'load') {
           const st = coachStep(q, e.load);
           next.load = Math.max(0, coachRound(e.load + dir * st, st));
         } else if (e.kind === 'assisted') {
@@ -340,6 +347,7 @@ export function CoachPanel({
           </button>
         </section></div>
       )}
+      {cardioPeek && <CardioSummary session={cardioPeek} onClose={() => setCardioPeek(null)} onStart={() => { setCardioRun({ session: cardioPeek }); setCardioPeek(null); }} />}
       {cardioRun && <CardioSession session={cardioRun.session} startAtEnd={!!cardioRun.atEnd} gameState={gameState} onClose={() => setCardioRun(null)} onSave={res => saveCardio(cardioRun.session, res)} />}
       {cardioMsg && <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-200" data-testid="cardio-saved" onClick={() => setCardioMsg('')}><Art name="heart" />{cardioMsg}</p>}
       {!guidedActive && cardioToday && !muscuToday && (
@@ -355,7 +363,8 @@ export function CoachPanel({
       )}
       {!guidedActive && !coachOff && !(cardioToday && !muscuToday) && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
-        const title = plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : shownSession.program ? shownSession.templateId : `Séance ${shownSession.templateId}`;
+        const fc = sessionFocus(shownSession.exercises);
+        const title = shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : `Séance ${shownSession.templateId}`;
         return (
           <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
             <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}<br />{shownSession.estMin} min</p>
@@ -375,11 +384,13 @@ export function CoachPanel({
       {/* cardio : prochaine séance (ou celle du jour, après la muscu), puis l'invitation tant que la personne n'a pas répondu */}
       {cardioNext && !(cardioNext === cardioToday && !muscuToday) && (
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 flex items-center gap-3" data-testid="cardio-next">
+          <button type="button" onClick={() => setCardioPeek(cardioNext)} data-testid="cardio-next-open" aria-label="Voir le détail du cardio" className="tap-free flex-1 min-w-0 flex items-center gap-3 text-left">
           <span className="w-11 h-11 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={26} bare /></span>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</p>
-            <p className="text-sm font-black text-white leading-tight">{cardioNext.title}</p>
-          </div>
+          <span className="flex-1 min-w-0 block">
+            <span className="block text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</span>
+            <span className="block text-sm font-black text-white leading-tight">{cardioNext.title} <span className="text-pink-300" aria-hidden="true">›</span></span>
+          </span>
+          </button>
           <button type="button" data-testid="cardio-next-start" data-key="pill" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>
           <button type="button" data-testid="cardio-next-done" onClick={() => setCardioRun({ session: cardioNext, atEnd: true })} aria-label="Déjà faite" className="w-10 h-10 rounded-full bg-slate-800 text-emerald-300 inline-flex items-center justify-center shrink-0"><Art name="check" size={18} bare /></button>
         </section>

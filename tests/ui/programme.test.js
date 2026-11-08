@@ -31,7 +31,7 @@ describe('programme de mon coach', () => {
     expect(by(h, 'program-card').textContent).toContain('Semaine 1 sur 2');
     expect(by(h, 'program-analysis').textContent).toMatch(/Progression par la charge/);
     // la prochaine séance est celle du coach
-    expect(h.doc.body.textContent).toContain('Ton coach'); // badge de chaque exercice de la séance
+    expect([...h.doc.querySelectorAll('[data-testid="change-badge"]')].some(b => b.title === 'Ton coach')).toBe(true); // badge de chaque exercice de la séance
     await openCoachDetails(h);
     expect(h.doc.body.textContent).toContain('Programme de ton coach : semaine 1');
     await clickText(h, 'Lancer');

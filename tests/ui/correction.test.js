@@ -61,14 +61,14 @@ describe('aller à l’encontre du coach', () => {
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await expandCoachDetails(h);
     expect(pageText(h)).toContain('aide 12,5 kg'); // la proposition du coach : l'aide remonte
-    await clickText(h, 'Moins d’aide'); // 12,5 → 10
+    await clickEl(h, h.doc.querySelector('button[aria-label="Aide moins"]')); // 12,5 → 10
     expect(pageText(h)).toContain('aide 10 kg');
-    await clickText(h, 'Moins d’aide'); // 10 → 7,5
+    await clickEl(h, h.doc.querySelector('button[aria-label="Aide moins"]')); // 10 → 7,5
     expect(pageText(h)).toContain('aide 7,5 kg');
     expect(pageText(h)).toContain('Ton choix');
     expect(pageText(h)).toContain('Le coach proposait aide 12,5 kg');
     expect(saved(h).quests[0].coachOverride).toMatchObject({ entries: 2, assist: 7.5 });
-    await clickText(h, 'Proposition du coach');
+    await clickEl(h, h.doc.querySelector('[data-testid="adj-reset"]'));
     expect(pageText(h)).toContain('aide 12,5 kg');
     expect(saved(h).quests[0].coachOverride).toBeUndefined();
     expect(h.errors).toEqual([]);
@@ -78,8 +78,8 @@ describe('aller à l’encontre du coach', () => {
     const h = await start();
     await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
     await expandCoachDetails(h);
-    await clickText(h, 'Plus d’aide');
-    await clickText(h, 'Plus d’aide');
+    await clickEl(h, h.doc.querySelector('button[aria-label="Aide plus"]'));
+    await clickEl(h, h.doc.querySelector('button[aria-label="Aide plus"]'));
     expect(saved(h).quests[0].coachOverride.assist).toBe(17.5);
     expect(pageText(h)).toContain('aide 17,5 kg');
   }, TIMEOUT);

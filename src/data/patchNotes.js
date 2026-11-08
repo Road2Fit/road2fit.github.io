@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.12',
+    date: '2026-11-08',
+    title: 'Prochaine séance plus compacte',
+    items: [
+      'Prochaine séance : chaque exercice tient en deux lignes. Le crayon ouvre la charge, les répétitions, les séries, la forme, et Changer / Monter / Descendre / Retirer.',
+      'Le titre de la séance dit ce qu’elle travaille : « Haut du corps », « Bas du corps » ou « Corps entier » (plus de 70 % d’exercices en haut ou en bas, sinon corps entier).',
+      'Cardio : toucher la carte ouvre le résumé de la séance (étapes, durées, vitesses), avec « Lancer » en bas.',
+    ],
+  },
+  {
     version: '4.11',
     date: '2026-11-08',
     title: 'Ressenti à part, exercice supprimable',

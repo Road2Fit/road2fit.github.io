@@ -157,13 +157,15 @@ export function computeExerciseTarget(q, opts = {}) {
 
   // Décision de l'utilisateur : elle prime sur la proposition du coach jusqu'à la prochaine séance de cet exercice
   // (voir « Tu décides » dans l'onglet Coach). On garde la proposition du coach pour pouvoir y revenir.
-  const suggested = { load, assist, targetReps: reps.slice(), change };
+  const suggested = { load, assist, sets, targetReps: reps.slice(), change };
   const choice = q.coachOverride;
   const manual = !!(choice && choice.entries === entries.length);
   if (manual) {
     if (kind === 'load' && choice.load !== undefined) load = Number(choice.load) || 0;
     if (kind === 'assisted' && choice.assist !== undefined) assist = Number(choice.assist) || 0; // négatif = lest
     if (choice.repsDelta) reps = reps.map(r => Math.max(1, r + choice.repsDelta));
+    // nombre de séries choisi (1 à 10) : la dernière série est répétée, ou on retire les dernières
+    if (choice.sets) { sets = Math.max(1, Math.min(10, Math.round(Number(choice.sets)) || sets)); reps = Array.from({ length: sets }, (_, i) => (reps[i] !== undefined ? reps[i] : reps[reps.length - 1])); }
     change = 'manual';
     const was = kind === 'load' ? `${suggested.load} kg` : kind === 'assisted' ? assistText(suggested.assist) : suggested.targetReps.join(' - ') + (T ? ' s' : ' reps');
     reason = `Ta décision : tu as choisi toi-même cet objectif. Le coach proposait ${was}.`;
@@ -174,7 +176,7 @@ export function computeExerciseTarget(q, opts = {}) {
     // repos calculé pour CET exercice et cette charge (coach/rest.js) ; profil endurance : repos courts voulus (≤ 90 s, ACSM 2009)
     restSec: restOf(q, arena, reps, T, compound, opts.profile), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
     profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
-    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, suggested
+    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, manualSets: !!(manual && choice.sets), suggested
   };
 }
 

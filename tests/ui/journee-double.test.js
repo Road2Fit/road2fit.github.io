@@ -35,7 +35,7 @@ describe('journée double et séance en plus', () => {
     await clickEl(h, h.doc.querySelector('[data-testid="week-add-gym"]'));
     expect(saved(h).coach.gymExtra).toContain('2026-10-22');
     const t = cell(h, '2026-10-22').textContent;
-    expect(t).toContain('Séance');
+    expect(t).toMatch(/Corps entier|Haut du corps|Bas du corps|Séance/); // type de séance calculé
     expect(t).toContain('Volley');
     expect(t).toContain('en plus');
     // on peut la retirer
