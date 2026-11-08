@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.11',
+    date: '2026-11-08',
+    title: 'Ressenti à part, exercice supprimable',
+    items: [
+      'Séance guidée : à la fin d’un exercice, un écran à part te demande ton ressenti (1 à 10). Une seule fois : ensuite, le chrono du repos s’affiche en grand.',
+      'Menu ⋯ de la séance : « Supprimer l’exercice de la séance » le retire complètement (rien n’est enregistré pour lui).',
+    ],
+  },
+  {
     version: '4.10',
     date: '2026-11-08',
     title: 'Les boutons clés ressortent',

@@ -180,7 +180,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // exercice fini : repos, puis exercice suivant ; le ressenti se donne pendant le repos
     const n = nextExerciseIdx(g.idx, data);
     setG(prev => ({ ...prev, data }));
-    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId, ...prX });
+    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId, rpeAsk: it.questId, ...prX });
   };
   const doneWarm = () => {
     const w = warmRows[warmIdx];
@@ -202,6 +202,36 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const rpeQ = g.rpeFor ? items.find(x => x.questId === g.rpeFor) : null;
   const rpeD = rpeQ ? g.data[rpeQ.questId] : null;
   const setRpe = n => { if (rpeQ) patch(rpeQ.questId, { rpe: rpeD && rpeD.rpe === n ? undefined : n }); };
+  // écran dédié au ressenti, juste après la fin d'un exercice : une note et on n'en parle plus
+  const askQ = g.rpeAsk ? items.find(x => x.questId === g.rpeAsk) : null;
+  const answerRpe = n => { if (askQ) setG(prev => ({ ...prev, rpeAsk: null, data: { ...prev.data, [askQ.questId]: { ...prev.data[askQ.questId], rpe: n } } })); };
+  const skipRpe = () => setG(prev => ({ ...prev, rpeAsk: null }));
+  // retirer complètement un exercice de CETTE séance (rien n'est enregistré pour lui)
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const removeExercise = () => {
+    if (!it) return;
+    const qid = it.questId;
+    setConfirmRemove(false);
+    setMenu(false);
+    setSwapOpen(false);
+    setSw(null);
+    stopRestEvent();
+    setG(prev => {
+      const left = prev.items.filter(x => x.questId !== qid);
+      const data = { ...prev.data };
+      delete data[qid];
+      const clean = { ...prev, items: left, data, rest: null, adapt: null, pr: null,
+        rpeAsk: prev.rpeAsk === qid ? null : prev.rpeAsk, rpeFor: prev.rpeFor === qid ? null : prev.rpeFor };
+      if (!left.length) return { ...clean, idx: 0, phase: 'summary' };
+      // exercice suivant qui a encore des séries (à partir de la même place), sinon le résumé
+      const from = Math.min(prev.idx, left.length - 1);
+      for (let k = 0; k < left.length; k++) {
+        const n = (from + k) % left.length;
+        if (((data[left[n].questId] || {}).done || []).some(v => !v)) return { ...clean, idx: n, phase: 'run' };
+      }
+      return { ...clean, idx: from, phase: 'summary' };
+    });
+  };
 
   const RPE_LABELS = { 6: 'Facile', 7: 'Modéré', 8: 'Dur', 9: 'Très dur', 10: 'Max' };
   const big = 'w-full py-4 rounded-2xl text-lg font-black text-white bg-pink-600 active:bg-pink-500';
@@ -265,6 +295,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   let screen = 'set';
   if (!g.feel && !Object.values(g.data).some(dd => (dd.done || []).some(Boolean))) screen = 'feel';
   else if (g.phase === 'summary') screen = 'summary';
+  else if (askQ && !(g.data[askQ.questId] || {}).rpe) screen = 'rpe';
   else if (rest) screen = 'rest';
   else if (inWarm) screen = 'warm';
 
@@ -350,19 +381,41 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           </div>
         )}
 
+        {/* RESSENTI de l'exercice qui vient de se terminer : écran à lui, demandé une seule fois */}
+        {screen === 'rpe' && askQ && (
+          <div className="flex-1 flex flex-col" data-testid="guided-rpe-screen">
+            <p className="text-center text-sm font-bold text-slate-400" data-testid="rpe-rest-left">{rest ? <>Repos · <span className="text-white font-black">{fmtT(restLeft)}</span></> : 'Repos terminé'}</p>
+            {g.pr && <div className="num-pop text-center mt-2" data-testid="guided-pr"><p className="text-lg font-black text-amber-300"><Art name="trophy" size={22} />Nouveau record !</p><p className="text-xs text-slate-400">{(items.find(x => x.questId === g.pr.questId) || {}).name} · {g.pr.text}</p></div>}
+            <div className="flex-1 flex flex-col justify-center gap-4" data-testid="guided-rpe">
+              <div className="text-center">
+                <p className="text-sm font-black text-pink-300 uppercase tracking-wider">Exercice terminé</p>
+                <h2 className="text-2xl font-black text-white mt-1">Ressenti sur {askQ.name} ?</h2>
+                <p className="text-xs text-slate-400 mt-1">1 = très facile · 10 = impossible d’en faire une de plus</p>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  <button key={n} type="button" onClick={() => answerRpe(n)} aria-label={`Ressenti ${n} sur 10`} data-testid={`rpe-${n}`}
+                    className="h-16 rounded-2xl text-2xl font-black border bg-slate-900 border-slate-700 text-slate-100 active:bg-slate-700">{n}</button>
+                ))}
+              </div>
+            </div>
+            <button type="button" onClick={skipRpe} className="w-full py-3 text-sm font-bold text-slate-400" data-testid="rpe-skip">Passer</button>
+          </div>
+        )}
+
         {/* REPOS */}
         {screen === 'rest' && (
           <div className="flex-1 flex flex-col" data-testid="guided-rest">
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
               {g.pr && <div className="num-pop text-center" data-testid="guided-pr"><p className="text-lg font-black text-amber-300"><Art name="trophy" size={22} />Nouveau record !</p><p className="text-xs text-slate-400">{(items.find(x => x.questId === g.pr.questId) || {}).name} · {g.pr.text}</p></div>}
               <p className="text-sm font-black text-emerald-300 uppercase tracking-wider">Repos</p>
-              <div className="relative w-52 h-52">
+              <div className="relative w-64 h-64 max-w-[70vw] max-h-[70vw]">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="6" />
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round"
                     strokeDasharray={2 * Math.PI * 45} strokeDashoffset={2 * Math.PI * 45 * (1 - restLeft / Math.max(1, rest.total))} />
                 </svg>
-                <p className="absolute inset-0 flex items-center justify-center text-5xl font-black text-white" data-testid="rest-left">{fmtT(restLeft)}</p>
+                <p className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white" data-testid="rest-left">{fmtT(restLeft)}</p>
               </div>
               {rest.next && <p className="text-base font-bold text-slate-200 text-center" data-testid="rest-next">{rest.next}</p>}
               {adapt && (
@@ -376,7 +429,6 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               )}
             </div>
             <div className="space-y-3">
-              {rpeRow()}
               <div className="flex gap-2">
                 <button type="button" onClick={addRest} className="px-5 py-4 rounded-2xl bg-slate-800 text-slate-100 font-black">+30 s</button>
                 <button type="button" onClick={skipRest} className={`${big} flex-1`} data-key data-testid="guided-next">{/^Ensuite/.test(rest.next || '') ? 'Exercice suivant' : 'Série suivante'}</button>
@@ -526,7 +578,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
 
       {/* MENU « ⋯ » : tout ce qui sert rarement */}
       {menu && (
-        <div className="absolute inset-0 z-10 bg-slate-950/80 flex items-end" onClick={() => { setMenu(false); setConfirmCancel(false); }}>
+        <div className="absolute inset-0 z-10 bg-slate-950/80 flex items-end" onClick={() => { setMenu(false); setConfirmCancel(false); setConfirmRemove(false); }}>
           <div className="w-full max-w-md mx-auto bg-slate-900 border-t border-slate-700 rounded-t-3xl p-4 space-y-2" onClick={e => e.stopPropagation()} data-testid="guided-menu-sheet">
             {it && screen !== 'summary' && (
               <>
@@ -553,6 +605,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     </div>
                   );
                 })()}
+                {!confirmRemove
+                  ? <button type="button" onClick={() => setConfirmRemove(true)} className="w-full py-3 rounded-xl bg-slate-800 text-rose-300 font-bold text-sm" data-testid="remove-exercise">Supprimer l’exercice de la séance</button>
+                  : <button type="button" onClick={removeExercise} className="w-full py-3 rounded-xl bg-rose-600 text-white font-black text-sm" data-testid="remove-exercise-confirm">Oui, retirer {it.name}{d.done.some(Boolean) ? ' (ses séries faites ne seront pas enregistrées)' : ''}</button>}
                 {it.reason && <details className="text-xs text-slate-400"><summary className="font-bold text-slate-300 py-1">Pourquoi cet objectif ?</summary><p className="mt-1">{it.reason}</p>{plan && <p className="mt-1">{(METHODS[it.method] || {}).how}</p>}</details>}
               </>
             )}

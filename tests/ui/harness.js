@@ -372,6 +372,7 @@ export async function guidedStep(h, { warm = 'skip' } = {}) {
   if (gq(h, 'guided-summary')) return 'summary';
   if (gq(h, 'feel-ok')) { await gclick(h, gq(h, 'feel-ok')); return 'feel'; }
   if (gq(h, 'set-done')) { await gclick(h, gq(h, 'set-done')); return 'set'; }
+  if (gq(h, 'rpe-skip')) { await gclick(h, gq(h, 'rpe-skip')); return 'rpe'; } // écran du ressenti : passé
   if (gq(h, 'warm-done')) {
     if (warm === 'do') await gclick(h, gq(h, 'warm-done'));
     else await gclick(h, [...gq(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
