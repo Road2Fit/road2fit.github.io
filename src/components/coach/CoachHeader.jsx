@@ -21,7 +21,7 @@ export function CoachHeader({ coach, guidedActive, onResumeGuided, trainingWeeks
       </div>
 
       {guidedActive && (
-        <button onClick={onResumeGuided} className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm">
+        <button onClick={onResumeGuided} data-key className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm">
           ▶ Reprendre la séance guidée en cours
         </button>
       )}

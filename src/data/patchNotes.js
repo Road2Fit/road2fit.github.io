@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.10',
+    date: '2026-11-08',
+    title: 'Les boutons clés ressortent',
+    items: [
+      'Les boutons les plus importants (Lancer, Reprendre, Série faite, Série suivante, Enregistrer) ont une touche de la couleur complémentaire de ton néon : framboise pour le vert citron, jaune pour le violet, orange pour le bleu…',
+      'La couleur que tu as choisie reste la couleur principale : les grands boutons gardent ta couleur avec un liseré, seuls les petits boutons sont pleins de la complémentaire.',
+    ],
+  },
+  {
     version: '4.9.3',
     date: '2026-11-08',
     title: 'Échauffement : la barre fait 20 kg',

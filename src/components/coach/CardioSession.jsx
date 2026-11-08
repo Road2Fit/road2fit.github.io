@@ -110,7 +110,7 @@ export function CardioSession({ session, gameState, startAtEnd = false, onClose,
                 <button key={v} type="button" data-testid={`cardio-rpe-${v}`} aria-pressed={rpe === v} onClick={() => setRpe(v)} className={`py-3 rounded-xl text-sm font-black border ${rpe === v ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-200'}`}><Art name={art} />{lab}</button>
               ))}
             </div>
-            <button type="button" data-testid="cardio-save" onClick={finish} className="w-full py-3.5 rounded-xl bg-pink-600 text-white text-lg font-black">Enregistrer</button>
+            <button type="button" data-testid="cardio-save" data-key onClick={finish} className="w-full py-3.5 rounded-xl bg-pink-600 text-white text-lg font-black">Enregistrer</button>
           </section>
         )}
       </div>

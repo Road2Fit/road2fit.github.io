@@ -380,7 +380,7 @@ export function CoachPanel({
             <p className="text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</p>
             <p className="text-sm font-black text-white leading-tight">{cardioNext.title}</p>
           </div>
-          <button type="button" data-testid="cardio-next-start" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>
+          <button type="button" data-testid="cardio-next-start" data-key="pill" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>
           <button type="button" data-testid="cardio-next-done" onClick={() => setCardioRun({ session: cardioNext, atEnd: true })} aria-label="Déjà faite" className="w-10 h-10 rounded-full bg-slate-800 text-emerald-300 inline-flex items-center justify-center shrink-0"><Art name="check" size={18} bare /></button>
         </section>
       )}

@@ -379,7 +379,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               {rpeRow()}
               <div className="flex gap-2">
                 <button type="button" onClick={addRest} className="px-5 py-4 rounded-2xl bg-slate-800 text-slate-100 font-black">+30 s</button>
-                <button type="button" onClick={skipRest} className={`${big} flex-1`} data-testid="guided-next">{/^Ensuite/.test(rest.next || '') ? 'Exercice suivant' : 'Série suivante'}</button>
+                <button type="button" onClick={skipRest} className={`${big} flex-1`} data-key data-testid="guided-next">{/^Ensuite/.test(rest.next || '') ? 'Exercice suivant' : 'Série suivante'}</button>
               </div>
             </div>
           </div>
@@ -448,7 +448,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 </div>
               )
             ) : (
-              <button type="button" onClick={() => doneSet()} className={big} data-hero data-testid="set-done">Série faite</button>
+              <button type="button" onClick={() => doneSet()} className={big} data-hero data-key data-testid="set-done">Série faite</button>
             )}
           </div>
         )}
@@ -482,7 +482,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={addSet} className="px-5 py-4 rounded-2xl bg-slate-800 text-slate-100 font-black">+ Série</button>
-              <button type="button" onClick={skipExercise} className={`${big} flex-1`} data-testid="guided-next">Exercice suivant</button>
+              <button type="button" onClick={skipExercise} className={`${big} flex-1`} data-key data-testid="guided-next">Exercice suivant</button>
             </div>
           </div>
         )}
@@ -518,7 +518,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={() => onFinish(g)} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-emerald-600 active:bg-emerald-500')}>Enregistrer la séance</button>
+              <button type="button" onClick={() => onFinish(g)} data-hero data-key className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-emerald-600 active:bg-emerald-500')}>Enregistrer la séance</button>
             </div>
           </div>
         )}

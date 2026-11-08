@@ -309,6 +309,7 @@ export function CoachNextSession({
           <button
             onClick={() => onStartGuided(sessionToStart)}
             data-hero
+            data-key
             className="w-full py-3 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-sm"
           >
             ▶ {shownDate === today ? 'Lancer la séance guidée' : 'Lancer cette séance guidée maintenant'}

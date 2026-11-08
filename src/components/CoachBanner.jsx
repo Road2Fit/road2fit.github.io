@@ -49,12 +49,12 @@ export function CoachBanner({ gameState, guidedActive, onCoachTab, onOpenCoach, 
         </div>
         <div className="flex flex-wrap gap-2">
           {guidedActive && (
-            <button type="button" onClick={onResumeGuided} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base bg-emerald-600 hover:bg-emerald-500 text-white">
+            <button type="button" onClick={onResumeGuided} data-key className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base bg-emerald-600 hover:bg-emerald-500 text-white">
               Reprendre ma séance
             </button>
           )}
           {canStart && (
-            <button type="button" onClick={() => onStartGuided(session)} className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-500 text-white">
+            <button type="button" onClick={() => onStartGuided(session)} data-key className="flex-1 md:flex-none px-5 py-3 rounded-xl font-black text-sm sm:text-base inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-500 text-white">
               <Play className="w-4 h-4 fill-current" />Lancer ma séance
             </button>
           )}

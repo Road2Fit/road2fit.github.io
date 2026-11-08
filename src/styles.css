@@ -157,3 +157,27 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
 @keyframes r2f-wave-out { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.09); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { :root[data-theme="neon"] .hero-round::before, :root[data-theme="neon"] .hero-round::after { display: none; } }
 :root[data-theme="neon"] .hero-round.bg-pink-600 [data-testid="session-muscles"] * { color: var(--neon); }
+
+/* ---------- Couleur des actions clés (4.10) : la couleur COMPLÉMENTAIRE de celle du néon choisie, sur le cercle
+   des peintres (rouge, jaune, bleu) choisi par Gabin : vert / rouge, violet / jaune, orange / bleu ; vert citron / framboise, réservée aux boutons les plus importants (Lancer, Reprendre,
+   Série faite, Série suivante, Enregistrer) : attribut data-key et bouton du grand rond (.hero-cta). ---------- */
+:root[data-theme="neon"] { --key: #ff3d6e; --key-rgb: 255 61 110; }
+:root[data-theme="neon"][data-neon="lime"] { --key: #ff3d6e; --key-rgb: 255 61 110; }
+:root[data-theme="neon"][data-neon="yellow"] { --key: #a66bff; --key-rgb: 166 107 255; }
+:root[data-theme="neon"][data-neon="orange"] { --key: #3d8bff; --key-rgb: 61 139 255; }
+:root[data-theme="neon"][data-neon="red"] { --key: #3dff6e; --key-rgb: 61 255 110; }
+:root[data-theme="neon"][data-neon="magenta"] { --key: #c6ff3d; --key-rgb: 198 255 61; }
+:root[data-theme="neon"][data-neon="violet"] { --key: #ffe03d; --key-rgb: 255 224 61; }
+:root[data-theme="neon"][data-neon="blue"] { --key: #ff8a1f; --key-rgb: 255 138 31; }
+:root[data-theme="neon"][data-neon="cyan"] { --key: #ff5a3d; --key-rgb: 255 90 61; }
+/* La couleur principale doit rester DOMINANTE (règle de Gabin) : la complémentaire n'est qu'une touche.
+   - petits boutons ronds / pilules (data-key="pill", bouton du grand rond) : remplis de la complémentaire ;
+   - grands boutons pleine largeur (data-key) : remplis de la couleur principale, liseré + halo de la complémentaire. */
+:root[data-theme="neon"] [data-key] {
+  background-color: var(--neon) !important; color: #111111 !important; border-color: transparent !important;
+  box-shadow: inset 0 0 0 3px var(--key), 0 0 16px 1px rgb(var(--key-rgb) / 0.45) !important; }
+:root[data-theme="neon"] [data-key="pill"], :root[data-theme="neon"] .hero-round .hero-cta {
+  background-color: var(--key) !important; color: #111111 !important; border-color: transparent !important;
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.35) inset, 0 0 18px 2px rgb(var(--key-rgb) / 0.45) !important; }
+:root[data-theme="neon"] [data-key] *, :root[data-theme="neon"] .hero-round .hero-cta * { background-color: transparent !important; color: #111111 !important; }
+:root[data-theme="neon"] [data-key] svg.art, :root[data-theme="neon"] [data-key] .text-white { color: #111111 !important; }
