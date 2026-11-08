@@ -74,17 +74,32 @@ export function CoachPanel({
     const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
     const fit = () => {
       const z = document.querySelector('.hero-zone');
-      const t = document.querySelector('[data-testid="next-session-title"]');
+      const t = document.querySelector('[data-testid="seance-end"]');
       if (!z) return;
       if (!touch || window.__r2fVhW !== window.innerWidth) { window.__r2fVhW = window.innerWidth; window.__r2fVh = window.innerHeight; }
       const vh = window.__r2fVh;
       const nav = document.querySelector('nav[aria-label="Navigation"]');
-      const navH = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().height : 0;
+      const navH0 = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().height : 0;
+      document.documentElement.style.setProperty('--bnav-h', `${Math.round(navH0)}px`);
+      const bar = document.querySelector('.coach-tabs');
+      const navH = navH0 + (bar && getComputedStyle(bar).position === 'fixed' ? bar.getBoundingClientRect().height : 0);
       const prev = z.style.minHeight;
       z.style.minHeight = '';
+      z.style.removeProperty('--hero-d');
       if (!t) return;
-      const titleBottom = t.getBoundingClientRect().bottom - document.body.getBoundingClientRect().top;
-      const extra = Math.min(vh * 0.6, vh - navH - 14 - titleBottom);
+      // page Séance sans défiler : si elle dépasse, le rond rapetisse (jamais sous 210 px) ; sinon la zone s'étire et le rond est centré
+      const endB = () => t.getBoundingClientRect().bottom - document.body.getBoundingClientRect().top;
+      // ce qui reste sous la fin de la page (marges, place de la barre du bas) : mesuré quand la page dépasse l'écran
+      const sh = document.body.scrollHeight;
+      const tail = sh > vh + 1 ? Math.max(navH + 10, sh - endB()) : navH + 10;
+      const room = () => vh - tail - endB();
+      const r = z.querySelector('.hero-round');
+      let over = -room();
+      if (over > 0 && r) {
+        const d = Math.max(210, Math.round(r.getBoundingClientRect().width - over));
+        z.style.setProperty('--hero-d', `${d}px`);
+      }
+      const extra = Math.min(vh * 0.6, room());
       const next = extra > 0 ? `${Math.round(z.getBoundingClientRect().height + extra)}px` : '';
       z.style.minHeight = next || '';
       if (prev && next && Math.abs(parseFloat(prev) - parseFloat(next)) < 2) z.style.minHeight = prev;
@@ -193,6 +208,7 @@ export function CoachPanel({
   const cardioToday = cardioWeeks[0].sessions.find(x => x.iso === today) || null;
   const cardioNext = cardioWeeks.flatMap(w => w.sessions).find(x => x.iso >= today) || null;
   const heart = useMemo(() => heartBalance(gameState, today), [gameState.quests, gameState.coach, today]);
+  const [sheet, setSheet] = useState(null); // fenêtre ouverte sur la page Séance : 'next' | 'goal' | 'program'
   const [cardioPeek, setCardioPeek] = useState(null); // résumé d'une séance de cardio avant de la lancer
   const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
   const [cardioMsg, setCardioMsg] = useState('');
@@ -318,31 +334,85 @@ export function CoachPanel({
   const dayShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="space-y-4" data-testid="coach-panel">
+    <div className="space-y-3" data-testid="coach-panel">
       {/* PAGES DU COACH : un bouton = une page, rien d'autre à l'écran */}
-      <nav aria-label="Pages du Coach" className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4" role="tablist">
+      <nav aria-label="Pages du Coach" className="coach-tabs flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4" role="tablist">
         {COACH_PAGES.map(([id, label, art]) => (
           <button key={id} type="button" role="tab" aria-selected={page === id} data-testid={`coach-page-${id}`} onClick={() => { setPage(id); try { window.scrollTo({ top: 0 }); } catch (e) { /* rien */ } }}
             className={`shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap ${page === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'}`}><Art name={art} size={15} className="mr-1" />{label}</button>
         ))}
       </nav>
       {page === 'seance' && (
-      <div className="space-y-4 page-in" key="seance">
-      {/* séance prévue ces derniers jours et pas faite : la faire maintenant en un geste */}
+      <div className="space-y-3 page-in" key="seance">
+      {/* séance prévue ces derniers jours et pas faite : une ligne, la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
-        <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 p-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <span className="w-11 h-11 rounded-xl bg-slate-900 flex items-center justify-center shrink-0"><Art name="calendar" size={26} bare /></span>
-            <div className="min-w-0">
-              <h3 className="font-black text-white">Séance de {formatDayFr(missedSession.iso)} pas faite</h3>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button type="button" data-testid="missed-session-start" onClick={() => onStartGuided(sessionToStart)} className="flex-1 py-3 rounded-xl bg-pink-600 text-white text-sm font-black">Faire cette séance maintenant</button>
-            <button type="button" onClick={() => updateCoach({ missedDismissed: [...(coach.missedDismissed || []), missedSession.iso].slice(-10) })} className="px-4 py-3 rounded-xl bg-slate-800 text-slate-300 text-sm font-bold">Ignorer</button>
-          </div>
+        <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 px-3 py-1.5 flex items-center gap-2">
+          <Art name="calendar" size={22} bare />
+          <span className="flex-1 min-w-0 text-sm font-black text-white leading-tight">Séance de {formatDayFr(missedSession.iso)} pas faite</span>
+          <button type="button" data-testid="missed-session-start" onClick={() => onStartGuided(sessionToStart)} className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">La faire</button>
+          <button type="button" onClick={() => updateCoach({ missedDismissed: [...(coach.missedDismissed || []), missedSession.iso].slice(-10) })} aria-label="Ignorer" className="shrink-0 w-8 h-8 rounded-xl bg-slate-800 text-slate-300 text-sm font-black">✕</button>
         </section>
       )}
+      {/* QUESTIONS À RÉPONDRE UNE FOIS : petites notifications en haut ; une fois répondues, elles disparaissent
+          (on retrouve le réglage dans la page Réglages) */}
+      <CardioInvite gameState={gameState} setGameState={setGameState} />
+      {!hasGoal && (
+        <section data-testid="notif-goal" className="rounded-2xl border border-pink-400/50 bg-slate-900/80 px-3 py-1.5 flex items-center gap-2">
+          <Art name="target" size={22} bare />
+          <span className="flex-1 min-w-0 text-sm font-black text-white leading-tight">Quel est ton objectif ?</span>
+          <button type="button" onClick={() => setSheet('goal')} data-testid="goal-open" className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">Choisir</button>
+        </section>
+      )}
+      {!coach.program && !coach.noCoach && (
+        <section data-testid="notif-program" className="rounded-2xl border border-slate-700 bg-slate-900/80 px-3 py-1.5 flex items-center gap-2">
+          <Art name="clipboard" size={22} bare />
+          <span className="flex-1 min-w-0 text-sm font-black text-white leading-tight">Tu as déjà un coach ?</span>
+          <button type="button" onClick={() => setSheet('program')} data-testid="program-open" className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">Oui</button>
+          <button type="button" onClick={() => updateCoach({ noCoach: true })} data-testid="notif-program-no" className="shrink-0 px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold">Non</button>
+        </section>
+      )}
+      {coach.program && coach.program.askTakeOver && (
+        <section data-testid="notif-takeover" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 px-3 py-1.5 flex items-center gap-2">
+          <Art name="clipboard" size={22} bare />
+          <span className="flex-1 min-w-0 text-sm font-black text-white leading-tight">Après ton programme, l’appli prend le relais ?</span>
+          <button type="button" onClick={() => setSheet('program')} data-testid="program-open" className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">Répondre</button>
+        </section>
+      )}
+      {/* EN HAUT : deux petits encadrés côte à côte. Prochaine séance → fenêtre pour la voir et la modifier ;
+          cardio → résumé de la séance (Lancer / Déjà faite). */}
+      {(() => {
+        const fc = shownSession ? sessionFocus(shownSession.exercises) : null;
+        const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
+        const showCardio = cardioNext && !(cardioNext === cardioToday && !muscuToday);
+        const tile = 'tap-free min-w-0 rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 flex items-center gap-2 text-left';
+        const dayTxt = iso => { if (iso === today) return 'auj.'; const d = new Date(`${iso}T00:00:00`); return `${['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'][d.getDay()]} ${d.getDate()}`; };
+        return (
+          <div className={showCardio ? 'grid grid-cols-2 gap-2' : ''}>
+            <button type="button" onClick={() => setSheet('next')} data-testid="next-session-open" aria-label="Voir et modifier la prochaine séance" className={`${tile} w-full`}>
+              <span className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="dumbbell" size={22} bare /></span>
+              <span className="flex-1 min-w-0 block">
+                <span className="block text-xs font-bold text-slate-400 truncate">{coachOff ? 'Aperçu' : 'Séance'}{shownSession ? ` · ${dayTxt(shownDate)}` : ''}{plan ? ' · perso' : ''}</span>
+                <span className="block text-sm font-black text-white leading-tight truncate">{ttl}</span>
+                {shownSession && shownSession.exercises.length > 0 && <span className="block text-xs text-slate-400 truncate">{shownSession.exercises.length} exos · {shownSession.estMin} min</span>}
+              </span>
+              <span className="text-pink-300 font-black shrink-0" aria-hidden="true">›</span>
+            </button>
+            {showCardio && (
+              <section className="min-w-0" data-testid="cardio-next">
+                <button type="button" onClick={() => setCardioPeek(cardioNext)} data-testid="cardio-next-open" aria-label="Voir le détail du cardio" className={`${tile} w-full h-full`}>
+                  <span className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={22} bare /></span>
+                  <span className="flex-1 min-w-0 block">
+                    <span className="block text-xs font-bold text-slate-400 truncate">Cardio · {cardioNext.iso === today ? 'après ta muscu' : dayTxt(cardioNext.iso)}</span>
+                    <span className="block text-sm font-black text-white leading-tight truncate">{cardioNext.title.split(' · ')[0]}</span>
+                    <span className="block text-xs text-slate-400 truncate">{cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</span>
+                  </span>
+                  <span className="text-pink-300 font-black shrink-0" aria-hidden="true">›</span>
+                </button>
+              </section>
+            )}
+          </div>
+        );
+      })()}
       {/* GRANDE CARTE DE LA SÉANCE : tout en haut, la prochaine séance et le bouton pour la lancer */}
       {guidedActive && (
         <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
@@ -353,7 +423,7 @@ export function CoachPanel({
           </button>
         </section></div>
       )}
-      {cardioPeek && <CardioSummary session={cardioPeek} onClose={() => setCardioPeek(null)} onStart={() => { setCardioRun({ session: cardioPeek }); setCardioPeek(null); }} />}
+      {cardioPeek && <CardioSummary session={cardioPeek} onClose={() => setCardioPeek(null)} onStart={() => { setCardioRun({ session: cardioPeek }); setCardioPeek(null); }} onDone={() => { setCardioRun({ session: cardioPeek, atEnd: true }); setCardioPeek(null); }} />}
       {cardioRun && <CardioSession session={cardioRun.session} startAtEnd={!!cardioRun.atEnd} gameState={gameState} onClose={() => setCardioRun(null)} onSave={res => saveCardio(cardioRun.session, res)} />}
       {cardioMsg && <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-200" data-testid="cardio-saved" onClick={() => setCardioMsg('')}><Art name="heart" />{cardioMsg}</p>}
       {!guidedActive && cardioToday && !muscuToday && (
@@ -387,27 +457,29 @@ export function CoachPanel({
           </section></div>
         );
       })()}
-      {/* cardio : prochaine séance (ou celle du jour, après la muscu), puis l'invitation tant que la personne n'a pas répondu */}
-      {cardioNext && !(cardioNext === cardioToday && !muscuToday) && (
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 flex items-center gap-3" data-testid="cardio-next">
-          <button type="button" onClick={() => setCardioPeek(cardioNext)} data-testid="cardio-next-open" aria-label="Voir le détail du cardio" className="tap-free flex-1 min-w-0 flex items-center gap-3 text-left">
-          <span className="w-11 h-11 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={26} bare /></span>
-          <span className="flex-1 min-w-0 block">
-            <span className="block text-xs font-bold text-slate-400">{cardioNext.iso === today ? 'Cardio après ta muscu' : `Cardio · ${formatDayFr(cardioNext.iso)}`} · {cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</span>
-            <span className="block text-sm font-black text-white leading-tight">{cardioNext.title} <span className="text-pink-300" aria-hidden="true">›</span></span>
-          </span>
-          </button>
-          <button type="button" data-testid="cardio-next-start" data-key="pill" onClick={() => setCardioRun({ session: cardioNext })} aria-label="Lancer le cardio" className="w-10 h-10 rounded-full bg-pink-600 text-white inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 4.5v15l12-7.5Z" fill="currentColor" /></svg></button>
-          <button type="button" data-testid="cardio-next-done" onClick={() => setCardioRun({ session: cardioNext, atEnd: true })} aria-label="Déjà faite" className="w-10 h-10 rounded-full bg-slate-800 text-emerald-300 inline-flex items-center justify-center shrink-0"><Art name="check" size={18} bare /></button>
-        </section>
-      )}
-      <CardioInvite gameState={gameState} setGameState={setGameState} />
-      <CoachChat gameState={gameState} setGameState={setGameState} overview={ov} />
-      {/* « Mon objectif » : en haut tant qu'il n'est pas rempli, puis dans les réglages pour libérer le haut de la page */}
-      {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
-      {/* « Tu as déjà un coach ? » : rangé dans les réglages si la personne a répondu non (et sans programme) */}
-      {!(coach.noCoach && !coach.program) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
-      {/* PROCHAINE SÉANCE */}
+      {/* sous le rond : « Parle à ton coach » */}
+      <div className="pr-16 md:pr-0"><CoachChat slim gameState={gameState} setGameState={setGameState} overview={ov} /></div>
+      <span data-testid="seance-end" className="block h-px" aria-hidden="true" />
+      <div className={sheet === 'goal' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-goal">
+        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+          <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Mon objectif">
+            <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
+            {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
+          </div>
+        </div>
+      </div>
+      <div className={sheet === 'program' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-program">
+        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+          <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Programme de mon coach">
+            <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
+            {((!coach.program && !coach.noCoach) || (coach.program && coach.program.askTakeOver)) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
+          </div>
+        </div>
+      </div>
+      <div className={sheet === 'next' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-next">
+        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+          <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Prochaine séance">
+            <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
       <CoachNextSession
         preview={coachOff}
         onTakeOver={() => updateCoach({ program: { ...coach.program, takeOver: true, askTakeOver: false } })}
@@ -424,9 +496,9 @@ export function CoachPanel({
         first={first}
         gameState={gameState}
         onAddExercise={onAddExercise}
-        onGoTab={onGoTab}
-        onOpenLevelUp={onOpenLevelUp}
-        onStartGuided={onStartGuided}
+        onGoTab={x => { setSheet(null); onGoTab(x); }}
+        onOpenLevelUp={x => { setSheet(null); onOpenLevelUp(x); }}
+        onStartGuided={x => { setSheet(null); onStartGuided(x); }}
         ov={ov}
         plan={plan}
         planAdd={planAdd}
@@ -450,6 +522,9 @@ export function CoachPanel({
         todayInfo={todayInfo}
         updateCoach={updateCoach}
       />
+          </div>
+        </div>
+      </div>
 
       </div>
       )}
@@ -496,8 +571,8 @@ export function CoachPanel({
 
       {page === 'reglages' && (
       <div className="space-y-4 page-in" data-testid="coach-settings-page" key="reglages">
-        {hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
-        {coach.noCoach && !coach.program && <CoachProgram gameState={gameState} setGameState={setGameState} inSettings />}
+        <CoachGoal gameState={gameState} setGameState={setGameState} />
+        <CoachProgram gameState={gameState} setGameState={setGameState} inSettings={!!coach.noCoach && !coach.program} />
         <CoachCardio gameState={gameState} setGameState={setGameState} />
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />

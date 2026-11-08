@@ -67,7 +67,7 @@ describe('« Tu as déjà un coach ? » : réponse non', () => {
     await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     expect(by(h, 'program-intro')).toBeTruthy(); // dans les réglages
     expect(by(h, 'program-no')).toBeNull();
-    await clickText(h, 'Remettre cet encadré en haut du Coach');
+    await clickText(h, 'Me reposer la question en haut du Coach');
     expect(save(h).coach.noCoach).toBe(false);
     expect(h.errors).toEqual([]);
   }, T);
@@ -104,14 +104,20 @@ describe('après la saisie : l’appli prend le relais ?', () => {
     await clickEl(h, by(h, 'takeover-no'));
     expect(save(h).coach.program.takeOver).toBe(false);
     expect(by(h, 'program-takeover')).toBeNull();
+    // question répondue : la notification disparaît, le programme se règle dans Réglages
+    expect(by(h, 'notif-takeover')).toBeNull();
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     expect(by(h, 'takeover-state').textContent).toContain('tu continues seul');
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-seance"]'));
     // pendant le programme, rien ne change : séance de son coach, à lancer normalement
     expect(by(h, 'coach-preview')).toBeNull();
     expect(h.doc.body.textContent).toContain('Lancer');
     // les deux séances passées : programme fini → aperçu, rien pour lancer ni régler
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     await clickText(h, 'Passer cette séance');
     await clickText(h, 'Passer cette séance');
     await advance(h, 300);
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-seance"]'));
     expect(by(h, 'coach-preview')).toBeTruthy();
     expect(h.doc.body.textContent).toContain('Aperçu de la séance suivante');
     expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(false);
@@ -125,10 +131,13 @@ describe('après la saisie : l’appli prend le relais ?', () => {
     expect(h.doc.body.textContent).toContain('suite que je propose');
     expect([...h.doc.querySelectorAll('button')].some(b => /Lancer/.test(b.textContent))).toBe(true);
     // la question revient à chaque enregistrement du programme
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-reglages"]'));
     await clickEl(h, by(h, 'program-edit'));
     await clickEl(h, by(h, 'program-save'));
     await advance(h, 300);
     expect(by(h, 'program-takeover')).toBeTruthy();
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-seance"]'));
+    expect(by(h, 'notif-takeover')).toBeTruthy();
     await clickEl(h, by(h, 'takeover-yes'));
     expect(save(h).coach.program.takeOver).toBe(true);
     expect(h.errors).toEqual([]);

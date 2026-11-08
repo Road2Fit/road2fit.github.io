@@ -45,7 +45,7 @@ export function CoachProgram({ gameState, setGameState, inSettings = false }) {
           <button type="button" onClick={() => setEditing(true)} data-testid="program-add" className={`${btn} bg-pink-600 text-white`}>Ajouter le programme de mon coach</button>
           {/* « Non » : l'encadré quitte le haut du Coach et se range dans les réglages */}
           {!inSettings && <button type="button" onClick={() => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), noCoach: true } }))} data-testid="program-no" className={`${btn} bg-slate-800 border border-slate-600 text-slate-100`}>Non, je n’ai pas de coach</button>}
-          {inSettings && <button type="button" onClick={() => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), noCoach: false } }))} className="text-xs font-bold text-slate-400 underline">Remettre cet encadré en haut du Coach</button>}
+          {inSettings && <button type="button" onClick={() => setGameState(prev => ({ ...prev, coach: { ...(prev.coach || {}), noCoach: false } }))} className="text-xs font-bold text-slate-400 underline">Me reposer la question en haut du Coach</button>}
         </div>
         {editing && <ProgramEditor gameState={gameState} setGameState={setGameState} onClose={() => setEditing(false)} />}
       </section>

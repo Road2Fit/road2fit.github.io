@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.13',
+    date: '2026-11-08',
+    title: 'Page Séance sans défiler',
+    items: [
+      'Coach → Séance tient dans l’écran : en haut les encadrés « Séance » (toucher = voir et modifier la prochaine séance) et « Cardio », au milieu le grand rond, dessous « Parle à ton coach ».',
+      'Les questions à répondre une fois (ton objectif, as-tu déjà un coach, le cardio…) apparaissent en haut comme des notifications, puis disparaissent : tu les retrouves dans Réglages.',
+      'Sur téléphone, les onglets du Coach (Séance, Semaine, Objectifs…) sont en bas, au-dessus de la barre de navigation.',
+    ],
+  },
+  {
     version: '4.12.1',
     date: '2026-11-08',
     title: 'Retrouver sa séance perso',

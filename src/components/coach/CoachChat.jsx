@@ -224,12 +224,19 @@ export function CoachChat(props) {
   if (aiStatus(props.gameState) === 'no_service') return null;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} data-testid="coach-chat-open"
-        className="w-full flex items-center gap-3 rounded-2xl border border-pink-400/50 bg-slate-900 px-4 py-3 text-left">
-        <span className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0"><Art name="coach" size={26} bare /></span>
-        <span className="flex-1 font-black text-white">Parle à ton coach</span>
-        <span className="text-slate-400 font-black">›</span>
-      </button>
+      {props.compact ? (
+        <button type="button" onClick={() => setOpen(true)} data-testid="coach-chat-open" aria-label="Parle à ton coach"
+          className="tap-free flex-1 min-w-0 py-2.5 px-3 rounded-xl border border-pink-400/50 bg-slate-900 text-xs font-black text-white truncate">
+          <Art name="coach" size={16} />Discuter
+        </button>
+      ) : (
+        <button type="button" onClick={() => setOpen(true)} data-testid="coach-chat-open"
+          className={`w-full flex items-center gap-3 rounded-2xl border border-pink-400/50 bg-slate-900 px-4 text-left ${props.slim ? 'py-1.5' : 'py-3'}`}>
+          <span className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shrink-0"><Art name="coach" size={26} bare /></span>
+          <span className="flex-1 font-black text-white">Parle à ton coach</span>
+          <span className="text-slate-400 font-black">›</span>
+        </button>
+      )}
       {open && (
         <div className="fixed inset-0 z-[60] bg-slate-950/85 backdrop-blur-sm flex items-start justify-center px-3 pt-14 pb-4 overflow-y-auto" onClick={() => setOpen(false)}>
           <div className="relative w-full max-w-xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Parle à ton coach">

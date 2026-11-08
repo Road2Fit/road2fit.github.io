@@ -26,7 +26,7 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
   return (
     <>
       {open && <div className="fixed inset-0 z-40 bg-slate-950/50" onClick={() => setOpen(false)} />}
-      <div className={`fixed right-4 bottom-20 md:bottom-6 z-40 flex flex-col items-end gap-2 transition-transform duration-200 ${hidden && !open ? 'translate-x-24' : ''}`}>
+      <div className={`fab-stack fixed right-4 bottom-20 md:bottom-6 z-40 flex flex-col items-end gap-2 transition-transform duration-200 ${hidden && !open ? 'translate-x-24' : ''}`}>
         {open && (
           <div className="flex flex-col items-end gap-2">
             {item('Nouvel exercice', 'dumbbell', onExercise)}

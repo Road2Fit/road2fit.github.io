@@ -21,7 +21,7 @@ describe('coach cardio', () => {
     }
     await advance(h, 200);
     expect(saved(h).coach.cardio.on).toBe(true);
-    const startBtn = q(h, 'cardio-start') || q(h, 'cardio-next-start');
+    const startBtn = q(h, 'cardio-start') || q(h, 'cardio-next-open');
     expect(startBtn).toBeTruthy();
     if (q(h, 'cardio-next-open')) {
       // la carte « Cardio » ouvre d'abord le résumé de la séance, qu'on lance de là
