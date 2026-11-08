@@ -1,5 +1,6 @@
 import { Art } from '../Art';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
 import { sessionFocus } from '../../coach/focus';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
@@ -209,6 +210,17 @@ export function CoachPanel({
   const cardioNext = cardioWeeks.flatMap(w => w.sessions).find(x => x.iso >= today) || null;
   const heart = useMemo(() => heartBalance(gameState, today), [gameState.quests, gameState.coach, today]);
   const [sheet, setSheet] = useState(null);
+  // téléphone : la barre des pages du Coach est fixée en bas. Elle est rendue directement dans <body> : l'animation
+  // d'arrivée de l'onglet (transform) faisait sinon flotter la barre au milieu de l'écran le temps de l'animation.
+  const phoneQ = () => { try { return window.matchMedia('(max-width: 767px)').matches; } catch (e) { return false; } };
+  const [isPhone, setIsPhone] = useState(phoneQ);
+  useEffect(() => {
+    let mq = null;
+    try { mq = window.matchMedia('(max-width: 767px)'); } catch (e) { return undefined; }
+    const on = () => setIsPhone(mq.matches);
+    if (mq.addEventListener) mq.addEventListener('change', on); else if (mq.addListener) mq.addListener(on);
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', on); else if (mq.removeListener) mq.removeListener(on); };
+  }, []);
   const [sheetTop, setSheetTop] = useState(0); // bas de l'encadré « Séance » : la fenêtre commence dessous // fenêtre ouverte sur la page Séance : 'next' | 'goal' | 'program'
   const [cardioPeek, setCardioPeek] = useState(null); // résumé d'une séance de cardio avant de la lancer
   const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
@@ -334,17 +346,20 @@ export function CoachPanel({
   const protein = Math.round((Number(pace.current) || Number(gameState.userWeightKg) || 80));
   const dayShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
+  const coachTabs = (
+    <nav aria-label="Pages du Coach" className="coach-tabs flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4" role="tablist">
+      {COACH_PAGES.map(([id, label, art]) => (
+        <button key={id} type="button" role="tab" aria-selected={page === id} data-testid={`coach-page-${id}`} onClick={() => { setPage(id); try { window.scrollTo({ top: 0 }); } catch (e) { /* rien */ } }}
+          className={`shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap ${page === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'}`}><Art name={art} size={15} className="mr-1" />{label}</button>
+      ))}
+    </nav>
+  );
   return (
     <div className="space-y-3" data-testid="coach-panel">
       {/* PAGES DU COACH : un bouton = une page, rien d'autre à l'écran */}
-      <nav aria-label="Pages du Coach" className="coach-tabs flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4" role="tablist">
-        {COACH_PAGES.map(([id, label, art]) => (
-          <button key={id} type="button" role="tab" aria-selected={page === id} data-testid={`coach-page-${id}`} onClick={() => { setPage(id); try { window.scrollTo({ top: 0 }); } catch (e) { /* rien */ } }}
-            className={`shrink-0 px-3 py-1.5 rounded-full border text-xs font-bold whitespace-nowrap ${page === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'}`}><Art name={art} size={15} className="mr-1" />{label}</button>
-        ))}
-      </nav>
+      {isPhone && typeof document !== 'undefined' ? createPortal(coachTabs, document.body) : coachTabs}
       {page === 'seance' && (
-      <div className="space-y-3 page-in" key="seance">
+      <div className="space-y-3 page-fade" key="seance">
       {/* séance prévue ces derniers jours et pas faite : une ligne, la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
         <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 px-3 py-1.5 flex items-center gap-2">

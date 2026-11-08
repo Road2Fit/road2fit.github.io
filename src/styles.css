@@ -76,6 +76,7 @@ svg.art .art-l .f { fill: currentColor; stroke-width: 0.8; }
 .tab-in { animation: r2f-up 0.28s ease-out backwards; }
 /* cartes d'une page qui apparaissent l'une après l'autre */
 .tab-in > *, .page-in > * { animation: r2f-up 0.32s ease-out backwards; }
+.page-fade { animation: r2f-fade 0.25s ease-out backwards; }
 .tab-in > *:nth-child(2), .page-in > *:nth-child(2) { animation-delay: 0.04s; }
 .tab-in > *:nth-child(3), .page-in > *:nth-child(3) { animation-delay: 0.08s; }
 .tab-in > *:nth-child(4), .page-in > *:nth-child(4) { animation-delay: 0.12s; }

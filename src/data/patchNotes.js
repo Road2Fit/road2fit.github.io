@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.13.2',
+    date: '2026-11-08',
+    title: 'Page Séance stable',
+    items: [
+      'En revenant sur la page Séance, la barre des onglets du Coach ne passe plus par le milieu de l’écran et les boutons ne bougent plus.',
+    ],
+  },
+  {
     version: '4.13.1',
     date: '2026-11-08',
     title: 'Fenêtre de la séance en bas',
