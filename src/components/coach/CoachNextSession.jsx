@@ -28,15 +28,24 @@ export function CoachNextSession({
   const toggleEx = id => setOpenEx(o => ({ ...o, [id]: !o[id] }));
   const [showRating, setShowRating] = useState(false);
   const [customFor, setCustomFor] = useState(null); // exercice dont on règle la forme personnalisée
+  const [planEdit, setPlanEdit] = useState(false); // séance perso : jour, groupes, exercices à ajouter (derrière le crayon)
+  const backup = !plan && coach && coach.planBackup && coach.planBackup.date >= today ? coach.planBackup : null;
   return (
     <section className={card}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-black text-white" data-testid="next-session-title"><Art name="dumbbell" />{preview ? 'Aperçu de la séance suivante' : 'Prochaine séance'} {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
         {!plan && ov.hasExercises && !preview && (
-          <button onClick={startCustom} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
+          <button onClick={() => { startCustom(); setPlanEdit(true); }} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
+        )}
+        {backup && (
+          <button onClick={() => { updateCoach({ plan: backup, planBackup: null }); setPlanEdit(false); }} data-testid="plan-restore" className="px-3 py-1.5 rounded-lg bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200"><Art name="repeat" />Revenir à ma séance perso</button>
         )}
         {plan && (
-          <button onClick={() => updateCoach({ plan: null })} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="repeat" />Revenir à la proposition du coach</button>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setPlanEdit(v => !v)} aria-expanded={planEdit} aria-label="Modifier le jour et les exercices" title="Modifier le jour et les exercices" data-testid="plan-edit"
+              className={`tap-free w-9 h-9 rounded-xl border flex items-center justify-center ${planEdit ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-700'}`}><Art name="pencil" size={18} bare /></button>
+            <button onClick={() => { updateCoach({ plan: null, planBackup: plan }); setPlanEdit(false); }} data-testid="plan-reset" className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="repeat" />Revenir à la proposition du coach</button>
+          </div>
         )}
       </div>
 
@@ -60,8 +69,8 @@ export function CoachNextSession({
         </p>
       )}
 
-      {plan && (
-        <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3 space-y-3">
+      {plan && planEdit && (
+        <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3 space-y-3" data-testid="plan-box">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-bold text-slate-300">Jour de la séance :</span>
             <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
@@ -208,6 +217,11 @@ export function CoachNextSession({
                         )}
                         {customFor === e.questId && setCustom && (
                           <CustomSetsEditor e={e} onCancel={() => setCustomFor(null)} onSave={rows => { setCustom(e, rows); setCustomFor(null); }} />
+                        )}
+                        {e.canRestore && (
+                          <button type="button" onClick={() => adjustTarget(e, 'restore')} className="w-full py-2 rounded-xl bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200" data-testid="adj-restore">
+                            <Art name="repeat" />Revenir à mon réglage
+                          </button>
                         )}
                         {e.manual && (
                           <button type="button" onClick={() => adjustTarget(e, 'reset')} className="w-full py-2 rounded-xl bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200" data-testid="adj-reset">

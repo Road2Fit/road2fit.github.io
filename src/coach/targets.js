@@ -176,7 +176,9 @@ export function computeExerciseTarget(q, opts = {}) {
     // repos calculé pour CET exercice et cette charge (coach/rest.js) ; profil endurance : repos courts voulus (≤ 90 s, ACSM 2009)
     restSec: restOf(q, arena, reps, T, compound, opts.profile), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
     profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
-    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, manualSets: !!(manual && choice.sets), suggested
+    load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, manualSets: !!(manual && choice.sets), suggested,
+    // réglage annulé par « Revenir à la proposition du coach » : on peut le remettre tant qu'aucune séance n'a été faite
+    canRestore: !manual && !!(q.coachOverridePrev && q.coachOverridePrev.entries === entries.length)
   };
 }
 

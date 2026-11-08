@@ -46,6 +46,10 @@ describe('prochaine séance en deux lignes', () => {
     // retour à la proposition du coach
     await clickEl(h, panel().querySelector('[data-testid="adj-reset"]'));
     expect(Number(panel().querySelector('[data-testid="adj-sets"]').textContent)).toBe(sets0);
+    // touché par erreur : on retrouve son réglage
+    await clickEl(h, panel().querySelector('[data-testid="adj-restore"]'));
+    expect(Number(panel().querySelector('[data-testid="adj-sets"]').textContent)).toBe(sets0 + 1);
+    expect(panel().querySelector('[data-testid="adj-restore"]')).toBeNull();
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
@@ -66,6 +70,21 @@ describe('prochaine séance en deux lignes', () => {
     await clickEl(h, p0().querySelector('[data-testid="ex-remove"]'));
     expect(names()).not.toContain(before[0]);
     expect(names()).toHaveLength(before.length - 1);
+    // l'encadré jour / groupes est ouvert juste après « Choisir le jour / modifier », puis se range derrière le crayon
+    expect(one(h, 'plan-box')).toBeTruthy();
+    await clickEl(h, one(h, 'plan-edit'));
+    expect(one(h, 'plan-box')).toBeNull();
+    await clickEl(h, one(h, 'plan-edit'));
+    expect(one(h, 'plan-box')).toBeTruthy();
+    // revenir à la proposition du coach, puis retrouver sa séance perso
+    const perso = names();
+    await clickEl(h, one(h, 'plan-reset'));
+    expect(saved(h).coach.plan).toBeNull();
+    expect(names()).not.toEqual(perso);
+    await clickEl(h, one(h, 'plan-restore'));
+    expect(names()).toEqual(perso);
+    expect(saved(h).coach.planBackup).toBeNull();
+    expect(one(h, 'plan-box')).toBeNull(); // encadré rangé
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

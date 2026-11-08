@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.12.1',
+    date: '2026-11-08',
+    title: 'Retrouver sa séance perso',
+    items: [
+      'Après « Revenir à la proposition du coach », un bouton « Revenir à ma séance perso » la remet comme elle était (pareil pour le réglage d’un exercice : « Revenir à mon réglage »).',
+      'Séance perso : l’encadré jour / groupes / exercices à ajouter est rangé derrière un petit crayon.',
+    ],
+  },
+  {
     version: '4.12',
     date: '2026-11-08',
     title: 'Prochaine séance plus compacte',

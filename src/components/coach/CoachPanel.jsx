@@ -247,7 +247,7 @@ export function CoachPanel({
     const ids = ov.session ? ov.session.exercises.map(e => e.questId) : [];
     const sets = {};
     if (ov.session) ov.session.exercises.forEach(e => { sets[e.questId] = e.sets; });
-    updateCoach({ plan: { date: first ? first.iso : today, questIds: ids, sets } });
+    updateCoach({ plan: { date: first ? first.iso : today, questIds: ids, sets }, planBackup: null });
   };
   const planAdd = ids => patchPlan(pl => ({ ...pl, questIds: [...pl.questIds, ...ids.filter(i => i && !pl.questIds.includes(i))] }));
   const planRemove = id => patchPlan(pl => ({ ...pl, questIds: pl.questIds.filter(x => x !== id) }));
@@ -278,8 +278,13 @@ export function CoachPanel({
       quests: prev.quests.map(q => {
         if (q.id !== e.questId) return q;
         if (action === 'reset') {
+          // on garde le réglage annulé pour pouvoir y revenir (« Revenir à mon réglage »)
           const { coachOverride, ...rest } = q;
-          return rest;
+          return coachOverride ? { ...rest, coachOverridePrev: coachOverride } : rest;
+        }
+        if (action === 'restore') {
+          const { coachOverridePrev, ...rest } = q;
+          return coachOverridePrev ? { ...rest, coachOverride: coachOverridePrev } : rest;
         }
         const n = coachRealEntries(q).length;
         const cur = q.coachOverride && q.coachOverride.entries === n ? q.coachOverride : {};
@@ -298,7 +303,8 @@ export function CoachPanel({
         } else {
           next.repsDelta = (cur.repsDelta || 0) + dir;
         }
-        return { ...q, coachOverride: next };
+        const { coachOverridePrev, ...base } = q; // nouveau réglage : l'ancien n'est plus proposé
+        return { ...base, coachOverride: next };
       }),
     }));
   const planDate = d => { if (d && d >= today) patchPlan(pl => ({ ...pl, date: d })); };
