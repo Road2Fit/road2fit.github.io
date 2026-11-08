@@ -73,47 +73,42 @@ export function CoachPanel({
   // Sur ordinateur (pas d'écran tactile), la hauteur suit la fenêtre (pas de barre d'adresse qui bouge).
   useLayoutEffect(() => {
     const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+    // Page Séance sans défiler : la MISE EN PAGE place le rond (styles.css : .seance-page en colonne, la zone du rond prend
+    // la place qui reste, le rond = min(largeur, hauteur de sa zone) grâce aux unités de conteneur). Ici on ne fait que donner
+    // à la page sa hauteur minimale = écran − ce qui est au-dessus − ce qui est en dessous (barres fixes, marges), mesurés
+    // en positions de mise en page (offsetTop / offsetHeight) : les animations d'arrivée (transform) ne faussent rien,
+    // donc rien ne bouge après coup.
     const fit = () => {
-      const z = document.querySelector('.hero-zone');
-      const t = document.querySelector('[data-testid="seance-end"]');
-      if (!z) return;
+      const page = document.querySelector('.seance-page');
       if (!touch || window.__r2fVhW !== window.innerWidth) { window.__r2fVhW = window.innerWidth; window.__r2fVh = window.innerHeight; }
       const vh = window.__r2fVh;
       const nav = document.querySelector('nav[aria-label="Navigation"]');
-      const navH0 = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().height : 0;
+      const navH0 = nav && getComputedStyle(nav).position === 'fixed' ? nav.offsetHeight : 0;
       document.documentElement.style.setProperty('--bnav-h', `${Math.round(navH0)}px`);
+      if (!page) return;
       const bar = document.querySelector('.coach-tabs');
-      const navH = navH0 + (bar && getComputedStyle(bar).position === 'fixed' ? bar.getBoundingClientRect().height : 0);
-      const prev = z.style.minHeight;
-      z.style.minHeight = '';
-      z.style.removeProperty('--hero-d');
-      if (!t) return;
-      // page Séance sans défiler : si elle dépasse, le rond rapetisse (jamais sous 210 px) ; sinon la zone s'étire et le rond est centré
-      // ⚠️ position de MISE EN PAGE (offsetTop), pas getBoundingClientRect : en revenant sur l'onglet, l'animation d'arrivée
-      // (translateY) décalait la mesure vers le bas → zone trop petite, « Parle à ton coach » remontait jusqu'au rafraîchissement
-      const endB = () => { let y = t.offsetHeight; for (let e = t; e && e !== document.body; e = e.offsetParent) y += e.offsetTop; return y; };
-      // ce qui reste sous la fin de la page (marges, place de la barre du bas) : mesuré quand la page dépasse l'écran
-      const sh = document.body.scrollHeight;
-      const tail = sh > vh + 1 ? Math.max(navH + 10, sh - endB()) : navH + 10;
-      const room = () => vh - tail - endB();
-      const r = z.querySelector('.hero-round');
-      let over = -room();
-      if (over > 0 && r) {
-        const d = Math.max(210, Math.round(r.getBoundingClientRect().width - over));
-        z.style.setProperty('--hero-d', `${d}px`);
+      const fixedH = navH0 + (bar && getComputedStyle(bar).position === 'fixed' ? bar.offsetHeight : 0);
+      let top = 0;
+      for (let e = page; e && e !== document.body; e = e.offsetParent) top += e.offsetTop;
+      // sous la page : marges basses des parents et éléments qui suivent (dans le flux)
+      let below = 0;
+      for (let e = page; e && e.parentElement && e !== document.body; e = e.parentElement) {
+        const pcs = getComputedStyle(e.parentElement);
+        below += parseFloat(pcs.paddingBottom) || 0;
+        for (let n = e.nextElementSibling; n; n = n.nextElementSibling) {
+          const ncs = getComputedStyle(n);
+          if (ncs.position === 'fixed' || ncs.position === 'absolute' || ncs.display === 'none') continue;
+          below += n.offsetHeight + (parseFloat(ncs.marginTop) || 0) + (parseFloat(ncs.marginBottom) || 0);
+        }
       }
-      const extra = Math.min(vh * 0.6, room());
-      const next = extra > 0 ? `${Math.round(z.getBoundingClientRect().height + extra)}px` : '';
-      z.style.minHeight = next || '';
-      if (prev && next && Math.abs(parseFloat(prev) - parseFloat(next)) < 2) z.style.minHeight = prev;
+      const h = Math.round(vh - top - Math.max(below, fixedH + 8));
+      page.style.minHeight = h > 0 ? `${h}px` : '';
     };
     fit();
-    // sécurité : on recalcule une fois les animations d'arrivée finies
-    const again = setTimeout(fit, 600);
     let w = window.innerWidth, h = window.innerHeight;
     const onResize = () => { if (window.innerWidth !== w || (!touch && window.innerHeight !== h)) { w = window.innerWidth; h = window.innerHeight; fit(); } };
     window.addEventListener('resize', onResize);
-    return () => { clearTimeout(again); window.removeEventListener('resize', onResize); };
+    return () => window.removeEventListener('resize', onResize);
   });
   const heroGo = fn => {
     if (heroPress) return;
@@ -363,7 +358,7 @@ export function CoachPanel({
       {/* PAGES DU COACH : un bouton = une page, rien d'autre à l'écran */}
       {isPhone && typeof document !== 'undefined' ? createPortal(coachTabs, document.body) : coachTabs}
       {page === 'seance' && (
-      <div className="space-y-3 page-fade" key="seance">
+      <div className="seance-page page-fade" key="seance">
       {/* séance prévue ces derniers jours et pas faite : une ligne, la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
         <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 px-3 py-1.5 flex items-center gap-2">

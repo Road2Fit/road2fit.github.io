@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.13.4',
+    date: '2026-11-08',
+    title: 'Page Séance calée tout de suite',
+    items: [
+      'En revenant sur le Coach, le rond et « Parle à ton coach » sont à leur place dès la première image : plus de bouton qui descend après coup.',
+    ],
+  },
+  {
     version: '4.13.3',
     date: '2026-11-08',
     title: '« Parle à ton coach » reste en place',
