@@ -208,7 +208,8 @@ export function CoachPanel({
   const cardioToday = cardioWeeks[0].sessions.find(x => x.iso === today) || null;
   const cardioNext = cardioWeeks.flatMap(w => w.sessions).find(x => x.iso >= today) || null;
   const heart = useMemo(() => heartBalance(gameState, today), [gameState.quests, gameState.coach, today]);
-  const [sheet, setSheet] = useState(null); // fenêtre ouverte sur la page Séance : 'next' | 'goal' | 'program'
+  const [sheet, setSheet] = useState(null);
+  const [sheetTop, setSheetTop] = useState(0); // bas de l'encadré « Séance » : la fenêtre commence dessous // fenêtre ouverte sur la page Séance : 'next' | 'goal' | 'program'
   const [cardioPeek, setCardioPeek] = useState(null); // résumé d'une séance de cardio avant de la lancer
   const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
   const [cardioMsg, setCardioMsg] = useState('');
@@ -388,7 +389,7 @@ export function CoachPanel({
         const dayTxt = iso => { if (iso === today) return 'auj.'; const d = new Date(`${iso}T00:00:00`); return `${['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'][d.getDay()]} ${d.getDate()}`; };
         return (
           <div className={showCardio ? 'grid grid-cols-2 gap-2' : ''}>
-            <button type="button" onClick={() => setSheet('next')} data-testid="next-session-open" aria-label="Voir et modifier la prochaine séance" className={`${tile} w-full`}>
+            <button type="button" onClick={ev => { setSheetTop(ev.currentTarget.getBoundingClientRect().bottom); setSheet('next'); }} data-testid="next-session-open" aria-label="Voir et modifier la prochaine séance" className={`${tile} w-full`}>
               <span className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="dumbbell" size={22} bare /></span>
               <span className="flex-1 min-w-0 block">
                 <span className="block text-xs font-bold text-slate-400 truncate">{coachOff ? 'Aperçu' : 'Séance'}{shownSession ? ` · ${dayTxt(shownDate)}` : ''}{plan ? ' · perso' : ''}</span>
@@ -461,7 +462,7 @@ export function CoachPanel({
       <div className="pr-16 md:pr-0"><CoachChat slim gameState={gameState} setGameState={setGameState} overview={ov} /></div>
       <span data-testid="seance-end" className="block h-px" aria-hidden="true" />
       <div className={sheet === 'goal' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-goal">
-        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+        <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2">
           <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Mon objectif">
             <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
             {!hasGoal && <CoachGoal gameState={gameState} setGameState={setGameState} />}
@@ -469,7 +470,7 @@ export function CoachPanel({
         </div>
       </div>
       <div className={sheet === 'program' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-program">
-        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+        <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2">
           <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Programme de mon coach">
             <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
             {((!coach.program && !coach.noCoach) || (coach.program && coach.program.askTakeOver)) && <CoachProgram gameState={gameState} setGameState={setGameState} />}
@@ -477,7 +478,8 @@ export function CoachPanel({
         </div>
       </div>
       <div className={sheet === 'next' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-next">
-        <div className="min-h-full flex items-start justify-center px-2 pt-14 pb-4">
+        {/* collée en bas (comme le cardio) et commençant sous l'encadré « Séance » : retoucher l'encadré la referme */}
+        <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2" style={sheetTop ? { paddingTop: Math.round(sheetTop + 52) } : undefined}>
           <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Prochaine séance">
             <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
       <CoachNextSession

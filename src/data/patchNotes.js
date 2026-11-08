@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.13.1',
+    date: '2026-11-08',
+    title: 'Fenêtre de la séance en bas',
+    items: [
+      'La fenêtre de la prochaine séance est collée en bas de l’écran, comme celle du cardio, et commence sous l’encadré « Séance » : le retoucher la referme.',
+    ],
+  },
+  {
     version: '4.13',
     date: '2026-11-08',
     title: 'Page Séance sans défiler',
