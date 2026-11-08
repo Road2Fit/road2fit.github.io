@@ -37,6 +37,25 @@ describe('micro', () => {
     expect(ended).toBe(1);
     expect(made).toHaveLength(2);
   });
+  it('Android : morceaux cumulés et renvoyés en double → la phrase une seule fois', async () => {
+    setup();
+    const got = [];
+    const mids = [];
+    const ctl = startListening({ interim: true, onFinal: t => got.push(t), onInterim: t => mids.push(t), onEnd: () => {} });
+    await tick(); await tick();
+    const r = made[0];
+    const res = (list, idx = 0) => r.onresult({ resultIndex: idx, results: list.map(([t, f]) => Object.assign([{ transcript: t }], { isFinal: f })) });
+    // forme 1 : un nouveau résultat final à chaque mot, chacun contenant toute la phrase depuis le début
+    res([['hier', true]]);
+    res([['hier', true], ['hier j’ai', true]], 1);
+    res([['hier', true], ['hier j’ai', true], ['hier j’ai eu un match', true]], 0); // liste renvoyée depuis 0
+    res([['hier', true], ['hier j’ai', true], ['hier j’ai eu un match', true], ['hier j’ai eu un match de volley', false]], 3);
+    expect(mids[mids.length - 1]).toBe('de volley');
+    res([['hier', true], ['hier j’ai', true], ['hier j’ai eu un match', true], ['hier j’ai eu un match de volley pendant 2h30', true]], 3);
+    ctl.stop();
+    await tick();
+    expect(got.join(' ')).toBe('hier j’ai eu un match de volley pendant 2h30');
+  });
   it('micro bloqué : message qui explique comment l’autoriser, sans lancer la reconnaissance', async () => {
     setup({ gum: async () => { throw Object.assign(new Error('x'), { name: 'NotAllowedError' }); } });
     const errs = [];

@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.9.1',
+    date: '2026-11-08',
+    title: 'Dictée sur Android',
+    items: [
+      'Sur Android, la dictée répétait chaque mot plusieurs fois (« hier hier j’ai hier j’ai eu… ») : la phrase s’écrit maintenant une seule fois.',
+    ],
+  },
+  {
     version: '4.9',
     date: '2026-11-07',
     title: 'Noter une séance oubliée',

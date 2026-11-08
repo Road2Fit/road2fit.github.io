@@ -59,6 +59,19 @@ export async function askMicPermission() {
   }
 }
 
+const norm = s => s.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ').trim();
+/** Ce que `text` ajoute à `prev` quand il le répète en entier au début (morceaux cumulés d'Android) ; sinon `text` tel quel. */
+export function newPart(prev, text) {
+  if (!prev || !text) return text;
+  const p = norm(prev);
+  const t = norm(text);
+  if (t === p) return '';
+  if (!t.startsWith(p + ' ')) return text;
+  // retrouver dans le texte d'origine où s'arrête la partie déjà dite
+  const words = p.split(' ').length;
+  return text.trim().split(/\s+/).slice(words).join(' ');
+}
+
 /**
  * Lance l'écoute. Renvoie { stop() } ; `stop` termine pour de bon (onEnd est alors appelé une fois).
  * callbacks : onStart(), onFinal(texte), onInterim(texte), onError(message), onEnd()
@@ -93,16 +106,26 @@ export function startListening({ interim = false, onStart, onFinal, onInterim, o
       rec.continuous = true;
       rec.interimResults = interim;
       rec.onstart = () => { if (!started) { started = true; if (onStart) onStart(); } };
+      // Chrome sur Android (et l'appli Android) renvoie souvent la phrase en morceaux CUMULÉS :
+      // « hier », « hier j'ai », « hier j'ai eu »… chacun marqué « final », parfois renvoyés plusieurs fois.
+      // On ne garde que la partie nouvelle de chaque morceau (sinon : « hier hier j'ai hier j'ai eu… »).
+      const seen = {};
+      let last = '';
       rec.onresult = ev => {
         let fin = '';
         let mid = '';
         for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          if (ev.results[i].isFinal) fin += ev.results[i][0].transcript + ' ';
-          else mid += ev.results[i][0].transcript;
+          const text = String(ev.results[i][0].transcript || '').trim();
+          if (ev.results[i].isFinal) {
+            if (!text || seen[i] === text) continue; // même résultat renvoyé une 2e fois
+            seen[i] = text;
+            const part = newPart(last, text);
+            if (part) { fin += part + ' '; last = last ? `${last} ${part}` : part; }
+          } else mid += ev.results[i][0].transcript;
         }
         restarts = 0;
         if (fin.trim() && onFinal) onFinal(fin.trim());
-        if (onInterim) onInterim(mid);
+        if (onInterim) onInterim(newPart(last, mid.trim()));
       };
       rec.onerror = ev => {
         const code = ev && ev.error;
