@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.9.3',
+    date: '2026-11-08',
+    title: 'Échauffement : la barre fait 20 kg',
+    items: [
+      'Les exercices à la barre dont le nom ne dit pas « barre » (développé couché prise serrée, push press, jetés, squat bras tendus) sont reconnus : échauffement jamais sous 20 kg, disques indiqués.',
+    ],
+  },
+  {
     version: '4.9.2',
     date: '2026-11-08',
     title: 'Disques à l’échauffement',

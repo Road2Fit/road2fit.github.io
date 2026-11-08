@@ -21,6 +21,9 @@ describe('calculateur de disques', () => {
     expect(isBarbell('Développé Couché Barre')).toBe(true);
     expect(isBarbell('Soulevé de Terre')).toBe(true);
     expect(isBarbell('Curl Biceps Barre EZ')).toBe(false);
+    // exercices à la barre sans le mot « barre » dans le nom
+    for (const n of ['Développé Couché Prise Serrée', 'Push Press', 'Jeté Poussé (Push Jerk)', 'Jeté Fente (Split Jerk)', 'Squat Bras Tendus (Overhead Squat)']) expect(isBarbell(n)).toBe(true);
+    expect(isBarbell('Squat Goblet (Haltère / Kettlebell)')).toBe(false);
     expect(isBarbell('Squat Smith Machine')).toBe(false);
     expect(isBarbell('Développé Couché Haltères')).toBe(false);
     expect(isBarbell('Tirage Vertical Poulie Haute')).toBe(false);

@@ -9,7 +9,7 @@ export const BAR_KG = 20;
 export function isBarbell(name) {
   const n = stripAccents(String(name || '').toLowerCase());
   if (/\bez\b|smith|guide|machine|poulie|traction|parallele|landmine|trap bar|hexagonale|haltere|kettlebell/.test(n)) return false;
-  return /barre|souleve de terre|deadlift|hip thrust|militaire|epaule[- ]jete|epaule en force|arrache|clean|snatch/.test(n);
+  return /barre|souleve de terre|deadlift|hip thrust|militaire|epaule[- ]jete|epaule en force|arrache|clean|snatch|jerk|\bjete\b|push press|overhead squat|squat bras tendus|developpe couche prise serree|bench press|back squat|front squat|good morning|rowing pendlay|barbell/.test(n);
 }
 
 /** Disques d'un côté pour `total` kg (barre comprise). null si la charge est sous le poids de la barre.
