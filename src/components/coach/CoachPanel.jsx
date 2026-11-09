@@ -101,8 +101,13 @@ export function CoachPanel({
           below += n.offsetHeight + (parseFloat(ncs.marginTop) || 0) + (parseFloat(ncs.marginBottom) || 0);
         }
       }
-      const h = Math.round(vh - top - Math.max(below, fixedH + 8));
+      // la page descend jusqu'aux barres fixes du bas (« Parle à ton coach » collé à la barre des onglets du Coach) ;
+      // la marge basse prévue en dessous (plus grande que les barres) est compensée par une marge négative : pas de défilement
+      const reserve = fixedH ? fixedH + 4 : Math.max(below, 8);
+      const h = Math.round(vh - top - reserve);
+      const extra = Math.round(below - reserve);
       page.style.minHeight = h > 0 ? `${h}px` : '';
+      page.style.marginBottom = h > 0 && extra > 0 ? `-${extra}px` : '';
     };
     fit();
     let w = window.innerWidth, h = window.innerHeight;
@@ -474,7 +479,7 @@ export function CoachPanel({
       })()}
       {/* sous le rond : « Parle à ton coach » */}
       <div className="pr-16 md:pr-0"><CoachChat slim gameState={gameState} setGameState={setGameState} overview={ov} /></div>
-      <span data-testid="seance-end" className="block h-px" aria-hidden="true" />
+      <span data-testid="seance-end" className="block h-px -mt-3" aria-hidden="true" />
       <div className={sheet === 'goal' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-goal">
         <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2">
           <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Mon objectif">
