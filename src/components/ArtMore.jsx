@@ -122,6 +122,7 @@ export const MORE = {
   shirt: <><path d="M8 2.5 2 7l2.5 4L7 9.500V22h10V9.500l2.5 1.500L22 7l-6-4.500c-1 1.5-2.5 2-4 2s-3-.5-4-2Z" fill="#38bdf8" /><path d="M7 12h10M7 16h10" {...S} stroke="#f8fafc" strokeWidth="1.6" /></>,
   bed: <><rect x="2" y="12" width="20" height="6" rx="1.5" fill="#60a5fa" /><rect x="4" y="9" width="6" height="4" rx="1.5" fill="#f8fafc" />{L('M2 6v16M22 12v10', '#94a3b8', 2.2)}</>,
   sleepy: <><circle cx="12" cy="12" r="10" fill="#fbbf24" /><path d="M6.5 10.500h4M13.5 10.500h4" {...S} stroke="#78350f" strokeWidth="1.8" /><ellipse cx="12" cy="16" rx="1.8" ry="1.5" fill="#78350f" /></>,
+  gamepad: <><path d="M7 7.5h10a4.5 4.5 0 0 1 4.4 5.5l-.8 3.6a2.5 2.5 0 0 1-4.3 1.1L14.5 15.5h-5l-1.8 2.2a2.5 2.5 0 0 1-4.3-1.1L2.6 13A4.5 4.5 0 0 1 7 7.5Z" fill="#334155" /><path d="M8 10.5v3M6.5 12h3" stroke="#e2e8f0" strokeWidth="1.6" strokeLinecap="round" /><circle cx="15.5" cy="11" r="1" fill="#f472b6" /><circle cx="17.5" cy="13" r="1" fill="#34d399" /></>,
   battery: <><rect x="2" y="7" width="18" height="10" rx="2" fill="#334155" /><rect x="20" y="10" width="2.5" height="4" rx=".8" fill="#64748b" /><rect x="4" y="9" width="4" height="6" rx=".6" fill="#34d399" /><rect x="9" y="9" width="4" height="6" rx=".6" fill="#34d399" /><rect x="14" y="9" width="4" height="6" rx=".6" fill="#34d399" /></>,
   // ---- symboles ----
   tick: L('m4.5 13 5 5L20 6.5', '#34d399', 3.2),

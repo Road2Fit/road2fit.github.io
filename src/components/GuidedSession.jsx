@@ -9,6 +9,7 @@ import { restText } from '../coach/rest';
 import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 import { METHODS } from '../coach/methods';
+import { RestGame, restGameWasOpen } from './RestGame';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
 
@@ -60,6 +61,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [sw, setSw] = useState(null); // chrono d'une tenue : { start }
   const [swapOpen, setSwapOpen] = useState(false); // liste « machine prise »
+  // petit jeu pendant le repos : rouvert (en pause) au repos suivant s'il était ouvert
+  const [gameOpen, setGameOpen] = useState(restGameWasOpen);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
@@ -408,7 +411,17 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 flex flex-col" data-testid="guided-rest">
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
               {g.pr && <div className="num-pop text-center" data-testid="guided-pr"><p className="text-lg font-black text-amber-300"><Art name="trophy" size={22} />Nouveau record !</p><p className="text-xs text-slate-400">{(items.find(x => x.questId === g.pr.questId) || {}).name} · {g.pr.text}</p></div>}
-              <p className="text-sm font-black text-emerald-300 uppercase tracking-wider">Repos</p>
+              {gameOpen ? (
+                <>
+                  <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white" data-testid="rest-left">{fmtT(restLeft)}</span></p>
+                  <RestGame onClose={() => setGameOpen(false)} />
+                </>
+              ) : (<>
+              <div className="w-full flex items-center justify-between">
+                <span className="w-11" />
+                <p className="text-sm font-black text-emerald-300 uppercase tracking-wider">Repos</p>
+                <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
+              </div>
               <div className="relative w-64 h-64 max-w-[70vw] max-h-[70vw]">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="6" />
@@ -417,6 +430,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 </svg>
                 <p className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white" data-testid="rest-left">{fmtT(restLeft)}</p>
               </div>
+              </>)}
               {rest.next && <p className="text-base font-bold text-slate-200 text-center" data-testid="rest-next">{rest.next}</p>}
               {adapt && (
                 <div className="w-full bg-slate-900 border border-amber-500/50 rounded-2xl p-3 space-y-2" data-testid="guided-adapt">

@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.18',
+    date: '2026-11-09',
+    title: 'Un petit jeu pendant le repos',
+    items: [
+      'Séance guidée : touche la manette sur l’écran de repos pour jouer. Glisse vers le haut pour sauter les haltères, vers le bas (doigt posé) pour passer sous les barres de traction.',
+      'À la fin du repos, la partie se met en pause et reprend au repos suivant. Ton record est gardé.',
+    ],
+  },
+  {
     version: '4.17',
     date: '2026-11-09',
     title: 'Nouvelle navigation',
