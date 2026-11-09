@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.14.2',
+    date: '2026-11-09',
+    title: 'Fenêtre de la séance sans défilement',
+    items: [
+      'La fenêtre de la prochaine séance ne défile plus pour rien : elle remonte juste ce qu’il faut pour que tout tienne, bouton « Lancer » compris.',
+    ],
+  },
+  {
     version: '4.14.1',
     date: '2026-11-09',
     title: '« Parle à ton coach » en bas',

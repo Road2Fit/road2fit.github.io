@@ -1,5 +1,5 @@
 import { Art } from '../Art';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { coachBalance, coachDayAdvice, coachEta, coachMissed, coachMissedSession, coachNutrition, coachOverview, coachPlateau, coachStrengthTrend, coachTrainingWeeks, coachWeekActivity, coachWeightPace } from '../../coach/advice';
 import { sessionFocus } from '../../coach/focus';
@@ -226,6 +226,25 @@ export function CoachPanel({
     return () => { if (mq.removeEventListener) mq.removeEventListener('change', on); else if (mq.removeListener) mq.removeListener(on); };
   }, []);
   const [sheetTop, setSheetTop] = useState(0); // bas de l'encadré « Séance » : la fenêtre commence dessous // fenêtre ouverte sur la page Séance : 'next' | 'goal' | 'program'
+  const nextPadRef = useRef(null);
+  const nextBoxRef = useRef(null);
+  // fenêtre de la séance : commence sous l'encadré « Séance » (le retoucher la referme), mais remonte si besoin pour que
+  // tout tienne dans l'écran : on ne défile que si la séance est vraiment plus haute que l'écran (détails ouverts…)
+  useLayoutEffect(() => {
+    const pad = nextPadRef.current;
+    const box = nextBoxRef.current;
+    if (!pad || !box || sheet !== 'next') return undefined;
+    const place = () => {
+      const want = sheetTop ? sheetTop + 52 : 56;
+      const fit = window.innerHeight - box.offsetHeight - 8; // pb-2
+      pad.style.paddingTop = `${Math.round(Math.max(56, Math.min(want, fit)))}px`;
+    };
+    place();
+    let ro = null;
+    try { ro = new ResizeObserver(place); ro.observe(box); } catch (e) { /* vieux navigateur */ }
+    window.addEventListener('resize', place);
+    return () => { if (ro) ro.disconnect(); window.removeEventListener('resize', place); };
+  }, [sheet, sheetTop]);
   const [cardioPeek, setCardioPeek] = useState(null); // résumé d'une séance de cardio avant de la lancer
   const [cardioRun, setCardioRun] = useState(() => { const r = savedCardioRun(); return r && r.session ? { session: r.session } : null; });
   const [cardioMsg, setCardioMsg] = useState('');
@@ -498,8 +517,8 @@ export function CoachPanel({
       </div>
       <div className={sheet === 'next' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-next">
         {/* collée en bas (comme le cardio) et commençant sous l'encadré « Séance » : retoucher l'encadré la referme */}
-        <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2" style={sheetTop ? { paddingTop: Math.round(sheetTop + 52) } : undefined}>
-          <div className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Prochaine séance">
+        <div ref={nextPadRef} className="min-h-full flex items-end justify-center px-2 pt-14 pb-2">
+          <div ref={nextBoxRef} className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Prochaine séance">
             <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
       <CoachNextSession
         preview={coachOff}
