@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.17',
+    date: '2026-11-09',
+    title: 'Nouvelle navigation',
+    items: [
+      'En bas, « Communauté » ouvre directement Souvenirs et Amis.',
+      'Bilan, Trophées, Récompenses et Épreuve de rang : touche ton profil en haut à gauche.',
+      'L’engrenage en haut à droite regroupe les réglages, la couleur du néon et les Nouveautés, avec une pastille quand il y a du nouveau à lire.',
+    ],
+  },
+  {
     version: '4.16',
     date: '2026-11-09',
     title: 'Photos entre amis',

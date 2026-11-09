@@ -1,4 +1,4 @@
-// Nouveautés : la fenêtre s'ouvre une fois après une mise à jour, l'historique est dans Plus, le bandeau propose de rafraîchir.
+// Nouveautés : après une mise à jour, une pastille sur ⚙️ (Réglages et données → Nouveautés) ; le bandeau propose de rafraîchir.
 import { afterEach, describe, expect, it } from 'vitest';
 import { CURRENT_VERSION, PATCH_NOTES } from '../../src/data/patchNotes';
 import { advance, clickEl, clickText, launch } from './harness';
@@ -16,15 +16,21 @@ describe('nouveautés', () => {
     expect(h.w.localStorage.getItem('rondoufit:seenVersion')).toBe(CURRENT_VERSION);
   }, T);
 
-  it('après une mise à jour : la fenêtre résume les nouveautés, une seule fois', async () => {
+  it('après une mise à jour : pas de fenêtre, une pastille sur ⚙️ et « Nouveautés » jusqu’à la lecture', async () => {
     const old = PATCH_NOTES[PATCH_NOTES.length - 1].version;
     const h = await launch({ storage: { 'rondoufit:seenVersion': old } });
     open.push(h);
-    expect(dialog(h)).toBeTruthy();
+    expect(dialog(h)).toBeNull();
+    expect(h.doc.querySelector('[data-testid="gear-badge"]')).toBeTruthy();
+    await clickEl(h, h.doc.querySelector('button[aria-label="Réglages et données"]'));
+    expect(h.doc.querySelector('[data-testid="notes-badge"]')).toBeTruthy();
+    await clickEl(h, h.doc.querySelector('[data-testid="open-patchnotes"]'));
     expect(dialog(h).textContent).toContain(PATCH_NOTES[0].title);
+    expect(dialog(h).textContent).toContain('nouveau');
     await clickText(h, 'Compris');
     expect(dialog(h)).toBeNull();
     expect(h.w.localStorage.getItem('rondoufit:seenVersion')).toBe(CURRENT_VERSION);
+    expect(h.doc.querySelector('[data-testid="gear-badge"]')).toBeNull();
   }, T);
 
   it('Plus → Nouveautés montre toutes les versions', async () => {

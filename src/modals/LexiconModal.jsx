@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { SLANG, SLANG_CATS, searchSlang } from '../data/slang';
 
-// « Lexique de la salle » (Plus → Lexique) : l'argot de la musculation, cherchable. Les mêmes mots sont compris par la dictée,
+// « Lexique de la salle » (⚙️ Réglages et données → Lexique) : l'argot de la musculation, cherchable. Les mêmes mots sont compris par la dictée,
 // la saisie d'un programme, la recherche d'exercice et le coach intelligent (data/slang.js).
 export function LexiconModal({ onClose }) {
   const [q, setQ] = useState('');

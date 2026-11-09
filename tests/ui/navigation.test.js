@@ -12,7 +12,7 @@ const bas = (h, texte) => [...nav(h).querySelectorAll('button')].find(b => b.tex
 describe('navigation', () => {
   it('barre du bas : 4 entrées ; le poids est dans le profil (icône en haut à gauche)', async () => {
     const h = await start();
-    expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Plus']);
+    expect([...nav(h).querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Coach', 'Exercices', 'Journal', 'Communauté']);
     await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
     await clickEl(h, h.doc.querySelector('[data-testid="profile-weight-button"]'));
     expect(h.doc.querySelector('[data-testid="profile-weight"]')).toBeTruthy();
@@ -22,15 +22,26 @@ describe('navigation', () => {
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 
-  it('« Plus » : pages secondaires, sons, exporter, réinitialiser', async () => {
+  it('« Communauté » : Souvenirs et Amis ; ⚙️ : réglages et données ; Bilan et Trophées par le profil', async () => {
     const h = await start();
-    await clickEl(h, bas(h, 'Plus'));
+    await clickEl(h, bas(h, 'Communauté'));
+    expect(h.doc.querySelector('.fixed.inset-0')).toBeNull(); // plus de feuille : on arrive directement sur la page
+    const sub = h.doc.querySelector('[aria-label="Sous-onglets"]');
+    expect([...sub.querySelectorAll('button')].map(b => b.textContent.replace(/[^A-Za-zÀ-ÿ]/g, ''))).toEqual(['Souvenirs', 'Amis']);
+    expect(h.doc.querySelector('[data-tab="bilan"]')).toBeNull();
+    expect(h.doc.querySelector('[data-tab="trophies"]')).toBeNull();
+    // l'engrenage : couleur du néon, nouveautés, réglages et données
+    await clickEl(h, h.doc.querySelector('button[aria-label="Réglages et données"]'));
     const feuille = h.doc.querySelector('.fixed.inset-0');
-    for (const t of ['Souvenirs', 'Bilan', 'Trophées', 'Sons :', 'Mon compte et ma sauvegarde', 'Exporter mes données', 'Importer une sauvegarde', 'Tout réinitialiser']) {
+    for (const t of ['Réglages et données', 'Nouveautés', 'Sons :', 'Mon compte et ma sauvegarde', 'Exporter mes données', 'Importer une sauvegarde', 'Tout réinitialiser']) {
       expect(feuille.textContent, t).toContain(t);
     }
-    await clickEl(h, [...feuille.querySelectorAll('button')].find(b => b.textContent.includes('Bilan')));
-    expect(pageText(h)).not.toContain('Tout réinitialiser'); // la feuille se ferme
+    expect(feuille.textContent).not.toContain('Récompenses');
+    expect(feuille.textContent).not.toContain('Trophées');
+    await clickEl(h, feuille.querySelector('button[aria-label="Fermer"]'));
+    // Bilan : par le profil
+    await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]'));
+    await clickText(h, 'Bilan');
     expect(pageText(h)).toContain('Bilan de la semaine');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);

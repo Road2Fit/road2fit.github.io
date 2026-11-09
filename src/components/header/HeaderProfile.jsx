@@ -1,4 +1,5 @@
 import { Art } from '../Art';
+import { useUnreadNotes } from '../PatchNotes';
 import { useEffect, useMemo, useState } from 'react';
 import { MuscleBodyMap } from '../coach/MuscleBodyMap';
 import { coachBalance } from '../../coach/advice';
@@ -35,6 +36,7 @@ export function HeaderProfile({
   currentStreak, gameState, levelInfo, lifetimeStats, onOpenMore, onOpenRewards, onOpenSync, onOpenTrial,
   onRetrySync, setActiveTab, streakBonusPct, syncStatus, trialRank, renderWeight,
 }) {
+  const unreadNotes = useUnreadNotes();
   const [open, setOpen] = useState(false);
   const [showWeight, setShowWeight] = useState(false);
   // ouvrir directement le suivi du poids depuis ailleurs (événement rondoufit-open-weight)
@@ -71,8 +73,9 @@ export function HeaderProfile({
           </button>
         )}
         <button type="button" onClick={onOpenMore} title="Réglages et données" aria-label="Réglages et données"
-          className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white">
+          className="relative shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white">
           <Art name="gear" size={22} bare />
+          {unreadNotes && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-slate-950" data-testid="gear-badge" aria-label="Nouveautés à lire" />}
         </button>
       </div>
 

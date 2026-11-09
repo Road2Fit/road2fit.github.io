@@ -1,19 +1,21 @@
+import { useRef } from 'react';
 import { Art } from './Art';
 import { ACHIEVEMENTS_LIST } from '../data/gamification';
 
-// Onglets de l'application. `group` : « suivi » (poids, maxima, courbes) et « plus » (souvenirs, bilan, trophées)
-// sont regroupés dans la barre du bas sur téléphone.
+// Onglets de l'application. `group` : « plus » = Communauté (Souvenirs, Amis), regroupés dans la barre du bas sur téléphone ;
+// « profil » = Bilan et Trophées, ouverts seulement depuis le profil (en haut à gauche), jamais dans les barres d'onglets.
 export const TABS = [
   { id: 'coach', icon: '🧠', art: 'coach', label: 'Coach' },
   { id: 'quests', icon: '🏋️', art: 'dumbbell', label: 'Exercices' },
   { id: 'journal', icon: '📅', art: 'calendar', label: 'Journal' },
   { id: 'photos', icon: '📸', art: 'camera', label: 'Souvenirs', group: 'plus' },
-  { id: 'bilan', icon: '📊', art: 'clipboard', label: 'Bilan', group: 'plus' },
-  { id: 'trophies', icon: '🏆', art: 'trophy', label: 'Trophées', group: 'plus' },
+  { id: 'bilan', icon: '📊', art: 'clipboard', label: 'Bilan', group: 'profil' },
+  { id: 'trophies', icon: '🏆', art: 'trophy', label: 'Trophées', group: 'profil' },
   { id: 'friends', icon: '👥', art: 'friends', label: 'Amis', group: 'plus' },
 ];
 export const SUIVI_TABS = TABS.filter(t => t.group === 'suivi');
 export const PLUS_TABS = TABS.filter(t => t.group === 'plus');
+export const BAR_TABS = TABS.filter(t => t.group !== 'profil');
 
 const tabText = (t, gameState) =>
   t.id === 'quests' ? `${t.label} (${gameState.quests.length})`
@@ -24,7 +26,7 @@ const tabText = (t, gameState) =>
 export function TabBar({ activeTab, gameState, setActiveTab, badges = null }) {
   return (
     <nav className="hidden md:flex flex-wrap items-center gap-1.5 border-b border-slate-800 pb-3" aria-label="Onglets">
-      {TABS.map(t => (
+      {BAR_TABS.map(t => (
         <button
           key={t.id}
           onClick={() => setActiveTab(t.id)}
@@ -62,13 +64,16 @@ export function SubTabs({ activeTab, setActiveTab, badges = null }) {
 
 // Téléphone : barre fixe en bas de l'écran
 export function BottomNav({ activeTab, moreOpen, onOpenMore, setActiveTab, badges = null }) {
+  // « Communauté » rouvre la dernière page choisie (Souvenirs ou Amis)
+  const lastCommunity = useRef('photos');
+  if (PLUS_TABS.some(t => t.id === activeTab)) lastCommunity.current = activeTab;
   const plusBadge = badges ? PLUS_TABS.reduce((n, t) => n + (Number(badges[t.id]) || 0), 0) : 0;
   const inPlus = PLUS_TABS.some(t => t.id === activeTab);
   const items = [
     { key: 'coach', art: 'coach', label: 'Coach', on: activeTab === 'coach', go: () => setActiveTab('coach') },
     { key: 'quests', art: 'dumbbell', label: 'Exercices', on: activeTab === 'quests', go: () => setActiveTab('quests') },
     { key: 'journal', art: 'calendar', label: 'Journal', on: activeTab === 'journal', go: () => setActiveTab('journal') },
-    { key: 'plus', art: 'more', label: 'Plus', on: inPlus || moreOpen, go: onOpenMore },
+    { key: 'plus', art: 'friends', label: 'Communauté', on: inPlus, go: () => setActiveTab(inPlus ? activeTab : (lastCommunity.current || 'photos')) },
   ];
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur border-t border-slate-800 grid grid-cols-4 pb-[env(safe-area-inset-bottom)]" aria-label="Navigation">

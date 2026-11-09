@@ -23,7 +23,10 @@ describe('logos maison', () => {
     open.push(h);
     const vus = new Set();
     for (const id of ['coach', 'quests', 'journal', 'photos', 'bilan', 'trophies', 'friends']) {
-      await clickEl(h, h.doc.querySelector(`[data-tab="${id}"]`));
+      // Bilan et Trophées ne sont plus dans les onglets : on y va par le profil (en haut à gauche)
+      const tab = h.doc.querySelector(`[data-tab="${id}"]`);
+      if (tab) await clickEl(h, tab);
+      else { await clickEl(h, h.doc.querySelector('[data-testid="profile-button"]')); await clickText(h, id === 'bilan' ? 'Bilan' : 'Trophées'); }
       emojisIn(h).forEach(e => vus.add(`${id} : ${e}`));
     }
     await clickEl(h, h.doc.querySelector('[data-tab="quests"]'));

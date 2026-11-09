@@ -2,15 +2,16 @@ import { Art } from '../components/Art';
 import NEON_COLORS from '../data/neonColors.json';
 const NEON_NAMES = { lime: 'vert citron', yellow: 'jaune', orange: 'orange', red: 'rouge', magenta: 'magenta', violet: 'violet', blue: 'bleu', cyan: 'cyan' };
 import { useState } from 'react';
-import { PLUS_TABS } from '../components/TabBar';
+import { useUnreadNotes } from '../components/PatchNotes';
 import { readSafetyCopy } from '../lib/safetyCopy';
 import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 
-// « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
+// ⚙️ « Réglages et données » : couleur du néon, nouveautés (pastille s'il y en a une à lire), réglages et données
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
 export function MoreSheet({ badges = null, activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenCsvImport, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
+  const unreadNotes = useUnreadNotes();
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
   const toggleBigText = () => { const p = { ...prefs, bigText: !prefs.bigText }; setPrefs(p); saveUiPrefs(p); };
@@ -20,7 +21,7 @@ export function MoreSheet({ badges = null, activeTab, gameState, importInputRef,
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="w-full sm:max-w-md bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-4 pb-8 sm:pb-4 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-white">Plus</h3>
+          <h3 className="font-black text-white">Réglages et données</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 font-black" aria-label="Fermer">✕</button>
         </div>
           {prefs.theme === 'neon' && (
@@ -35,37 +36,13 @@ export function MoreSheet({ badges = null, activeTab, gameState, importInputRef,
             </div>
           )}
 
-        <div className="space-y-2">
-          <p className="text-xs font-black uppercase tracking-wider text-pink-300">Pages</p>
-          {PLUS_TABS.map(t => (
-            <button key={t.id} onClick={close(() => onGoTab(t.id))} className={`${row} ${activeTab === t.id ? 'border-pink-500/60' : ''}`}>
-              <Art name={t.art} size={22} bare />
-              <span>{t.label}</span>
-              {badges && badges[t.id] > 0 && <span className="ml-auto px-1.5 rounded-full bg-rose-500 text-[10px] font-black text-white" data-testid={`more-badge-${t.id}`}>{badges[t.id]} nouvelle(s)</span>}
-            </button>
-          ))}
-        </div>
+        <button onClick={close(() => window.dispatchEvent(new Event('rondoufit-patchnotes')))} className={row} data-testid="open-patchnotes">
+          <Art name="sparkle" size={22} bare />
+          <span>Nouveautés</span>
+          {unreadNotes && <span className="ml-auto px-1.5 rounded-full bg-rose-500 text-[10px] font-black text-white" data-testid="notes-badge">à lire</span>}
+        </button>
 
-        <div className="space-y-2">
-          <p className="text-xs font-black uppercase tracking-wider text-pink-300">Progression</p>
-          <button onClick={close(() => window.dispatchEvent(new Event('rondoufit-patchnotes')))} className={row} data-testid="open-patchnotes">
-            <Art name="sparkle" size={22} bare />
-            <span>Nouveautés</span>
-          </button>
-          <button onClick={close(onOpenRewards)} className={row}>
-            <Art name="gift" size={22} bare />
-            <span>Récompenses</span>
-          </button>
-          {trialRank && (
-            <button onClick={close(onOpenTrial)} className={row}>
-              <Art name={levelInfo && levelInfo.locked ? 'lock' : 'swords'} size={22} bare />
-              <span>Épreuve de rang</span>
-            </button>
-          )}
-        </div>
-
-        <details className="space-y-2" data-testid="more-settings">
-          <summary className="text-sm font-black text-slate-200 py-2">Réglages et données</summary>
+        <div className="space-y-2" data-testid="more-settings">
           <div className="space-y-2 pt-1">
           <button onClick={() => setGameState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))} className={row}>
             <Art name={gameState.soundEnabled ? 'sound' : 'mute'} size={22} bare />
@@ -123,7 +100,7 @@ export function MoreSheet({ badges = null, activeTab, gameState, importInputRef,
             <span>Tout réinitialiser</span>
           </button>
         </div>
-        </details>
+        </div>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ export function readUiPrefs() {
 export function applyUiPrefs(prefs) {
   try {
     document.documentElement.style.fontSize = prefs.bigText ? '18px' : '';
-    document.documentElement.dataset.neon = prefs.neon || 'lime'; // couleur du néon choisie (Plus → Couleur du néon)
+    document.documentElement.dataset.neon = prefs.neon || 'lime'; // couleur du néon choisie (⚙️ Réglages et données → Couleur du néon)
     if (prefs.theme === 'neon') document.documentElement.dataset.theme = 'neon';
     else delete document.documentElement.dataset.theme;
   } catch (e) { /* rien */ }

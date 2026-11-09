@@ -4,7 +4,7 @@
 // Sert à trois choses :
 //  1. traduire avant de lire une dictée, une ligne de programme ou une recherche d'exercice (`to` = texte que l'appli comprend) ;
 //  2. donner le lexique au coach intelligent (envoyé avec le catalogue, partie mise en cache) ;
-//  3. la page « Lexique de la salle » (Plus → Lexique), où chacun peut chercher un mot.
+//  3. la page « Lexique de la salle » (⚙️ Réglages et données → Lexique), où chacun peut chercher un mot.
 // Entrée : { t: [variantes écrites ou dites], to: remplacement pour la lecture (absent = explication seulement), means, cat }.
 import { stripAccents } from '../lib/text';
 
