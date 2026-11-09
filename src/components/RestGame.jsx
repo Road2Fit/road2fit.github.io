@@ -12,7 +12,9 @@ const PLAYER_X = 46;
 const STAND_H = 40;
 const DUCK_H = 22;
 const GRAVITY = 0.0028; // px / ms²
-const JUMP_V = -0.78;   // px / ms
+const JUMP_V = -0.626;  // px / ms : un saut monte à ≈ 70 px ; deux haltères empilés (≈ 80 px) demandent un DOUBLE saut
+const STACK_H = 80;
+const DOUBLE_KEY = 'rondoufit:gameDouble'; // double saut déjà réussi une fois : plus d'astuce
 const BEST_KEY = 'rondoufit:gameBest';
 const TUTO_KEY = 'rondoufit:gameTuto'; // les deux gestes ont été faits au moins une fois : plus de tuto
 const SWIPE = 18; // px de glissement pour un saut / un « baissé »
@@ -40,6 +42,12 @@ export function RestGame({ onClose }) {
   const [score, setScore] = useState(Math.floor(st.current.dist / 10));
   const [best, setBest] = useState(readBest);
   const swipe = useRef(null);
+  // astuce « deux haltères : swipe 2 fois » à l'arrivée des premières piles, tant qu'aucun double saut n'a été fait
+  const [hint, setHint] = useState(false);
+  const doubleKnown = useRef((() => { try { return localStorage.getItem(DOUBLE_KEY) === '1'; } catch (e) { return false; } })());
+  const learnDouble = () => { if (!doubleKnown.current) { doubleKnown.current = true; setHint(false); try { localStorage.setItem(DOUBLE_KEY, '1'); } catch (e) { /* rien */ } } };
+  const hintRef = useRef(null);
+  hintRef.current = () => { if (doubleKnown.current) return; setHint(true); setTimeout(() => setHint(false), 3500); };
   // tuto « swipe » (flèches haut / bas) en surbrillance à droite, jusqu'à ce que les deux gestes aient été faits une fois
   const [tuto, setTuto] = useState(() => { try { return localStorage.getItem(TUTO_KEY) !== '1'; } catch (e) { return true; } });
   const learned = useRef({ up: false, down: false });
@@ -59,7 +67,8 @@ export function RestGame({ onClose }) {
     const s = st.current;
     if (s.over) return;
     if (pausedRef.current) { setPaused(false); return; }
-    if (s.y === 0) { s.vy = JUMP_V; s.duck = false; }
+    if (s.y === 0) { s.vy = JUMP_V; s.duck = false; s.doubled = false; }
+    else if (!s.doubled) { s.vy = JUMP_V; s.doubled = true; learnDouble(); } // 2e swipe en l'air : double saut
   };
   const setDuck = v => { const s = st.current; if (!s.over && !pausedRef.current) { s.duck = v; if (v && s.y < 0) s.vy = Math.max(s.vy, 0.6); } };
   const restart = () => { st.current = fresh(); setOver(false); setScore(0); setPaused(false); };
@@ -110,14 +119,21 @@ export function RestGame({ onClose }) {
         line(PLAYER_X, base - 24, phase ? PLAYER_X + 9 : PLAYER_X - 8, base - 17); // bras
       }
     };
+    const dumbbell = (x, w, cy, ph) => {
+      line(x + 6, cy, x + w - 6, cy);
+      ctx.strokeRect(x, cy - ph / 2, 7, ph);
+      ctx.strokeRect(x + w - 7, cy - ph / 2, 7, ph);
+    };
     const drawObstacle = o => {
       glow(key, 12);
       ctx.lineWidth = 3;
       if (o.kind === 'dumbbell') {
-        const y = GROUND - 9;
-        line(o.x + 6, y, o.x + o.w - 6, y);
-        ctx.strokeRect(o.x, y - 9, 7, 18);
-        ctx.strokeRect(o.x + o.w - 7, y - 9, 7, 18);
+        dumbbell(o.x, o.w, GROUND - 9, 18);
+      } else if (o.kind === 'stack') {
+        // deux gros haltères posés l'un sur l'autre
+        const ph = STACK_H / 2 - 2;
+        dumbbell(o.x, o.w, GROUND - ph / 2 - 1, ph);
+        dumbbell(o.x, o.w, GROUND - ph * 1.5 - 4, ph);
       } else {
         // barre de traction : barre horizontale tenue par deux montants qui descendent du haut
         const y = GROUND - 30;
@@ -134,6 +150,7 @@ export function RestGame({ onClose }) {
       const right = PLAYER_X + (s.duck ? 16 : 9);
       if (right < o.x + 2 || left > o.x + o.w - 2) return false;
       if (o.kind === 'dumbbell') return bottom > GROUND - 18;
+      if (o.kind === 'stack') return bottom > GROUND - STACK_H + 2;
       return top < GROUND - 27; // la barre est à 30 px du sol : debout ou en l'air on la touche, accroupi on passe dessous
     };
 
@@ -150,9 +167,12 @@ export function RestGame({ onClose }) {
         // obstacles
         s.nextIn -= dt;
         if (s.nextIn <= 0) {
-          const bar = s.t > 4000 && Math.random() < 0.38;
-          s.obstacles.push(bar ? { kind: 'bar', x: W + 10, w: 34 } : { kind: 'dumbbell', x: W + 10, w: 30 });
-          s.nextIn = 650 + Math.random() * 900 * (0.3 / s.speed);
+          const r = Math.random();
+          const stack = s.t > 7000 && r < 0.22;
+          const bar = !stack && s.t > 4000 && r < 0.55;
+          s.obstacles.push(stack ? { kind: 'stack', x: W + 10, w: 34 } : bar ? { kind: 'bar', x: W + 10, w: 34 } : { kind: 'dumbbell', x: W + 10, w: 30 });
+          if (stack && hintRef.current) hintRef.current();
+          s.nextIn = 650 + (stack ? 350 : 0) + Math.random() * 900 * (0.3 / s.speed);
         }
         s.obstacles.forEach(o => { o.x -= s.speed * dt; });
         s.obstacles = s.obstacles.filter(o => o.x + o.w > -10);
@@ -210,6 +230,11 @@ export function RestGame({ onClose }) {
             <Art name="arrowUp" size={30} bare />
             <span className="text-sm font-black uppercase tracking-widest">Swipe</span>
             <Art name="arrowDown" size={30} bare />
+          </div>
+        )}
+        {hint && !paused && !over && (
+          <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 px-3 py-2 rounded-xl border-2 game-hint text-sm font-black text-center whitespace-nowrap" data-testid="game-hint">
+            <Art name="arrowUp" size={18} bare /><Art name="arrowUp" size={18} bare /> 2 haltères : swipe 2 fois !
           </div>
         )}
         {(paused || over) && (
