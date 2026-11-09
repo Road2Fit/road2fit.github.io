@@ -22,6 +22,20 @@ describe('résumé de la séance de cardio', () => {
     expect(g2[1].noLastRest).toBe(true);
   });
 
+  it('cardio du jour dans le grand rond : l’encadré Cardio reste en haut (résumé accessible) tant qu’il n’est pas fait', async () => {
+    // mercredi 21/10 : pas de salle ce jour-là, cardio prévu ce jour-là
+    const state = { ...DEMO_STATE, coach: { ...(DEMO_STATE.coach || {}), gymSkips: ['2026-10-21'], cardio: { on: true, asked: true, goal: 'endurance', kinds: ['walk'], perWeek: 1, minutes: 30, days: [3] } }, quests: DEMO_STATE.quests.map(q => ({ ...q, history: (q.history || []).filter(e => e.date < '2026-10-19') })) };
+    const h = await launch({ openCoach: true, storage: { rondoudou_save_v1: JSON.stringify(state) } });
+    open.push(h);
+    await advance(h, 300);
+    expect(q(h, 'cardio-hero')).toBeTruthy();
+    expect(q(h, 'cardio-next-open')).toBeTruthy();
+    expect(q(h, 'cardio-next-open').textContent).toContain('auj.');
+    await clickEl(h, q(h, 'cardio-next-open'));
+    expect(q(h, 'cardio-summary')).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('la carte Cardio ouvre le résumé puis lance la séance', async () => {
     // cardio le samedi seulement (la démo est un mercredi) : la carte « Cardio · samedi » s'affiche sous la séance
     const state = { ...DEMO_STATE, coach: { ...(DEMO_STATE.coach || {}), cardio: { on: true, asked: true, goal: 'endurance', kinds: ['walk'], perWeek: 1, minutes: 30, days: [6] } } };

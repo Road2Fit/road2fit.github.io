@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.14.4',
+    date: '2026-11-09',
+    title: 'Cardio du jour : résumé toujours là',
+    items: [
+      'Quand le cardio du jour est dans le grand rond, l’encadré « Cardio » reste en haut (avec son résumé) tant que la séance n’est pas faite.',
+    ],
+  },
+  {
     version: '4.14.3',
     date: '2026-11-09',
     title: 'Page Séance symétrique',

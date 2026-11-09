@@ -442,7 +442,8 @@ export function CoachPanel({
       {(() => {
         const fc = shownSession ? sessionFocus(shownSession.exercises) : null;
         const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
-        const showCardio = cardioNext && !(cardioNext === cardioToday && !muscuToday);
+        // l'encadré Cardio reste en haut tant que la séance n'est pas faite, même quand c'est elle qui est dans le grand rond
+        const showCardio = !!cardioNext;
         const tile = 'tap-free min-w-0 rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 flex items-center gap-2 text-left';
         const dayTxt = iso => { if (iso === today) return 'auj.'; const d = new Date(`${iso}T00:00:00`); return `${['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'][d.getDay()]} ${d.getDate()}`; };
         return (
@@ -461,7 +462,7 @@ export function CoachPanel({
                 <button type="button" onClick={() => setCardioPeek(cardioNext)} data-testid="cardio-next-open" aria-label="Voir le détail du cardio" className={`${tile} w-full h-full`}>
                   <span className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center shrink-0"><Art name="heart" size={22} bare /></span>
                   <span className="flex-1 min-w-0 block">
-                    <span className="block text-xs font-bold text-slate-400 truncate">Cardio · {cardioNext.iso === today ? 'après ta muscu' : dayTxt(cardioNext.iso)}</span>
+                    <span className="block text-xs font-bold text-slate-400 truncate">Cardio · {cardioNext.iso === today ? (muscuToday ? 'après ta muscu' : 'auj.') : dayTxt(cardioNext.iso)}</span>
                     <span className="block text-sm font-black text-white leading-tight truncate">{cardioNext.title.split(' · ')[0]}</span>
                     <span className="block text-xs text-slate-400 truncate">{cardioNext.minutes} min{cardioNext.distanceText ? ` · ${cardioNext.distanceText}` : ''}</span>
                   </span>
