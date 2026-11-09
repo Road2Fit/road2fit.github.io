@@ -195,3 +195,9 @@ svg circle[stroke-dasharray] { transition: stroke-dashoffset 0.6s cubic-bezier(0
   .coach-tabs { position: fixed; left: 0; right: 0; margin: 0 !important; bottom: var(--bnav-h, 64px); z-index: 39; padding: 0.35rem 1rem; background: rgb(13 13 13 / 0.95); border-top: 1px solid rgb(var(--slate-800, 30 41 59)); }
   body:has(.coach-tabs) .fab-stack { bottom: calc(var(--bnav-h, 64px) + 3.6rem); }
 }
+
+/* jeu du repos : tuto « swipe » en surbrillance (couleur du néon, qui pulse) */
+.game-tuto { color: var(--neon, #f472b6); border-color: var(--neon, #f472b6); background: rgb(13 13 13 / 0.75); box-shadow: 0 0 18px rgb(var(--neon-rgb, 244 114 182) / 0.55); animation: r2f-tuto 1.4s ease-in-out infinite; }
+.game-tuto svg.art { color: var(--neon, #f472b6) !important; }
+@keyframes r2f-tuto { 0%, 100% { opacity: 0.65; transform: translateY(-50%) scale(1); } 50% { opacity: 1; transform: translateY(-50%) scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .game-tuto { animation: none; } }

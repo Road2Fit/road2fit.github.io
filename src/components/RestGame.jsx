@@ -3,16 +3,18 @@
 // complémentaire (--key), fond noir.
 // Fin du repos : la partie se met en PAUSE (gardée en mémoire) et reprend au repos suivant si elle n'était pas perdue.
 import { useEffect, useRef, useState } from 'react';
+import { Art } from './Art';
 
 const W = 360;
-const H = 170;
-const GROUND = 140;
+const H = 340; // zone haute : de la place pour glisser le doigt (4.18.1)
+const GROUND = 300;
 const PLAYER_X = 46;
 const STAND_H = 40;
 const DUCK_H = 22;
 const GRAVITY = 0.0028; // px / ms²
 const JUMP_V = -0.78;   // px / ms
 const BEST_KEY = 'rondoufit:gameBest';
+const TUTO_KEY = 'rondoufit:gameTuto'; // les deux gestes ont été faits au moins une fois : plus de tuto
 const SWIPE = 18; // px de glissement pour un saut / un « baissé »
 
 const readBest = () => { try { return Number(localStorage.getItem(BEST_KEY)) || 0; } catch (e) { return 0; } };
@@ -38,6 +40,13 @@ export function RestGame({ onClose }) {
   const [score, setScore] = useState(Math.floor(st.current.dist / 10));
   const [best, setBest] = useState(readBest);
   const swipe = useRef(null);
+  // tuto « swipe » (flèches haut / bas) en surbrillance à droite, jusqu'à ce que les deux gestes aient été faits une fois
+  const [tuto, setTuto] = useState(() => { try { return localStorage.getItem(TUTO_KEY) !== '1'; } catch (e) { return true; } });
+  const learned = useRef({ up: false, down: false });
+  const learn = dir => {
+    learned.current[dir] = true;
+    if (learned.current.up && learned.current.down) { setTuto(false); try { localStorage.setItem(TUTO_KEY, '1'); } catch (e) { /* rien */ } }
+  };
   // téléphone (écran tactile) : tout se fait en glissant le doigt, sans boutons
   const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
   const pausedRef = useRef(paused);
@@ -189,13 +198,20 @@ export function RestGame({ onClose }) {
           const sw = swipe.current;
           if (!sw || sw.id !== e.pointerId) return;
           const dy = e.clientY - sw.y;
-          if (!sw.done && dy < -SWIPE) { sw.done = 'up'; jump(); }
-          else if (sw.done !== 'down' && dy > SWIPE) { sw.done = 'down'; setDuck(true); }
+          if (!sw.done && dy < -SWIPE) { sw.done = 'up'; jump(); learn('up'); }
+          else if (sw.done !== 'down' && dy > SWIPE) { sw.done = 'down'; setDuck(true); learn('down'); }
         }}
         onPointerUp={e => { const sw = swipe.current; swipe.current = null; if (!sw) return; if (sw.done === 'down') setDuck(false); else if (!sw.done) jump(); }}
         onPointerCancel={() => { const sw = swipe.current; swipe.current = null; if (sw && sw.done === 'down') setDuck(false); }}>
         <canvas ref={canvasRef} style={{ width: '100%', aspectRatio: `${W} / ${H}` }}
           className="block rounded-2xl border border-slate-800" aria-label="Jeu : glisse vers le haut pour sauter au-dessus des haltères, vers le bas pour te baisser sous les barres" />
+        {touch && tuto && !paused && !over && (
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 px-3 py-3 rounded-2xl border-2 game-tuto" data-testid="game-tuto">
+            <Art name="arrowUp" size={30} bare />
+            <span className="text-sm font-black uppercase tracking-widest">Swipe</span>
+            <Art name="arrowDown" size={30} bare />
+          </div>
+        )}
         {(paused || over) && (
           <button type="button" onClick={over ? restart : () => setPaused(false)} data-testid={over ? 'game-restart' : 'game-resume'}
             className="absolute inset-0 rounded-2xl bg-slate-950/70 flex flex-col items-center justify-center gap-1 text-white">
@@ -204,9 +220,7 @@ export function RestGame({ onClose }) {
           </button>
         )}
       </div>
-      {touch
-        ? <p className="text-xs text-slate-400 text-center" data-testid="game-help">Glisse vers le haut pour sauter · vers le bas (et garde le doigt) pour te baisser</p>
-        : <div className="grid grid-cols-2 gap-2">
+      {!touch && <div className="grid grid-cols-2 gap-2">
         <button type="button" onPointerDown={e => { e.preventDefault(); setDuck(true); }} onPointerUp={() => setDuck(false)} onPointerLeave={() => setDuck(false)} onPointerCancel={() => setDuck(false)}
           className="tap-free py-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-black text-white select-none touch-none" data-testid="game-duck">▼ Se baisser</button>
         <button type="button" onPointerDown={e => { e.preventDefault(); jump(); }}

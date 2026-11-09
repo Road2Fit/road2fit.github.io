@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.18.1',
+    date: '2026-11-09',
+    title: 'Jeu du repos plus grand',
+    items: [
+      'La zone du jeu est deux fois plus haute : plus de place pour glisser le doigt.',
+      'Un petit tuto « Swipe » (flèches haut et bas) s’affiche à droite tant que tu n’as pas fait les deux gestes.',
+    ],
+  },
+  {
     version: '4.18',
     date: '2026-11-09',
     title: 'Un petit jeu pendant le repos',
