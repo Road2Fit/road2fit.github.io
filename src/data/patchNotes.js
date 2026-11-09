@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.16',
+    date: '2026-11-09',
+    title: 'Photos entre amis',
+    items: [
+      'Amis : active « Montrer ma dernière photo de séance à mes amis » pour qu’elle apparaisse dans ton profil chez eux (désactivé au départ).',
+      'Souvenirs : « Taguer un ami » sur une de tes photos (amis qui t’ont ajouté aussi) : elle apparaît dans ses Souvenirs.',
+      'Quand un ami te tague, une pastille s’affiche sur Souvenirs jusqu’à ce que tu l’ouvres.',
+    ],
+  },
+  {
     version: '4.15.1',
     date: '2026-11-09',
     title: 'Prénom visible chez les amis',

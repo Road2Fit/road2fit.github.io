@@ -9,7 +9,7 @@ import { readUiPrefs, saveUiPrefs } from '../lib/uiPrefs';
 // « Plus » : pages secondaires, réglages et données (remplace les boutons Exporter / Importer / Réinitialiser de l'en-tête)
 const row = 'w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-800 text-left text-sm font-bold text-slate-100 hover:border-slate-600';
 
-export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenCsvImport, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
+export function MoreSheet({ badges = null, activeTab, gameState, importInputRef, levelInfo, onClose, onExport, onGoTab, onOpenOnboarding, onOpenLexicon, onOpenCsvImport, onOpenRewards, onOpenSync, onOpenTrial, trialRank, onReset, onRestore, setGameState, syncStatus }) {
   const close = fn => () => { onClose(); fn(); };
   const [prefs, setPrefs] = useState(readUiPrefs);
   const safety = readSafetyCopy();
@@ -41,6 +41,7 @@ export function MoreSheet({ activeTab, gameState, importInputRef, levelInfo, onC
             <button key={t.id} onClick={close(() => onGoTab(t.id))} className={`${row} ${activeTab === t.id ? 'border-pink-500/60' : ''}`}>
               <Art name={t.art} size={22} bare />
               <span>{t.label}</span>
+              {badges && badges[t.id] > 0 && <span className="ml-auto px-1.5 rounded-full bg-rose-500 text-[10px] font-black text-white" data-testid={`more-badge-${t.id}`}>{badges[t.id]} nouvelle(s)</span>}
             </button>
           ))}
         </div>

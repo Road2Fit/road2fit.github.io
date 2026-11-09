@@ -275,6 +275,59 @@ export const friends = {
   },
 };
 
+/** Photos partagées entre amis (docs/supabase-photos-amis.sql) : ma dernière photo de séance (si je l'active) et mes photos
+ *  où je tague des amis mutuels. Les photos des autres ne se lisent que par les fonctions (friend_last_photo, photos_tagged_me). */
+export const sharedPhotos = {
+  async putLast(cfg, { date, note = '', data }) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'POST', '/rest/v1/shared_photos', {
+      token: s.access_token, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, query: '?on_conflict=id',
+      body: { id: `${s.user.id}:last:last`, owner: s.user.id, photo_id: 'last', kind: 'last', date, note: String(note || '').slice(0, 200), data, tagged: [], updated_at: new Date().toISOString() },
+    });
+  },
+  async removeLast(cfg) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'DELETE', '/rest/v1/shared_photos', { token: s.access_token, query: `?id=eq.${encodeURIComponent(`${s.user.id}:last:last`)}` });
+  },
+  /** { photo_id, date, note, data, updated_at } ou null */
+  async friendLast(cfg, userId) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'POST', '/rest/v1/rpc/friend_last_photo', { token: s.access_token, body: { p_user: userId } });
+    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  },
+  async putTag(cfg, { photoId, date, note = '', data, tagged }) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'POST', '/rest/v1/shared_photos', {
+      token: s.access_token, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, query: '?on_conflict=id',
+      body: { id: `${s.user.id}:tag:${photoId}`, owner: s.user.id, photo_id: photoId, kind: 'tag', date, note: String(note || '').slice(0, 200), data, tagged, updated_at: new Date().toISOString() },
+    });
+  },
+  async removeTag(cfg, photoId) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'DELETE', '/rest/v1/shared_photos', { token: s.access_token, query: `?id=eq.${encodeURIComponent(`${s.user.id}:tag:${photoId}`)}` });
+  },
+  /** Mes photos taguées : { photoId: [userId…] } */
+  async myTags(cfg) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'GET', '/rest/v1/shared_photos', { token: s.access_token, query: `?select=photo_id,tagged&kind=eq.tag&owner=eq.${uid(s)}` });
+    const out = {};
+    (Array.isArray(rows) ? rows : []).forEach(r => { out[r.photo_id] = r.tagged || []; });
+    return out;
+  },
+  /** Photos où je suis tagué : [{ id, photo_id, date, note, data, owner_name, created_at }] */
+  async taggedMe(cfg) {
+    const s = await freshSession(cfg);
+    const rows = await call(cfg, 'POST', '/rest/v1/rpc/photos_tagged_me', { token: s.access_token, body: {} });
+    return Array.isArray(rows) ? rows : [];
+  },
+  /** Mes amis mutuels (ids) */
+  async mutual(cfg) {
+    const s = await freshSession(cfg);
+    const r = await call(cfg, 'POST', '/rest/v1/rpc/my_mutual_friends', { token: s.access_token, body: {} });
+    return Array.isArray(r) ? r : [];
+  },
+};
+
 /** Catalogue commun : exercices créés par le coach intelligent (lecture seule pour les comptes, docs/supabase-exercices.sql). */
 export const sharedExercises = {
   async list(cfg) {

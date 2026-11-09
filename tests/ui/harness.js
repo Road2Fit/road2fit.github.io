@@ -311,6 +311,35 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       if (!srv.ai) return res(503, { error: 'not_configured' });
       try { return res(200, { ok: true, data: await srv.ai(body.task, body) }); } catch (e) { return res(e.status || 500, { error: e.error || 'server' }); }
     }
+    // ---- Photos entre amis (reproduit docs/supabase-photos-amis.sql) ----
+    if (u.pathname === '/rest/v1/shared_photos' || ['/rest/v1/rpc/friend_last_photo', '/rest/v1/rpc/photos_tagged_me', '/rest/v1/rpc/my_mutual_friends'].includes(u.pathname)) {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      srv.sharedPhotos = srv.sharedPhotos || new Map();
+      const sp = srv.sharedPhotos;
+      const added = (a, b) => (srv.friendships.get(a) || new Set()).has(b);
+      const mutual = () => [...(srv.friendships.get(uid) || new Set())].filter(f => added(f, uid));
+      if (u.pathname === '/rest/v1/rpc/my_mutual_friends') return res(200, mutual());
+      if (u.pathname === '/rest/v1/rpc/friend_last_photo') {
+        const r = sp.get(`${body.p_user}:last:last`);
+        const p = srv.profiles.get(body.p_user);
+        return res(200, r && p && p.share && added(uid, body.p_user) ? [{ photo_id: 'last', date: r.date, note: r.note, data: r.data, updated_at: r.updated_at }] : []);
+      }
+      if (u.pathname === '/rest/v1/rpc/photos_tagged_me') {
+        return res(200, [...sp.values()].filter(r => r.kind === 'tag' && r.tagged.includes(uid)).map(r => ({ id: r.id, photo_id: r.photo_id, date: r.date, note: r.note, data: r.data, owner_name: ((srv.profiles.get(r.owner) || {}).summary || {}).name || '', created_at: r.created_at })));
+      }
+      const idq = (u.searchParams.get('id') || '').replace('eq.', '');
+      if (method === 'GET') return res(200, [...sp.values()].filter(r => r.owner === uid && (!u.searchParams.get('kind') || `eq.${r.kind}` === u.searchParams.get('kind'))).map(r => ({ photo_id: r.photo_id, tagged: r.tagged })));
+      if (method === 'DELETE') { const r = sp.get(decodeURIComponent(idq)); if (r && r.owner === uid) sp.delete(r.id); return res(204, null); }
+      if (method === 'POST') {
+        // règles RLS : sa propre ligne, id cohérent, tags seulement des amis mutuels
+        if (body.owner !== uid || body.id !== `${uid}:${body.kind}:${body.photo_id}`) return res(403, { message: 'row-level security' });
+        if (body.kind === 'tag' && !body.tagged.every(t => mutual().includes(t))) return res(403, { message: 'row-level security' });
+        const prev = sp.get(body.id);
+        sp.set(body.id, { ...body, created_at: prev ? prev.created_at : new Date(Date.now() + (++srv.n)).toISOString() });
+        return res(201, null);
+      }
+    }
     // ---- Amis (reproduit docs/supabase-amis.sql) ----
     if (u.pathname === '/rest/v1/profiles' || u.pathname.startsWith('/rest/v1/rpc/friend_')) {
       const uid = tokens.get(bearer);

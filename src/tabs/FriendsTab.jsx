@@ -1,5 +1,5 @@
 import { Art } from '../components/Art';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cleanText } from '../edition';
 import { RPG_RANKS } from '../data/gamification';
 import { FRIEND_CODE_LENGTH, normalizeFriendCode } from '../sync/supabase';
@@ -18,7 +18,7 @@ const rankOf = f => {
 };
 
 // Onglet « Amis » : mon code à 7 caractères, ajouter un ami avec le sien, consulter son profil (dernière séance, maxima, exercices).
-export function FriendsTab({ friends, onOpenAccount }) {
+export function FriendsTab({ friends, onOpenAccount, fphotos = null, photoShare = false, setPhotoShare = null }) {
   const [input, setInput] = useState('');
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -60,7 +60,7 @@ export function FriendsTab({ friends, onOpenAccount }) {
     if (r.ok) { setInput(''); setMsg({ ok: true, text: 'Ami ajouté !' }); } else setMsg({ ok: false, text: r.message });
   };
 
-  if (current) return <FriendProfile friend={current} onBack={() => setOpenId(null)} onRemove={async () => { if (window.confirm('Retirer cet ami de ta liste ? (Tu pourras le rajouter avec son code.)')) { await friends.removeFriend(current.user_id); setOpenId(null); } }} />;
+  if (current) return <FriendProfile friend={current} fphotos={fphotos} onBack={() => setOpenId(null)} onRemove={async () => { if (window.confirm('Retirer cet ami de ta liste ? (Tu pourras le rajouter avec son code.)')) { await friends.removeFriend(current.user_id); setOpenId(null); } }} />;
 
   return (
     <div className="space-y-4" data-testid="friends-tab">
@@ -74,6 +74,12 @@ export function FriendsTab({ friends, onOpenAccount }) {
           <input type="checkbox" data-testid="share-toggle" checked={friends.share} onChange={e => friends.setShare(e.target.checked)} className="w-4 h-4" />
           Partager mon profil avec ceux qui ont mon code
         </label>
+        {setPhotoShare && (
+          <label className="flex items-start gap-2 text-sm text-slate-300">
+            <input type="checkbox" data-testid="photo-share-toggle" checked={photoShare} onChange={e => setPhotoShare(e.target.checked)} className="w-4 h-4 mt-0.5" />
+            <span>Montrer ma dernière photo de séance à mes amis</span>
+          </label>
+        )}
         <button type="button" data-testid="regen-code" onClick={async () => { if (window.confirm('Changer ton code ? L’ancien ne marchera plus ET tous ceux qui t’avaient ajouté ne verront plus ton profil.')) { const ok = await friends.regenerateCode(); setMsg(ok ? { ok: true, text: 'Nouveau code créé.' } : { ok: false, text: 'Impossible de changer le code.' }); } }} className="text-xs underline text-slate-400">
           Changer mon code (retire aussi ceux qui l’avaient)
         </button>
@@ -124,13 +130,32 @@ export function FriendsTab({ friends, onOpenAccount }) {
   );
 }
 
-function FriendProfile({ friend, onBack, onRemove }) {
+function FriendLastPhoto({ friend, fphotos }) {
+  const [ph, setPh] = useState(undefined);
+  useEffect(() => {
+    let ok = true;
+    if (!fphotos || !fphotos.on) { setPh(null); return undefined; }
+    fphotos.friendLast(friend.user_id).then(r => { if (ok) setPh(r || null); }).catch(() => { if (ok) setPh(null); });
+    return () => { ok = false; };
+  }, [friend.user_id]);
+  if (!ph) return null;
+  return (
+    <section className={card} data-testid="friend-last-photo">
+      <p className="text-xs font-black uppercase tracking-wider text-slate-400">Dernière photo de séance{ph.date ? ` · ${new Date(String(ph.date).slice(0, 10) + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}` : ''}</p>
+      <img src={ph.data} alt="" className="w-full rounded-xl border border-slate-700" />
+      {ph.note && <p className="text-xs text-slate-300">« {cleanText(ph.note)} »</p>}
+    </section>
+  );
+}
+
+function FriendProfile({ friend, onBack, onRemove, fphotos }) {
   const s = friend.summary || {};
   const byMuscle = {};
   (s.exercises || []).forEach(x => { (byMuscle[x.muscle || 'Autre'] = byMuscle[x.muscle || 'Autre'] || []).push(x); });
   return (
     <div className="space-y-4" data-testid="friend-profile">
       <button type="button" onClick={onBack} className="text-sm font-bold text-slate-300">← Mes amis</button>
+      <FriendLastPhoto friend={friend} fphotos={fphotos} />
       <section className={card}>
         <h3 className="text-xl font-black text-white">{nameOf(friend)}{rankOf(friend) && <span data-testid="friend-profile-rank" className="ml-2 text-base text-pink-300">{rankOf(friend)}</span>}</h3>
         <div className="flex flex-wrap gap-1.5">

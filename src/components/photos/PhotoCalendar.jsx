@@ -3,10 +3,24 @@ import { PhotoAddButton } from './PhotoAddButton';
 import { getTodayISODate } from '../../lib/dates';
 import { PhotoDB, usePhotos } from '../../lib/photos';
 import { isStartEntry } from '../../lib/quests';
+import { Art } from '../Art';
 
 // Onglet « Souvenirs » : calendrier mensuel de photos
-export function PhotoCalendar({ gameState }) {
-  const photos = usePhotos();
+const friendName = (list, id) => {
+  const f = (list || []).find(x => x.user_id === id);
+  return (f && f.summary && f.summary.name) || 'Ami sans prénom';
+};
+
+export function PhotoCalendar({ gameState, fphotos = null, friendsList = [] }) {
+  const own = usePhotos();
+  // photos où un ami m'a tagué : dans mon calendrier aussi (lecture seule)
+  const taggedPhotos = useMemo(() => ((fphotos && fphotos.tagged) || []).filter(t => t.date && t.data).map(t => ({
+    id: `t_${t.id}`, date: String(t.date).slice(0, 10), img: t.data, note: t.note || '', from: t.owner_name || 'Un ami', fromFriend: true, createdAt: Date.parse(t.created_at) || 0,
+  })), [fphotos && fphotos.tagged]);
+  const photos = useMemo(() => [...own, ...taggedPhotos], [own, taggedPhotos]);
+  const [tagFor, setTagFor] = useState(null); // photo dont on choisit les amis à taguer
+  const [tagSel, setTagSel] = useState([]);
+  const [tagMsg, setTagMsg] = useState('');
   const today = getTodayISODate();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [openDay, setOpenDay] = useState(null);
@@ -32,7 +46,8 @@ export function PhotoCalendar({ gameState }) {
   const monthName = first.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   const monthPhotos = Object.keys(byDay).filter(k => k.startsWith(month)).length;
   const monthSessions = [...sessionDays].filter(k => k.startsWith(month)).length;
-  const total = photos.length;
+  const total = own.length;
+  const recentTagged = taggedPhotos.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
 
   const exportPng = async () => {
     const W = 1080, pad = 40, head = 150, cw = (W - pad * 2) / 7, ch = cw * 1.15;
@@ -89,6 +104,17 @@ export function PhotoCalendar({ gameState }) {
 
   return (
     <div className="space-y-4">
+      {recentTagged.length > 0 && (
+        <div className="bg-slate-900 border border-violet-500/40 rounded-2xl p-3 space-y-1.5" data-testid="tagged-photos">
+          <p className="text-xs font-black uppercase tracking-wider text-violet-300">Photos avec tes amis</p>
+          {recentTagged.map(t => (
+            <button key={t.id} type="button" onClick={() => { setMonth(t.date.slice(0, 7)); setOpenDay(t.date); }} className="w-full flex items-center gap-2 text-left text-sm text-slate-200">
+              <img src={t.img} alt="" className="w-10 h-10 rounded-lg object-cover border border-slate-700" />
+              <span className="min-w-0"><strong className="text-white">{t.from}</strong> t’a tagué · {fmtDay(t.date)}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
         <div className="flex items-center justify-between">
           <button onClick={() => shift(-1)} className="px-3 py-1.5 rounded-lg bg-slate-800 text-white font-black">‹</button>
@@ -136,12 +162,37 @@ export function PhotoCalendar({ gameState }) {
               </div>
               {sessionDays.has(openDay) && <p className="text-xs text-pink-300 font-bold">💪 Séance enregistrée ce jour-là</p>}
               {dayList.length === 0 && <p className="text-xs text-slate-400">Aucun souvenir ce jour-là.</p>}
-              {dayList.map(p => (
+              {dayList.map(p => p.fromFriend ? (
+                <div key={p.id} className="space-y-1.5" data-testid="tagged-photo">
+                  <img src={p.img} alt="" className="w-full rounded-xl border border-violet-500/50" />
+                  <p className="text-xs text-violet-200 font-bold"><Art name="friends" size={14} />Photo de {p.from}, tu es tagué{p.note ? ` · « ${p.note} »` : ''}</p>
+                </div>
+              ) : (
                 <div key={p.id} className="space-y-1.5">
                   <img src={p.img} alt="" className="w-full rounded-xl border border-slate-700" />
                   <input defaultValue={p.note || ''} placeholder="Une petite note…" onBlur={e => { if (e.target.value !== (p.note || '')) PhotoDB.put({ ...p, note: e.target.value }); }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white" />
-                  <button onClick={() => { if (window.confirm('Supprimer cette photo ?')) PhotoDB.del(p.id); }} className="text-xs font-bold text-rose-300">🗑 Supprimer</button>
+                  {fphotos && fphotos.on && (fphotos.myTags[p.id] || []).length > 0 && (
+                    <p className="text-xs text-violet-200" data-testid="photo-tags">Avec : {(fphotos.myTags[p.id] || []).map(id => friendName(friendsList, id)).join(', ')}</p>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    {fphotos && fphotos.on && <button type="button" onClick={() => { setTagFor(tagFor === p.id ? null : p.id); setTagSel(fphotos.myTags[p.id] || []); setTagMsg(''); }} className="text-xs font-bold text-violet-200" data-testid={`photo-tag-${p.id}`}><Art name="friends" size={14} />Taguer un ami</button>}
+                    <button onClick={() => { if (window.confirm('Supprimer cette photo ?')) PhotoDB.del(p.id); }} className="text-xs font-bold text-rose-300">🗑 Supprimer</button>
+                  </div>
+                  {tagFor === p.id && (
+                    <div className="bg-slate-950 border border-violet-500/40 rounded-xl p-3 space-y-2" data-testid="tag-picker">
+                      {fphotos.mutual.length === 0
+                        ? <p className="text-xs text-slate-400">Tu peux taguer un ami quand vous vous êtes ajoutés tous les deux (onglet Amis).</p>
+                        : fphotos.mutual.map(id => (
+                          <label key={id} className="flex items-center gap-2 text-sm text-slate-100">
+                            <input type="checkbox" checked={tagSel.includes(id)} onChange={e => setTagSel(sel => (e.target.checked ? [...sel, id] : sel.filter(x => x !== id)))} data-testid={`tag-friend-${id}`} className="w-4 h-4" />
+                            {friendName(friendsList, id)}
+                          </label>
+                        ))}
+                      {fphotos.mutual.length > 0 && <button type="button" data-testid="tag-save" onClick={async () => { try { await fphotos.setTags(p, tagSel); setTagMsg(tagSel.length ? 'Photo envoyée : elle apparaît dans ses Souvenirs.' : 'Tag retiré.'); setTagFor(null); } catch (e) { setTagMsg('Impossible d’envoyer la photo (connexion ?).'); } }} className="w-full py-2 rounded-xl bg-pink-600 text-white text-xs font-black">Enregistrer</button>}
+                    </div>
+                  )}
+                  {tagMsg && tagFor === null && <p className="text-xs text-emerald-300" data-testid="tag-msg">{tagMsg}</p>}
                 </div>
               ))}
               <PhotoAddButton capture="environment" date={openDay} className="w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black">📷 Prendre une photo</PhotoAddButton>

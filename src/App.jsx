@@ -20,6 +20,7 @@ import { ResetModal } from './modals/ResetModal';
 import { BottomNav, SubTabs, TabBar } from './components/TabBar';
 import { MoreSheet } from './modals/MoreSheet';
 import { FriendsTab } from './tabs/FriendsTab';
+import { useFriendPhotos } from './hooks/useFriendPhotos';
 import { useFriends } from './hooks/useFriends';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -69,6 +70,9 @@ export function App() {
   const [activeTab, setActiveTab] = useState('coach'); // l'appli s'ouvre sur le Coach : c'est lui qui dit quoi faire aujourd'hui
   useSharedExercises(sync.user);
   const friends = useFriends({ gameState, setGameState, isLoaded: sync.isLoaded, user: sync.user, active: activeTab === 'friends' });
+  // photos entre amis : ma dernière photo (si activé), photos où l'on m'a tagué (pastille sur Souvenirs)
+  const fphotos = useFriendPhotos({ gameState, setGameState, user: sync.user, enabled: friends.enabled, activeTab });
+  const tabBadges = { photos: fphotos.unseen };
   // Ouvre un onglet depuis un bouton du haut de la page (gros bouton Coach, en-tête…) et fait défiler jusqu'à lui,
   // pour ne pas avoir à descendre à la main.
   const tabsRef = useRef(null);
@@ -247,8 +251,8 @@ onUndoSwap={undoSwap}/>
 <RestTimer guidedOpen={!!(guided && guidedOpen)} soundEnabled={gameState.soundEnabled} />
         {/* BARRE D'ONGLETS PRINCIPALE */}
         <div ref={tabsRef} className="scroll-mt-3 space-y-3">
-          <TabBar activeTab={activeTab} gameState={gameState} setActiveTab={setActiveTab} />
-          <SubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <TabBar activeTab={activeTab} gameState={gameState} setActiveTab={setActiveTab} badges={tabBadges} />
+          <SubTabs activeTab={activeTab} setActiveTab={setActiveTab} badges={tabBadges} />
         </div>
 
         <div key={activeTab} className="tab-in space-y-4 sm:space-y-6">
@@ -301,13 +305,13 @@ setGameState={setGameState}
 
         {/* ONGLET : BILAN (défis, semaine, records) */}
         {activeTab !== 'photos' && <PhotoReminder gameState={gameState} onGo={() => goToTab('photos')} />}
-        {activeTab === 'photos' && <PhotoCalendar gameState={gameState} />}
+        {activeTab === 'photos' && <PhotoCalendar gameState={gameState} fphotos={fphotos} friendsList={friends.list} />}
 
         {activeTab === 'bilan' && (
           <BilanTab gameState={gameState} levelInfo={levelInfo} records={records} weekData={weekData} />
         )}
 
-        {activeTab === 'friends' && <FriendsTab friends={friends} onOpenAccount={openSync} />}
+        {activeTab === 'friends' && <FriendsTab friends={friends} onOpenAccount={openSync} fphotos={fphotos} photoShare={!!gameState.friendsPhotoShare} setPhotoShare={v => setGameState(prev => ({ ...prev, friendsPhotoShare: !!v }))} />}
 
         {/* ONGLET 5 : TROPHÉES */}
         {activeTab === 'trophies' && (
@@ -348,6 +352,7 @@ setGameState={setGameState}
 
       {moreOpen && (
         <MoreSheet
+          badges={tabBadges}
           activeTab={activeTab}
           gameState={gameState}
           importInputRef={importInputRef}
@@ -378,7 +383,7 @@ setGameState={setGameState}
           voiceBadge={!gameState.voiceNextSeen}
         />
       )}
-      <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />
+      <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} badges={tabBadges} />
       {accountOpen && <AccountModal sync={sync} recovery={recovery} heroName={gameState.heroName} onRenameHero={name => setGameState(prev => ({ ...prev, heroName: name }))} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
       {lexOpen && <LexiconModal onClose={() => setLexOpen(false)} />}
