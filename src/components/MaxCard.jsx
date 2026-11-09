@@ -110,13 +110,20 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
               <span className="text-xs font-semibold text-slate-400">pour 1 répétition</span>
             </p>
           )}
-          <p className="text-xs text-slate-400">
-            Fourchette des équations : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
-            D’après {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
-            {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${result.basis.rir} rép en réserve)` : ''}.
+          <p className="text-xs text-slate-400" data-testid="max-basis">
+            Fourchette : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
+            {result.sessions > 1 ? ` Moyenne de tes ${result.sessions} séances récentes (les séries courtes et récentes comptent le plus), surtout` : ' D’après'}{' '}
+            {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
+            {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${fmt(result.basis.rir)} rép en réserve)` : ''}.
           </p>
+          {result.k && (
+            <p className="text-xs text-violet-200" data-testid="max-k">
+              Ton coefficient personnel : k = {fmt(result.k)}, réglé sur ton record du {fmtDate(result.kFrom.date)}.
+              {result.k > 33 ? ' Plus haut que la moyenne (≈ 30) : une répétition en plus « vaut » moins de force sur cet exercice.' : result.k < 27 ? ' Plus bas que la moyenne (≈ 30) : chaque répétition en plus est de la vraie force sur cet exercice.' : ' Proche de la moyenne (≈ 30).'}
+            </p>
+          )}
           {!result.fromRecent && <p className="text-xs text-amber-300">Aucune séance depuis plus de 90 jours : estimation d’après ta meilleure séance ancienne.</p>}
-          {result.basis.reps > 10 && <p className="text-xs text-amber-300">Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
+          {result.basis.reps + (result.basis.rir || 0) > 10 && <p className="text-xs text-amber-300">Série de plus de 10 répétitions : l’estimation est moins précise. Une série de 3 à 5 répétitions donnerait un résultat plus sûr.</p>}
         </div>
       )}
 
@@ -149,18 +156,26 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
         <p className="text-xs text-slate-400">
           {kind === 'cardio'
             ? 'Pas encore de sortie exploitable (distance et durée, entre 3,5 et 230 minutes).'
-            : 'Pas encore de séance exploitable : il faut au moins une série de 15 répétitions ou moins.'}
+            : result.noRpe
+              ? 'Aucune séance avec ton ressenti : le max se calcule seulement sur les séances où tu as noté ton ressenti (1 à 10), en fin d’exercice ou dans « Noter la séance ».'
+              : result.bestSet
+              ? `Séries de plus de 12 répétitions (en comptant celles en réserve) : pas de max calculé, les formules ne sont plus fiables au-delà. Ta meilleure série : ${result.bestSet.reps} rép le ${fmtDate(result.bestSet.date)}. Une série plus lourde de 3 à 8 répétitions permettrait d’estimer ton max.`
+              : 'Pas encore de séance exploitable : il faut au moins une série de 12 répétitions ou moins (en comptant celles en réserve).'}
           {kind === 'cardio' && result.bestDistance > 0 ? ` Meilleure distance : ${fmt(result.bestDistance)} km.` : ''}
         </p>
       )}
 
       {manual && kind === 'load' && !result.empty && (
         <p className="text-xs text-slate-400">
-          {Math.abs(manual.kg - result.estimate) / manual.kg < 0.03
-            ? 'Ton record réel confirme l’estimation.'
-            : manual.kg > result.estimate
-              ? `Ton record réel dépasse l’estimation de ${Math.round(((manual.kg - result.estimate) / result.estimate) * 100)} %.`
-              : `L’estimation est ${Math.round(((result.estimate - manual.kg) / manual.kg) * 100)} % au-dessus de ton record réel : tu as sans doute encore de la marge.`}
+          {(() => {
+            // comparaison avec ce que donnaient les équations seules (le k personnel est justement réglé sur ce record)
+            const est = result.estimateGeneric || result.estimate;
+            return Math.abs(manual.kg - est) / manual.kg < 0.03
+              ? 'Ton record réel confirme l’estimation des équations.'
+              : manual.kg > est
+                ? `Ton record réel dépasse l’estimation des équations de ${Math.round(((manual.kg - est) / est) * 100)} %.`
+                : `L’estimation des équations est ${Math.round(((est - manual.kg) / manual.kg) * 100)} % au-dessus de ton record réel : tu as sans doute encore de la marge.`;
+          })()}
         </p>
       )}
 
@@ -170,9 +185,9 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
         <details className="bg-slate-950 border border-slate-800 rounded-xl p-3">
           <summary className="cursor-pointer text-xs font-bold text-slate-300"><Art name="clipboard" />Charges de travail ({manual ? 'd’après ton record réel' : 'd’après l’estimation'} : {fmt(reference)} kg)</summary>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            {workingLoads(reference, step).map(l => (
-              <div key={l.pct} className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center">
-                <p className="text-xs text-slate-400">{l.pct} % · ≈ {l.reps} rép</p>
+            {workingLoads(reference, step, result.k).map(l => (
+              <div key={`${l.reps}-${l.rir}`} className="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center">
+                <p className="text-xs text-slate-400">{l.reps} rép · {l.rir} en réserve · {l.pct} %</p>
                 <p className="text-xs font-black text-white">{fmt(l.kg)} kg</p>
               </div>
             ))}

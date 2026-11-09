@@ -165,7 +165,7 @@ export function applyWorkoutImport(state, read, today, { makeQuest, afterHistory
       const e = {
         id, date: s.date, value: isKg ? top : Math.max(...reps), sets: reps.length, reps: Math.max(...reps), setDetails: reps, validatedSets: reps.length,
         goalSets: reps.length, goalReps: Math.max(...reps), assistanceKg: assists ? Math.max(...assists) : 0,
-        rpe: rpes.length ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : 7, goalBeaten: false,
+        rpe: rpes.length ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : 7, rpeSet: rpes.length > 0, goalBeaten: false,
         note: `Importé de ${read.source}`,
         ...(isKg && new Set(loads).size > 1 ? { setLoads: loads } : {}),
         ...(assists && new Set(assists).size > 1 ? { setAssists: assists } : {}),

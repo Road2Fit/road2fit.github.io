@@ -13,6 +13,7 @@ export function LogSessionModal({
   logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
   logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
   setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
+  logRpe, logRpeSet, chooseLogRpe,
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
@@ -442,6 +443,18 @@ export function LogSessionModal({
                   />
                 </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {chooseLogRpe && logModalQuest && logModalQuest.type !== 'cardio' && (
+            <div className="space-y-1.5" data-testid="log-rpe">
+              <p className="text-xs font-bold text-slate-300">Ressenti (facultatif) <span className="font-normal text-slate-500">· 10 = impossible d’en faire une de plus ; sans ressenti, la séance ne compte pas dans ton max</span></p>
+              <div className="grid grid-cols-10 gap-1">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  <button key={n} type="button" onClick={() => chooseLogRpe(n)} aria-label={`Ressenti ${n} sur 10`} aria-pressed={logRpeSet && logRpe === n}
+                    className={`tap-free h-9 rounded-lg text-sm font-black border ${logRpeSet && logRpe === n ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>{n}</button>
+                ))}
               </div>
             </div>
           )}

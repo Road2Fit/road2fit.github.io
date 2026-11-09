@@ -175,6 +175,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               durationMin: item.durationMin,
               elevationM: 0,
               rpe: item.rpe || 7,
+              rpeSet: !!item.rpe,
               calories: item.calories,
               goalBeaten: false,
               note: `Dictée : ${item.summary}${item.aiNote ? ` • ${item.aiNote}` : ''}`
@@ -192,6 +193,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
               ...(item.setKinds ? { setKinds: item.setKinds } : {}),
               ...(item.method ? { method: item.method } : {}),
               rpe: item.rpe || 7,
+              rpeSet: !!item.rpe,
               calories: item.calories,
               goalBeaten: false,
               note: `Dictée : ${item.summary}${item.aiNote ? ` • ${item.aiNote}` : ''}`

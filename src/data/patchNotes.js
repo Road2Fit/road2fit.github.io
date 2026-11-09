@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.14',
+    date: '2026-11-09',
+    title: 'Maxima plus justes',
+    items: [
+      'Ton max est la moyenne de tes séances récentes (les plus courtes et les plus récentes comptent le plus), avec tes répétitions en réserve, jusqu’à 12 répétitions.',
+      'Une séance sans ressenti ne compte plus dans le max. « Noter la séance » a maintenant un choix de ressenti (facultatif).',
+      'Note un vrai record dans « Mon maximum » : l’appli règle un coefficient propre à cet exercice. Le tableau des charges dit quoi mettre pour X répétitions en en gardant Y en réserve.',
+    ],
+  },
+  {
     version: '4.13.4',
     date: '2026-11-08',
     title: 'Page Séance calée tout de suite',

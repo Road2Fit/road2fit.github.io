@@ -32,21 +32,32 @@ describe('estimation du 1RM à partir d’une série', () => {
     expect(repsInReserve(5)).toBe(3);
   });
 
-  it('tableau de charges : 80 % ≈ 8 répétitions, arrondi au pas de la machine', () => {
+  it('tableau de charges : X répétitions en gardant Y en réserve, arrondi au pas de la machine', () => {
     expect(PERCENT_TABLE.find(([p]) => p === 80)[1]).toBe(8);
-    expect(workingLoads(100, 2.5).find(l => l.pct === 80)).toMatchObject({ reps: 8, kg: 80 });
-    expect(workingLoads(93, 2.5).find(l => l.pct === 80).kg).toBe(75); // 74,4 → 75
+    const t = workingLoads(100, 2.5);
+    const huit = t.find(l => l.reps === 8 && l.rir === 2); // 10 répétitions effectives ≈ 75 %
+    expect(huit.pct).toBeGreaterThanOrEqual(73);
+    expect(huit.pct).toBeLessThanOrEqual(77);
+    expect(huit.kg % 2.5).toBe(0);
+    // avec un k personnel (k = 60, comme les tractions de Maxime) : 3 rép à RIR 2 = 1 / (1 + 5/60) ≈ 92 %
+    expect(workingLoads(100, 2.5, 60).find(l => l.reps === 3).pct).toBe(92);
+  });
+  it('k personnel : 1RM = charge × (1 + reps / k)', () => {
+    expect(estimateOneRm(100, 5, 50).mean).toBeCloseTo(110, 5);
   });
 });
 
 describe('maximum d’un exercice', () => {
-  it('prend la meilleure série récente', () => {
+  it('moyenne des séances récentes : la plus récente et la plus courte pèse le plus', () => {
     const q = bench([entry('a', '2026-10-01', [8, 8, 8], 60), entry('b', '2026-10-15', [5, 5, 4], 75)]);
     const r = estimateQuestMax(q, { weightHistory: [] }, { today: TODAY });
     expect(r.kind).toBe('load');
     expect(r.basis).toMatchObject({ reps: 5, load: 75, date: '2026-10-15' });
-    expect(r.estimate).toBeGreaterThan(84);
-    expect(r.estimate).toBeLessThan(90);
+    expect(r.sessions).toBe(2);
+    // entre la séance à 60 kg (≈ 75) et celle à 75 kg (≈ 86,5), plus près de la seconde
+    expect(r.estimate).toBeGreaterThan(80);
+    expect(r.estimate).toBeLessThan(87);
+    expect(r.allTime).toBeGreaterThan(r.estimate);
     expect(r.fromRecent).toBe(true);
     expect(r.confidence).toBe('bonne');
   });
@@ -116,5 +127,40 @@ describe('cardio : formule de Riegel', () => {
     const q = { id: 'q_c', name: 'Course', type: 'cardio', unit: 'km', history: [{ id: 'a', date: '2026-10-10', value: 5, durationMin: 30 }] };
     const r = estimateQuestMax(q, { maxRecords: { q_c: { distanceKm: 5, minutes: 24, date: '2026-10-20' } } }, { today: TODAY });
     expect(r.base).toMatchObject({ min: 24, source: 'record' });
+  });
+});
+
+describe('répétitions effectives et k personnel (méthode inspirée de Forge)', () => {
+  it('ressenti noté : reps + en réserve ; plus de 3 en réserve → série pas utilisée', () => {
+    const facile = bench([entry('a', '2026-10-15', [5, 5, 5], 70, { rpe: 6 })]); // 4 en réserve
+    expect(estimateQuestMax(facile, {}, { today: TODAY, useRpe: true }).empty).toBe(true);
+    expect(estimateQuestMax(facile, {}, { today: TODAY }).empty).toBeFalsy(); // sans le ressenti (coach) : comptée à l'échec
+  });
+  it('plus de 12 répétitions effectives : pas de max, la meilleure série est donnée', () => {
+    const q = bench([entry('a', '2026-10-15', [15, 14], 30, { rpe: 9 })]);
+    const r = estimateQuestMax(q, {}, { today: TODAY, useRpe: true });
+    expect(r.empty).toBe(true);
+    expect(r.bestSet).toMatchObject({ reps: 15 });
+  });
+  it('record réel noté : k personnel réglé dessus, les équations restent comparables', () => {
+    const q = bench([entry('a', '2026-10-10', [5, 5, 5], 80, { rpe: 10 })]);
+    const state = { maxRecords: { q_b: { kg: 90, date: '2026-10-12' } } };
+    const r = estimateQuestMax(q, state, { today: TODAY, useRpe: true });
+    // k = 5 / (90/80 − 1) = 40 → la série redonne 90 kg
+    expect(r.k).toBe(40);
+    expect(r.estimate).toBeCloseTo(90, 0);
+    expect(r.estimateGeneric).toBeGreaterThan(91); // les équations (≈ k 30) prédisaient plus
+  });
+  it('ressenti pas donné (7/10 mis par défaut) : la séance ne compte pas dans le max', () => {
+    const q = bench([entry('a', '2026-10-15', [5, 5, 5], 80, { rpe: 7, rpeSet: false }), entry('b', '2026-10-17', [6, 6], 70, { rpe: 9, rpeSet: true })]);
+    const r = estimateQuestMax(q, {}, { today: TODAY, useRpe: true });
+    expect(r.sessions).toBe(1);
+    expect(r.basis.load).toBe(70);
+    const seule = bench([entry('a', '2026-10-15', [5, 5, 5], 80, { rpe: 7, rpeSet: false })]);
+    const vide = estimateQuestMax(seule, {}, { today: TODAY, useRpe: true });
+    expect(vide.empty).toBe(true);
+    expect(vide.noRpe).toBe(true);
+    // le coach (sans le ressenti) la compte toujours, prudemment, comme faite à l'échec
+    expect(estimateQuestMax(seule, {}, { today: TODAY }).empty).toBeFalsy();
   });
 });

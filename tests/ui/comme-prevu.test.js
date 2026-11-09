@@ -30,6 +30,20 @@ describe('Noter séance : comme prévu par le coach', () => {
     const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');
     expect(e.value).toBe(t.load);
     expect(e.setDetails).toEqual(t.targetReps);
+    expect(e.rpeSet).toBe(false); // ressenti pas choisi : la séance ne comptera pas dans le max
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('ressenti choisi dans « Noter la séance » : enregistré comme vrai ressenti', async () => {
+    const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' } });
+    open.push(h);
+    await clickText(h, 'Noter la séance');
+    await clickText(h, 'Remplir comme prévu par le coach');
+    expect(h.doc.querySelector('[data-testid="log-rpe"]')).toBeTruthy();
+    await clickEl(h, h.doc.querySelector('[data-testid="log-rpe"] button[aria-label="Ressenti 9 sur 10"]'));
+    await clickText(h, 'Valider la séance');
+    const e = saved(h).quests[0].history.find(x => x.date === '2026-10-21');
+    expect(e).toMatchObject({ rpe: 9, rpeSet: true });
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

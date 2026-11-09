@@ -50,7 +50,9 @@ export function useLogSession({
     return { distanceKm: dist, durationMin: dur, elevationM: elev };
   };
 
-  const [logRpe, setLogRpe] = useState(7);
+  const [logRpe, setLogRpe] = useState(7); // 7 par défaut pour les calories
+  const [logRpeSet, setLogRpeSet] = useState(false); // ressenti vraiment choisi (sinon la séance ne compte pas dans le max)
+  const chooseLogRpe = v => { if (logRpeSet && logRpe === v) { setLogRpe(7); setLogRpeSet(false); return; } setLogRpe(v); setLogRpeSet(true); };
 
   const [logNote, setLogNote] = useState('');
 
@@ -122,6 +124,7 @@ export function useLogSession({
     setLogModalQuest(quest);
     setLogDate(selectedDate || getTodayISODate());
     setLogRpe(7);
+    setLogRpeSet(false);
     setLogNote('');
     setLogCardioInputRaw(DEFAULT_CARDIO_INPUT);
     setLogPerSetLoad(false);
@@ -298,7 +301,7 @@ export function useLogSession({
         ? (perSetActive ? perSetValues(logAssistanceKg) : Array(n).fill(Number(logAssistanceKg) || 0))
         : null;
       const r = applyStrengthSession(q, {
-        date: logDate, setDetails: finalSetDetails, loads, assists, rpe: logRpe, calories, note: logNote.trim(),
+        date: logDate, setDetails: finalSetDetails, loads, assists, rpe: logRpe, rpeSet: logRpeSet, calories, note: logNote.trim(),
       });
       xpEarned = r.xp;
       r.unlocked.forEach(u => newUnlocked.add(u));
@@ -348,5 +351,5 @@ export function useLogSession({
     }
   };
 
-  return { logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, applyCoachTarget, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
+  return { logRpe, logRpeSet, chooseLogRpe, logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, applyCoachTarget, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
 }

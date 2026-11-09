@@ -189,6 +189,7 @@ export function useGuidedSession({
         loads: isKg ? doneLoads : null,
         assists: !isKg && it.kind === 'assisted' ? doneAssists : null,
         rpe: exerciseRpe,
+        rpeSet: !!(Number(dd.rpe) || Number(g.rpe)),
         calories,
         guidedLabel: g.templateId || '',
         method: it.method && it.method !== 'straight' ? it.method : null,
