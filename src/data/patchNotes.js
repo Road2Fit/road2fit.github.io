@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.15.1',
+    date: '2026-11-09',
+    title: 'Prénom visible chez les amis',
+    items: [
+      'Ton prénom est bien envoyé à tes amis dès l’ouverture de l’appli (avant, il pouvait rester « Ami sans prénom » tant que tu n’avais pas fait de nouvelle séance).',
+    ],
+  },
+  {
     version: '4.15',
     date: '2026-11-09',
     title: 'Dicte ta prochaine séance',

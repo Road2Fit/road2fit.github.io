@@ -33,6 +33,8 @@ export function useFriends({ gameState, setGameState, user, active = false, isLo
   const [error, setError] = useState('');
   const lastSent = useRef('');
   const serverName = useRef(''); // prénom déjà publié : jamais remplacé par un prénom vide
+  const stateRef = useRef(gameState);
+  stateRef.current = gameState;
   const shareRef = useRef(true);
   shareRef.current = share;
 
@@ -84,18 +86,24 @@ export function useFriends({ gameState, setGameState, user, active = false, isLo
   // Mon résumé se met à jour tout seul quand mes séances / exercices changent
   useEffect(() => {
     if (!on || !code) return undefined;
-    const t = setTimeout(async () => {
-      if (!shareRef.current || !ready()) return;
-      const summary = buildFriendProfile(gameState, getTodayISODate());
+    let t = null;
+    const run = async () => {
+      if (!shareRef.current) return;
+      // ⚠️ sauvegarde en ligne pas encore lue : on RÉESSAIE un peu plus tard. Avant, on abandonnait jusqu'au prochain
+      // changement (séance, EXP…) : un prénom ajouté ne partait jamais et les amis voyaient « Ami sans prénom ».
+      if (!ready()) { t = setTimeout(run, 1500); return; }
+      const st = stateRef.current; // dernières données (pas celles du moment où le délai a été lancé)
+      const summary = buildFriendProfile(st, getTodayISODate());
       // prénom vide sur cet appareil (vieille copie) alors qu'un prénom est déjà publié : on garde celui-là, et on le remet dans l'appli
       if (!summary.name && serverName.current) {
         summary.name = serverName.current;
-        if (setGameState && !gameState.heroName) setGameState(prev => (prev.heroName ? prev : { ...prev, heroName: serverName.current }));
+        if (setGameState && !st.heroName) setGameState(prev => (prev.heroName ? prev : { ...prev, heroName: serverName.current }));
       } else if (summary.name) serverName.current = summary.name;
       const key = JSON.stringify(summary);
       if (key === lastSent.current) return;
       try { await api.publish(cfg, summary, true); lastSent.current = key; } catch (e) { setError(msg(e)); }
-    }, PUBLISH_DEBOUNCE_MS);
+    };
+    t = setTimeout(run, PUBLISH_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, code, gameState.quests, gameState.maxRecords, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
