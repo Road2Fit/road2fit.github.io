@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.14.3',
+    date: '2026-11-09',
+    title: 'Page Séance symétrique',
+    items: [
+      'Sur téléphone, « Parle à ton coach » est centré entre le micro et le « + », avec le même écart en bas qu’au-dessus du premier encadré : la page est symétrique autour du grand rond.',
+    ],
+  },
+  {
     version: '4.14.2',
     date: '2026-11-09',
     title: 'Fenêtre de la séance sans défilement',

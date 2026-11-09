@@ -103,7 +103,27 @@ export function CoachPanel({
       }
       // la page descend jusqu'aux barres fixes du bas (« Parle à ton coach » collé à la barre des onglets du Coach) ;
       // la marge basse prévue en dessous (plus grande que les barres) est compensée par une marge négative : pas de défilement
-      const reserve = fixedH ? fixedH + 4 : Math.max(below, 8);
+      let reserve = fixedH ? fixedH + 4 : Math.max(below, 8);
+      // téléphone (4.14.3, demande de Gabin) : « Parle à ton coach » centré entre le micro et le « + », et le même écart
+      // au-dessus du premier encadré (sous l'en-tête) que sous « Parle à ton coach » (au-dessus des onglets) : symétrique
+      // autour du grand rond. Le micro et le « + » sont fixes : leurs positions à l'écran servent de repère.
+      let padTop = 0;
+      const chat = page.querySelector('[data-testid="coach-chat-open"]');
+      const plus = document.querySelector('button[aria-label="Ajouter"]');
+      const mic = document.querySelector('[data-testid="fab-voice"]');
+      const header = document.querySelector('header');
+      if (fixedH && chat && plus && mic) {
+        const mid = (mic.getBoundingClientRect().bottom + plus.getBoundingClientRect().top) / 2;
+        const chatBottom = mid + chat.offsetHeight / 2;
+        const gap = Math.max(4, Math.round(vh - fixedH - chatBottom)); // écart sous « Parle à ton coach »
+        reserve = fixedH + gap;
+        if (header) {
+          let hb = header.offsetHeight;
+          for (let e = header; e && e !== document.body; e = e.offsetParent) hb += e.offsetTop;
+          padTop = Math.max(0, gap - (top - hb)); // compléter l'écart en haut jusqu'au même écart
+        }
+      }
+      page.style.paddingTop = padTop ? `${padTop}px` : '';
       const h = Math.round(vh - top - reserve);
       const extra = Math.round(below - reserve);
       page.style.minHeight = h > 0 ? `${h}px` : '';
