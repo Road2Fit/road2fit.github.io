@@ -74,6 +74,7 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
   const known = knownMethods(state);
 
   let out = exercises.map(e => {
+    if (e.dictated) return e; // séance dictée : forme de séries telle quelle
     const q = byId[e.questId] || {};
     let ex = e;
     // objectif « plus de muscle » sur un groupe : une série de plus sur ses exercices (relation dose-réponse, Schoenfeld 2017)

@@ -5,6 +5,7 @@ import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { profileOpts } from './profiles';
 import { applyMethods } from './methodChoice';
+import { restFor } from './rest';
 import { planMinutes } from './methods';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
@@ -235,6 +236,23 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
       deload: deloadOn,
       reduceSets: !!opts.matchWeek && isLegArena(arenaOf(q))
     });
+    // séance dictée ou collée (« Prochaine séance » de la dictée) : charge, séries et répétitions telles quelles,
+    // sauf si la personne a réglé l'exercice ensuite (« Tu décides » : e.manual)
+    const t = opts.targets && opts.targets[q.id];
+    if (t && !e.manual) {
+      const reps = (Array.isArray(t.reps) && t.reps.length ? t.reps : e.targetReps).map(r => Math.max(1, Number(r) || 1));
+      const sets = Math.max(1, Math.min(10, Number(t.sets) || reps.length));
+      e.sets = sets;
+      e.targetReps = Array.from({ length: sets }, (_, i) => (reps[i] !== undefined ? reps[i] : reps[reps.length - 1]));
+      if (e.kind === 'load' && Number(t.load) > 0) e.load = Number(t.load);
+      if (e.kind === 'assisted' && t.assist !== undefined && t.assist !== null) e.assist = Number(t.assist) || 0;
+      e.restSec = restFor({ name: e.name, reps: Math.min(...e.targetReps), timed: e.timed, compound: e.compound, arena: e.arena }).sec;
+      e.change = 'dictated';
+      e.dictated = true;
+      e.manualSets = true;
+      e.reason = 'Ta séance, dictée ou collée par toi : le coach la reprend telle quelle. Tu peux l’ajuster ici ou revenir à sa proposition.';
+      return e;
+    }
     const want = opts.sets && Number(opts.sets[q.id]);
     if (!deloadOn && !e.manualSets && want > e.sets && want <= 8) {
       while (e.sets < want) { e.sets += 1; e.targetReps.push(e.targetReps[e.targetReps.length - 1]); }

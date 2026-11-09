@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.15',
+    date: '2026-11-09',
+    title: 'Dicte ta prochaine séance',
+    items: [
+      'Le micro a deux onglets : « Séance faite » (comme avant) et « Prochaine séance ». Dicte ou colle la séance que tu veux faire (« jeudi développé couché 4x6 à 55 kg, tractions 3x8 ») : le coach la propose à la place de la sienne, telle quelle.',
+      'Tu peux toujours l’ajuster ou revenir à la proposition du coach. « Sans élastique » est bien compris.',
+      'Du cardio dicté (« samedi 40 minutes de course ») devient ta séance de cardio de ce jour-là, exactement comme demandé.',
+    ],
+  },
+  {
     version: '4.14.4',
     date: '2026-11-09',
     title: 'Cardio du jour : résumé toujours là',

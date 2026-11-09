@@ -143,7 +143,7 @@ export function groupSteps(steps) {
   return out;
 }
 
-export function CardioSummary({ session, onClose, onStart, onDone }) {
+export function CardioSummary({ session, onClose, onStart, onDone, onRemoveCustom }) {
   const groups = groupSteps(session.steps || []);
   return (
     <div className="fixed inset-0 !mt-0 z-[70] bg-slate-950/85 overflow-y-auto" onClick={onClose} data-testid="cardio-summary">
@@ -173,6 +173,7 @@ export function CardioSummary({ session, onClose, onStart, onDone }) {
             ))}
           </ol>
           {session.why && <p className="text-xs text-slate-400">{session.why}</p>}
+          {session.custom && onRemoveCustom && <button type="button" onClick={onRemoveCustom} className="w-full py-2 rounded-xl bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200" data-testid="cardio-custom-remove"><Art name="repeat" />Revenir à la proposition du coach</button>}
           <div className="flex gap-2">
             {onDone && <button type="button" onClick={onDone} className="px-4 py-3.5 rounded-xl bg-slate-800 text-emerald-300 text-sm font-black" data-testid="cardio-summary-done"><Art name="check" size={16} bare />Déjà faite</button>}
             <button type="button" onClick={onStart} data-key className="flex-1 py-3.5 rounded-xl bg-pink-600 text-white text-lg font-black" data-testid="cardio-summary-start">Lancer</button>

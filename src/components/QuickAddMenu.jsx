@@ -2,7 +2,7 @@ import { Art } from './Art';
 import { useEffect, useRef, useState } from 'react';
 
 // Boutons flottants : micro (dicter sa séance) au-dessus du « + » (saisie rapide), même taille, au pouce
-export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
+export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice, voiceBadge = false }) {
   const [open, setOpen] = useState(false);
   // Il s'efface quand on descend (pour ne cacher aucun bouton) et revient dès qu'on remonte
   const [hidden, setHidden] = useState(false);
@@ -36,8 +36,9 @@ export function QuickAddMenu({ onCourse, onExercise, onTimer, onVoice }) {
         )}
         {!open && onVoice && (
           <button type="button" onClick={onVoice} aria-label="Dicter ma séance" title="Dicter ma séance" data-testid="fab-voice"
-            className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl bg-slate-800 border border-slate-600">
+            className="relative w-14 h-14 rounded-full flex items-center justify-center shadow-xl bg-slate-800 border border-slate-600">
             <Art name="mic" size={28} bare />
+            {voiceBadge && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-rose-500 border-2 border-slate-950 animate-pulse" data-testid="fab-voice-badge" aria-label="Nouveau : dicter ta prochaine séance" />}
           </button>
         )}
         <button

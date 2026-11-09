@@ -286,7 +286,7 @@ export function CoachPanel({
   const tiredToday = !!(coach.readiness && coach.readiness.date === today && coach.readiness.level === 'low');
   const planWeek = useMemo(() => (plan ? coachPlanWeek(gameState, getWeekStart(plan.date), today) : null), [gameState.quests, gameState.coach]);
   const customSession = useMemo(
-    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, tired: tiredToday && plan.date === today }) : null),
+    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday && plan.date === today }) : null),
     [gameState.quests, gameState.coach]
   );
   const shownSession = plan ? customSession : ov.session;
@@ -300,7 +300,7 @@ export function CoachPanel({
   const sessionToStart = coachOff ? null : (() => {
     if (plan) {
       if (!plan.questIds.length) return null;
-      return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, tired: tiredToday });
+      return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday });
     }
     if (!first || !ov.hasExercises) return null;
     if (first.iso === today) return ov.session;
@@ -340,7 +340,7 @@ export function CoachPanel({
     const old = shownSession.exercises.find(e => e.questId === oldId);
     sets[newId] = old ? old.sets : 3;
     delete sets[oldId];
-    updateCoach({ plan: { date: shownDate, questIds: ids.map(i => (i === oldId ? newId : i)), sets } });
+    updateCoach({ plan: { ...(plan || {}), date: shownDate, questIds: ids.map(i => (i === oldId ? newId : i)), sets } });
     setSwapFor(null);
   };
   // « Tu décides » : on va à l'encontre du coach pour un exercice (plus lourd / plus léger, moins / plus d'aide, ±1 rép)
@@ -483,7 +483,7 @@ export function CoachPanel({
           </button>
         </section></div>
       )}
-      {cardioPeek && <CardioSummary session={cardioPeek} onClose={() => setCardioPeek(null)} onStart={() => { setCardioRun({ session: cardioPeek }); setCardioPeek(null); }} onDone={() => { setCardioRun({ session: cardioPeek, atEnd: true }); setCardioPeek(null); }} />}
+      {cardioPeek && <CardioSummary session={cardioPeek} onClose={() => setCardioPeek(null)} onStart={() => { setCardioRun({ session: cardioPeek }); setCardioPeek(null); }} onDone={() => { setCardioRun({ session: cardioPeek, atEnd: true }); setCardioPeek(null); }} onRemoveCustom={() => { const id = cardioPeek.customId; updateCoach({ cardioCustom: (coach.cardioCustom || []).filter(x => x.id !== id) }); setCardioPeek(null); }} />}
       {cardioRun && <CardioSession session={cardioRun.session} startAtEnd={!!cardioRun.atEnd} gameState={gameState} onClose={() => setCardioRun(null)} onSave={res => saveCardio(cardioRun.session, res)} />}
       {cardioMsg && <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm font-bold text-emerald-200" data-testid="cardio-saved" onClick={() => setCardioMsg('')}><Art name="heart" />{cardioMsg}</p>}
       {!guidedActive && cardioToday && !muscuToday && (

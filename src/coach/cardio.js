@@ -329,9 +329,37 @@ function cardioDoneDays(state) {
  * d'un match ou d'un sport (jambes fraîches, comme pour la muscu) ; sinon le même jour que la muscu, après elle
  * (Schumann 2022 : pas de frein sur la force ni le muscle).
  */
+/** Mode du catalogue (course, marche, vélo…) → type de cardio du coach. */
+export function kindFromMode(mode) {
+  const m = String(mode || '');
+  if (/bike|velo|cycl|spin/.test(m)) return 'bike';
+  if (/row|rame/.test(m)) return 'rower';
+  if (/ellip/.test(m)) return 'elliptical';
+  if (/run|interval|trail|course/.test(m)) return 'run';
+  return 'walk';
+}
+
+/** Séance de cardio dictée par la personne (« Prochaine séance » de la dictée) : exactement ce qu'elle a demandé. */
+export function customCardioSession(x) {
+  const km = Number(x.distanceKm) || 0;
+  const min = Math.max(1, Math.round(Number(x.minutes) || 30));
+  const fmt = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  return {
+    iso: x.iso, type: 'custom', kind: kindFromMode(x.cardioMode), catalogId: x.catalogId, icon: x.icon || '🏃',
+    title: x.name || 'Cardio', minutes: min, distanceKm: km, distanceText: km ? `${fmt(km)} km` : '', custom: true, customId: x.id,
+    steps: [{ label: x.name || 'Cardio', min, zone: 'easy', km, target: { text: km ? `${fmt(km)} km en ${min} min` : `${min} min`, cue: 'comme tu l’as prévu' } }],
+    why: 'Ta séance, dictée par toi : le coach la reprend telle quelle.', zones: [],
+  };
+}
+
 export function cardioPlanWeek(state, weekStart, today, gymDays = []) {
   const c = getCardioSettings(state);
-  if (!c.on) return { on: false, sessions: [], done: [] };
+  const coachS = getCoachSettings(state);
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i));
+  const doneDays = cardioDoneDays(state);
+  // séances dictées de la semaine, pas encore faites
+  const customs = (coachS.cardioCustom || []).filter(x => x && weekDays.includes(x.iso) && x.iso >= today && !doneDays[x.iso]).map(customCardioSession);
+  if (!c.on) return { on: false, sessions: customs, done: [] };
   const coach = getCoachSettings(state);
   const days = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i));
   const doneMap = cardioDoneDays(state);
@@ -361,7 +389,10 @@ export function cardioPlanWeek(state, weekStart, today, gymDays = []) {
     taken.push(best.iso);
   });
   chosen.sort((a, b) => a.iso.localeCompare(b.iso));
-  const sessions = chosen.map((x, k) => ({ ...cardioSession(state, x.type, x.iso, k + done.length), withGym: x.withGym }));
+  const planned = chosen.map((x, k) => ({ ...cardioSession(state, x.type, x.iso, k + done.length), withGym: x.withGym }));
+  // une séance dictée remplace celle que le coach avait prévue le même jour
+  const sessions = [...planned.filter(p => !customs.some(cu => cu.iso === p.iso)), ...customs.map(cu => ({ ...cu, withGym: gym.has(cu.iso) }))]
+    .sort((a, b) => a.iso.localeCompare(b.iso));
   return { on: true, sessions, done, shortfall: Math.max(0, types.length - chosen.length) };
 }
 

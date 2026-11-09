@@ -375,6 +375,7 @@ setGameState={setGameState}
           onExercise={form.openCreateQuestModal}
           onTimer={() => window.dispatchEvent(new CustomEvent('rondoufit-rest-open'))}
           onVoice={() => window.dispatchEvent(new CustomEvent('rondoufit-voice'))}
+          voiceBadge={!gameState.voiceNextSeen}
         />
       )}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} />

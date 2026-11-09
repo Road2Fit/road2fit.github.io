@@ -39,3 +39,27 @@ export function spokenDate(text, today) {
   }
   return null;
 }
+
+/** Date dite pour une séance À VENIR : « aujourd'hui / ce soir », « demain », « après-demain », « jeudi » (le prochain,
+ *  aujourd'hui compris), « le 12 novembre ». Jamais dans le passé. { date, phrase } ou null. */
+export function nextSpokenDate(text, today) {
+  const t = stripAccents(String(text || '').toLowerCase()).replace(/[’']/g, ' ').replace(/\s+/g, ' ');
+  if (!t.trim()) return null;
+  let m;
+  if ((m = t.match(/\bapres[- ]?demain\b/))) return { date: addDaysISO(today, 2), phrase: m[0] };
+  if ((m = t.match(/\bdemain\b/))) return { date: addDaysISO(today, 1), phrase: m[0] };
+  if ((m = t.match(/\b(aujourd hui|ce soir|ce midi|ce matin)\b/))) return { date: today, phrase: m[0] };
+  if ((m = t.match(/\b(?:le )?(\d{1,2}|\w+) (janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\b/)) && num(m[1])) {
+    const d = num(m[1]), mo = MONTHS.indexOf(m[2]) + 1;
+    let y = Number(today.slice(0, 4));
+    if (`${y}-${pad(mo)}-${pad(d)}` < today) y += 1;
+    return d <= 31 ? { date: `${y}-${pad(mo)}-${pad(d)}`, phrase: m[0] } : null;
+  }
+  if ((m = t.match(new RegExp(`\\b(${DAYS.join('|')})( prochain)?\\b`)))) {
+    const target = DAYS.indexOf(m[1]);
+    let ahead = (target - dow(today) + 7) % 7;
+    if (ahead === 0 && m[2]) ahead = 7;
+    return { date: addDaysISO(today, ahead), phrase: m[0] };
+  }
+  return null;
+}
