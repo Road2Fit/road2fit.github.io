@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.21.2',
+    date: '2026-11-10',
+    title: 'Une vraie barre',
+    items: [
+      'Schéma des disques : la barre a maintenant ses stries (comme une vraie barre) et des butées claires entre la barre et les disques. Schéma plus petit.',
+    ],
+  },
+  {
     version: '4.21.1',
     date: '2026-11-10',
     title: 'La barre entière',
