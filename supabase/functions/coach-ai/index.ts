@@ -2,7 +2,7 @@
 // - La clé ANTHROPIC_API_KEY est un secret du projet Supabase (Edge Functions → Secrets) : elle n'est jamais dans l'appli.
 // - Seuls les comptes connectés peuvent appeler (session vérifiée auprès de Supabase Auth), avec une limite d'appels par jour
 //   (table ai_usage, docs/supabase-ia.sql).
-// - Cinq tâches : « dictation » (lire une séance dictée), « coach » (discussion + changements proposés), « program » (lire
+// - Six tâches : « form » (analyse d'une série filmée, à partir des seules mesures chiffrées : jamais d'image), « dictation » (lire une séance dictée), « coach » (discussion + changements proposés), « program » (lire
 //   un programme collé tel quel), « history » (lire le passé d'entraînement raconté), « exercise » (décrire un exercice absent
 //   du catalogue ; il est alors ajouté au catalogue commun de tous les utilisateurs, table shared_exercises, avec la clé de service). Les réponses sont du JSON contraint par un schéma, revérifié ensuite par l'appli.
 // Déploiement : supabase functions deploy coach-ai --no-verify-jwt (la session est vérifiée ici même).
@@ -113,12 +113,30 @@ const EXERCISE = `Tâche : la personne demande un exercice de musculation qui n'
 
 // ---------- Schémas de réponse ----------
 
+const FORM = `Tâche : analyser une série de musculation filmée, comme un coach qui l'aurait regardée, puis donner des conseils pendant le repos.
+Tu ne vois pas la vidéo : tu reçois uniquement les mesures calculées par l'application à partir des points du corps (angles, durées des phases, amplitude de chaque rep, inclinaison du buste), les constats de son algorithme, la série prévue et l'historique de l'exercice.
+Règles :
+- Appuie-toi sur les chiffres et compare les reps entre elles (début / fin de série) et avec les séries précédentes : c'est ta valeur ajoutée par rapport à l'algorithme.
+- Ne contredis pas une mesure ; si la vue de la caméra n'est pas la bonne ou la visibilité est faible, dis-le et reste prudent.
+- Les seuils de l'algorithme sont des repères de coaching, pas des normes : tu peux nuancer selon l'exercice, le niveau et l'historique.
+- points : 3 au plus, les plus utiles d'abord ; level = warn (à corriger), tip (à améliorer) ou good (bien fait). title : 5 mots au plus. detail : ce que montrent les chiffres, 1 phrase. fix : quoi faire concrètement à la prochaine série, 1 phrase.
+- nextSet : un conseil pour la série suivante (technique, tempo, ou charge si les chiffres le justifient nettement), 1 à 2 phrases.
+- summary : 1 à 2 phrases, le bilan de la série.
+- verdict : Propre, Correct ou À travailler.
+- Une douleur signalée dans les données passe avant tout : prudence et arrêt si besoin.`;
+
 const str = { type: "string" };
 const num = { type: "number" };
 const int = { type: "integer" };
 const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
 
 const SCHEMAS: Record<string, unknown> = {
+  form: obj({
+    verdict: { type: "string", enum: ["Propre", "Correct", "À travailler"] },
+    summary: str,
+    points: { type: "array", items: obj({ level: { type: "string", enum: ["warn", "tip", "good"] }, title: str, detail: str, fix: str }) },
+    nextSet: str,
+  }),
   dictation: obj({
     items: {
       type: "array",
@@ -178,6 +196,7 @@ const SCHEMAS: Record<string, unknown> = {
 
 const TASKS: Record<string, { model: string; prompt: string; effort: string; maxTokens: number }> = {
   dictation: { model: FAST, prompt: DICTATION, effort: "low", maxTokens: 8000 },
+  form: { model: SMART, prompt: FORM, effort: "low", maxTokens: 3000 },
   coach: { model: SMART, prompt: COACH, effort: "medium", maxTokens: 10000 },
   program: { model: SMART, prompt: PROGRAM, effort: "medium", maxTokens: 16000 },
   history: { model: SMART, prompt: HISTORY, effort: "medium", maxTokens: 10000 },
@@ -188,6 +207,9 @@ const clip = (v: unknown, n: number) => String(v ?? "").slice(0, n);
 
 function buildMessages(task: string, body: any) {
   const ctx = clip(body.context, 30_000);
+  if (task === "form") {
+    return [{ role: "user", content: `Série filmée et mesures :\n${clip(body.context, 8000)}` }];
+  }
   if (task === "dictation") {
     return [{ role: "user", content: `Données de l'utilisateur :\n${ctx}\n\nSéance dictée :\n"""${clip(body.text, 4000)}"""` }];
   }
@@ -320,7 +342,8 @@ Deno.serve(async (req) => {
       max_tokens: conf.maxTokens,
       ...extra,
       output_config: { effort: conf.effort, format: { type: "json_schema", schema: SCHEMAS[task] } },
-      system: [
+      // analyse de série : pas besoin du catalogue (moins de texte envoyé, donc moins cher)
+      system: task === "form" ? [{ type: "text", text: `${COMMON}\n\n${conf.prompt}` }] : [
         { type: "text", text: `${COMMON}\n\n${conf.prompt}` },
         { type: "text", text: `Catalogue des exercices (identifiant | nom | type | unité) :\n${clip(body.catalog, 45_000)}`, cache_control: { type: "ephemeral" } },
       ],
@@ -332,6 +355,8 @@ Deno.serve(async (req) => {
     let data;
     try { data = JSON.parse(text); } catch { return json(502, { error: "bad_output" }); }
     if (task === "exercise") data = await saveSharedExercise(data, supaUrl, auth, anon, who as Response);
+    // analyse de série : la consommation est renvoyée pour être affichée (comparaison algorithme / coach IA)
+    if (task === "form") data.usage = { input: res.usage?.input_tokens || 0, output: res.usage?.output_tokens || 0 };
     return json(200, { ok: true, data, model: res.model });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return json(503, { error: "busy" });

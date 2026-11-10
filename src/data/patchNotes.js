@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.19',
+    date: '2026-11-10',
+    title: 'Le coach regarde ta série',
+    items: [
+      'Séance guidée : « Me filmer » sur l’écran de la série. Pose ton téléphone (de profil ou de face selon l’exercice) : l’analyse démarre toute seule quand tout ton corps est visible, compte tes reps en direct et s’arrête toute seule à la fin.',
+      'Pendant le repos, le coach te dit ce qu’il a vu : profondeur, bras ou hanches tendus, buste, genoux, élan, tempo, fin de série plus lente… avec une correction pour chaque point. Bouton haut-parleur pour l’écouter.',
+      'La caméra a compté un autre nombre de reps ? Un bouton corrige la série. Elle se rouvre toute seule à la série suivante du même exercice.',
+      'Coach intelligent activé : un onglet « Coach IA » te propose une analyse plus personnalisée, seulement si tu la lances (environ 1 centime).',
+      'La vidéo reste sur ton téléphone : rien n’est enregistré ni envoyé. La 1re fois, environ 20 Mo sont téléchargés (Wi-Fi conseillé).',
+    ],
+  },
+  {
     version: '4.18.3',
     date: '2026-11-09',
     title: 'Le tapis de course',

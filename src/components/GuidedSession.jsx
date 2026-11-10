@@ -10,8 +10,11 @@ import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 import { METHODS } from '../coach/methods';
 import { RestGame, restGameWasOpen } from './RestGame';
+import { FormReport } from './FormReport';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
+// analyse vidéo d'une série (4.19) : chargée seulement quand on filme
+const FormCam = lazy(() => import('./FormCam'));
 
 const fmtKg = x => String(Math.round(x * 100) / 100).replace('.', ',');
 /**
@@ -55,7 +58,7 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -63,6 +66,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const [swapOpen, setSwapOpen] = useState(false); // liste « machine prise »
   // petit jeu pendant le repos : rouvert (en pause) au repos suivant s'il était ouvert
   const [gameOpen, setGameOpen] = useState(restGameWasOpen);
+  // caméra ouverte pour filmer la série en cours (rouverte toute seule à la série suivante du même exercice : g.formAuto)
+  const [camOpen, setCamOpen] = useState(false);
+  const aiArgsRef = useRef(null); // mesures de la dernière série filmée, prêtes pour le coach IA
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
@@ -139,9 +145,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     return -1;
   };
 
-  const doneSet = (repsOverride) => {
+  const doneSet = (repsOverride, form = null) => {
     if (!it || j < 0) return;
     const reps = repsOverride !== undefined ? d.reps.map((r, k) => (k === j ? repsOverride : r)) : d.reps;
+    // analyse vidéo de CETTE série (affichée pendant le repos) ; série faite sans caméra : l'ancienne analyse disparaît
+    const fx = form ? { formLast: { result: form, questId: it.questId, j, noted: Number(reps[j]) || 0, at: Date.now(), ai: aiForm && form.ok ? { idle: true } : null }, formAuto: it.questId } : { formLast: null };
     const done = d.done.map((x, k) => (k === j ? true : x));
     // record battu sur cette série ? (seulement s'il y a déjà un historique) : fêté sur l'écran de repos
     let pr = null;
@@ -160,7 +168,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // séance finie : résumé
     if (items.every(x => (data[x.questId].done || []).every(Boolean))) {
       stopRestEvent();
-      setG(prev => ({ ...prev, data, rest: null, phase: 'summary', rpeFor: it.questId, ...prX }));
+      setG(prev => ({ ...prev, data, rest: null, phase: 'summary', rpeFor: it.questId, ...prX, ...fx }));
       return;
     }
     // superset : on passe à l'autre exercice de la paire
@@ -169,7 +177,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
       const pd = data[px.questId];
       const pj = pd.done.findIndex(v => !v);
       setG(prev => ({ ...prev, data }));
-      startRest(it.superset.first ? 15 : it.restSec, `Superset : ${px.name} · ${setText(px, pd, pj)}`, { idx: partnerIdx, ...prX });
+      startRest(it.superset.first ? 15 : it.restSec, `Superset : ${px.name} · ${setText(px, pd, pj)}`, { idx: partnerIdx, ...prX, ...fx });
       return;
     }
     const nj = done.findIndex(v => !v);
@@ -177,13 +185,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
       setG(prev => ({ ...prev, data }));
       // série trop dure ou trop facile : le coach propose d'ajuster la suite (un geste sur l'écran de repos)
       const adapt = plan ? null : adaptAfterSet(it, d, Number(reps[j]) || 0, Number(it.targetReps && it.targetReps[j] !== undefined ? it.targetReps[j] : it.goalReps) || 0, step);
-      startRest(restAfter(j), `${plan ? setLabel(nj) : `Série ${nj + 1}/${done.length}`} · ${setText(it, data[it.questId], nj)}`, { adapt: adapt ? { ...adapt, questId: it.questId } : null, ...prX });
+      startRest(restAfter(j), `${plan ? setLabel(nj) : `Série ${nj + 1}/${done.length}`} · ${setText(it, data[it.questId], nj)}`, { adapt: adapt ? { ...adapt, questId: it.questId } : null, ...prX, ...fx });
       return;
     }
     // exercice fini : repos, puis exercice suivant ; le ressenti se donne pendant le repos
     const n = nextExerciseIdx(g.idx, data);
     setG(prev => ({ ...prev, data }));
-    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId, rpeAsk: it.questId, ...prX });
+    startRest(it.restSec, `Ensuite : ${items[n].name}`, { idx: n, rpeFor: it.questId, rpeAsk: it.questId, ...prX, ...fx });
   };
   const doneWarm = () => {
     const w = warmRows[warmIdx];
@@ -193,6 +201,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     startRest(w.restSec, left >= 0 ? `Échauffement ${left + 1} · ${warmRows[left].label}` : `${setLabel(0)} · ${setText(it, d, 0)}`);
   };
   const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
+  const fixFormReps = n => setG(prev => {
+    const fl = prev.formLast;
+    const dd = fl && prev.data[fl.questId];
+    if (!dd) return prev;
+    return { ...prev, formLast: { ...fl, noted: n }, data: { ...prev.data, [fl.questId]: { ...dd, reps: dd.reps.map((r, k) => (k === fl.j ? n : r)) } } };
+  });
+  const stopFormAuto = () => { setCamOpen(false); setG(prev => ({ ...prev, formAuto: null })); };
   const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist], ...(Array.isArray(d.kinds) ? { kinds: [...d.kinds, 'work'] } : {}) });
   const removeSet = () => { if (d.reps.length > 1 && !d.done[d.done.length - 1]) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1), loads: loadsOf(d).slice(0, -1), assists: assistsOf(d).slice(0, -1), ...(Array.isArray(d.kinds) ? { kinds: d.kinds.slice(0, -1) } : {}) }); };
   const goto = idx => { setSw(null); setMenu(false); stopRestEvent(); setG(prev => ({ ...prev, idx: Math.max(0, Math.min(items.length - 1, idx)), phase: 'run', rest: null })); };
@@ -314,6 +329,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     hist.current.key = screenKey;
   }
   hist.current.snap = { g, restLeft };
+  useEffect(() => {
+    setCamOpen(screen === 'set' && !!it && j >= 0 && g.formAuto === it.questId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenKey]);
+  const formNow = g.formLast && (screen === 'rest' || screen === 'summary') ? g.formLast : null;
   const canBack = hist.current.stack.length > 0;
   const goBack = () => {
     const st = hist.current.stack;
@@ -343,6 +363,29 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
       doneSet(holdTarget);
     }
   });
+
+  const onFormDone = (res, extra = {}) => {
+    setCamOpen(false);
+    // tenue : le temps prévu s'il est atteint, sinon le temps mesuré ; reps : le nombre prévu (la caméra propose de corriger)
+    const secs = it && it.timed ? (extra.reachedTarget && holdTarget ? holdTarget : res.ok && res.holdSec ? res.holdSec : extra.sec) : undefined;
+    const earlier = (g.formHist && g.formHist[it.questId]) || [];
+    const args = { item: it, setLabel: setLabel(j), setText: setText(it, d, j), result: res, earlier };
+    doneSet(secs, res);
+    if (res.ok) {
+      const line = `${setLabel(j)} : ${res.summary}, verdict ${res.verdict}`;
+      setG(prev => ({ ...prev, formHist: { ...(prev.formHist || {}), [it.questId]: [...earlier, line].slice(-4) } }));
+    }
+    // coach IA activé : son analyse ne part QUE si la personne la demande (bouton de l'onglet « Coach IA »)
+    aiArgsRef.current = aiForm && res.ok ? { res, args } : null;
+  };
+  // envoie les mesures (jamais l'image) au coach IA ; sa réponse s'affiche dans l'onglet « Coach IA »
+  const runFormAi = () => {
+    const a = aiArgsRef.current;
+    if (!aiForm || !a || !g.formLast || g.formLast.result !== a.res) return;
+    const put = ai => setG(prev => (prev.formLast && prev.formLast.result === a.res ? { ...prev, formLast: { ...prev.formLast, ai } } : prev));
+    put({ pending: true });
+    aiForm(a.args).then(ai => put(ai || { error: 'Réponse du coach IA illisible.' }), e => put({ error: (e && e.message) || 'Le coach IA ne répond pas.', retry: true }));
+  };
 
   return (
     <div className="fixed inset-0 z-[70] bg-slate-950 flex flex-col h-[100dvh] overflow-hidden" role="dialog" aria-label="Séance guidée" data-testid="guided" style={{ margin: 0 }}>
@@ -415,6 +458,15 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 <>
                   <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                   <RestGame onClose={() => setGameOpen(false)} />
+                </>
+              ) : formNow ? (
+                <>
+                  <div className="w-full flex items-center justify-between">
+                    <span className="w-11" />
+                    <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
+                    <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
+                  </div>
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -504,6 +556,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 return <p className="text-center text-xs text-slate-500" data-testid="set-prev">La dernière fois : {r} {it.timed ? 's' : 'reps'}{extra}</p>;
               })()}
             </div>
+            {!sw && (
+              <button type="button" onClick={() => setCamOpen(true)} className="tap-free w-full py-1.5 text-sm font-bold text-slate-300 flex items-center justify-center gap-1" data-testid="form-cam-open">
+                <Art name="camera" />Me filmer : le coach analyse ma série
+              </button>
+            )}
             {it.timed ? (
               sw ? (
                 <button type="button" onClick={() => doneSet(Math.max(1, Math.round((Date.now() - sw.start) / 1000)))} data-hero className={big.replace('bg-pink-600 active:bg-pink-500', 'bg-rose-600')} data-testid="set-done">■ Stop</button>
@@ -558,6 +615,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);
@@ -589,6 +647,15 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           </div>
         )}
       </div>
+
+      {camOpen && it && d && j >= 0 && (
+        <Suspense fallback={null}>
+          <FormCam item={it} soundEnabled={soundEnabled}
+            info={`${setLabel(j)} · ${setText(it, d, j)}`}
+            targetReps={it.timed ? 0 : Number(d.reps[j]) || 0} holdTarget={it.timed ? Number(d.reps[j]) || 0 : 0}
+            onDone={onFormDone} onClose={() => setCamOpen(false)} onStopAuto={g.formAuto === it.questId ? stopFormAuto : null} />
+        </Suspense>
+      )}
 
       {/* MENU « ⋯ » : tout ce qui sert rarement */}
       {menu && (

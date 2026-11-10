@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CoachPanel } from './components/coach/CoachPanel';
 import { GuidedSession } from './components/GuidedSession';
+import { aiStatus, callAi } from './ai/client';
+import { formContext, normalizeFormAi } from './ai/form';
 import { PhotoCalendar } from './components/photos/PhotoCalendar';
 import { PhotoReminder } from './components/photos/PhotoReminder';
 import { RestTimer } from './components/RestTimer';
@@ -244,6 +246,7 @@ onFinish={handleFinishGuided}
 onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
  soundEnabled={gameState.soundEnabled !== false}
+ aiForm={aiStatus(gameState) === 'ok' ? args => callAi('form', { context: formContext(gameState, args) }, { timeoutMs: 60000 }).then(normalizeFormAi) : null}
 swapChoices={swapChoices}
 onSwap={swapExercise}
 onUndoSwap={undoSwap}/>

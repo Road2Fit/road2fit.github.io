@@ -1138,7 +1138,7 @@ export const NAME_RULES = [
   [/tirage.*(menton)|upright/, 'fp_upright_row'],
   [/face.?pull/, 'fp_face_pull'],
   [/tirage.*(vertical|poitrine|nuque)|lat.?pulldown|pulldown/, 'lat_pulldown'],
-  [/rowing.*(t.?bar)|t.?bar/, 'fp_tbar_row'],
+  [/rowing.*(t.?bar)|\bt.?bar/, 'fp_tbar_row'],
   [/rowing.*haltere|haltere.*rowing/, 'fp_db_row'],
   [/rowing.*(machine|hammer)|low.?row/, 'fp_low_row_machine'],
   [/rowing.*(poulie|assis)|tirage horizontal/, 'fp_seated_row'],
