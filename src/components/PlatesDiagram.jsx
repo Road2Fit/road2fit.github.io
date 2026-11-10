@@ -8,6 +8,14 @@ const SIZE = { 25: [17, 58], 20: [16, 58], 15: [15, 52], 10: [14, 44], 5: [13, 3
 const fmt = v => String(v).replace('.', ',');
 const NEON = 'var(--neon, #ec4899)';
 const TXT = { fontSize: 10, fontWeight: 600, letterSpacing: 0.6 }; // assez fin pour que « 10 » ne se colle pas
+// Taille dynamique (4.21.3) : le schéma suit la largeur de l'écran (≈ 0,9 × sa taille de dessin sur un téléphone de 375 px,
+// un peu plus sur un grand écran) et le nombre de disques (plus de disques = plus large). Plancher : les chiffres restent
+// à 9 px au moins (échelle 0,9 pour une police de 10) ; plafond : échelle 1,2 et 92 % de la largeur disponible.
+const MIN_TEXT_PX = 9;
+const sizeCss = W => {
+  const min = Math.round(W * Math.max(0.9, MIN_TEXT_PX / TXT.fontSize));
+  return `clamp(${min}px, ${(W / 4.15).toFixed(1)}vw, ${Math.round(W * 1.2)}px)`;
+};
 
 export function PlatesDiagram({ total, testId, className = '' }) {
   const r = platesFor(total);
@@ -43,7 +51,7 @@ export function PlatesDiagram({ total, testId, className = '' }) {
   return (
     <div className={`flex justify-center ${className}`} data-testid={testId}>
       <span className="sr-only">{text}</span>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: Math.round(W * 0.85), maxWidth: '64%', height: 'auto', display: 'block', margin: '0 auto' }} aria-hidden="true">
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: sizeCss(W), maxWidth: '92%', height: 'auto', display: 'block', margin: '0 auto' }} aria-hidden="true">
         <rect x="0" y={mid - 3} width={W} height="6" rx="3" fill="#64748b" />
         <rect x={left + 2} y={mid - 7} width={centre - 4} height="14" rx="3" fill="#94a3b8" />
         {knurl}

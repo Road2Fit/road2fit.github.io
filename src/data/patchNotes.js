@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.21.3',
+    date: '2026-11-10',
+    title: 'Schéma à la bonne taille',
+    items: [
+      'Le schéma des disques s’adapte : un peu plus grand sur un grand écran, plus large quand il y a beaucoup de disques, et jamais trop petit pour lire les poids.',
+    ],
+  },
+  {
     version: '4.21.2',
     date: '2026-11-10',
     title: 'Une vraie barre',
