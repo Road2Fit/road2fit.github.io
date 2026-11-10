@@ -3,6 +3,7 @@ import { assistText } from '../lib/assist';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { playGameSound } from '../lib/sound';
 import { isBarbell, platesText } from '../lib/plates';
+import { PlatesDiagram } from './PlatesDiagram';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { restText } from '../coach/rest';
@@ -514,7 +515,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               <p className="text-sm font-black text-amber-300 uppercase tracking-wider"><Art name="flame" />Échauffement {warmRows.length > 1 ? `${warmIdx + 1}/${warmRows.length}` : ''}</p>
               <p className="text-4xl font-black text-amber-100">{warmRows[warmIdx].label}</p>
               {it.kind === 'load' && isBarbell(it.name) && platesText(warmRows[warmIdx].load) && (
-                <p className="text-sm text-slate-400" data-testid="warm-plates">Disques : {platesText(warmRows[warmIdx].load)}</p>
+                <PlatesDiagram total={warmRows[warmIdx].load} testId="warm-plates" className="w-full" />
               )}
             </div>
             <div className="space-y-2">
@@ -549,7 +550,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               {it.kind === 'assisted' && !sw && tune({ label: 'Lest', testId: 'guided-assist', value: assistsOf(d)[j] === 0 ? '0' : coachFmt(-assistsOf(d)[j]), unit: assistsOf(d)[j] > 0 ? 'kg · aide élastique' : assistsOf(d)[j] < 0 ? 'kg · lest' : 'poids du corps',
                 onMinus: () => setAssist(d.assist + 2.5), onPlus: () => setAssist(d.assist - 2.5) })}
               {it.kind === 'load' && !sw && isBarbell(it.name) && platesText(loadsOf(d)[j]) && (
-                <p className="text-center text-xs text-slate-500 -mt-1" data-testid="set-plates">Disques : {platesText(loadsOf(d)[j])}</p>
+                <PlatesDiagram total={loadsOf(d)[j]} testId="set-plates" className="-mt-1" />
               )}
               {d.prev && !sw && (() => {
                 const k = Math.min(j, d.prev.reps.length - 1);
