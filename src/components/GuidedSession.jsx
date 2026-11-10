@@ -11,6 +11,7 @@ import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 import { METHODS } from '../coach/methods';
 import { RestGame, restGameWasOpen } from './RestGame';
 import { FormReport } from './FormReport';
+import { clearClip } from '../form/clip';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
 // analyse vidéo d'une série (4.19) : chargée seulement quand on filme
@@ -150,6 +151,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     const reps = repsOverride !== undefined ? d.reps.map((r, k) => (k === j ? repsOverride : r)) : d.reps;
     // analyse vidéo de CETTE série (affichée pendant le repos) ; série faite sans caméra : l'ancienne analyse disparaît
     const fx = form ? { formLast: { result: form, questId: it.questId, j, noted: Number(reps[j]) || 0, at: Date.now(), ai: aiForm && form.ok ? { idle: true } : null }, formAuto: it.questId } : { formLast: null };
+    if (!form) clearClip(); // vidéo de la série précédente non gardée : effacée
     const done = d.done.map((x, k) => (k === j ? true : x));
     // record battu sur cette série ? (seulement s'il y a déjà un historique) : fêté sur l'écran de repos
     let pr = null;

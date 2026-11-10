@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.20',
+    date: '2026-11-10',
+    title: 'Revois le moment',
+    items: [
+      'Série filmée : touche un point relevé par le coach (« ▶ Voir ») pour revoir le moment exact dans la vidéo, en boucle et au ralenti, avec ton squelette par-dessus.',
+      'Plusieurs reps concernées ? Passe de l’une à l’autre, ou revois toute la série.',
+      '« Garder la vidéo » l’enregistre sur ton téléphone. Sinon, elle est effacée à la série suivante : rien n’est envoyé.',
+    ],
+  },
+  {
     version: '4.19',
     date: '2026-11-10',
     title: 'Le coach regarde ta série',

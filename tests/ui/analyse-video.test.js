@@ -14,10 +14,10 @@ afterEach(() => { while (open.length) open.pop().close(); });
 const q = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
 
 // images de squelette adaptées au mouvement de l'exercice affiché
-function framesFor(name, reps, opts = {}) {
+function framesFor(name, reps, opts = {}, tlOpts = {}) {
   const cat = EXERCISE_CATALOG.find(c => c.name === name);
   const P = patternFor({ catalogId: cat && cat.id, name });
-  const tl = timeline({ reps, p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5 });
+  const tl = timeline({ reps, p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5, ...tlOpts });
   if (P.signal === 'knee' || P.signal === 'kneeFront') return { P, frames: makeFrames(tl, d => squatBody(d, opts)), aspect: 9 / 16 };
   if (P.id === 'pushUp') return { P, frames: makeFrames(tl, d => pushUpBody(d), { aspect: 16 / 9 }), aspect: 16 / 9 };
   return { P, frames: makeFrames(tl, d => curlBody(d, opts)), aspect: 9 / 16 };
@@ -154,4 +154,40 @@ describe('analyse vidéo de la série', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+
+  it('vidéo de la série : toucher un point relevé montre l’extrait du moment ; « Garder la vidéo »', async () => {
+    const h = await launch();
+    open.push(h);
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
+    await clickText(h, lancer.textContent.trim().slice(0, 30));
+    if (q(h, 'feel-ok')) await clickEl(h, q(h, 'feel-ok'));
+    while (q(h, 'warm-done')) await clickEl(h, [...q(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
+    const name = q(h, 'guided-set').querySelector('h2').textContent.trim();
+    // reps très rapides : la descente trop rapide est forcément relevée
+    const { frames, aspect } = framesFor(name, 6, {}, { p1: 0.4, p2: 0.4, holdTurn: 0 });
+    h.w.__r2fPoseMock = { frames, aspect, batch: 60, clip: true };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
+    await advance(h, 0);
+    expect(q(h, 'form-video')).toBeTruthy();
+    const play = q(h, 'form-play');
+    expect(play).toBeTruthy();
+    await clickEl(h, play.closest('[role="button"]'));
+    expect(q(h, 'clip-player')).toBeTruthy();
+    expect(q(h, 'clip-video').getAttribute('src')).toBe('blob:test-clip');
+    expect(q(h, 'clip-reps').textContent).toMatch(/Rep [0-9]/);
+    await clickEl(h, q(h, 'clip-all'));
+    await clickEl(h, q(h, 'clip-close'));
+    expect(q(h, 'clip-player')).toBeNull();
+    await clickEl(h, q(h, 'form-video-save'));
+    expect(q(h, 'form-video-save').textContent).toMatch(/gardée/);
+    // série suivante faite sans caméra : la vidéo est effacée
+    h.w.__r2fPoseMock = { frames: [], aspect };
+    await clickEl(h, q(h, 'guided-next'));
+    await advance(h, 0);
+    if (q(h, 'form-cam-stop-auto')) await clickEl(h, q(h, 'form-cam-stop-auto'));
+    if (q(h, 'set-done')) { await clickEl(h, q(h, 'set-done')); expect(q(h, 'form-video')).toBeNull(); }
+    expect(h.errors).toEqual([]);
+  }, 120000);
 });

@@ -1,11 +1,15 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Art } from './Art';
+import { ClipPlayer } from './ClipPlayer';
+import { getClip, saveClip } from '../form/clip';
 
 // Retour du coach sur la série filmée (4.19), affiché pendant le repos.
 // Onglet « Algorithme » : verdict, reps, tempo, points à corriger calculés sur le téléphone (gratuit, immédiat).
 // Onglet « Coach IA » (seulement si le coach intelligent est activé) : la même série analysée par le coach IA à partir des
 // seules mesures chiffrées, lancée seulement sur demande (bouton) pour ne pas consommer de tokens à chaque série. Les deux restent
 // visibles pour comparer (phase d'essai) ; le haut-parleur lit l'onglet ouvert.
+// 4.20 : un point relevé se touche pour revoir l'extrait vidéo du moment ; « Garder la vidéo » l'enregistre sur le téléphone.
 const LEVEL = {
   warn: { dot: 'bg-rose-500', border: 'border-rose-500/60', label: 'À corriger' },
   tip: { dot: 'bg-amber-400', border: 'border-amber-400/50', label: 'À améliorer' },
@@ -26,21 +30,28 @@ function speak(text) {
   } catch (e) {}
 }
 
-const Points = ({ list }) => (
+const Points = ({ list, onPlay }) => (
   <ul className="space-y-1.5">
-    {list.map(f => (
-      <li key={f.id + f.level} className={`border-l-4 ${LEVEL[f.level].border} bg-slate-950/60 rounded-r-xl pl-2.5 pr-2 py-1.5`} data-testid={`form-finding-${f.level}`}>
-        <p className="text-sm font-black text-white flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${LEVEL[f.level].dot}`} aria-hidden="true" />{f.title}<span className="sr-only"> ({LEVEL[f.level].label})</span></p>
+    {list.map(f => {
+      const playable = !!(onPlay && f.reps && f.reps.length);
+      return (
+      <li key={f.id + f.level} className={`border-l-4 ${LEVEL[f.level].border} bg-slate-950/60 rounded-r-xl pl-2.5 pr-2 py-1.5 ${playable ? 'cursor-pointer active:bg-slate-800' : ''}`} data-testid={`form-finding-${f.level}`}
+        {...(playable ? { role: 'button', tabIndex: 0, onClick: () => onPlay(f), onKeyDown: e => { if (e.key === 'Enter') onPlay(f); }, 'aria-label': `${f.title} : voir le moment dans la vidéo` } : {})}>
+        <p className="text-sm font-black text-white flex items-center gap-1.5 min-w-0"><span className={`shrink-0 w-2 h-2 rounded-full ${LEVEL[f.level].dot}`} aria-hidden="true" /><span className="flex-1 min-w-0">{f.title}<span className="sr-only"> ({LEVEL[f.level].label})</span></span>
+          {playable && <span className="shrink-0 px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-black text-slate-200" data-testid="form-play">▶ Voir{f.reps.length === 1 ? ` (rep ${f.reps[0] + 1})` : ''}</span>}</p>
         {f.detail && <p className="text-xs text-slate-400">{f.detail}</p>}
         {f.fix && f.level !== 'good' && <p className="text-xs font-bold text-emerald-200 mt-0.5">→ {f.fix}</p>}
       </li>
-    ))}
+      );
+    })}
   </ul>
 );
 
 export function FormReport({ form, onFixReps, onAskAi }) {
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
+  const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
+  const [saved, setSaved] = useState(false);
   const r = form && form.result;
   if (!r) return null;
   if (!r.ok) {
@@ -53,6 +64,7 @@ export function FormReport({ form, onFixReps, onAskAi }) {
     );
   }
   const ai = form.ai || null;
+  const clip = getClip(r.clipId);
   const aiReady = ai && !ai.pending && !ai.error && !ai.idle;
   const showAi = tab === 'ai' && ai;
   const issues = r.findings.filter(f => f.level === 'warn' || f.level === 'tip');
@@ -80,7 +92,7 @@ export function FormReport({ form, onFixReps, onAskAi }) {
     </button>
   );
   return (
-    <div className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 space-y-2 max-h-[50dvh] overflow-y-auto" data-testid="form-report">
+    <div className="w-full min-w-0 bg-slate-900 border border-slate-700 rounded-2xl p-3 space-y-2 max-h-[50dvh] overflow-y-auto overflow-x-hidden" data-testid="form-report">
       <div className="flex items-center gap-2">
         <p className="flex-1 text-sm font-black text-white"><Art name="camera" />Le coach a regardé ta série</p>
         {(!showAi || aiReady) && <span className={`px-2 py-0.5 rounded-full text-xs font-black ${VERDICT[verdict] || VERDICT.Correct}`} data-testid="form-verdict">{verdict}</span>}
@@ -121,9 +133,19 @@ export function FormReport({ form, onFixReps, onAskAi }) {
         </div>
       ) : (<>
         {!issues.length && <p className="text-sm font-bold text-emerald-300" data-testid="form-clean">Rien à corriger sur cette série.</p>}
-        <Points list={list} />
+        <Points list={list} onPlay={clip ? f => setPlay(f) : null} />
         {!all && extra > 0 && <button type="button" onClick={() => setAll(true)} className="text-xs font-bold text-slate-400 underline underline-offset-2" data-testid="form-more">{extra > 1 ? `Voir les ${extra} autres points` : 'Voir l’autre point'}</button>}
       </>)}
+      {clip && (
+        <div className="pt-1 space-y-1" data-testid="form-video">
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setPlay({})} className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-100 text-xs font-black" data-testid="form-video-watch">▶ Revoir la série</button>
+            <button type="button" onClick={() => setSaved(saveClip(clip))} disabled={saved} className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-100 text-xs font-black disabled:opacity-60" data-testid="form-video-save">{saved ? '✓ Vidéo gardée' : 'Garder la vidéo'}</button>
+          </div>
+          <p className="text-[11px] text-slate-500">{saved ? 'Enregistrée dans les téléchargements de ton téléphone.' : 'Sinon, elle est effacée à la série suivante.'}</p>
+        </div>
+      )}
+      {play && clip && createPortal(<ClipPlayer clip={clip} reps={r.reps || []} finding={play.title ? play : null} onClose={() => setPlay(null)} />, document.body)}
     </div>
   );
 }

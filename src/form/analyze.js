@@ -462,11 +462,12 @@ export function analyzeSet(frames, pattern, meta = {}) {
       const need = FRONT_ONLY.has(id) ? 'front' : 'sagittal';
       if (need === 'front' && ctx.view === 'side') continue;
       if (need === 'sagittal' && ctx.view !== 'side' && !ctx.use3d && !SIGNAL_ONLY.has(id)) continue;
+      TRACK.last = null; TRACK.bad = null;
       const out = fn(ctx, P, reps);
-      if (out) findings.push(...[].concat(out).filter(Boolean));
+      if (out) findings.push(...[].concat(out).filter(Boolean).map(attachReps));
     }
   } else {
-    for (const id of ['tempo', 'fade']) if ((P.checks || []).includes(id)) { const o = CHECKS[id](ctx, P, reps); if (o) findings.push(o); }
+    for (const id of ['tempo', 'fade']) if ((P.checks || []).includes(id)) { TRACK.last = null; TRACK.bad = null; const o = CHECKS[id](ctx, P, reps); if (o) findings.push(attachReps(o)); }
     findings.push({ id: 'fallback', level: 'info', title: 'Analyse simplifiée', detail: 'Certaines parties du corps n’étaient pas visibles : j’ai seulement compté les reps et mesuré le tempo.', fix: P.view === 'front' ? 'Filme-toi de face, tout le corps dans l’image.' : 'Filme-toi de profil, tout le corps dans l’image.' });
   }
   if (!viewOk && !fallback) {
@@ -496,7 +497,8 @@ export function analyzeSet(frames, pattern, meta = {}) {
     reps: reps.map((r, i) => {
       const c = cyc(s, r);
       const lean = !fallback && (ctx.view === 'side' || ctx.use3d) ? leanSeries(ctx)[r.turn] : NaN;
-      return { ecc: round2(ecc[i]), con: round2(con[i]), hold: round2(r.hold), depth: round2(r.depth), lo: round2(c.min), hi: round2(c.max), lean: isNum(lean) ? Math.round(lean) : null };
+      return { ecc: round2(ecc[i]), con: round2(con[i]), hold: round2(r.hold), depth: round2(r.depth), lo: round2(c.min), hi: round2(c.max), lean: isNum(lean) ? Math.round(lean) : null,
+        t0: round2(Math.max(0, ctx.t[r.start] - ctx.t[0] - 0.4)), t1: round2(ctx.t[r.end] - ctx.t[0] + 0.4) };
     }),
     tempo: { ecc: round2(eM), con: round2(cM) },
     duration: round2(ctx.t[ctx.t.length - 1] - ctx.t[0]),
@@ -513,12 +515,38 @@ const round2 = v => (isNum(v) ? Math.round(v * 100) / 100 : null);
 const FRONT_ONLY = new Set(['valgus', 'shift', 'sym']);
 const SIGNAL_ONLY = new Set(['tempo', 'fade', 'speed', 'bounce', 'topPause', 'raiseTop', 'elbowBend']);
 
-const perRep = (reps, fn) => reps.map(fn).filter(isNum);
+// TRACK : dernières valeurs par rep calculées par un contrôle (et reps qui ne passent pas), pour relier un point relevé
+// aux reps concernées sans le réécrire dans chaque contrôle
+const TRACK = { last: null, bad: null };
+const perRep = (reps, fn) => {
+  const out = [];
+  out.idx = [];
+  reps.forEach((r, i) => { const v = fn(r, i); if (isNum(v)) { out.push(v); out.idx.push(i); } });
+  TRACK.last = out;
+  return out;
+};
 const cyc = (a, r) => stat(a, r.a, r.b) || {};
 const mov = (a, r) => stat(a, r.start, r.end) || {};
-const share = (vals, pred) => (vals.length ? vals.filter(pred).length / vals.length : 0);
+const share = (vals, pred) => {
+  if (vals.idx) TRACK.bad = vals.idx.filter((_, k) => pred(vals[k]));
+  return vals.length ? vals.filter(pred).length / vals.length : 0;
+};
+// contrôles où le pire écart se lit en valeur absolue (côté gauche / droit, bassin trop bas / trop haut)
+const ABS_WORST = new Set(['sym', 'shift', 'line']);
+function attachReps(f) {
+  if (!f || (f.level !== 'warn' && f.level !== 'tip') || f.reps) return f;
+  if (TRACK.bad && TRACK.bad.length) f.reps = TRACK.bad.slice();
+  else if (TRACK.last && TRACK.last.length) {
+    const val = v => (ABS_WORST.has(f.id) ? Math.abs(v) : v);
+    let k = 0;
+    TRACK.last.forEach((v, j) => { if (val(v) > val(TRACK.last[k])) k = j; });
+    f.reps = [TRACK.last.idx[k]];
+  }
+  return f;
+}
 const note3d = ctx => (ctx.view !== 'side' ? ' (mesure approximative de face)' : '');
-const F = (id, level, title, detail, fix) => ({ id, level, title, detail, fix });
+// reps : index (à partir de 0) des reps où le point se voit, pour l'extrait vidéo
+const F = (id, level, title, detail, fix, reps) => ({ id, level, title, detail, fix, ...(reps && reps.length ? { reps } : {}) });
 
 const CHECKS = {
   depthThigh(ctx, P, reps) {
@@ -526,6 +554,7 @@ const CHECKS = {
     const v = perRep(reps, r => mov(th, r).min);
     if (v.length < reps.length / 2) return null;
     const ok = v.filter(x => x <= P.thighOk).length, med = median(v);
+    TRACK.bad = v.idx.filter((_, k) => v[k] > P.thighOk);
     if (ok / v.length >= 0.8) return F('depth', 'good', 'Profondeur', `Cuisses à la parallèle (ou plus bas) sur ${ok}/${v.length} reps${note3d(ctx)}.`);
     if (med > P.thighWarn) return F('depth', 'warn', 'Squat partiel', `Il manque environ ${r0(med)}° pour avoir les cuisses parallèles au sol${note3d(ctx)}.`, 'Descends jusqu’à ce que le pli de la hanche arrive au niveau des genoux. Si tu n’y arrives pas, allège la charge et travaille la mobilité des chevilles et des hanches.');
     const miss = `il manque environ ${r0(Math.max(1, med))}° pour avoir les cuisses parallèles au sol`;
@@ -535,6 +564,7 @@ const CHECKS = {
     const k = ctx.main;
     const v = perRep(reps, r => cyc(k, r).min);
     const ok = v.filter(x => x <= P.depth).length, med = median(v);
+    TRACK.bad = v.idx.filter((_, k) => v[k] > P.depth);
     const fixes = {
       machineLeg: 'Descends jusqu’à environ 90° aux genoux, sans que le bas du dos se décolle du dossier.',
       lunge: 'Descends jusqu’à ce que le genou arrière frôle le sol, genou avant au-dessus du pied.',
@@ -548,6 +578,7 @@ const CHECKS = {
     const el = ctx.main;
     const v = perRep(reps, r => cyc(el, r).min);
     const ok = v.filter(x => x <= P.depth).length, med = median(v);
+    TRACK.bad = v.idx.filter((_, k) => v[k] > P.depth);
     const fixes = {
       benchPress: 'Descends jusqu’à toucher légèrement la poitrine (ou jusqu’à ce que les coudes passent sous le banc), sans rebondir.',
       pushUp: 'Descends jusqu’à ce que la poitrine frôle le sol, corps gainé.',
@@ -592,8 +623,11 @@ const CHECKS = {
   bounce(ctx, P, reps) {
     if (reps.length < 2) return null;
     let bad;
-    if (!ctx.conFirst) bad = reps.filter((r, i) => r.hold < 0.07 && ctx.ecc[i] < 0.8).length;
-    else bad = reps.slice(1).filter((r, i) => ctx.t[r.start] - ctx.t[reps[i].end] < 0.08 && ctx.ecc[i] < 0.6).length;
+    let list;
+    if (!ctx.conFirst) list = reps.map((r, i) => (r.hold < 0.07 && ctx.ecc[i] < 0.8 ? i : -1)).filter(i => i >= 0);
+    else list = reps.map((r, i) => (i > 0 && ctx.t[r.start] - ctx.t[reps[i - 1].end] < 0.08 && ctx.ecc[i - 1] < 0.6 ? i : -1)).filter(i => i >= 0);
+    bad = list.length;
+    TRACK.bad = list;
     const n = ctx.conFirst ? reps.length - 1 : reps.length;
     if (bad / n < 0.5) return null;
     const fixes = {
@@ -612,7 +646,7 @@ const CHECKS = {
   tempo(ctx, P, reps) {
     const e = median(ctx.ecc), c = median(ctx.con);
     if (!isNum(e)) return null;
-    if (e < 0.7) return F('tempo', 'tip', `${cap(P.words[1])} rapide`, `${cap(P.words[1])} en ${fmtS(e)} en moyenne : la charge tombe plus qu’elle n’est freinée.`, `Freine ${withArt(P.words[1])} : compte environ 2 secondes à chaque rep.`);
+    if (e < 0.7) return F('tempo', 'tip', `${cap(P.words[1])} rapide`, `${cap(P.words[1])} en ${fmtS(e)} en moyenne : la charge tombe plus qu’elle n’est freinée.`, `Freine ${withArt(P.words[1])} : compte environ 2 secondes à chaque rep.`, ctx.ecc.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(p => p[1]));
     if (e >= 1.2) return F('tempo', 'good', 'Tempo contrôlé', `${cap(P.words[1])} en ${fmtS(e)}, ${P.words[0]} en ${fmtS(c)}.`);
     return null;
   },
@@ -621,11 +655,11 @@ const CHECKS = {
     const amp = reps.map(r => r.depth);
     if (reps.length >= 4) {
       const first = median(amp.slice(0, Math.min(3, amp.length - 2))), last = mean(amp.slice(-2));
-      if (first > 0 && last < first * 0.85) return F('fade', 'tip', 'Amplitude qui baisse', `Tes 2 dernières reps étaient environ ${pct(1 - last / first)} moins amples que les premières.`, 'Garde la même amplitude jusqu’au bout, quitte à faire une rep de moins.');
+      if (first > 0 && last < first * 0.85) return F('fade', 'tip', 'Amplitude qui baisse', `Tes 2 dernières reps étaient environ ${pct(1 - last / first)} moins amples que les premières.`, 'Garde la même amplitude jusqu’au bout, quitte à faire une rep de moins.', [reps.length - 2, reps.length - 1]);
     }
     const partial = amp.map((a, i) => (a < 0.75 ? i + 1 : 0)).filter(Boolean);
     if (partial.length && partial.length < reps.length) {
-      return F('partial', 'tip', partial.length > 1 ? 'Reps incomplètes' : 'Une rep incomplète', `Rep${partial.length > 1 ? 's' : ''} n° ${partial.join(', ')} nettement moins ample${partial.length > 1 ? 's' : ''} que les autres.`, 'Garde la même amplitude à chaque rep.');
+      return F('partial', 'tip', partial.length > 1 ? 'Reps incomplètes' : 'Une rep incomplète', `Rep${partial.length > 1 ? 's' : ''} n° ${partial.join(', ')} nettement moins ample${partial.length > 1 ? 's' : ''} que les autres.`, 'Garde la même amplitude à chaque rep.', partial.map(n => n - 1));
     }
     return null;
   },
@@ -666,10 +700,12 @@ const CHECKS = {
   },
   valgus(ctx, P, reps) {
     const ratio = clean(ctx, ctx.F.map(f => (f.p && [25, 26, 27, 28].every(i => f.p[i].v >= VIS) ? dist(f.p[25], f.p[26]) / (dist(f.p[27], f.p[28]) || NaN) : NaN)));
-    const bad = reps.filter(r => {
+    const badList = reps.map((r, i) => {
       const b = ratio[r.turn], top = ratio[r.a];
-      return isNum(b) && (b < 0.8 || (isNum(top) && b < top * 0.85));
-    }).length;
+      return isNum(b) && (b < 0.8 || (isNum(top) && b < top * 0.85)) ? i : -1;
+    }).filter(i => i >= 0);
+    const bad = badList.length;
+    TRACK.bad = badList;
     const seen = reps.filter(r => isNum(ratio[r.turn])).length;
     if (!seen) return null;
     if (bad / seen >= 0.4) return F('valgus', 'warn', 'Genoux qui rentrent', `Tes genoux se rapprochent l’un de l’autre en bas sur ${bad}/${seen} reps.`, 'Pousse les genoux vers l’extérieur, dans l’axe des pieds. Allège la charge si tu n’y arrives pas.');
@@ -729,6 +765,7 @@ const CHECKS = {
     });
     if (!v.length) return null;
     const ok = v.filter(x => x >= 0.08).length, under = v.filter(x => x < -0.02).length;
+    TRACK.bad = v.idx.filter((_, k) => v[k] < 0.08);
     if (ok / v.length >= 0.8) return F('chin', 'good', 'Menton au niveau de la barre', `Sur ${ok}/${v.length} reps.`);
     if (under / v.length >= 0.5) return F('chin', 'warn', 'Menton sous la barre', `Ton menton a atteint la barre sur ${ok}/${v.length} reps.`, 'Monte jusqu’à ce que le menton dépasse la barre ; sinon, prends un élastique ou fais des négatives (descentes lentes).');
     return F('chin', 'tip', 'Il manque un peu en haut', `Ton menton a atteint la barre sur ${ok}/${v.length} reps.`, 'Tire encore un peu à chaque rep, jusqu’au menton au-dessus de la barre.');
@@ -764,8 +801,8 @@ const CHECKS = {
     const v = perRep(reps, r => cyc(ctx.main, r).max);
     if (!v.length) return null;
     const med = median(v);
-    if (med > P.topMax) return F('top', 'tip', 'Trop haut', `Tes bras montent à ~${r0(med)}°.`, 'Monte jusqu’à l’horizontale (coudes à hauteur d’épaules), pas plus.');
-    if (med < P.topMin) return F('top', 'tip', 'Pas assez haut', `Tes bras montent à ~${r0(med)}°.`, 'Monte jusqu’à avoir les coudes à hauteur d’épaules.');
+    if (med > P.topMax) return F('top', 'tip', 'Trop haut', `Tes bras montent à ~${r0(med)}°.`, 'Monte jusqu’à l’horizontale (coudes à hauteur d’épaules), pas plus.', v.idx.filter((_, k) => v[k] > P.topMax));
+    if (med < P.topMin) return F('top', 'tip', 'Pas assez haut', `Tes bras montent à ~${r0(med)}°.`, 'Monte jusqu’à avoir les coudes à hauteur d’épaules.', v.idx.filter((_, k) => v[k] < P.topMin));
     return F('top', 'good', 'Hauteur', `Bras à ~${r0(med)}° en haut : bonne hauteur.`);
   },
   elbowBend(ctx, P, reps) {

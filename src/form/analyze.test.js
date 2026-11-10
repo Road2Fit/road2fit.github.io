@@ -236,3 +236,22 @@ describe('cas limites', () => {
     expect(bodyVisible(cut, P)).toBe(false);
   });
 });
+
+describe('extraits vidéo : reps concernées par chaque point', () => {
+  const P = patternFor({ catalogId: 'squat', name: 'Squat' });
+  it('amplitude qui baisse → les 2 dernières reps, avec leurs horaires', () => {
+    const fr = makeFrames(timeline({ reps: 6, depth: i => (i < 4 ? 1 : 0.55) }), d => squatBody(d));
+    const res = analyzeSet(fr, P, { aspect: 9 / 16 });
+    expect(res.findings.find(f => f.id === 'fade').reps).toEqual([4, 5]);
+    const r = res.reps[4];
+    expect(r.t1).toBeGreaterThan(r.t0);
+    expect(r.t0).toBeGreaterThan(res.reps[3].t0);
+  });
+  it('chaque point à corriger a au moins une rep', () => {
+    const cur = patternFor({ catalogId: 'fp_db_curl', name: 'Curl haltères' });
+    const res = analyzeSet(makeFrames(timeline({ reps: 6 }), d => curlBody(d, { swing: 25, drift: 40, top: 80 })), cur, { aspect: 9 / 16 });
+    const issues = res.findings.filter(f => f.level === 'warn' || f.level === 'tip');
+    expect(issues.length).toBeGreaterThan(1);
+    for (const f of issues) expect(f.reps && f.reps.length, f.id).toBeTruthy();
+  });
+});

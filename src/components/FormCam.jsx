@@ -4,12 +4,15 @@ import { loadPose, poseMock } from '../form/pose';
 import { analyzeSet, bodyVisible, liveCount } from '../form/analyze';
 import { patternFor, placementText } from '../form/patterns';
 import { playGameSound } from '../lib/sound';
+import { drawSkeleton, neonColor } from '../form/draw';
+import { pickMime, setClip } from '../form/clip';
 
 // Filmer une série (4.19) : la caméra du téléphone, le squelette détecté dessiné par-dessus, le compteur de reps en direct.
 // L'enregistrement démarre tout seul quand le corps est entièrement visible depuis 1 s, et s'arrête tout seul
 // (plus de nouvelle rep depuis 8 s, ou 4 s une fois le nombre prévu atteint, ou corps sorti de l'image 2,5 s) ou avec le bouton.
 // Puis l'analyse (form/analyze.js) est rendue à la séance guidée, qui l'affiche pendant le repos.
-const BONES = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28], [27, 29], [29, 31], [27, 31], [28, 30], [30, 32], [28, 32]];
+// 4.20 : la série est aussi enregistrée (MediaRecorder, en mémoire seulement : form/clip.js) pour revoir l'extrait d'un
+// point relevé et, si la personne le choisit, garder la vidéo.
 const MAX_FRAMES = 30 * 60 * 4; // 4 minutes au plus
 
 function camError(e) {
@@ -35,7 +38,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
 
   useEffect(() => {
     let stopped = false, raf = 0, timer = 0, stream = null;
-    const r = { phase: 'loading', frames: [], visibleSince: null, recStart: 0, lastTs: 0, lostSince: null, count: 0, lastRepT: 0, countedAt: 0, aspect: 9 / 16, sec: 0 };
+    const r = { phase: 'loading', frames: [], visibleSince: null, recStart: 0, lastTs: 0, lostSince: null, count: 0, lastRepT: 0, countedAt: 0, aspect: 9 / 16, sec: 0, recorder: null, chunks: [], mime: '' };
     run.current = r;
     const go = p => { r.phase = p; if (!stopped) setPhase(p); };
     const stopCam = () => {
@@ -44,52 +47,39 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       if (stream) stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
       stream = null;
     };
-    const neon = (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--neon').trim() || '#c6ff3d'; } catch (e) { return '#c6ff3d'; } })();
+    const neon = neonColor();
+    const draw = lm => drawSkeleton(canvasRef.current, videoRef.current, lm, { aspect: r.aspect, color: neon });
 
-    const draw = lm => {
-      const c = canvasRef.current, v = videoRef.current;
-      if (!c || !c.getContext) return;
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-      const cw = c.clientWidth, ch = c.clientHeight, dpr = window.devicePixelRatio || 1;
-      if (c.width !== Math.round(cw * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, cw, ch);
-      if (!lm) return;
-      // même cadrage que la vidéo (object-contain)
-      const vw = (v && v.videoWidth) || r.aspect * 1000, vh = (v && v.videoHeight) || 1000;
-      const s = Math.min(cw / vw, ch / vh), ox = (cw - vw * s) / 2, oy = (ch - vh * s) / 2;
-      const X = p => ox + p.x * vw * s, Y = p => oy + p.y * vh * s;
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = neon;
-      ctx.shadowColor = neon;
-      ctx.shadowBlur = 8;
-      for (const [a, b] of BONES) {
-        const A = lm[a], B = lm[b];
-        if (!A || !B || (A.visibility ?? 1) < 0.4 || (B.visibility ?? 1) < 0.4) continue;
-        ctx.globalAlpha = Math.min(A.visibility ?? 1, B.visibility ?? 1);
-        ctx.beginPath(); ctx.moveTo(X(A), Y(A)); ctx.lineTo(X(B), Y(B)); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#ffffff';
-      for (let i = 11; i < 33; i++) {
-        const p = lm[i];
-        if (!p || (p.visibility ?? 1) < 0.4) continue;
-        ctx.beginPath(); ctx.arc(X(p), Y(p), 4, 0, Math.PI * 2); ctx.fill();
-      }
-    };
-
+    // vidéo de la série : arrêt de l'enregistreur, puis la vidéo complète (ou rien si l'enregistrement n'a pas pu se faire)
+    const stopRecorder = () => new Promise(done => {
+      const rec = r.recorder;
+      const mock = poseMock();
+      if (!rec) return done(mock && mock.clip ? (mock.clip === true ? { blob: new Blob(['video'], { type: 'video/webm' }), url: 'blob:test-clip', mime: 'video/webm' } : mock.clip) : null);
+      r.recorder = null;
+      rec.onstop = () => {
+        try {
+          const blob = new Blob(r.chunks, { type: r.mime || rec.mimeType || 'video/webm' });
+          done(blob.size ? { blob, url: URL.createObjectURL(blob), mime: blob.type } : null);
+        } catch (e) { done(null); }
+      };
+      try { rec.stop(); } catch (e) { done(null); }
+    });
     const finish = () => {
       if (r.phase !== 'rec') return;
       go('analyzing');
-      stopCam();
-      setTimeout(() => {
+      const clipP = stopRecorder();
+      clipP.then(() => stopCam());
+      Promise.all([clipP, new Promise(ok => setTimeout(ok, 30))]).then(([clip]) => {
         if (stopped) return;
         const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps });
+        if (clip) {
+          const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+          setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name });
+          res.clipId = id;
+        } else setClip(null);
         const reached = holdTarget > 0 && r.lastTs - r.recStart >= holdTarget * 1000;
         doneRef.current(res, { sec: Math.max(1, Math.round((r.lastTs - r.recStart) / 1000)), reachedTarget: reached });
-      }, 30);
+      });
     };
     r.finish = finish;
 
@@ -104,6 +94,18 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           if (r.visibleSince == null) r.visibleSince = ts;
           if (ts - r.visibleSince >= 1000) {
             r.recStart = ts; r.lastRepT = ts; r.frames = [];
+            // enregistrement de la vidéo (en mémoire) en même temps que l'analyse
+            if (stream && window.MediaRecorder) {
+              try {
+                r.mime = pickMime();
+                r.chunks = [];
+                const rec = new MediaRecorder(stream, r.mime ? { mimeType: r.mime, videoBitsPerSecond: 2500000 } : { videoBitsPerSecond: 2500000 });
+                rec.ondataavailable = e => { if (e.data && e.data.size) r.chunks.push(e.data); };
+                rec.start(1000);
+                r.recorder = rec;
+                r.recStart = performance.now();
+              } catch (e) { r.recorder = null; }
+            }
             go('rec');
             playGameSound('click', soundEnabled);
             try { navigator.vibrate && navigator.vibrate(80); } catch (e) {}
@@ -188,8 +190,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       };
       raf = requestAnimationFrame(tick);
     })();
-    return () => { stopped = true; stopCam(); };
-  }, [facing, P, targetReps, holdTarget, soundEnabled]);
+    return () => { stopped = true; try { r.recorder && r.recorder.stop(); } catch (e) {} stopCam(); };
+  }, [facing, P, targetReps, holdTarget, soundEnabled, item.name]);
 
   const switchCam = () => {
     const next = facing === 'user' ? 'environment' : 'user';
@@ -246,7 +248,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           <button type="button" onClick={onClose} className="w-full py-3 rounded-2xl bg-slate-800 text-slate-100 font-bold">{phase === 'error' ? 'Fermer' : 'Annuler'}</button>
         )}
         {onStopAuto && phase !== 'rec' && <button type="button" onClick={onStopAuto} className="w-full py-1 text-xs font-bold text-slate-500 underline underline-offset-2" data-testid="form-cam-stop-auto">Ne plus filmer cet exercice</button>}
-        <p className="text-center text-[11px] text-slate-500">La vidéo reste sur ton téléphone : rien n’est enregistré ni envoyé.</p>
+        <p className="text-center text-[11px] text-slate-500">La vidéo reste sur ton téléphone, rien n’est envoyé. Tu pourras la garder si tu veux.</p>
       </div>
     </div>
   );
