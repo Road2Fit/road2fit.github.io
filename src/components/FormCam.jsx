@@ -7,6 +7,7 @@ import { patternFor, placementText } from '../form/patterns';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
+import { lensesFor, nextZoom, savedLens, savedZoom, saveLens, saveZoom, zoomLevels, zoomText } from '../form/camZoom';
 
 // Filmer une série (4.19) : la caméra du téléphone, le squelette détecté dessiné par-dessus, le compteur de reps en direct.
 // L'enregistrement démarre tout seul quand le corps est entièrement visible depuis 1 s ; depuis 4.24 il ne s'arrête QUE
@@ -35,6 +36,13 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
   const usesChin = (P.checks || []).includes('chin');
   const [calibMsg, setCalibMsg] = useState('');
   const [facing, setFacing] = useState(() => { try { return localStorage.getItem('rondoufit:formCam') || 'user'; } catch (e) { return 'user'; } });
+  // zoom et objectif (4.30) : réglables avant l'enregistrement seulement
+  const [lens, setLens] = useState(() => savedLens(facing));
+  const [lenses, setLenses] = useState([]);
+  const [zoomCaps, setZoomCaps] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [camReady, setCamReady] = useState(false);
+  const trackRef = useRef(null);
   const run = useRef(null);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
@@ -53,6 +61,22 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       if (stream) stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
       stream = null;
     };
+    function setupTrack(track) {
+      trackRef.current = track || null;
+      let caps = {};
+      try { caps = (track && track.getCapabilities && track.getCapabilities()) || {}; } catch (e) { caps = {}; }
+      const zc = caps.zoom && caps.zoom.max > caps.zoom.min ? { min: caps.zoom.min, max: caps.zoom.max } : null;
+      setZoomCaps(zc);
+      if (zc) {
+        let now = 1;
+        try { now = Number(track.getSettings().zoom) || 1; } catch (e) { /* rien */ }
+        const want = savedZoom(facing);
+        const z = Math.min(zc.max, Math.max(zc.min, want || now));
+        if (Math.abs(z - now) > 0.01) { try { track.applyConstraints({ advanced: [{ zoom: z }] }).catch(() => {}); } catch (e) { /* rien */ } }
+        setZoom(z);
+      }
+      setCamReady(true);
+    }
     const neon = neonColor();
     const draw = lm => drawSkeleton(canvasRef.current, videoRef.current, lm, { aspect: r.aspect, color: neon });
 
@@ -112,6 +136,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         return;
       }
       if (r.phase === 'wait') {
+        // réglage du zoom / de l'objectif à l'instant : on laisse 2,5 s avant de démarrer
+        if (r.holdUntil && Date.now() < r.holdUntil) { r.visibleSince = null; return; }
         if (visible) {
           if (r.visibleSince == null) r.visibleSince = ts;
           if (ts - r.visibleSince >= 1000) {
@@ -170,8 +196,17 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       try {
         if (!mock) {
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw Object.assign(new Error('no camera'), { name: 'NotFoundError' });
-          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } } });
+          const size = { width: { ideal: 1280 }, height: { ideal: 720 } };
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: lens ? { deviceId: { exact: lens }, ...size } : { facingMode: facing, ...size } });
+          } catch (e) {
+            if (!lens) throw e;
+            saveLens(facing, null); // objectif disparu (autre téléphone…) : caméra par défaut
+            stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: facing, ...size } });
+          }
           if (stopped) { stopCam(); return; }
+          setupTrack(stream.getVideoTracks()[0]);
+          navigator.mediaDevices.enumerateDevices && navigator.mediaDevices.enumerateDevices().then(ds => { if (!stopped) setLenses(lensesFor(ds, facing)); }).catch(() => {});
           const v = videoRef.current;
           v.srcObject = stream;
           await v.play().catch(() => {});
@@ -188,6 +223,12 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       }
       if (stopped) { stopCam(); return; }
       go('wait');
+      if (mock && mock.camera) {
+        // tests : fausse caméra avec zoom et objectifs
+        const c = mock.camera;
+        setupTrack({ getCapabilities: () => (c.zoom ? { zoom: c.zoom } : {}), getSettings: () => ({ zoom: c.now || 1 }), applyConstraints: o => { c.applied = o.advanced[0].zoom; return Promise.resolve(); } });
+        setLenses(lensesFor(c.devices || [], facing));
+      } else if (mock) setCamReady(true);
       if (mock) {
         // tests : images fournies à l'avance, lues par paquets
         const frames = mock.frames || [];
@@ -214,14 +255,36 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       raf = requestAnimationFrame(tick);
     })();
     return () => { stopped = true; try { r.recorder && r.recorder.stop(); } catch (e) {} stopCam(); };
-  }, [facing, P, targetReps, holdTarget, soundEnabled, item.name]);
+  }, [facing, lens, P, targetReps, holdTarget, soundEnabled, item.name]);
 
   const switchCam = () => {
     const next = facing === 'user' ? 'environment' : 'user';
     try { localStorage.setItem('rondoufit:formCam', next); } catch (e) {}
     setCount(0); setSec(0);
+    setZoomCaps(null); setLenses([]); setCamReady(false);
+    setLens(savedLens(next));
     setFacing(next);
   };
+  const levels = zoomLevels(zoomCaps);
+  const setZoomTo = z => {
+    const t = trackRef.current;
+    if (!t || !zoomCaps) return;
+    if (run.current) run.current.holdUntil = Date.now() + 2500;
+    setZoom(z);
+    saveZoom(facing, z);
+    try { const p = t.applyConstraints({ advanced: [{ zoom: z }] }); if (p && p.catch) p.catch(() => {}); } catch (e) { /* rien */ }
+  };
+  const nextLens = () => {
+    if (lenses.length < 2) return;
+    const k = Math.max(0, lenses.findIndex(l => l.id === lens)); // sans choix : la caméra par défaut compte comme le n° 1
+    const id = lenses[(k + 1) % lenses.length].id;
+    saveLens(facing, id);
+    saveZoom(facing, null); // chaque objectif repart de son zoom normal
+    setCamReady(false);
+    setLens(id);
+  };
+  const lensIdx = Math.max(0, lenses.findIndex(l => l.id === lens));
+  const canTune = phase === 'wait' || phase === 'calib';
   const mirror = facing === 'user' ? { transform: 'scaleX(-1)' } : undefined;
 
   return (
@@ -242,6 +305,20 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           <video ref={videoRef} playsInline muted autoPlay className="absolute inset-0 w-full h-full object-contain" />
           <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
         </div>
+        {canTune && (zoomCaps || lenses.length > 1) && (
+          <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5" data-testid="cam-tune">
+            {zoomCaps && (
+              <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-700 rounded-xl p-1" data-testid="cam-zoom">
+                <button type="button" onClick={() => setZoomTo(nextZoom(levels, zoom, -1))} disabled={zoom <= zoomCaps.min + 0.01} aria-label="Dézoomer" data-testid="cam-zoom-out" className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xl font-black disabled:opacity-30">−</button>
+                <span className="min-w-[3.2rem] text-center text-sm font-black text-white" data-testid="cam-zoom-value">{zoomText(zoom)}</span>
+                <button type="button" onClick={() => setZoomTo(nextZoom(levels, zoom, 1))} disabled={zoom >= zoomCaps.max - 0.01} aria-label="Zoomer" data-testid="cam-zoom-in" className="w-9 h-9 rounded-lg bg-slate-800 text-white text-xl font-black disabled:opacity-30">+</button>
+              </div>
+            )}
+            {lenses.length > 1 && (
+              <button type="button" onClick={nextLens} data-testid="cam-lens" className="px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-700 text-xs font-black text-white">Objectif {lensIdx + 1}/{lenses.length}</button>
+            )}
+          </div>
+        )}
         {phase === 'rec' && (
           <div className="absolute top-3 right-3 flex flex-col items-end gap-1 pointer-events-none">
             <p className="flex items-center gap-1.5 text-xs font-black text-rose-300"><span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />ANALYSE EN COURS</p>
@@ -258,6 +335,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
               <p className="text-sm text-slate-300">{placementText(P)}</p>
               <p className="text-xs text-slate-400">L’analyse démarre toute seule dès que tout ton corps est visible.</p>
               {calibMsg && <p className="text-xs font-bold text-emerald-300" data-testid="chin-calib-done">{calibMsg}</p>}
+              {camReady && (zoomCaps || lenses.length > 1) && <p className="text-xs text-slate-400">{zoomCaps && zoomCaps.min < 0.95 ? 'Tu peux dézoomer (grand angle) ou zoomer en haut à gauche, avant que l’analyse démarre.' : lenses.length > 1 ? 'Change d’objectif (grand angle…) ou de zoom en haut à gauche, avant que l’analyse démarre.' : 'Tu peux zoomer en haut à gauche, avant que l’analyse démarre.'}</p>}
+              {camReady && !zoomCaps && lenses.length < 2 && <p className="text-[11px] text-slate-500" data-testid="cam-zoom-none">Zoom et grand angle : ce téléphone ne les donne pas au navigateur. Recule le téléphone si tu n’es pas en entier dans l’image.</p>}
               {usesChin && <button type="button" onClick={() => run.current && run.current.startCalib && run.current.startCalib()} className="mt-1 px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-black text-white" data-testid="chin-calib">{getChinCal() ? 'Recalibrer le menton' : 'Calibrer le menton'}</button>}
             </>)}
             {phase === 'calib' && (<>

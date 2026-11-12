@@ -96,6 +96,33 @@ describe('calibration du menton', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+  it('4.30 : zoomer / dézoomer (grand angle) et changer d’objectif avant l’enregistrement', async () => {
+    const h = await launch();
+    open.push(h);
+    expect(await toPullUps(h)).toBe(true);
+    const camera = { zoom: { min: 0.5, max: 4 }, now: 1, devices: [
+      { kind: 'videoinput', deviceId: 'f1', label: 'camera 1, facing front' },
+      { kind: 'videoinput', deviceId: 'f2', label: 'camera 3, facing front' },
+    ] };
+    h.w.__r2fPoseMock = { frames: [], aspect: 9 / 16, camera };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => q(h, 'cam-zoom'))).toBe(true);
+    expect(q(h, 'cam-zoom-value').textContent).toBe('1×');
+    for (let k = 0; k < 6; k++) await clickEl(h, q(h, 'cam-zoom-out'));
+    expect(q(h, 'cam-zoom-value').textContent).toBe('0,5×');
+    expect(camera.applied).toBe(0.5);
+    expect(q(h, 'cam-zoom-out').disabled).toBe(true);
+    await clickEl(h, q(h, 'cam-zoom-in'));
+    expect(q(h, 'cam-zoom-value').textContent).toBe('0,6×');
+    expect(JSON.parse(h.w.localStorage.getItem('rondoufit:formZoom')).user).toBe(0.6);
+    // objectifs
+    expect(q(h, 'cam-lens').textContent).toContain('1/2');
+    await clickEl(h, q(h, 'cam-lens'));
+    expect(await waitFor(h, () => q(h, 'cam-lens') && /2\/2/.test(q(h, 'cam-lens').textContent))).toBe(true);
+    expect(JSON.parse(h.w.localStorage.getItem('rondoufit:formLens')).user).toBe('f2');
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('calibrer avant la série : menton tenu au niveau de la barre', async () => {
     const h = await launch();
     open.push(h);

@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.30',
+    date: '2026-11-12',
+    title: 'Me filmer : zoom et grand angle',
+    items: [
+      'Avant que l’analyse démarre, des boutons − / + en haut à gauche permettent de dézoomer (grand angle, si ton téléphone le permet) ou de zoomer. Le réglage est gardé pour la prochaine fois.',
+      'Si le téléphone présente ses objectifs séparément, un bouton « Objectif » passe de l’un à l’autre. Sinon, un petit message te le dit.',
+    ],
+  },
+  {
     version: '4.29',
     date: '2026-11-12',
     title: 'Analyse vidéo : le bon nombre de reps',
