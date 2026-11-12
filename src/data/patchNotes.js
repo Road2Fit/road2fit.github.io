@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.38',
+    date: '2026-11-12',
+    title: 'Signaler une analyse vidéo fausse',
+    items: [
+      'Sous l’analyse d’une série filmée : « Cette analyse est fausse ? Signaler une erreur ». Coche ce qui est faux (nombre de reps, menton, mauvaise personne suivie, conseils) et donne le bon nombre de reps.',
+      'Seul le squelette de ta série (des points, en chiffres) est envoyé, jamais l’image ni la vidéo. Ces cas servent à corriger l’analyse.',
+      'Il faut être connecté à ton compte.',
+    ],
+  },
+  {
     version: '4.37',
     date: '2026-11-12',
     title: 'Push / Pull / Legs et Haut / Bas, même à 3 séances',

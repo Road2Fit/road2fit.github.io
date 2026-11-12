@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Art } from './Art';
 import { ClipPlayer } from './ClipPlayer';
 import { getClip, saveClip } from '../form/clip';
+import { FormFlag } from './FormFlag';
 
 // Retour du coach sur la série filmée (4.19), affiché pendant le repos.
 // Onglet « Algorithme » : verdict, reps, tempo, points à corriger calculés sur le téléphone (gratuit, immédiat).
@@ -47,7 +48,7 @@ const Points = ({ list, onPlay }) => (
   </ul>
 );
 
-export function FormReport({ form, onFixReps, onAskAi, onChinCal }) {
+export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null }) {
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
   const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
@@ -60,6 +61,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal }) {
         <p className="text-sm font-black text-white"><Art name="camera" />Analyse impossible</p>
         <p className="text-sm text-slate-300" data-testid="form-report-fail">{r.message}</p>
         <ul className="text-xs text-slate-400 list-disc pl-4 space-y-0.5">{(r.tips || []).map(t => <li key={t}>{t}</li>)}</ul>
+        <FormFlag key={form.at} onFlag={onFlag} noted={form.noted} counted={0} />
       </div>
     );
   }
@@ -154,6 +156,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal }) {
           <p className="text-[11px] text-slate-500">{saved ? 'Enregistrée dans les téléchargements de ton téléphone.' : 'Sinon, elle est effacée à la série suivante.'}</p>
         </div>
       )}
+      <FormFlag key={form.at} onFlag={onFlag} noted={form.noted} counted={r.iso ? null : r.repCount} chin={!!r.chin} timed={!!r.iso} />
       {play && clip && createPortal(<ClipPlayer clip={clip} reps={r.reps || []} finding={play.title ? play : null} onClose={() => setPlay(null)} />, document.body)}
     </div>
   );

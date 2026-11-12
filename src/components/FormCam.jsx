@@ -7,6 +7,7 @@ import { patternFor, placementText } from '../form/patterns';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
+import { keepSeries } from '../form/flag';
 import { pickPerson } from '../form/pickPerson';
 import { beepOn, playRepBeep, setBeepOn, unlockBeep } from '../form/repBeep';
 import { lensesFor, nextZoom, savedLens, savedZoom, saveLens, saveZoom, zoomLevels, zoomText } from '../form/camZoom';
@@ -110,6 +111,10 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       Promise.all([clipP, new Promise(ok => setTimeout(ok, 30))]).then(([clip]) => {
         if (stopped) return;
         const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps, chinCal: getChinCal() });
+        // 4.38 : squelette de la série gardé (en mémoire) pour pouvoir signaler une analyse fausse
+        const sid = `series-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+        keepSeries({ id: sid, frames: r.frames, aspect: r.aspect, mirror: facing === 'user', pattern: P.id, targetReps, chinCal: getChinCal() });
+        res.seriesId = sid;
         if (clip) {
           const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
           setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name });

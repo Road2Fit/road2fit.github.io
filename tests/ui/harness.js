@@ -300,6 +300,18 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       }
       if (method === 'DELETE') { mine.delete(id); return res(204, null); }
     }
+    // ---- Signalements d'analyse vidéo (reproduit docs/supabase-signalements-video.sql : chacun écrit les siens) ----
+    if (u.pathname === '/rest/v1/form_flags') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT' });
+      if (method === 'POST') {
+        if (body.user_id !== uid) return res(403, { message: 'row-level security' });
+        if (JSON.stringify(body.data).length >= 3000000) return res(400, { message: 'form_flags_size' });
+        srv.formFlags = [...(srv.formFlags || []), { user_id: uid, data: body.data }];
+        return res(201, null);
+      }
+      return res(200, (srv.formFlags || []).filter(x => x.user_id === uid));
+    }
     // ---- Catalogue commun : exercices créés par le coach (lecture seule) ----
     if (u.pathname === '/rest/v1/shared_exercises') {
       if (!tokens.get(bearer)) return res(401, { message: 'JWT' });

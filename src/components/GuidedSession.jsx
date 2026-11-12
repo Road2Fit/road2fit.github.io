@@ -2,6 +2,8 @@ import { Art } from './Art';
 import { assistText } from '../lib/assist';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { safeLazy } from '../lib/safeLazy';
+import { buildFlag, getSeries } from '../form/flag';
+import { APP_VERSION } from '../lib/updateCheck';
 import { beepOn, unlockBeep } from '../form/repBeep';
 import { playGameSound } from '../lib/sound';
 import { isBarbell, platesText } from '../lib/plates';
@@ -79,7 +81,7 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, pains = [], onTogglePain = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, onFormFlag = null, pains = [], onTogglePain = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -437,6 +439,14 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // coach IA activé : son analyse ne part QUE si la personne la demande (bouton de l'onglet « Coach IA »)
   };
   // envoie les mesures (jamais l'image) au coach IA ; sa réponse s'affiche dans l'onglet « Coach IA »
+  // 4.38 : « Signaler une erreur » sous le rapport de la série filmée → squelette + ce que la personne dit être juste
+  const sendFormFlag = onFormFlag ? ({ problems, trueReps, note }) => {
+    const fl = g.formLast;
+    if (!fl || !fl.result) return Promise.reject(new Error('Plus de série à signaler.'));
+    const item = (g.items || []).find(x => x.questId === fl.questId) || null;
+    const data = buildFlag({ series: getSeries(fl.result.seriesId), result: fl.result, item, problems, trueReps, note, noted: fl.noted, appVersion: APP_VERSION });
+    return onFormFlag(data);
+  } : null;
   // 4.34 : tout est lu dans g.formLast (avant, une copie à part se perdait : après « Mon menton passait la barre »,
   // la séance réduite puis rouverte ou l'appli rechargée, le bouton ne faisait plus rien)
   const runFormAi = () => {
@@ -531,7 +541,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                     <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
                   </div>
-                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} />
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -695,7 +705,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} />}
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);

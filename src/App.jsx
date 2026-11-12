@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { formFlags } from './sync/supabase';
+import { SUPABASE, supabaseReady } from './config';
 import { CoachPanel } from './components/coach/CoachPanel';
 import { aiStatus, callAi } from './ai/client';
 import { togglePain } from './coach/pains';
@@ -309,6 +311,7 @@ onCancel={() => { setGuided(null); setGuidedOpen(false); }}
  soundEnabled={gameState.soundEnabled !== false}
  pains={(gameState.coach && gameState.coach.pains) || []}
  onTogglePain={(zone, side) => setGameState(prev => { const c = getCoachSettings(prev); return { ...prev, coach: { ...c, pains: togglePain(c, zone, side, getTodayISODate()) } }; })}
+ onFormFlag={supabaseReady(SUPABASE) && sync.user ? data => formFlags.send(SUPABASE, data) : null}
  aiForm={aiStatus(gameState) === 'ok' ? args => callAi('form', { context: formContext(gameState, args) }, { timeoutMs: 60000 }).then(normalizeFormAi) : null}
 swapChoices={swapChoices}
 onSwap={swapExercise}

@@ -277,6 +277,14 @@ export const friends = {
 
 /** Photos partagées entre amis (docs/supabase-photos-amis.sql) : ma dernière photo de séance (si je l'active) et mes photos
  *  où je tague des amis mutuels. Les photos des autres ne se lisent que par les fonctions (friend_last_photo, photos_tagged_me). */
+/** Signalements d'une analyse vidéo fausse (4.38, table form_flags : chacun n'écrit et ne lit que les siens). */
+export const formFlags = {
+  async send(cfg, data) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'POST', '/rest/v1/form_flags', { token: s.access_token, headers: { Prefer: 'return=minimal' }, body: { user_id: s.user.id, data } });
+  },
+};
+
 export const sharedPhotos = {
   async putLast(cfg, { date, note = '', data }) {
     const s = await freshSession(cfg);
