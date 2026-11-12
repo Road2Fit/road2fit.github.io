@@ -69,13 +69,33 @@ export function missingText(item, coach) {
   return miss.includes('gym') ? 'matériel de salle' : miss.map(equipLabel).join(', ').toLowerCase();
 }
 
+// ---- Séance exceptionnellement à la maison (4.23) ----
+// coach.homeDays = ['AAAA-MM-JJ'] : ces jours-là, la séance est faite chez soi même si on s'entraîne d'habitude en salle.
+// Rien d'autre ne change (lieu habituel, liste d'exercices) ; les dates passées sont nettoyées au prochain changement.
+export const homeDaysOf = coach => (coach && Array.isArray(coach.homeDays) ? coach.homeDays.filter(d => typeof d === 'string') : []);
+export const isHomeDay = (coach, iso) => !!iso && homeDaysOf(coach).includes(iso);
+/** Lieu ce jour-là : 'home' si la séance est exceptionnellement à la maison, sinon le lieu habituel. */
+export const placeOn = (coach, iso) => (isHomeDay(coach, iso) ? 'home' : placeOf(coach));
+/** Réglages du coach à utiliser ce jour-là (lieu = maison si exceptionnel). */
+export const coachOn = (coach, iso) => (isHomeDay(coach, iso) && placeOf(coach) !== 'home' ? { ...(coach || {}), place: 'home' } : coach);
+/** Ajoute / retire un jour « à la maison » ; ne garde que les jours à venir. */
+export function toggleHomeDay(coach, iso, today) {
+  const cur = homeDaysOf(coach).filter(d => d >= today);
+  return cur.includes(iso) ? cur.filter(d => d !== iso) : [...cur, iso].sort();
+}
+
 /** Exercices que le coach peut programmer : chez soi uniquement, ceux qui sont faisables avec le matériel (les autres restent
- *  dans la liste avec leur historique, et reviennent si la personne retourne en salle). */
-export function coachableQuests(state) {
+ *  dans la liste avec leur historique, et reviennent si la personne retourne en salle). `iso` : jour de la séance (séance
+ *  exceptionnellement à la maison). */
+export function coachableQuests(state, iso = null) {
   const coach = (state && state.coach) || {};
   const qs = (state && state.quests) || [];
-  return placeOf(coach) === 'home' ? qs.filter(q => q.type !== 'strength' || doableAtHome(q, coach)) : qs;
+  // les exercices ajoutés pour une séance exceptionnelle à la maison (homeOnly) ne sont pas programmés en salle
+  return placeOn(coach, iso) === 'home' ? qs.filter(q => q.type !== 'strength' || doableAtHome(q, coach)) : qs.filter(q => !q.homeOnly || placeOf(coach) !== 'gym');
 }
+
+/** Réglages du coach comme si la personne s'entraînait chez elle (pour préparer une séance exceptionnelle à la maison). */
+export const asHome = state => ({ ...state, coach: { ...((state && state.coach) || {}), place: 'home' } });
 
 /** Exercices suivis qui ne sont pas faisables chez soi (seulement si la personne ne s'entraîne QUE chez elle). */
 export function undoableQuests(state) {
@@ -112,7 +132,13 @@ export function homeStarters(coach, { beginner = true } = {}) {
 export function equipmentLine(state) {
   const coach = (state && state.coach) || {};
   const p = placeOf(coach);
-  if (p === 'gym') return 'Lieu d’entraînement : en salle.';
-  const eq = equipmentOf(coach).map(equipLabel).join(', ').toLowerCase() || 'aucun (poids du corps seulement)';
-  return `Lieu d’entraînement : ${p === 'home' ? 'chez soi uniquement' : 'en salle et chez soi'}. Matériel à la maison : ${eq}. ${p === 'home' ? 'Ne propose que des exercices faisables avec ce matériel.' : ''}`.trim();
+  const days = p === 'home' ? [] : homeDaysOf(coach);
+  const once = days.length ? ` Exceptionnellement à la maison le ${days.join(', le ')} (matériel : ${equipmentText(coach)}) : ces jours-là, ne propose que des exercices faisables avec ce matériel.` : '';
+  if (p === 'gym') return `Lieu d’entraînement : en salle.${once}`;
+  return `Lieu d’entraînement : ${p === 'home' ? 'chez soi uniquement' : 'en salle et chez soi'}. Matériel à la maison : ${equipmentText(coach)}. ${p === 'home' ? 'Ne propose que des exercices faisables avec ce matériel.' : ''}${once}`.trim();
+}
+
+/** Matériel de la maison en clair : « haltères, banc » ou « aucun (poids du corps seulement) ». */
+export function equipmentText(coach) {
+  return equipmentOf(coach).map(equipLabel).join(', ').toLowerCase() || 'aucun (poids du corps seulement)';
 }

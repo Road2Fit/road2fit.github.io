@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EXERCISE_CATALOG } from '../data/catalog';
-import { doable, doableAtHome, equipmentLine, homeStarters, missingText, needsOf, undoableQuests } from './equipment';
+import { coachOn, coachableQuests, doable, doableAtHome, equipmentLine, homeStarters, isHomeDay, missingText, needsOf, placeOn, toggleHomeDay, undoableQuests } from './equipment';
 
 const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
 describe('lieu et matériel', () => {
@@ -51,5 +51,22 @@ describe('lieu et matériel', () => {
     expect(undoableQuests({ ...state, coach: { place: 'both' } })).toEqual([]);
     expect(equipmentLine(state)).toMatch(/chez soi uniquement.*poids du corps seulement/);
     expect(equipmentLine({ coach: {} })).toMatch(/en salle/);
+  });
+  it('séance exceptionnellement à la maison : seulement ce jour-là', () => {
+    const coach = { place: 'gym', equipment: ['dumbbells'], homeDays: toggleHomeDay({}, '2026-11-14', '2026-11-12') };
+    expect(coach.homeDays).toEqual(['2026-11-14']);
+    expect(isHomeDay(coach, '2026-11-14')).toBe(true);
+    expect(placeOn(coach, '2026-11-14')).toBe('home');
+    expect(placeOn(coach, '2026-11-16')).toBe('gym');
+    expect(coachOn(coach, '2026-11-14').place).toBe('home');
+    const bench = { id: 'q1', type: 'strength', catalogId: 'bench_press', name: byId('bench_press').name };
+    const pushups = { id: 'q2', type: 'strength', catalogId: 'pushups', name: byId('pushups').name };
+    const state = { coach, quests: [bench, pushups] };
+    expect(coachableQuests(state, '2026-11-14').map(q => q.id)).toEqual(['q2']);
+    expect(coachableQuests(state, '2026-11-16').map(q => q.id)).toEqual(['q1', 'q2']);
+    expect(equipmentLine(state)).toMatch(/Exceptionnellement à la maison le 2026-11-14/);
+    // retirer le jour ; les jours passés sont nettoyés
+    expect(toggleHomeDay(coach, '2026-11-14', '2026-11-12')).toEqual([]);
+    expect(toggleHomeDay({ homeDays: ['2026-11-01'] }, '2026-11-20', '2026-11-12')).toEqual(['2026-11-20']);
   });
 });

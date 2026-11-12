@@ -77,6 +77,7 @@ export function useGuidedSession({
       rpe: 7,
       warmup: session.warmup || '',
       programKey: session.program ? session.program.key : null,
+      home: !!session.home, // séance exceptionnellement à la maison : remplaçants faisables chez soi
     });
     setGuidedOpen(true);
   };
@@ -105,10 +106,11 @@ export function useGuidedSession({
     if (!it || !q) return [];
     const muscle = fineGroupOf(q);
     const inSession = new Set(guided.items.map(x => x.questId));
-    const mine = (gameState.quests || []).filter(x => x.type === 'strength' && doable(x, gameState.coach) && x.goalMode !== 'free_mode' && !inSession.has(x.id) && fineGroupOf(x) === muscle && coachKind(x) === coachKind(q) && !!x.timed === !!q.timed)
+    const where = guided.home ? { ...(gameState.coach || {}), place: 'home' } : gameState.coach;
+    const mine = (gameState.quests || []).filter(x => x.type === 'strength' && doable(x, where) && x.goalMode !== 'free_mode' && !inSession.has(x.id) && fineGroupOf(x) === muscle && coachKind(x) === coachKind(q) && !!x.timed === !!q.timed)
       .map(x => ({ questId: x.id, name: x.name }));
     const known = new Set((gameState.quests || []).map(x => x.catalogId));
-    const fromCatalog = EXERCISE_CATALOG.filter(c => c.type === 'strength' && doable(c, gameState.coach) && !known.has(c.id) && c.unit === q.unit && fineGroupOf({ catalogId: c.id, name: c.name, category: c.category, type: 'strength' }) === muscle)
+    const fromCatalog = EXERCISE_CATALOG.filter(c => c.type === 'strength' && doable(c, where) && !known.has(c.id) && c.unit === q.unit && fineGroupOf({ catalogId: c.id, name: c.name, category: c.category, type: 'strength' }) === muscle)
       .slice(0, Math.max(0, 8 - mine.length))
       .map(c => ({ catalogId: c.id, name: c.name, isNew: true }));
     // zone douloureuse signalée : les exercices qui la sollicitent passent en dernier

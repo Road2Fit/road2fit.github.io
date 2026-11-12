@@ -52,24 +52,64 @@ describe('chez soi, douleurs, rappel, bilan', () => {
     open.push(h);
     await settings(h);
     // genou + épaule : quel que soit le premier exercice de la séance (squat ou tractions), une zone est sollicitée
-    await clickEl(h, q(h, 'pain-knee'));
-    await clickEl(h, q(h, 'pain-shoulder'));
-    expect(saved(h).coach.pains.map(p => p.zone)).toEqual(['knee', 'shoulder']);
+    await clickEl(h, q(h, 'pain-knee-right'));
+    await clickEl(h, q(h, 'pain-shoulder-left'));
+    expect(saved(h).coach.pains.map(p => p.zone + ':' + p.side)).toEqual(['knee:right', 'shoulder:left']);
+    // schéma des muscles : vert par défaut, rouge une fois touché (triceps droit, vu de dos)
+    const tri = q(h, 'painmap-m:Triceps-right-back');
+    expect(tri.getAttribute('fill')).toBe('#10b981');
+    await clickEl(h, tri);
+    expect(q(h, 'painmap-m:Triceps-right-back').getAttribute('fill')).toBe('#f43f5e');
+    expect(q(h, 'painmap-m:Triceps-left-back').getAttribute('fill')).toBe('#10b981');
+    expect(q(h, 'pain-summary').textContent).toMatch(/triceps droit/);
+    await clickEl(h, q(h, 'painmap-m:Triceps-right-back'));
+    expect(saved(h).coach.pains.length).toBe(2);
     await clickEl(h, q(h, 'coach-page-seance'));
     expect(qa(h, 'ex-pain').length).toBeGreaterThan(0);
     const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
     await clickText(h, lancer.textContent.trim().slice(0, 30));
     if (q(h, 'feel-ok')) await clickEl(h, q(h, 'feel-ok'));
     while (q(h, 'warm-done')) await clickEl(h, [...q(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
-    expect(q(h, 'set-pain').textContent).toMatch(/(Genou|Épaule) sensible/);
+    expect(q(h, 'set-pain').textContent).toMatch(/(Genou droit|Épaule gauche|w+) sensible/);
     // depuis le menu de la séance : « J'ai mal quelque part » → on retire le genou, on ajoute le coude
     await clickEl(h, q(h, 'guided-menu'));
     await clickEl(h, q(h, 'pain-open'));
-    await clickEl(h, q(h, 'pain-knee'));
-    await clickEl(h, q(h, 'pain-elbow'));
-    expect(saved(h).coach.pains.map(p => p.zone)).toEqual(['shoulder', 'elbow']);
+    await clickEl(h, q(h, 'pain-knee-right'));
+    await clickEl(h, q(h, 'pain-elbow-left'));
+    expect(saved(h).coach.pains.map(p => p.zone + ':' + p.side)).toEqual(['shoulder:left', 'elbow:left']);
     await clickEl(h, q(h, 'guided-lexicon'));
     expect(q(h, 'lexicon').textContent).toMatch(/Répétition \(rep\)/);
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
+  it('séance exceptionnellement à la maison : seulement des exercices faisables, retour en salle d’un geste', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await clickEl(h, q(h, 'coach-page-seance'));
+    const before = qa(h, 'next-ex').map(el => el.querySelector('p').textContent.trim());
+    await clickEl(h, q(h, 'home-once'));
+    const s = saved(h);
+    expect(s.coach.place).toBe('gym');
+    expect(s.coach.homeDays.length).toBe(1);
+    expect(q(h, 'home-once-on')).toBeTruthy();
+    const names = qa(h, 'next-ex').map(el => el.querySelector('p').textContent.trim());
+    expect(names.length).toBeGreaterThan(0);
+    for (const name of names) {
+      const quest = s.quests.find(x => name.includes(x.name));
+      expect(doableAtHome(quest, s.coach), name).toBe(true);
+    }
+    // exercices ajoutés pour la maison : réservés aux séances à la maison
+    const n0 = saved(h).quests.length;
+    await clickEl(h, q(h, 'home-once-add'));
+    const added = saved(h).quests.slice(n0);
+    expect(added.length).toBeGreaterThan(0);
+    for (const x of added) { expect(x.homeOnly).toBe(true); expect(doableAtHome(x, saved(h).coach), x.name).toBe(true); }
+    expect(saved(h).coach.homeDays.length).toBe(1);
+    const atHome = qa(h, 'next-ex').map(el => el.querySelector('p').textContent.trim());
+    expect(added.some(x => atHome.some(t => t.includes(x.name)))).toBe(true);
+    await clickEl(h, q(h, 'home-once-off'));
+    expect(saved(h).coach.homeDays).toEqual([]);
+    expect(qa(h, 'next-ex').map(el => el.querySelector('p').textContent.trim())).toEqual(before);
     expect(h.errors).toEqual([]);
   }, 120000);
 

@@ -2,7 +2,7 @@
 // quand des exercices suivis ne sont pas faisables chez soi.
 import { Art } from '../Art';
 import { card } from './ui';
-import { HOME_EQUIPMENT, PLACES, equipmentOf, missingText, placeOf, undoableQuests } from '../../coach/equipment';
+import { HOME_EQUIPMENT, PLACES, asHome, equipmentOf, equipmentText, isHomeDay, missingText, placeOf, toggleHomeDay, undoableQuests } from '../../coach/equipment';
 import { getCoachSettings } from '../../coach/settings';
 import { applyHomeSwap, homeSwapPlan } from '../../lib/homeSwap';
 import { getTodayISODate } from '../../lib/dates';
@@ -74,5 +74,41 @@ export function EquipNotice({ gameState, setGameState, triggerToast }) {
       <span className="flex-1 min-w-0 text-sm font-black text-white leading-tight">{toAdd.length} exercice{toAdd.length > 1 ? 's' : ''} à remplacer pour la maison</span>
       <button type="button" onClick={run} data-testid="equip-swap" className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">Remplacer</button>
     </section>
+  );
+}
+
+/** 4.23 : sur la prochaine séance, « Exceptionnellement à la maison » (pour qui s'entraîne d'habitude en salle). Le coach refait
+ *  la séance avec ce qui est faisable chez soi ce jour-là (coach.homeDays) ; si des muscles n'ont rien de faisable, il propose
+ *  d'ajouter des exercices pour la maison (comme « Où tu t'entraînes », mais réservés aux séances à la maison). Un geste pour revenir. */
+export function HomeOnceToggle({ coach, date, today, updateCoach, gameState, setGameState }) {
+  if (placeOf(coach) === 'home' || !date) return null;
+  const on = isHomeDay(coach, date);
+  const toggle = () => updateCoach({ homeDays: toggleHomeDay(coach, date, today) });
+  const when = date === today ? 'aujourd’hui' : 'cette séance';
+  if (!on) {
+    return (
+      <button type="button" onClick={toggle} data-testid="home-once" className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-600 text-left">
+        <Art name="lifter" size={20} bare />
+        <span className="flex-1 min-w-0 text-xs font-bold text-slate-200">Pas à la salle {when} ? <span className="text-slate-400 font-semibold">Fais-la exceptionnellement à la maison.</span></span>
+        <span className="shrink-0 text-xs font-black text-pink-300">À la maison</span>
+      </button>
+    );
+  }
+  const toAdd = gameState && setGameState ? homeSwapPlan(asHome(gameState)).filter(p => p.alt) : [];
+  const add = () => setGameState(prev => ({ ...applyHomeSwap(asHome(prev), getTodayISODate(), { homeOnly: true }).state, coach: prev.coach }));
+  return (
+    <div data-testid="home-once-on" className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/40 space-y-2">
+      <div className="flex items-center gap-2">
+        <Art name="lifter" size={20} bare />
+        <span className="flex-1 min-w-0 text-xs text-slate-200 leading-snug"><b className="text-emerald-300">Exceptionnellement à la maison</b> {when}, avec ton matériel : {equipmentText(coach)}.{equipmentOf(coach).length === 0 && ' Il se règle dans Réglages → Où tu t’entraînes.'}</span>
+        <button type="button" onClick={toggle} data-testid="home-once-off" className="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-bold text-slate-100">Revenir en salle</button>
+      </div>
+      {toAdd.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-slate-300">Rien de faisable chez toi pour {toAdd.length > 1 ? 'certains muscles' : 'un muscle'}. Le coach peut ajouter : <b className="text-white">{toAdd.map(p => p.alt.name).join(', ')}</b> (seulement pour tes séances à la maison).</p>
+          <button type="button" onClick={add} data-testid="home-once-add" className="w-full py-2 rounded-xl bg-pink-600 text-white text-xs font-black">Ajouter {toAdd.length > 1 ? `ces ${toAdd.length} exercices` : 'cet exercice'}</button>
+        </div>
+      )}
+    </div>
   );
 }

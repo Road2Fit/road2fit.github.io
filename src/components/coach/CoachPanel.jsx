@@ -24,6 +24,7 @@ import { CoachGoal } from './CoachGoal';
 import { customFromSets } from '../../coach/methods';
 import { CoachExperience } from './CoachExperience';
 import { CoachPlace, EquipNotice } from './CoachPlace';
+import { homeDaysOf, isHomeDay } from '../../coach/equipment';
 import { CoachPains } from './CoachPains';
 import { CoachReminders, useSessionReminder } from './CoachReminders';
 import { CoachPast } from './CoachPast';
@@ -309,7 +310,9 @@ export function CoachPanel({
     if (!first || !ov.hasExercises) return null;
     if (first.iso === today) return ov.session;
     if (ov.program) return programSession(gameState, { ...ov.program, date: today }); // séance du programme faite en avance
-    return coachBuildPlanned(gameState, first, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek, tired: tiredToday, minutes: shortMode ? 40 : undefined });
+    // séance faite en avance : si elle était prévue exceptionnellement à la maison, aujourd'hui aussi
+    const early = isHomeDay(coach, first.iso) ? { ...gameState, coach: { ...coach, homeDays: [...homeDaysOf(coach), today] } } : gameState;
+    return coachBuildPlanned(early, first, coachDayInfo(today, coach), { deload: w0.deload, matchWeek: w0.matchInWeek, tired: tiredToday, minutes: shortMode ? 40 : undefined });
   })();
   const muscuToday = !coachOff && !!(shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && shownDate === today);
   // Édition du plan personnalisé (mises à jour fonctionnelles pour éviter les écrasements)
@@ -547,6 +550,7 @@ export function CoachPanel({
           <div ref={nextBoxRef} className="relative w-full max-w-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-label="Prochaine séance">
             <button type="button" onClick={() => setSheet(null)} aria-label="Fermer" className="absolute -top-11 right-1 w-9 h-9 rounded-lg bg-slate-800 text-slate-300 font-black">✕</button>
       <CoachNextSession
+        setGameState={setGameState}
         preview={coachOff}
         onTakeOver={() => updateCoach({ program: { ...coach.program, takeOver: true, askTakeOver: false } })}
         addSel={addSel}

@@ -14,6 +14,7 @@ import { sessionFocus } from '../../coach/focus';
 
 import { card } from './ui';
 import { CustomSetsEditor } from './CustomSetsEditor';
+import { HomeOnceToggle } from './CoachPlace';
 import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
@@ -21,7 +22,7 @@ export function CoachNextSession({
   setMethod, setCustom, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
-  startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach, preview = false, onTakeOver,
+  startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach, preview = false, onTakeOver, setGameState,
 }) {
   // preview : la personne continue sans l'appli après le programme de son coach → on montre la séance, sans rien pour la lancer ni la régler
   // détails d'un exercice (explication du coach + « Tu décides ») : repliés par défaut pour raccourcir la page
@@ -144,6 +145,7 @@ export function CoachNextSession({
               return pf.id ? <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 font-bold">{PROFILES[pf.id].label}</span> : null;
             })()}
           </div>
+          {!plan && !preview && !ov.program && <HomeOnceToggle coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;

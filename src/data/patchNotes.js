@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.23',
+    date: '2026-11-12',
+    title: 'Où ça fait mal, et séance à la maison',
+    items: [
+      '« J’ai mal quelque part » montre le schéma de tes muscles : touche celui qui te fait mal, il passe du vert au rouge. Tous les muscles suivis y sont, avec le côté droit ou gauche (par exemple triceps droit). Les articulations ont aussi leur bouton G / D.',
+      'Pas à la salle ? Sur ta prochaine séance, « À la maison » : le coach la refait exceptionnellement avec ce qui se fait chez toi. S’il manque des exercices, il te propose d’en ajouter, réservés à tes séances à la maison. « Revenir en salle » remet la séance d’origine.',
+    ],
+  },
+  {
     version: '4.22',
     date: '2026-11-12',
     title: 'Chez toi ou en salle',

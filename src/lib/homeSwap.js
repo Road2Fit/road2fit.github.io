@@ -34,13 +34,16 @@ export function homeSwapPlan(state) {
   });
 }
 
-/** Ajoute les remplaçants du plan. Renvoie { state, added: [noms] }. */
-export function applyHomeSwap(state, today) {
+/** Ajoute les remplaçants du plan. Renvoie { state, added: [noms] }.
+ *  `homeOnly` (4.23, séance exceptionnellement à la maison) : les exercices ajoutés ne servent qu'aux séances à la maison,
+ *  le coach ne les programme pas en salle (coach/equipment.js coachableQuests). */
+export function applyHomeSwap(state, today, { homeOnly = false } = {}) {
   let next = state;
   const added = [];
   homeSwapPlan(state).forEach(({ alt }) => {
     if (!alt) return;
-    const { quest } = makeQuestFromCatalog(alt, next, today, 'ajouté pour s’entraîner chez soi');
+    const { quest: made } = makeQuestFromCatalog(alt, next, today, homeOnly ? 'ajouté pour les séances à la maison' : 'ajouté pour s’entraîner chez soi');
+    const quest = homeOnly ? { ...made, homeOnly: true } : made;
     next = { ...next, quests: [...next.quests, quest] };
     added.push(alt.name);
   });

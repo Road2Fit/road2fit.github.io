@@ -1,7 +1,7 @@
 import { coachSlotFor } from './planning';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
-import { coachableQuests } from './equipment';
+import { coachOn, coachableQuests, isHomeDay, placeOf } from './equipment';
 import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { profileOpts } from './profiles';
@@ -32,7 +32,7 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
   const arenaCount = a => ex.filter(e => e.arena === a).length;
   const arenaSets = a => ex.filter(e => e.arena === a).reduce((s, e) => s + e.sets, 0);
   const pool = () =>
-    coachableQuests(state).filter(q => {
+    coachableQuests(state, di.iso).filter(q => {
       if (q.type !== 'strength' || q.goalMode === 'free_mode') return false;
       if (ex.some(e => e.questId === q.id)) return false;
       const a = arenaOf(q);
@@ -154,7 +154,8 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
       .filter(a => !isAbsArena(a) && (!isLegArena(a) || legsAllowed) && exercises.filter(e => e.arena === a).length < (arenaTier(a) === 1 ? 2 : 1))
       .sort((x, y) => exercises.filter(e => e.arena === x).length - exercises.filter(e => e.arena === y).length)
       .slice(0, 3);
-    arenas.forEach(a => coachSuggestExercises(state, a, 2).forEach(c => fillSuggestions.push({ id: c.id, name: c.name, arena: a })));
+    const sugState = { ...state, coach: coachOn(state.coach, di.iso) }; // séance exceptionnellement à la maison : suggestions faisables
+    arenas.forEach(a => coachSuggestExercises(sugState, a, 2).forEach(c => fillSuggestions.push({ id: c.id, name: c.name, arena: a })));
   }
   return { exercises, notes, estMin, estKcal, warmup, fillSuggestions, slot, target };
 }
@@ -162,7 +163,7 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
 // Construit une séance complète (liste d'exercices avec objectifs chiffrés), mode full body A/B
 function coachBuildSession(state, templateIdx, di, opts = {}) {
   const coach = getCoachSettings(state);
-  const templates = composeTemplates(coachableQuests(state), coach.sessionsPerWeek);
+  const templates = composeTemplates(coachableQuests(state, di.iso), coach.sessionsPerWeek);
   const t = templates[templateIdx % templates.length];
   const notes = [];
   let quests = t.quests;
@@ -189,11 +190,11 @@ function typedCaps(type) {
 }
 
 // Exercices d'une séance typée : les moins récemment travaillés d'abord
-function coachTypedQuests(state, type, legsOk) {
+function coachTypedQuests(state, type, legsOk, iso = null) {
   const arenas = COACH_TYPES[type].arenas;
   const caps = typedCaps(type);
   const side = COACH_TYPES[type].side;
-  const qs = coachableQuests(state).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode' && sideOk(side, q));
+  const qs = coachableQuests(state, iso).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode' && sideOk(side, q));
   const lastDate = q => { const es = coachRealEntries(q); return es.length ? es[es.length - 1].date : ''; };
   const out = [];
   COACH_ARENAS.filter(a => arenas.includes(a) && (legsOk || !isLegArena(a))).forEach(a => {
@@ -214,14 +215,16 @@ function coachBuildTypedSession(state, type, di, opts = {}) {
     notes.push(`Pas de jambes aujourd'hui (${di.legsWhy}) : séance haut du corps à la place.`);
   }
   if (tp === 'FB' && !di.legsOk) notes.push(`Pas d'exercices de jambes (${di.legsWhy}) pour garder les jambes fraîches.`);
-  const quests = coachTypedQuests(state, tp, di.legsOk);
+  const quests = coachTypedQuests(state, tp, di.legsOk, di.iso);
   const r = coachAssemble(state, quests, di, { ...opts, side: COACH_TYPES[tp].side }, notes, COACH_TYPES[tp].arenas.filter(a => !isLegArena(a) || di.legsOk));
   return { templateIdx: -1, templateId: COACH_TYPES[tp].label, type: tp, typeLabel: COACH_TYPES[tp].label, date: di.iso, ...r };
 }
 
 // Construit la séance prévue (mode A/B ou mode 3 séances)
 export function coachBuildPlanned(state, slot, di, opts = {}) {
-  return slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
+  const s = slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
+  // séance exceptionnellement à la maison (coach.homeDays) : repérée pour l'affichage et le « Machine prise ou pas le matériel ? »
+  return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...s, home: true } : s;
 }
 
 // Séance construite à la main par l'utilisateur (liste d'exercices + date choisie)

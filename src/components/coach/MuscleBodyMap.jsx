@@ -90,3 +90,46 @@ function WorkedMap({ worked }) {
     </svg>
   );
 }
+
+// 4.23 : même silhouette pour signaler une douleur. Chaque muscle est vert ; un clic le passe en rouge (et retour).
+// Face : la personne nous regarde, sa droite est donc à gauche de l'image ; dos : sa droite est à droite de l'image.
+// Muscles au milieu (dos, abdominaux, lombaires) et cou : sans côté. `isOn(zone, side)` et `onToggle(zone, side)`.
+const PAIN_COLORS = { ok: '#10b981', hurt: '#f43f5e' };
+export function PainBodyMap({ isOn, onToggle, labelOf, zoneOf }) {
+  const shape = (view, a, i, n, [cx, cy, rx, ry]) => {
+    const side = n < 2 ? null : (view === 'front' ? (i === 0 ? 'right' : 'left') : (i === 0 ? 'left' : 'right'));
+    const zone = zoneOf(a);
+    const on = isOn(zone, side);
+    const label = labelOf(zone, side);
+    return (
+      <ellipse key={view + a + i} cx={cx} cy={cy} rx={rx} ry={ry} fill={on ? PAIN_COLORS.hurt : PAIN_COLORS.ok} fillOpacity={on ? 0.95 : 0.7}
+        stroke={on ? '#fecdd3' : '#0f172a'} strokeWidth={on ? 1.5 : 1} role="button" tabIndex={0} aria-pressed={on} aria-label={label}
+        data-testid={`painmap-${zone}-${side || 'c'}-${view}`} className="cursor-pointer outline-none focus:stroke-white"
+        onClick={() => onToggle(zone, side)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(zone, side); } }}>
+        <title>{label}</title>
+      </ellipse>
+    );
+  };
+  const draw = (view, shapes) => Object.entries(shapes).flatMap(([a, list]) => list.map((s, i) => shape(view, a, i, list.length, s)));
+  const neckOn = isOn('neck', null);
+  const neck = x => (
+    <rect key={'neck' + x} x={x} y="28" width="18" height="8" rx="3" fill={neckOn ? PAIN_COLORS.hurt : PAIN_COLORS.ok} fillOpacity={neckOn ? 0.95 : 0.7}
+      role="button" tabIndex={0} aria-pressed={neckOn} aria-label={labelOf('neck', null)} data-testid={`painmap-neck-c-${x < 100 ? 'front' : 'back'}`} className="cursor-pointer outline-none"
+      onClick={() => onToggle('neck', null)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle('neck', null); } }}>
+      <title>{labelOf('neck', null)}</title>
+    </rect>
+  );
+  const side = (x, t) => <text x={x} y="110" textAnchor="middle" fontSize="8" fontWeight="700" fill="#64748b">{t}</text>;
+  return (
+    <svg viewBox="0 0 220 190" className="w-full max-w-xs mx-auto select-none" role="group" aria-label="Touche les muscles qui te font mal, vue de face et de dos" data-testid="pain-map">
+      <circle cx="55" cy="16" r="11" fill="#475569" />
+      <circle cx="165" cy="16" r="11" fill="#475569" />
+      {neck(46)}{neck(156)}
+      {draw('front', FRONT)}
+      {draw('back', BACK)}
+      {side(10, 'D')}{side(100, 'G')}{side(120, 'G')}{side(210, 'D')}
+      <text x="55" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Face</text>
+      <text x="165" y="188" textAnchor="middle" fontSize="9" fill="#94a3b8">Dos</text>
+    </svg>
+  );
+}

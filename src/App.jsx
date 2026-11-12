@@ -290,7 +290,7 @@ onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
  soundEnabled={gameState.soundEnabled !== false}
  pains={(gameState.coach && gameState.coach.pains) || []}
- onTogglePain={zone => setGameState(prev => { const c = getCoachSettings(prev); return { ...prev, coach: { ...c, pains: togglePain(c, zone, getTodayISODate()) } }; })}
+ onTogglePain={(zone, side) => setGameState(prev => { const c = getCoachSettings(prev); return { ...prev, coach: { ...c, pains: togglePain(c, zone, side, getTodayISODate()) } }; })}
  aiForm={aiStatus(gameState) === 'ok' ? args => callAi('form', { context: formContext(gameState, args) }, { timeoutMs: 60000 }).then(normalizeFormAi) : null}
 swapChoices={swapChoices}
 onSwap={swapExercise}
