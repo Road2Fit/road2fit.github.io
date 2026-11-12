@@ -7,6 +7,7 @@ import { patternFor, placementText } from '../form/patterns';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
+import { pickPerson } from '../form/pickPerson';
 import { lensesFor, nextZoom, savedLens, savedZoom, saveLens, saveZoom, zoomLevels, zoomText } from '../form/camZoom';
 
 // Filmer une série (4.19) : la caméra du téléphone, le squelette détecté dessiné par-dessus, le compteur de reps en direct.
@@ -116,6 +117,13 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
     const onFrame = (res, ts, aspect) => {
       if (stopped) return;
       r.aspect = aspect || r.aspect;
+      // plusieurs personnes à l'image (4.31) : celle du premier plan, puis la même pendant la série
+      const cands = res ? (res.all && res.all.length ? res.all : res.lm ? [res] : []) : [];
+      if (cands.length) {
+        const pk = pickPerson(cands, aspect || r.aspect, r.track, r.phase === 'rec');
+        r.track = pk.track;
+        res = pk.pose;
+      }
       const lm = res && res.lm;
       draw(lm);
       const visible = !!lm && bodyVisible(lm, P);

@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.31',
+    date: '2026-11-12',
+    title: 'Me filmer : c’est bien toi qui es suivi',
+    items: [
+      'Quand d’autres personnes passent ou s’entraînent derrière toi, l’analyse vidéo suit la personne au premier plan (la plus proche du téléphone) et reste sur elle pendant toute la série.',
+    ],
+  },
+  {
     version: '4.30',
     date: '2026-11-12',
     title: 'Me filmer : zoom et grand angle',

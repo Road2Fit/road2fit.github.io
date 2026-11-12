@@ -123,6 +123,27 @@ describe('calibration du menton', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+  it('4.31 : quelqu’un d’autre fait des tractions au fond de la salle : seules les miennes comptent', async () => {
+    const h = await launch();
+    open.push(h);
+    expect(await toPullUps(h)).toBe(true);
+    const mine = makeFrames(timeline({ reps: 4, p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5 }), d => fit(pullUpBody(d)));
+    // au fond : petit, plus rapide (7 reps sur la même durée), et donné EN PREMIER par le détecteur
+    const small = b => Object.fromEntries(Object.entries(b).map(([k, p]) => [k, { x: 0.02 + p.x * 0.35, y: 0.3 + p.y * 0.35 }]));
+    const theirs = makeFrames(timeline({ reps: 7, p1: 0.6, p2: 0.5, lead: 0.5, tail: 0.5 }), d => small(pullUpBody(d)));
+    const frames = mine.map((f, i) => {
+      const o = theirs[Math.min(i, theirs.length - 1)];
+      // comme le détecteur : la « première » personne (lm) est celle du fond
+      return { ...f, lm: o.lm, all: [{ lm: o.lm, wl: null }, { lm: f.lm, wl: null }] };
+    });
+    h.w.__r2fPoseMock = { frames, aspect: 9 / 16, batch: 60 };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
+    await advance(h, 0);
+    expect(q(h, 'form-summary').textContent).toMatch(/^4 reps/);
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('calibrer avant la série : menton tenu au niveau de la barre', async () => {
     const h = await launch();
     open.push(h);
