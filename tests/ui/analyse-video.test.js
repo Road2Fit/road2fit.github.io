@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SUPABASE_URL, advance, clickEl, fakeSupabase, findByText, clickText, launch, sleep } from './harness';
 import { DEMO_STATE } from './demo';
 import { patternFor } from '../../src/form/patterns';
-import { timeline, makeFrames, squatBody, curlBody, pushUpBody } from '../../src/form/synth';
+import { timeline, makeFrames, squatBody, curlBody, pushUpBody, pullUpBody } from '../../src/form/synth';
+
+// corps entier dans l'image (démarrage auto) : squelette de traction réduit
+const fit = b => Object.fromEntries(Object.entries(b).map(([k, p]) => [k, { x: 0.05 + p.x * 0.75, y: 0.05 + p.y * 0.75 }]));
 import { EXERCISE_CATALOG } from '../../src/data/catalog';
 
 const open = [];
@@ -19,6 +22,7 @@ function framesFor(name, reps, opts = {}, tlOpts = {}) {
   const P = patternFor({ catalogId: cat && cat.id, name });
   const tl = timeline({ reps, p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5, ...tlOpts });
   if (P.signal === 'knee' || P.signal === 'kneeFront') return { P, frames: makeFrames(tl, d => squatBody(d, opts)), aspect: 9 / 16 };
+  if (P.id === 'pullUp') return { P, frames: makeFrames(tl, d => fit(pullUpBody(d))), aspect: 9 / 16 };
   if (P.id === 'pushUp') return { P, frames: makeFrames(tl, d => pushUpBody(d), { aspect: 16 / 9 }), aspect: 16 / 9 };
   return { P, frames: makeFrames(tl, d => curlBody(d, opts)), aspect: 9 / 16 };
 }

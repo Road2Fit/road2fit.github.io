@@ -32,7 +32,12 @@ describe('échauffement avant les séries de travail', () => {
     // barre olympique : les disques à mettre de chaque côté sont indiqués aussi à l'échauffement
     expect(h.doc.querySelector('[data-testid="warm-plates"]').textContent).toMatch(/Disques : .*(de chaque côté|barre seule)/);
     let warms = 0;
-    while (zone() && warms < 3) { await click(h, h.doc.querySelector('[data-testid="warm-done"]')); warms++; await click(h, h.doc.querySelector('[data-testid="guided-next"]')); }
+    while (zone() && warms < 3) {
+      await click(h, h.doc.querySelector('[data-testid="warm-done"]')); warms++;
+      // 4.27 : pendant le repos, les disques de la série suivante sont déjà affichés
+      expect(h.doc.querySelector('[data-testid="rest-plates"]').textContent).toMatch(/Disques : .*(de chaque côté|barre seule)/);
+      await click(h, h.doc.querySelector('[data-testid="guided-next"]'));
+    }
     expect(warms).toBeGreaterThanOrEqual(1);
     expect(warms).toBeLessThanOrEqual(2);
     // les séries de travail ne sont pas touchées

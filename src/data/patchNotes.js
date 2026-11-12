@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.27',
+    date: '2026-11-12',
+    title: 'Repos : les disques à préparer',
+    items: [
+      'Pendant le repos, le schéma des disques de ta prochaine série (échauffement compris) s’affiche : tu peux préparer ta barre sans attendre.',
+      'L’analyse vidéo d’un exercice ne reste plus affichée pendant l’échauffement de l’exercice suivant.',
+    ],
+  },
+  {
     version: '4.26',
     date: '2026-11-12',
     title: 'Analyse vidéo : moins de reps en trop',

@@ -205,7 +205,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     const wdone = warmRows.map((_, k) => (k === warmIdx ? true : !!(d.wdone && d.wdone[k])));
     patch(it.questId, { wdone });
     const left = wdone.findIndex(v => !v);
-    startRest(w.restSec, left >= 0 ? `Échauffement ${left + 1} · ${warmRows[left].label}` : `${setLabel(0)} · ${setText(it, d, 0)}`);
+    // 4.27 : l'analyse vidéo d'un exercice précédent ne reste pas affichée pendant les repos de l'échauffement
+    clearClip();
+    startRest(w.restSec, left >= 0 ? `Échauffement ${left + 1} · ${warmRows[left].label}` : `${setLabel(0)} · ${setText(it, d, 0)}`, { formLast: null });
   };
   const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
   const fixFormReps = n => setG(prev => {
@@ -352,6 +354,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey]);
   const formNow = g.formLast && (screen === 'rest' || screen === 'summary') ? g.formLast : null;
+  // 4.27 : pendant le repos, schéma des disques de la PROCHAINE série (échauffement ou travail) pour préparer la barre
+  const restLoad = screen === 'rest' && it && d && it.kind === 'load' && isBarbell(it.name) ? (inWarm ? warmRows[warmIdx].load : j >= 0 ? loadsOf(d)[j] : null) : null;
+  const restPlates = restLoad && platesText(restLoad) ? restLoad : null;
   const canBack = hist.current.stack.length > 0;
   const goBack = () => {
     const st = hist.current.stack;
@@ -502,6 +507,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               </div>
               </>)}
               {rest.next && <p className="text-base font-bold text-slate-200 text-center" data-testid="rest-next">{rest.next}</p>}
+              {restPlates && <PlatesDiagram total={restPlates} testId="rest-plates" className="w-full" />}
               {adapt && (
                 <div className="w-full bg-slate-900 border border-amber-500/50 rounded-2xl p-3 space-y-2" data-testid="guided-adapt">
                   <p className="text-sm font-bold text-amber-100 text-center">{adapt.text}</p>

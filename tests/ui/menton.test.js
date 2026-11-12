@@ -67,6 +67,35 @@ describe('calibration du menton', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+  it('4.27 : l’analyse des tractions ne reste pas affichée pendant l’échauffement de l’exercice suivant', async () => {
+    const h = await launch();
+    open.push(h);
+    expect(await toPullUps(h)).toBe(true);
+    const frames = makeFrames(timeline({ reps: 4, p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5 }), d => fit(pullUpBody(d)));
+    h.w.__r2fPoseMock = { frames, aspect: 9 / 16, batch: 60 };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
+    await advance(h, 0);
+    expect(q(h, 'form-report')).toBeTruthy();
+    // exercice suivant avec échauffement
+    let warm = false;
+    for (let k = 0; k < 10 && !warm; k++) {
+      await clickEl(h, q(h, 'guided-menu'));
+      const skip = [...h.doc.querySelectorAll('[data-testid="guided-menu-sheet"] button')].find(b => /Passer l.exercice/.test(b.textContent));
+      if (!skip) break;
+      await clickEl(h, skip);
+      await advance(h, 0);
+      if (q(h, 'form-cam-close')) await clickEl(h, q(h, 'form-cam-close'));
+      warm = !!q(h, 'warm-done');
+    }
+    expect(warm).toBe(true);
+    await clickEl(h, q(h, 'warm-done'));
+    await advance(h, 0);
+    expect(q(h, 'guided-rest')).toBeTruthy();
+    expect(q(h, 'form-report')).toBeNull();
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('calibrer avant la série : menton tenu au niveau de la barre', async () => {
     const h = await launch();
     open.push(h);
