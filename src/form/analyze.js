@@ -404,15 +404,56 @@ function feetX(ctx) {
   const raw = ctx.F.map(f => (f.p && (f.p[27].v >= 0.5 || f.p[28].v >= 0.5) ? midOf(f.p, f.p, 27, 28).x / T : NaN));
   return (ctx.cache.feetX = clean(ctx, raw));
 }
+// 4.26 (encore 2 reps de trop) : aux tractions, lâcher la barre puis marcher jusqu'au téléphone plie les coudes
+// (et le filtre des pieds ne s'applique pas : les jambes bougent sous la barre). Donc :
+//  - HANDS_UP : une rep de traction n'existe que si les mains sont au-dessus des épaules (sur la barre) ;
+//  - début / fin de série : une rep faite AILLEURS que les autres (bassin à plus de EDGE_OUT longueurs de buste de la
+//    position habituelle des reps : installation, descente de la barre, marche) est retirée.
+const HANDS_UP = new Set(['pullUp']);
+const EDGE_OUT = 0.6;
+function handsUpShare(ctx, r) {
+  let n = 0, up = 0;
+  for (let i = r.start; i <= r.end; i++) {
+    const p = ctx.F[i] && ctx.F[i].p;
+    if (!p || !(p[15].v >= VIS || p[16].v >= VIS) || !(p[11].v >= VIS || p[12].v >= VIS)) continue;
+    n++;
+    if (midOf(p, p, 15, 16).y < midOf(p, p, 11, 12).y) up++;
+  }
+  return n ? up / n : 1;
+}
+function hipAt(ctx, r) {
+  const T = ctx.torso || 0.3, xs = [], ys = [];
+  for (let i = r.start; i <= r.end; i++) {
+    const p = ctx.F[i] && ctx.F[i].p;
+    if (!p || !(p[23].v >= VIS || p[24].v >= VIS)) continue;
+    const h = midOf(p, p, 23, 24);
+    xs.push(h.x / T); ys.push(h.y / T);
+  }
+  return xs.length ? { x: median(xs), y: median(ys) } : null;
+}
+function trimEdges(ctx, reps) {
+  if (reps.length < 3) return reps;
+  const pos = reps.map(r => hipAt(ctx, r));
+  const ok = pos.filter(Boolean);
+  if (ok.length < 3) return reps;
+  const cx = median(ok.map(p => p.x)), cy = median(ok.map(p => p.y));
+  const out = k => pos[k] && Math.hypot(pos[k].x - cx, pos[k].y - cy) > EDGE_OUT;
+  let a = 0, b = reps.length - 1;
+  while (a < b && out(a)) a++;
+  while (b > a && out(b)) b--;
+  return reps.slice(a, b + 1);
+}
 function realReps(ctx, P, reps) {
   const fx = FEET_MOVE.has(P.id) ? null : feetX(ctx);
-  return reps.filter(r => {
+  const kept = reps.filter(r => {
     if (!(ctx.t[r.end] - ctx.t[r.start] >= MIN_REP_S)) return false;
+    if (HANDS_UP.has(P.id) && handsUpShare(ctx, r) < 0.7) return false;
     if (!fx) return true;
     let lo = Infinity, hi = -Infinity;
     for (let i = r.start; i <= r.end; i++) if (isNum(fx[i])) { lo = Math.min(lo, fx[i]); hi = Math.max(hi, fx[i]); }
     return !(hi - lo > MAX_FEET_TRAVEL);
   });
+  return trimEdges(ctx, kept);
 }
 
 function restFor(P) {

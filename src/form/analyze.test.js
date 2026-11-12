@@ -160,6 +160,39 @@ describe('tractions', () => {
   });
 });
 
+describe('tractions : pas de reps en trop au début et à la fin (4.26)', () => {
+  const P = patternFor({ catalogId: 'pullups', name: 'Tractions' });
+  // debout sous la barre puis marche vers le téléphone : les bras se balancent, les coudes se plient
+  const walkArms = (fr, t0, n, x0 = 0.3, dx = 0.04) => {
+    const per = 0.9, fps = 30;
+    for (let i = 0; i <= n * per * fps; i++) {
+      const tt = i / fps, ph = Math.sin(((tt % per) / per) * Math.PI);
+      const b = sideBody({ x0: x0 + dx * (tt / per), ground: 0.98, ua: 180, fa: 180 - 95 * ph });
+      fr.push({ t: (t0 + tt) * 1000, lm: toLandmarks(b) });
+    }
+    return fr;
+  };
+  it('4 tractions, puis la personne lâche la barre et marche (bras qui plient) : 4 reps', () => {
+    const fr = makeFrames(timeline({ reps: 4, p1: 1, p2: 1.2, tail: 0.3 }), d => pullUpBody(d));
+    walkArms(fr, fr[fr.length - 1].t / 1000 + 0.033, 3);
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(4);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).repCount).toBe(4);
+  });
+  it('installation avant (bras qui plient en se mettant sous la barre) : pas comptée', () => {
+    const fr = walkArms([], 0, 2, 0.3, 0);
+    const t0 = fr[fr.length - 1].t / 1000 + 0.033;
+    for (const f of makeFrames(timeline({ reps: 4, p1: 1, p2: 1.2 }), d => pullUpBody(d))) fr.push({ ...f, t: f.t + t0 * 1000 });
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(4);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).repCount).toBe(4);
+  });
+  it('curl : quelques pas à la fin hors de la position des reps ne comptent pas', () => {
+    const C = patternFor({ catalogId: 'curl', name: 'Curl barre' });
+    const fr = makeFrames(timeline({ reps: 5, tail: 0.3 }), d => curlBody(d));
+    walkArms(fr, fr[fr.length - 1].t / 1000 + 0.033, 2, 0.3, 0.12);
+    expect(analyzeSet(fr, C, { aspect: 9 / 16 }).repCount).toBe(5);
+  });
+});
+
 describe('menton et barre (4.25)', () => {
   const P = patternFor({ catalogId: 'pullups', name: 'Tractions' });
   // la détection place souvent le bout des doigts bien au-dessus de la barre (main dessinée ouverte)

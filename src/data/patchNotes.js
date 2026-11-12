@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.26',
+    date: '2026-11-12',
+    title: 'Analyse vidéo : moins de reps en trop',
+    items: [
+      'Tractions : une rep ne compte que si tes mains sont sur la barre. Te mettre en place, lâcher la barre ou marcher jusqu’au téléphone ne comptent plus.',
+      'Tous les exercices : un mouvement fait au début ou à la fin, ailleurs que l’endroit de tes reps (installation, quelques pas), n’est plus compté.',
+    ],
+  },
+  {
     version: '4.25',
     date: '2026-11-12',
     title: 'Tractions : le menton mieux vu, et calibrable',
