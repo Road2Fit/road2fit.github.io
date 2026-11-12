@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Art } from '../Art';
 import { coachSlotFor } from '../../coach/planning';
-import { COACH_DAY_NAMES, coachDayLabel, coachDow } from '../../coach/settings';
+import { COACH_DAY_NAMES, coachDayLabel, coachDow, SPLIT_MODES } from '../../coach/settings';
 import { addDaysISO } from '../../lib/dates';
 import { card } from './ui';
 import { SPORTS, sportInfo } from '../../data/sports';
@@ -18,20 +18,22 @@ export function CoachSettings({
       <h3 className="font-black text-white"><Art name="gear" />Réglages & calendrier des matchs</h3>
       <div className="space-y-2 text-xs">
         <p className="text-slate-300 font-bold">Organisation des séances</p>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => updateCoach({ splitMode: 'auto' })}
-            className={`px-3 py-1.5 rounded-lg font-black border ${coach.splitMode !== 'trio' ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-            Full body (2 ou 3 par semaine)
-          </button>
-          <button onClick={() => updateCoach({ splitMode: 'trio', sessionsPerWeek: 3 })}
-            className={`px-3 py-1.5 rounded-lg font-black border ${coach.splitMode === 'trio' ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
-            3 séances : Full body + Jambes + Haut du corps
-          </button>
+        <div className="flex flex-wrap gap-2" data-testid="split-modes">
+          {SPLIT_MODES.map(m => {
+            const on = (SPLIT_MODES.some(x => x.id === coach.splitMode) ? coach.splitMode : 'auto') === m.id;
+            return (
+              <button key={m.id} type="button" onClick={() => updateCoach(m.id === 'trio' ? { splitMode: 'trio', sessionsPerWeek: 3 } : { splitMode: m.id })} aria-pressed={on} data-testid={`split-${m.id}`}
+                className={`px-3 py-1.5 rounded-lg font-black border ${on ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
+                {m.label}
+              </button>
+            );
+          })}
         </div>
+        <p className="text-slate-400">{(SPLIT_MODES.find(m => m.id === coach.splitMode) || SPLIT_MODES[0]).why}</p>
         {coach.splitMode !== 'trio' ? (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-slate-300 font-bold">Séances de muscu par semaine :</span>
-            {[2, 3].map(n => (
+            {[2, 3, 4, 5, 6].map(n => (
               <button key={n} onClick={() => updateCoach({ sessionsPerWeek: n })}
                 className={`px-3 py-1.5 rounded-lg font-black border ${coach.sessionsPerWeek === n ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>
                 {n}

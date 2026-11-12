@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.37',
+    date: '2026-11-12',
+    title: 'Push / Pull / Legs et Haut / Bas, même à 3 séances',
+    items: [
+      'Coach → Réglages → Organisation des séances : Auto, Push / Pull / Legs, Haut / Bas, ou Corps entier + Jambes + Haut. Push / Pull / Legs et Haut / Bas marchent avec 2 à 6 séances par semaine.',
+      'À 2 séances en Push / Pull / Legs, la suite continue d’une semaine à l’autre : chaque type revient.',
+      'Le coach comprend maintenant « je veux un push pull legs, 3 séances par semaine » et règle le bon rythme (avant, il ne savait pas le faire).',
+    ],
+  },
+  {
     version: '4.36',
     date: '2026-11-12',
     title: 'Choisis le thème de ta séance',

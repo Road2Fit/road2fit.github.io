@@ -1,5 +1,5 @@
 import { coachCycleInfo, coachIsDeloadWeek } from './cycle';
-import { COACH_TYPES, COACH_TYPE_ORDER, coachDaysBetween, coachDow, coachSplitRotation, coachTimeToMin, getCoachSettings } from './settings';
+import { COACH_TYPES, COACH_TYPE_ORDER, chosenRotation, coachDaysBetween, coachDow, coachSplitRotation, coachTimeToMin, getCoachSettings } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
@@ -81,7 +81,9 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
   const cand = info.filter(i => i.iso >= today && i.avail && !strengthDays.has(i.iso) && !extraSet.has(i.iso));
   const trio = coach.splitMode === 'trio';
   // 4 séances ou plus : plus de full body (48 h entre deux séances = 2 à 3 séances max), mais un split haut / bas ou poussée / tirage / jambes
-  const split = !trio && (Number(coach.sessionsPerWeek) || 0) >= 4;
+  // rythme choisi (push / pull / legs, haut / bas : 4.37) : split quel que soit le nombre de séances
+  const chosenRot = trio ? null : chosenRotation(coach.splitMode, coach.sessionsPerWeek, weekStart);
+  const split = !trio && (!!chosenRot || (Number(coach.sessionsPerWeek) || 0) >= 4);
   let planned = [];
   const plannedTypes = {};
   let remaining;
@@ -125,7 +127,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
     let needed;
     if (split) {
       // rotation de la semaine moins les séances déjà faites (une séance faite retire le type qui lui ressemble le plus)
-      needed = coachSplitRotation(Number(coach.sessionsPerWeek));
+      needed = chosenRot || coachSplitRotation(Number(coach.sessionsPerWeek));
       doneTypes.forEach(t => {
         const i = needed.indexOf(t) >= 0 ? needed.indexOf(t) : needed.findIndex(x => COACH_TYPES[x].groups.some(g => COACH_TYPES[t].groups.includes(g)));
         if (i >= 0) needed.splice(i, 1);

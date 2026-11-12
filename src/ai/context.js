@@ -101,7 +101,8 @@ export function coachContext(state, today, { overview } = {}) {
   lines.push(equipmentLine(state));
   if (painsLine(state)) lines.push(painsLine(state));
   lines.push(cardioLine(state, today));
-  lines.push(`Réglages : ${c.splitMode === 'trio' ? '3 séances par semaine (mode 3 séances)' : `${c.sessionsPerWeek} séances de muscu par semaine`}, durée ${Number(c.sessionMinutes) ? `${c.sessionMinutes} min` : 'libre'}, jours de salle : ${gym.length ? gym.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ') : 'non précisés'}.`);
+  const rythme = { trio: 'rythme corps entier + jambes + haut du corps (split "trio")', ppl: 'rythme push / pull / legs (split "ppl")', upperlower: 'rythme haut / bas (split "upperlower")' }[c.splitMode] || 'rythme automatique (split "auto" : corps entier jusqu’à 3 séances, au-delà haut / bas ou push / pull / legs)';
+  lines.push(`Réglages : ${c.splitMode === 'trio' ? 3 : c.sessionsPerWeek} séances de muscu par semaine, ${rythme}, durée ${Number(c.sessionMinutes) ? `${c.sessionMinutes} min` : 'libre'}, jours de salle : ${gym.length ? gym.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ') : 'non précisés'}.`);
   lines.push(`Sport régulier : ${c.sport || 'aucun'}${(c.volleyDays || []).length ? `, jours : ${c.volleyDays.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ')}` : ''}. Matchs à venir : ${(c.matchDates || []).filter(d => d >= today).slice(0, 6).join(', ') || 'aucun'}.`);
   const act = activeProfile(state, today);
   const prof = act.id;

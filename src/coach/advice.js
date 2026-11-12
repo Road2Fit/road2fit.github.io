@@ -200,7 +200,7 @@ export function coachOverview(state, today, extra = {}) {
   weeks.forEach(w => w.planned.forEach(d => plannedAll.push({ iso: d, week: w })));
   plannedAll.forEach((p, k) => { p.templateIdx = (nextIdx + k) % Math.max(1, templates.length); p.type = p.week.plannedTypes[p.iso] || null; });
   const first = plannedAll.find(p => p.iso >= today) || null;
-  const hasExercises = templates.some(t => t.quests.length > 0) || (coach.splitMode === 'trio' && (state.quests || []).some(q => q.type === 'strength' && q.goalMode !== 'free_mode'));
+  const hasExercises = templates.some(t => t.quests.length > 0) || ((coach.splitMode === 'trio' || coach.splitMode === 'ppl' || coach.splitMode === 'upperlower' || Number(coach.sessionsPerWeek) >= 4) && (state.quests || []).some(q => q.type === 'strength' && q.goalMode !== 'free_mode'));
   let session = null;
   if (first && hasExercises) {
     const di = coachDayInfo(first.iso, coach);

@@ -42,6 +42,27 @@ export function coachSplitRotation(n) {
 
 export const COACH_TYPE_ORDER = ['FB', 'LEGS', 'UPPER'];
 
+/** Rythme choisi (4.37, cas réel d'un ami : « push pull legs, 3 séances par semaine ») : coach.splitMode
+ *  'auto' (corps entier jusqu'à 3 séances, puis haut / bas ou push / pull / legs), 'trio' (corps entier + jambes + haut),
+ *  'upperlower' (haut / bas en alternance), 'ppl' (push / pull / legs en alternance), quel que soit le nombre de séances. */
+export const SPLIT_MODES = [
+  { id: 'auto', label: 'Auto', why: 'Corps entier jusqu’à 3 séances par semaine, puis haut / bas ou push / pull / legs.' },
+  { id: 'ppl', label: 'Push / Pull / Legs', why: 'Pousser (pectoraux, épaules, triceps), tirer (dos, biceps), jambes, en alternance.' },
+  { id: 'upperlower', label: 'Haut / Bas', why: 'Haut du corps et bas du corps en alternance.' },
+  { id: 'trio', label: 'Corps entier + Jambes + Haut', why: '3 séances différentes par semaine.' },
+];
+const CYCLES = { ppl: ['PUSH', 'PULL', 'LEGS'], upperlower: ['UPPER', 'LEGS'] };
+const weekNo = ws => Math.round(Date.parse(`${ws}T00:00:00Z`) / (7 * 86400000));
+/** Types de la semaine pour un rythme choisi : la suite continue d'une semaine à l'autre (2 séances en push / pull / legs :
+ *  push + pull, puis legs + push…), pour que chaque type revienne. null si le rythme n'est pas choisi. */
+export function chosenRotation(mode, n, weekStart) {
+  const cyc = CYCLES[mode];
+  if (!cyc) return null;
+  const k = Math.max(1, Math.min(6, Number(n) || 3));
+  const off = (((weekNo(weekStart || '2026-01-05') * k) % cyc.length) + cyc.length) % cyc.length;
+  return Array.from({ length: k }, (_, i) => cyc[(off + i) % cyc.length]);
+}
+
 export const coachTimeToMin = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
 
 export const coachDow = iso => new Date(iso + 'T00:00:00').getDay();

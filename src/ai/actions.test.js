@@ -14,7 +14,7 @@ describe('actions du coach intelligent', () => {
     expect(fromAiDay(7)).toBe(0);
     expect(toAiDay(0)).toBe(7);
     const a = normalizeAction(act('schedule', { gymDays: [1, 4, 7], sessionMinutes: 50, sessionsPerWeek: 4 }), S, today);
-    expect(a.args).toEqual({ gymDays: [0, 1, 4], sessionMinutes: 45, sessionsPerWeek: 3 });
+    expect(a.args).toEqual({ gymDays: [0, 1, 4], sessionMinutes: 45, sessionsPerWeek: 4 }); // 4.37 : 1 à 6 séances (avant : ramené à 3);
     const s = applyActions(S, [a], today);
     expect(Object.keys(s.coach.gymSlots).sort()).toEqual(['0', '1', '4']);
     expect(s.coach.gymSlots[1]).toEqual({ start: '07:00', end: '08:00' }); // créneau gardé

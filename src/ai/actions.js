@@ -39,7 +39,9 @@ export function normalizeAction(a, state, today) {
     case 'schedule': {
       const o = {};
       const spw = num(x.sessionsPerWeek);
-      if (spw !== null && spw >= 1) o.sessionsPerWeek = spw >= 3 ? 3 : 2;
+      // 1 à 6 séances (avant : ramené à 2 ou 3, d'où des réponses à côté pour « 4 séances » ou « push pull legs »)
+      if (spw !== null && spw >= 1) o.sessionsPerWeek = Math.max(1, Math.min(6, Math.round(spw)));
+      if (['auto', 'ppl', 'upperlower', 'trio'].includes(x.split)) o.split = x.split;
       const m = num(x.sessionMinutes);
       if (m !== null && m >= 0 && m <= 240) o.sessionMinutes = nearest(MINUTES, m);
       const d = dayList(x.gymDays);
@@ -218,6 +220,7 @@ export function applyAction(state, a, today) {
     case 'schedule': {
       const patch = {};
       if (x.sessionsPerWeek) patch.sessionsPerWeek = x.sessionsPerWeek;
+      if (x.split) { patch.splitMode = x.split; if (x.split === 'trio') patch.sessionsPerWeek = 3; }
       if (x.sessionMinutes !== undefined) patch.sessionMinutes = x.sessionMinutes;
       if (x.gymDays) {
         const old = coach.gymSlots || {};
@@ -316,7 +319,7 @@ export function applyAction(state, a, today) {
 
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
-  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
+  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
   body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 
