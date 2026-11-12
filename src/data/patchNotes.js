@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.32',
+    date: '2026-11-12',
+    title: 'Analyse vidéo : moins perdue quand tu sors du cadre',
+    items: [
+      'Réglé sur ta vidéo d’extensions lombaires : 10 reps comptées sur 10 (avant : 3).',
+      'Quand ton corps sort en partie de l’image, la détection pouvait sauter sur un « fantôme » immobile (reflet, matériel). L’analyse garde maintenant la personne qui bouge et suit le meilleur point de ton corps.',
+      'Conseil : filme-toi le corps entier dans l’image, ça reste ce qui marche le mieux.',
+    ],
+  },
+  {
     version: '4.31',
     date: '2026-11-12',
     title: 'Me filmer : c’est bien toi qui es suivi',

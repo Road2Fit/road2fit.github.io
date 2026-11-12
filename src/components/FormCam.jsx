@@ -191,6 +191,9 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         if (n > r.count) {
           r.count = n; r.lastRepT = ts; setCount(n);
           try { navigator.vibrate && navigator.vibrate(40); } catch (e) {}
+        } else if (n < r.count) {
+          // 4.32 : le calcul se corrige avec plus d'images (bonne personne retrouvée…) : le compteur suit, sans vibrer
+          r.count = n; setCount(n);
         }
       }
       // plus d'arrêt automatique (4.24, demande de Gabin) : la personne appuie sur « Série terminée » quand toutes ses reps

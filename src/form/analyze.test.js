@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeSet, liveCount, detectReps, bodyVisible, applyChinCal, chinCalToPassAll, chinCalibration } from './analyze';
+import { analyzeSet, liveCount, detectReps, bodyVisible, applyChinCal, chinCalToPassAll, chinCalibration, ownTrack } from './analyze';
 import { patternFor, PATTERNS, familyPatternMap } from './patterns';
 import { timeline, makeFrames, squatBody, curlBody, pushUpBody, frontSquatLm, plankBody, sideBody, toLandmarks, pullUpBody, frontRaiseLm } from './synth';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -157,6 +157,29 @@ describe('tractions', () => {
   it('élan des jambes (kipping)', () => {
     const fr = makeFrames(timeline({ reps: 5 }), d => pullUpBody(d, { kip: 50 }));
     expect(ids(analyzeSet(fr, P, { aspect: 9 / 16 }))).toContain('tip:kip');
+  });
+});
+
+describe('vidéo réelle d’extensions lombaires (4.32)', () => {
+  // ce qu'a montré la vidéo de Gabin : la personne n'est détectée qu'une image sur trois (tête hors cadre), et le reste du
+  // temps le détecteur renvoie un « fantôme » immobile ailleurs dans l'image (reflet, matériel)
+  const P = patternFor({ catalogId: 'squat', name: 'Squat' });
+  const ghost = toLandmarks(sideBody({ x0: 0.08, ground: 0.6, trunk: 10 })).map(p => ({ ...p, x: p.x * 0.8 + 0.02, y: p.y * 0.6 + 0.3 }));
+  const mixed = reps => makeFrames(timeline({ reps }), d => squatBody(d)).map((f, i) => (i % 3 === 0 ? f : { ...f, lm: ghost }));
+  it('le fantôme immobile est écarté, la personne qui bouge est gardée', () => {
+    const fr = mixed(8);
+    const own = ownTrack(fr, 9 / 16);
+    expect(own.filter(x => x.lm === ghost)).toHaveLength(0);
+    expect(own.filter(x => x.lm).length).toBe(fr.filter((_, i) => i % 3 === 0).length);
+  });
+  it('les reps de la personne sont toutes comptées, malgré les images perdues', () => {
+    const fr = mixed(8);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).repCount).toBe(8);
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(8);
+  });
+  it('une seule personne (debout puis accroupie) n’est jamais coupée en deux', () => {
+    const fr = makeFrames(timeline({ reps: 6 }), d => squatBody(d));
+    expect(ownTrack(fr, 9 / 16)).toBe(fr);
   });
 });
 

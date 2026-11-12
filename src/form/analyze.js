@@ -6,6 +6,7 @@
 // Une image = { t (ms), lm: [33 × {x, y, z, visibility}] (coordonnées normalisées de l'image), wl: [33 × {x, y, z}] (mètres, optionnel) }.
 // De profil, les angles sont mesurés dans le plan de l'image (le plus précis) ; de face, avec les repères 3D (wl).
 import { PATTERNS } from './patterns';
+import { personBox } from './pickPerson';
 
 const SIDES = {
   l: { ear: 7, sh: 11, el: 13, wr: 15, idx: 19, hip: 23, kn: 25, an: 27, heel: 29, foot: 31 },
@@ -97,9 +98,71 @@ function midOf(C, P, a, b) {
   return { x: (C[a].x * wa + C[b].x * wb) / s, y: (C[a].y * wa + C[b].y * wb) / s, z: ((C[a].z || 0) * wa + (C[b].z || 0) * wb) / s };
 }
 
+// ---------- la bonne personne sur toute la vidéo (4.32) ----------
+// Vidéo réelle (extensions lombaires, téléphone tourné, corps en partie hors cadre) : le détecteur sautait sans arrêt
+// entre la personne (perdue dès que sa tête sortait de l'image) et un « fantôme » immobile (reflet / matériel), et
+// l'analyse comptait 3 reps sur 10. Toutes les détections de la vidéo sont réparties en DEUX groupes (position et taille
+// à l'image, k-moyennes) ; si les deux groupes sont bien distincts ET alternent pendant la vidéo (deux « personnes » en
+// même temps), on garde celui qui BOUGE le plus (en distance réelle à l'image : la personne qui s'entraîne, au premier
+// plan) et on retire l'autre. Une même personne qui change de place (s'installer, se relever) donne des groupes qui se
+// suivent sans alterner : rien n'est retiré.
+function groupMotion(dets) {
+  const xs = [], ys = [];
+  for (const d of dets) for (const k of [11, 12, 23, 24]) if ((d.lm[k].visibility ?? 1) >= 0.5) { xs.push(d.lm[k].x * d.aspect); ys.push(d.lm[k].y); }
+  if (xs.length < 8) return 0;
+  return Math.max(quantile(xs, 0.95) - quantile(xs, 0.05), quantile(ys, 0.95) - quantile(ys, 0.05));
+}
+export function ownTrack(frames, aspect = 9 / 16) {
+  const dets = [];
+  (frames || []).forEach((f, i) => {
+    const cands = f ? (f.all && f.all.length ? f.all.map(p => p && p.lm).filter(Boolean) : f.lm ? [f.lm] : []) : [];
+    for (const lm of cands) { const b = personBox(lm, aspect); if (b && b.size > 0) dets.push({ i, lm, b, aspect, g: 0 }); }
+  });
+  if (dets.length < 20) return frames;
+  // k-moyennes à 2 groupes sur la position du squelette (nez, milieu des épaules, milieu du bassin) : le cadre des repères
+  // visibles varie trop (un fantôme dont les chevilles apparaissent semble deux fois plus grand)
+  const P2 = (lm, a, b) => ({ x: (lm[a].x + lm[b].x) / 2 * aspect, y: (lm[a].y + lm[b].y) / 2 });
+  for (const d of dets) { const sh = P2(d.lm, 11, 12), hp = P2(d.lm, 23, 24); d.f = [d.lm[0].x * aspect, d.lm[0].y, sh.x, sh.y, hp.x, hp.y]; }
+  const feat = d => d.f;
+  const d2 = (a, b) => a.reduce((s, v, k) => s + (v - b[k]) ** 2, 0);
+  // départ robuste (les images aberrantes, par exemple la marche vers le téléphone, ne doivent pas former un groupe) :
+  // sur la coordonnée qui varie le plus, moyenne du quart le plus bas et du quart le plus haut
+  const K = [0, 1, 2, 3, 4, 5];
+  const varOf = k => { const v = dets.map(d => d.f[k]); return quantile(v, 0.9) - quantile(v, 0.1); };
+  const kk = K.reduce((a, b) => (varOf(b) > varOf(a) ? b : a));
+  const vals = dets.map(d => d.f[kk]), qa = quantile(vals, 0.25), qb = quantile(vals, 0.75);
+  const avg = m => K.map(k => m.reduce((s, d) => s + d.f[k], 0) / m.length);
+  let C = [avg(dets.filter(d => d.f[kk] <= qa)), avg(dets.filter(d => d.f[kk] >= qb))];
+  for (let it = 0; it < 12; it++) {
+    for (const d of dets) { const v = feat(d); d.g = d2(v, C[0]) <= d2(v, C[1]) ? 0 : 1; }
+    C = [0, 1].map(g => { const m = dets.filter(d => d.g === g); return m.length ? [0, 1, 2, 3, 4, 5].map(k => m.reduce((s, d) => s + feat(d)[k], 0) / m.length) : C[g]; });
+  }
+  const G = [0, 1].map(g => dets.filter(d => d.g === g));
+  if (Math.min(G[0].length, G[1].length) < Math.max(8, 0.1 * dets.length)) return frames;
+  // bien distincts : écart des centres nettement plus grand que la dispersion de chaque groupe
+  const spreadOf = (m, c) => Math.sqrt(m.reduce((s, d) => s + d2(feat(d), c), 0) / m.length);
+  if (Math.sqrt(d2(C[0], C[1])) < 1.5 * Math.max(spreadOf(G[0], C[0]), spreadOf(G[1], C[1]))) return frames;
+  // en même temps : les deux groupes alternent souvent dans le temps...
+  const order = [...dets].sort((a, b) => a.i - b.i);
+  // ...et passent de l'un à l'autre D'UN COUP (une même personne qui s'accroupit change de forme progressivement)
+  const gap = Math.sqrt(d2(C[0], C[1]));
+  let jumps = 0;
+  for (let k = 1; k < order.length; k++) if (order[k].g !== order[k - 1].g && Math.sqrt(d2(feat(order[k]), feat(order[k - 1]))) >= 0.6 * gap) jumps++;
+  if (jumps < 6) return frames;
+  const keepG = groupMotion(G[0]) >= groupMotion(G[1]) ? 0 : 1;
+  const mine = new Map(G[keepG].map(d => [d.i, d.lm]));
+  return frames.map((f, i) => {
+    if (!f) return f;
+    const lm = mine.get(i) || null;
+    if (lm === f.lm) return f;
+    const w = lm && f.all ? (f.all.find(p => p && p.lm === lm) || {}).wl : null;
+    return { ...f, lm, wl: w || null };
+  });
+}
+
 function makeCtx(frames, meta) {
   const aspect = meta.aspect || 9 / 16;
-  let F = prepare(frames, aspect);
+  let F = prepare(ownTrack(frames, aspect), aspect);
   // longueur du buste (2D) : échelle du corps. Les images où la personne est bien plus grande que d'habitude
   // (elle s'approche du téléphone pour arrêter l'enregistrement) sont écartées.
   const torso2 = F.map(f => (f.p ? dist(midOf(f.p, f.p, 11, 12), midOf(f.p, f.p, 23, 24)) : NaN));
@@ -144,6 +207,8 @@ function sideSeries(ctx, joint, s) {
   return ctx.cache[k] || (ctx.cache[k] = clean(ctx, jointRaw(ctx, joint, s)));
 }
 function coverage(a) { return a.length ? finite(a).length / a.length : 0; }
+// 4.32 : part des images OÙ LA PERSONNE EST VUE (une personne en partie hors cadre n'est plus jugée « invisible »)
+const vcov = (ctx, a) => (a && ctx.valid ? finite(a).length / ctx.valid : 0);
 function spread(a) { return quantile(a, 0.95) - quantile(a, 0.05); }
 function sideVis(ctx, joint, s) {
   const ids = JOINT[joint].map(k => SIDES[s][k]);
@@ -324,15 +389,19 @@ function mainRaw(ctx, P) {
 }
 
 // repli : la coordonnée d'un repère qui bouge le plus (sert au comptage quand le signal prévu n'est pas visible)
-function motionSeries(ctx) {
+// 4.32 : on garde le point qui donne le plus de reps VALIDÉES (durée, corps qui revient à sa place), puis le plus ample.
+// Avant, c'était le point qui variait le plus : sur une vidéo réelle (extensions lombaires), un point bruité par quelques
+// images aberrantes était choisi (2 reps) alors que l'épaule montrait nettement les 10 reps.
+function motionSeries(ctx, P = PATTERNS.generic) {
   const T = ctx.torso || 0.3;
-  let best = null, bestR = 0;
+  let best = null, bestN = -1, bestR = 0;
   for (const i of [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28]) {
     for (const axis of ['x', 'y']) {
       const a = clean(ctx, ctx.F.map(f => (f.p && f.p[i].v >= 0.5 ? f.p[i][axis] / T : NaN)));
-      if (coverage(a) < 0.7) continue;
-      const r = spread(a);
-      if (r > bestR) { bestR = r; best = a; }
+      if (vcov(ctx, a) < 0.6) continue;
+      const det = detectReps(ctx.t, a, { rest: null, min: 0.12 });
+      const n = det.reps.length ? realReps(ctx, P, det.reps, det.u).length : 0;
+      if (n > bestN || (n === bestN && det.R > bestR)) { bestN = n; bestR = det.R; best = a; }
     }
   }
   return best;
@@ -509,7 +578,7 @@ export function liveCount(frames, pattern, meta = {}) {
   let s = mainRaw(ctx, P);
   let rest = restFor(P);
   let fallback = false;
-  if (!s || coverage(s) < 0.5) { s = motionSeries(ctx); rest = null; fallback = true; }
+  if (!s || vcov(ctx, s) < 0.5) { s = motionSeries(ctx, P); rest = null; fallback = true; }
   if (!s) return 0;
   // mêmes réglages que l'analyse complète (avant 4.24, le compte en direct n'avait pas de seuil sur le signal de secours)
   const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 });
@@ -530,8 +599,8 @@ export function analyzeSet(frames, pattern, meta = {}) {
   let s = mainRaw(ctx, P);
   let rest = restFor(P);
   let fallback = false;
-  if (!s || coverage(s) < 0.5) {
-    s = motionSeries(ctx);
+  if (!s || vcov(ctx, s) < 0.5) {
+    s = motionSeries(ctx, P);
     rest = null;
     fallback = true;
     if (!s) return fail('framing', 'Ton corps n’était pas assez visible pour analyser la série.', P);
@@ -1156,4 +1225,5 @@ export function bodyVisible(lm, pattern) {
   };
   return need('l') || need('r');
 }
+
 
