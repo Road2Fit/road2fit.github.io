@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.34',
+    date: '2026-11-12',
+    title: 'Trois bugs corrigés',
+    items: [
+      'Une séance guidée pas terminée par « Enregistrer la séance » restait seulement sur le téléphone (invisible pour tes amis). Le lendemain, elle est maintenant enregistrée toute seule à sa date.',
+      'La caméra ne fait plus planter l’appli (écran « Oups ») quand elle ne peut pas se charger : elle est préparée dès le début de la séance, et sinon un message propose de recharger ou de continuer sans filmer.',
+      '« Lancer l’analyse du coach » marche à nouveau après avoir réduit puis rouvert la séance, rechargé l’appli ou calibré le menton.',
+    ],
+  },
+  {
     version: '4.33',
     date: '2026-11-12',
     title: 'Corriger ta série pendant le repos',

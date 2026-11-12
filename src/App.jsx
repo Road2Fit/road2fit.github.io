@@ -225,7 +225,7 @@ export function App() {
   const {
     guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap, swapChoices, swapExercise, undoSwap,
   } = useGuidedSession({
-    gameState, openLevelUpModal: levelUp.openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+    gameState, openLevelUpModal: levelUp.openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast, isLoaded: sync.isLoaded,
   });
 
   const {

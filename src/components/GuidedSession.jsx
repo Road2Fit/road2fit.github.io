@@ -1,6 +1,7 @@
 import { Art } from './Art';
 import { assistText } from '../lib/assist';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { safeLazy } from '../lib/safeLazy';
 import { playGameSound } from '../lib/sound';
 import { isBarbell, platesText } from '../lib/plates';
 import { PlatesDiagram } from './PlatesDiagram';
@@ -18,9 +19,22 @@ import { clearClip } from '../form/clip';
 import { applyChinCal, chinCalToPassAll } from '../form/analyze';
 import { setChinCal } from '../form/calibration';
 
-const MiniMovement = lazy(() => import('./MiniMovement'));
-// analyse vidéo d'une série (4.19) : chargée seulement quand on filme
-const FormCam = lazy(() => import('./FormCam'));
+const MiniMovement = safeLazy(() => import('./MiniMovement'));
+// analyse vidéo d'une série (4.19) : chargée à la demande (préchargée dès l'ouverture de la séance, 4.34). Si elle ne
+// peut pas se charger (pas de réseau, nouvelle version publiée), message à la place de l'écran « Oups ».
+function CamUnavailable({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-[90] bg-black/90 flex items-center justify-center p-6" role="dialog" aria-label="Caméra indisponible" data-testid="form-cam-unavailable" style={{ margin: 0 }}>
+      <div className="max-w-sm w-full bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-3 text-center">
+        <p className="text-base font-black text-white">La caméra n’a pas pu se charger</p>
+        <p className="text-sm text-slate-300">Pas de réseau, ou une nouvelle version de l’appli vient d’être publiée. Recharge l’appli : ta séance reprendra où tu en étais.</p>
+        <button type="button" onClick={() => window.location.reload()} className="w-full py-3 rounded-xl bg-pink-600 text-white font-black">Recharger</button>
+        <button type="button" onClick={onClose} className="w-full py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold">Continuer sans filmer</button>
+      </div>
+    </div>
+  );
+}
+const FormCam = safeLazy(() => import('./FormCam'), CamUnavailable);
 
 const fmtKg = x => String(Math.round(x * 100) / 100).replace('.', ',');
 /**
@@ -74,7 +88,13 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const [gameOpen, setGameOpen] = useState(restGameWasOpen);
   // caméra ouverte pour filmer la série en cours (rouverte toute seule à la série suivante du même exercice : g.formAuto)
   const [camOpen, setCamOpen] = useState(false);
-  const aiArgsRef = useRef(null); // mesures de la dernière série filmée, prêtes pour le coach IA
+  // 4.34 : caméra et mini-animation préchargées (une coupure de réseau à la salle ne les bloque plus) ;
+  // une analyse IA restée « en cours » (appli rechargée pendant l'attente) redevient lançable
+  useEffect(() => {
+    FormCam.preload(); MiniMovement.preload();
+    setG(prev => (prev.formLast && prev.formLast.ai && prev.formLast.ai.pending ? { ...prev, formLast: { ...prev.formLast, ai: { idle: true } } } : prev));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
@@ -151,11 +171,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     return -1;
   };
 
-  const doneSet = (repsOverride, form = null) => {
+  const doneSet = (repsOverride, form = null, aiCtx = null) => {
     if (!it || j < 0) return;
     const reps = repsOverride !== undefined ? d.reps.map((r, k) => (k === j ? repsOverride : r)) : d.reps;
     // analyse vidéo de CETTE série (affichée pendant le repos) ; série faite sans caméra : l'ancienne analyse disparaît
-    const fx = form ? { formLast: { result: form, questId: it.questId, j, noted: Number(reps[j]) || 0, at: Date.now(), ai: aiForm && form.ok ? { idle: true } : null }, formAuto: it.questId } : { formLast: null };
+    const fx = form ? { formLast: { result: form, questId: it.questId, j, noted: Number(reps[j]) || 0, at: Date.now(), ai: aiForm && form.ok ? { idle: true } : null, aiCtx }, formAuto: it.questId } : { formLast: null };
     if (!form) clearClip(); // vidéo de la série précédente non gardée : effacée
     // 4.33 : la série qui vient d'être faite, pour corriger son nombre de reps pendant le repos
     fx.lastSet = { questId: it.questId, j };
@@ -408,22 +428,27 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // tenue : le temps prévu s'il est atteint, sinon le temps mesuré ; reps : le nombre prévu (la caméra propose de corriger)
     const secs = it && it.timed ? (extra.reachedTarget && holdTarget ? holdTarget : res.ok && res.holdSec ? res.holdSec : extra.sec) : undefined;
     const earlier = (g.formHist && g.formHist[it.questId]) || [];
-    const args = { item: it, setLabel: setLabel(j), setText: setText(it, d, j), result: res, earlier };
-    doneSet(secs, res);
+    doneSet(secs, res, { setLabel: setLabel(j), setText: setText(it, d, j), earlier });
     if (res.ok) {
       const line = `${setLabel(j)} : ${res.summary}, verdict ${res.verdict}`;
       setG(prev => ({ ...prev, formHist: { ...(prev.formHist || {}), [it.questId]: [...earlier, line].slice(-4) } }));
     }
     // coach IA activé : son analyse ne part QUE si la personne la demande (bouton de l'onglet « Coach IA »)
-    aiArgsRef.current = aiForm && res.ok ? { res, args } : null;
   };
   // envoie les mesures (jamais l'image) au coach IA ; sa réponse s'affiche dans l'onglet « Coach IA »
+  // 4.34 : tout est lu dans g.formLast (avant, une copie à part se perdait : après « Mon menton passait la barre »,
+  // la séance réduite puis rouverte ou l'appli rechargée, le bouton ne faisait plus rien)
   const runFormAi = () => {
-    const a = aiArgsRef.current;
-    if (!aiForm || !a || !g.formLast || g.formLast.result !== a.res) return;
-    const put = ai => setG(prev => (prev.formLast && prev.formLast.result === a.res ? { ...prev, formLast: { ...prev.formLast, ai } } : prev));
+    const fl = g.formLast;
+    if (!aiForm || !fl || !fl.result || !fl.result.ok || (fl.ai && fl.ai.pending)) return;
+    const item = (g.items || []).find(x => x.questId === fl.questId);
+    if (!item) return;
+    const dd = g.data[fl.questId];
+    const ctx = fl.aiCtx || { setLabel: setLabel(fl.j), setText: dd ? setText(item, dd, fl.j) : '', earlier: [] };
+    const args = { item, ...ctx, result: fl.result };
+    const put = ai => setG(prev => (prev.formLast && prev.formLast.at === fl.at ? { ...prev, formLast: { ...prev.formLast, ai } } : prev));
     put({ pending: true });
-    aiForm(a.args).then(ai => put(ai || { error: 'Réponse du coach IA illisible.' }), e => put({ error: (e && e.message) || 'Le coach IA ne répond pas.', retry: true }));
+    aiForm(args).then(ai => put(ai || { error: 'Réponse du coach IA illisible.' }), e => put({ error: (e && e.message) || 'Le coach IA ne répond pas.', retry: true }));
   };
 
   return (

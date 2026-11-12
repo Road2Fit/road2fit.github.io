@@ -9,16 +9,16 @@ import { fineGroupOf } from '../data/muscles';
 import { makeQuestFromCatalog } from '../lib/questFactory';
 import { calculateStrengthCalories, warmupCalories } from '../lib/calories';
 import { warmupSets } from '../coach/warmup';
-import { getTodayISODate } from '../lib/dates';
+import { formatDayFr, getTodayISODate, toLocalISODate } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
 import { applyStrengthSession } from '../lib/sessionRecord';
 import { assistsOf, loadsOf, weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { computeXp, xpNote } from '../lib/xp';
 
 export function useGuidedSession({
-  gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast,
+  gameState, openLevelUpModal, setGameState, setSelectedDate, setSelectedJournalDay, triggerToast, isLoaded = null,
 }) {
   // ---- Coach : séance guidée ----
   const GUIDED_KEY = 'rondoufit_guided_v1';
@@ -154,9 +154,10 @@ export function useGuidedSession({
     if (sw.added) setGameState(prev => ({ ...prev, quests: prev.quests.filter(q => q.id !== sw.added || coachRealEntries(q).length > 0) }));
   };
 
-  const handleFinishGuided = g => {
+  // `opts.date` / `opts.auto` : séance d'un jour passé jamais terminée, enregistrée toute seule à sa date (4.34)
+  const handleFinishGuided = (g, opts = {}) => {
     try { window.dispatchEvent(new CustomEvent('rondoufit-rest-stop')); } catch (e) { /* rien */ } // séance finie : plus de repos
-    const today = getTodayISODate();
+    const today = opts.date || getTodayISODate();
     let xpEarned = 0;
     let bossQuest = null;
     let doneEx = 0;
@@ -226,6 +227,10 @@ export function useGuidedSession({
     if (g.programKey) setGameState(prev => { const cs = prev.coach || {}; return cs.program ? { ...prev, coach: { ...cs, program: { ...cs.program, log: { ...(cs.program.log || {}), [g.programKey]: today } } } } : prev; });
     setGuided(null);
     setGuidedOpen(false);
+    if (opts.auto) {
+      triggerToast(`Séance du ${formatDayFr(today)} enregistrée`, `Tu ne l’avais pas terminée : les ${doneEx} exercice(s) faits sont enregistrés.` + xpNote(award), award.gained, '🎵');
+      return;
+    }
     playGameSound(bossQuest ? 'boss' : 'xp', gameState.soundEnabled);
     triggerToast('Séance guidée terminée !', `${doneEx} exercice(s) enregistré(s)` + xpNote(award), award.gained, bossQuest ? '👑' : '🎵');
     try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, award.gained, gameState)); } catch (err) {}
@@ -233,6 +238,27 @@ export function useGuidedSession({
   };
 
   const [recap, setRecap] = useState(null);
+
+  // 4.34 (bug vu chez un ami : séance faite mais invisible pour ses amis et absente de son compte) : une séance guidée
+  // n'est enregistrée qu'avec « Enregistrer la séance » ; sinon elle reste seulement sur le téléphone. Si elle date d'un
+  // jour passé et qu'au moins une série est faite, on l'enregistre toute seule à sa date (après lecture de la sauvegarde en ligne).
+  const finishRef = useRef(handleFinishGuided);
+  finishRef.current = handleFinishGuided;
+  useEffect(() => {
+    if (!guided || !guided.startedAt || !(gameState.quests || []).length) return undefined;
+    const day = toLocalISODate(new Date(guided.startedAt));
+    if (!(day < getTodayISODate())) return undefined;
+    const anyDone = Object.values(guided.data || {}).some(dd => dd && Array.isArray(dd.done) && dd.done.some(Boolean));
+    let t = null;
+    const run = () => {
+      if (isLoaded && isLoaded.current === false) { t = setTimeout(run, 1500); return; }
+      if (anyDone) finishRef.current(guided, { date: day, auto: true });
+      else { setGuided(null); setGuidedOpen(false); } // commencée un autre jour sans aucune série : on la retire
+    };
+    t = setTimeout(run, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guided && guided.startedAt, (gameState.quests || []).length > 0]);
 
   return { guided, setGuided, guidedOpen, setGuidedOpen, startGuided, handleFinishGuided, recap, setRecap, swapChoices, swapExercise, undoSwap };
 }
