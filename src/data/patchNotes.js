@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.39',
+    date: '2026-11-13',
+    title: 'Ton avatar dans les animations',
+    items: [
+      'Profil (l’icône en haut à gauche) → « Mon avatar » : habille le personnage des animations d’exercices à ton goût.',
+      'Peau, silhouette, cheveux (courts, rasés, bouclés, queue de cheval, chignon, foulard, crâne rasé) et leur couleur, haut (t-shirt, débardeur, manches longues, brassière), bas (short, cycliste, legging, jogging) et chaussures, chacun dans la couleur de ton choix.',
+      'Aperçu en direct ; « Personnage par défaut » remet celui d’avant. Les accessoires gagnés avec les niveaux arriveront plus tard.',
+    ],
+  },
+  {
     version: '4.38',
     date: '2026-11-12',
     title: 'Signaler une analyse vidéo fausse',

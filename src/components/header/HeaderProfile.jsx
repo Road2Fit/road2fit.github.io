@@ -134,6 +134,7 @@ export function HeaderProfile({
               {trialRank && <button type="button" onClick={() => { setOpen(false); onOpenTrial(); }} className={`py-3 rounded-xl text-sm font-black ${locked ? 'bg-amber-400 text-slate-950 animate-pulse' : 'bg-slate-800 text-slate-100'}`}>🔒 Épreuve de rang</button>}
               <button type="button" onClick={() => setShowWeight(v => !v)} aria-pressed={showWeight} data-testid="profile-weight-button" className={`py-3 rounded-xl text-sm font-bold ${showWeight ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-100'}`}><Art name="scale" size={16} />Mon poids</button>
               <button type="button" onClick={() => { setOpen(false); onOpenRewards(); }} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="gift" size={16} />Récompenses</button>
+              <button type="button" onClick={() => { setOpen(false); try { window.dispatchEvent(new CustomEvent('rondoufit-avatar')); } catch (e) { /* rien */ } }} data-testid="profile-avatar" className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="lifter" size={16} />Mon avatar</button>
               <button type="button" onClick={() => go('bilan')} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="chart" size={16} />Bilan</button>
               <button type="button" onClick={() => go('trophies')} className="py-3 rounded-xl text-sm font-bold bg-slate-800 text-slate-100"><Art name="trophy" size={16} />Trophées</button>
             </div>

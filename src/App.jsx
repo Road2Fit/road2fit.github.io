@@ -87,6 +87,7 @@ const TrophiesTab = lz(() => import('./tabs/TrophiesTab'), 'TrophiesTab');
 const WeightTab = lz(() => import('./tabs/WeightTab'), 'WeightTab');
 const RankTrialModal = lz(() => import('./modals/RankTrialModal'), 'RankTrialModal');
 const RewardsModal = lz(() => import('./modals/RewardsModal'), 'RewardsModal');
+const AvatarEditor = lz(() => import('./components/AvatarEditor'), 'AvatarEditor');
 const RankUpModal = lz(() => import('./modals/RankUpModal'), 'RankUpModal');
 const OnboardingModal = lz(() => import('./modals/OnboardingModal'), 'OnboardingModal');
 const LexiconModal = lz(() => import('./modals/LexiconModal'), 'LexiconModal');
@@ -215,6 +216,13 @@ export function App() {
     gameState, setGameState, triggerToast,
   });
   const [rewardsOpen, setRewardsOpen] = useState(false);
+  // « Mon avatar » (4.39) : ouvert depuis le profil par l'événement rondoufit-avatar
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  useEffect(() => {
+    const h = () => setAvatarOpen(true);
+    window.addEventListener('rondoufit-avatar', h);
+    return () => window.removeEventListener('rondoufit-avatar', h);
+  }, []);
 
   const { celebration, closeCelebration } = useLevelCelebration({
     levelInfo, isLoaded, syncStatus: sync.status, soundEnabled: gameState.soundEnabled, triggerToast,
@@ -406,6 +414,9 @@ setGameState={setGameState}
 
 
       {/* MODALE 7 : RÉCOMPENSES DE NIVEAU */}
+      {avatarOpen && (
+        <AvatarEditor avatar={gameState.avatar} onChange={a => setGameState(prev => ({ ...prev, avatar: a }))} onClose={() => setAvatarOpen(false)} />
+      )}
       {rewardsOpen && (
         <RewardsModal gameState={gameState} levelInfo={levelInfo} onClose={() => setRewardsOpen(false)} setGameState={setGameState} />
       )}

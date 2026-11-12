@@ -1,4 +1,5 @@
 import { musclesOf } from './muscles';
+import { currentLook, lookFor } from './avatar';
 import { ik, poseAt, SEG, solveFront, solvePose, solveTop, tracePath, traceFront, traceTop } from './skeleton';
 
 // Dessin SVG d'une scène à un instant donné : décor (machine, banc…), personnage habillé, muscles (rouges, selon l'effort), charge, trajet.
@@ -9,12 +10,9 @@ const C = {
   frame: '#6b7280', frameDark: '#4b5563', pad: '#7b8492', plate: '#a9b0ba', plateIn: '#d1d5db',
   trace: '#fbbf24', ground: '#2e323a', cable: '#cbd5e1', accent: '#38bdf8', bg: '#1f2228',
 };
-// Tenue du personnage (le même dans les deux éditions)
-const LOOK = {
-  skin: '#e8b48f', skinFar: '#c98f6b', shirt: '#2f6fb5', shirtFar: '#24578f', shorts: '#4a5160', shortsFar: '#363b46',
-  shoe: '#d9483b', shoeFar: '#a8362c', hair: '#4a3426', eye: '#1f2328', line: '#1d4a7a',
-};
-const LOOK_BAD = { ...LOOK, shirt: '#b4233c', shirtFar: '#8a1a2e', line: '#6d1424' };
+// Tenue du personnage : celle de l'avatar de la personne (anim/avatar.js, 4.39), sinon le personnage d'avant.
+// L.top : tee | tank | long | bra ; L.bottom : shorts | bike | leggings | joggers ; L.hairStyle ; L.body : m | f.
+const BAD = { shirt: '#b4233c', shirtFar: '#8a1a2e', line: '#6d1424' }; // erreur fréquente : maillot rouge
 const MUSCLE = '#e5484d';
 
 function Fixed({ e, i }) {
@@ -85,11 +83,13 @@ function Arm({ s, e, w, fist, L, far = false }) {
   const shirt = far ? L.shirtFar : L.shirt;
   const skin = far ? L.skinFar : L.skin;
   const k = far ? 0.88 : 1;
+  const top = L.top || 'tee';
   return (
     <g>
       <Taper a={e} b={w} ra={3.3 * k} rb={2.5 * k} c={skin} />
       <Taper a={s} b={e} ra={4.3 * k} rb={3.4 * k} c={skin} />
-      <Taper a={s} b={mix(s, e, 0.62)} ra={4.6 * k} rb={4 * k} c={shirt} />
+      {top === 'tee' && <Taper a={s} b={mix(s, e, 0.62)} ra={4.6 * k} rb={4 * k} c={shirt} />}
+      {top === 'long' && <><Taper a={s} b={e} ra={4.6 * k} rb={3.7 * k} c={shirt} /><Taper a={e} b={w} ra={3.6 * k} rb={2.8 * k} c={shirt} /></>}
       {fist ? <Taper a={w} b={fist} ra={3.1 * k} rb={3.3 * k} c={skin} /> : <circle cx={w[0]} cy={w[1]} r={3.6 * k} fill={skin} />}
     </g>
   );
@@ -105,7 +105,10 @@ function Leg({ h, k: kn, a, t, L, far = false }) {
     <g>
       <Taper a={kn} b={a} ra={4.2 * z} rb={2.9 * z} c={skin} />
       <Taper a={h} b={kn} ra={5.6 * z} rb={4.3 * z} c={skin} />
-      <Taper a={h} b={mix(h, kn, 0.72)} ra={6 * z} rb={5 * z} c={shorts} />
+      {(!L.bottom || L.bottom === 'shorts') && <Taper a={h} b={mix(h, kn, 0.72)} ra={6 * z} rb={5 * z} c={shorts} />}
+      {L.bottom === 'bike' && <Taper a={h} b={mix(h, kn, 0.95)} ra={6 * z} rb={4.6 * z} c={shorts} />}
+      {L.bottom === 'leggings' && <><Taper a={h} b={kn} ra={5.8 * z} rb={4.5 * z} c={shorts} /><Taper a={kn} b={a} ra={4.4 * z} rb={3.1 * z} c={shorts} /></>}
+      {L.bottom === 'joggers' && <><Taper a={h} b={kn} ra={6.3 * z} rb={5 * z} c={shorts} /><Taper a={kn} b={a} ra={5 * z} rb={3.7 * z} c={shorts} /></>}
       <Taper a={a} b={t} ra={3.4 * z} rb={2.7 * z} c={shoe} />
     </g>
   );
@@ -114,11 +117,16 @@ function Leg({ h, k: kn, a, t, L, far = false }) {
 /** Tête de profil : `up` = sens du haut du crâne ; le visage est du côté `front` (1 = à droite du haut du crâne, -1 = à gauche). */
 function HeadSide({ c, up, L, face = 1 }) {
   const ang = (Math.atan2(up[1], up[0]) * 180) / Math.PI;
+  const hs = L.hairStyle || 'short';
   return (
     <g transform={`translate(${rNum(c[0])},${rNum(c[1])}) rotate(${rNum(ang + 90)}) scale(${face},1)`}>
-      <circle r="9" fill={L.skin} />
-      <path d="M-3.7 8.8 A9.5 9.5 0 1 1 9.3 -2 Q1 -3.4 -3.7 8.8 Z" fill={L.hair} />
-      <circle cx="-0.7" cy="0.7" r="1.9" fill={L.skinFar} />
+      {hs === 'ponytail' && <ellipse cx="-11" cy="3" rx="3" ry="6.5" transform="rotate(18 -11 3)" fill={L.hair} />}
+      {hs === 'bun' && <circle cx="-5.6" cy="-8.4" r="4.2" fill={L.hair} />}
+      {hs === 'curly' && <circle cx="-1" cy="-1.4" r="10.8" fill={L.hair} />}
+      {hs === 'scarf' && <circle cx="-0.6" cy="-0.2" r="10.6" fill={L.hair} />}
+      {hs === 'scarf' ? <ellipse cx="3.6" cy="1" rx="5.6" ry="7.2" fill={L.skin} /> : <circle r="9" fill={L.skin} />}
+      {hs !== 'none' && hs !== 'scarf' && <path d="M-3.7 8.8 A9.5 9.5 0 1 1 9.3 -2 Q1 -3.4 -3.7 8.8 Z" fill={L.hair} opacity={hs === 'buzz' ? 0.55 : 1} />}
+      {hs !== 'scarf' && <circle cx="-0.7" cy="0.7" r="1.9" fill={L.skinFar} />}
       <circle cx="5.6" cy="-1.3" r="1.1" fill={L.eye} />
       <path d="M8.6 0.4 L10.3 1.9 L8.3 2.5 Z" fill={L.skin} />
     </g>
@@ -127,22 +135,27 @@ function HeadSide({ c, up, L, face = 1 }) {
 
 function HeadFront({ c, back, L }) {
   const [x, y] = [rNum(c[0]), rNum(c[1])];
+  const hs = L.hairStyle || 'short';
   if (back) {
     return (
       <g>
-        <ellipse cx={x - 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skin} />
-        <ellipse cx={x + 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skin} />
-        <circle cx={x} cy={y} r="9.4" fill={L.hair} />
+        {hs === 'bun' && <circle cx={x} cy={y - 9.4} r="4.2" fill={L.hair} />}
+        {hs !== 'scarf' && <><ellipse cx={x - 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skin} /><ellipse cx={x + 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skin} /></>}
+        <circle cx={x} cy={y} r={hs === 'curly' ? 11 : hs === 'scarf' ? 10.8 : 9.4} fill={hs === 'none' ? L.skin : L.hair} opacity={hs === 'buzz' ? 0.7 : 1} />
+        {hs === 'buzz' && <circle cx={x} cy={y} r="9.4" fill={L.skin} opacity="0.35" />}
+        {hs === 'ponytail' && <ellipse cx={x} cy={y + 10} rx="3" ry="6.2" fill={L.hair} />}
         <path d={`M${x - 5} ${y + 6.8} Q${x} ${y + 4.6} ${x + 5} ${y + 6.8} L${x + 4} ${y + 10} L${x - 4} ${y + 10} Z`} fill={L.skin} />
       </g>
     );
   }
   return (
     <g>
-      <ellipse cx={x - 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skinFar} />
-      <ellipse cx={x + 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skinFar} />
-      <circle cx={x} cy={y} r="9" fill={L.skin} />
-      <path d={`M${x - 9.4} ${y - 1} A9.5 9.5 0 0 1 ${x + 9.4} ${y - 1} Q${x} ${y - 6.5} ${x - 9.4} ${y - 1} Z`} fill={L.hair} />
+      {hs === 'bun' && <circle cx={x} cy={y - 10.4} r="4" fill={L.hair} />}
+      {hs === 'curly' && <circle cx={x} cy={y - 1.5} r="11" fill={L.hair} />}
+      {hs === 'scarf' && <circle cx={x} cy={y} r="10.8" fill={L.hair} />}
+      {hs !== 'scarf' && <><ellipse cx={x - 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skinFar} /><ellipse cx={x + 9.2} cy={y + 1} rx="1.8" ry="2.8" fill={L.skinFar} /></>}
+      {hs === 'scarf' ? <ellipse cx={x} cy={y + 1.2} rx="6.3" ry="7.4" fill={L.skin} /> : <circle cx={x} cy={y} r="9" fill={L.skin} />}
+      {hs !== 'none' && hs !== 'scarf' && <path d={`M${x - 9.4} ${y - 1} A9.5 9.5 0 0 1 ${x + 9.4} ${y - 1} Q${x} ${y - 6.5} ${x - 9.4} ${y - 1} Z`} fill={L.hair} opacity={hs === 'buzz' ? 0.55 : 1} />}
       <circle cx={x - 3.4} cy={y + 0.8} r="1.1" fill={L.eye} />
       <circle cx={x + 3.4} cy={y + 0.8} r="1.1" fill={L.eye} />
       <path d={`M${x - 2.4} ${y + 4.8} Q${x} ${y + 5.8} ${x + 2.4} ${y + 4.8}`} fill="none" stroke={L.skinFar} strokeWidth="0.9" strokeLinecap="round" />
@@ -327,7 +340,9 @@ function TopFigure({ scene, pose, showTrace, muscles, ghost, L, effort }) {
       {muscles.filter(m => ['core', 'back', 'chest'].includes(m.z)).map(m => <Band key={m.z} a={t.s0} b={[t.c, t.y + 6]} w={15} op={levelOp(m.lvl, effort)} />)}
       {[t.L, t.R].map((sd, k) => <Arm key={'a' + k} s={sd.shoulder} e={sd.elbow} w={sd.wrist} L={L} />)}
       {armMuscles([t.L, t.R], muscles.filter(isArmZone), effort, false)}
-      <circle cx={rNum(t.head[0])} cy={rNum(t.head[1])} r="9.4" fill={L.hair} />
+      {L.hairStyle === 'ponytail' && <ellipse cx={rNum(t.head[0] - Math.sin(th) * 10)} cy={rNum(t.head[1] + Math.cos(th) * 10)} rx="3" ry="3" fill={L.hair} />}
+      <circle cx={rNum(t.head[0])} cy={rNum(t.head[1])} r={L.hairStyle === 'curly' ? 10.6 : 9.4} fill={L.hairStyle === 'none' ? L.skin : L.hair} />
+      {L.hairStyle === 'bun' && <circle cx={rNum(t.head[0])} cy={rNum(t.head[1])} r="4" fill={L.hair} stroke={L.skinFar} strokeWidth="0.8" />}
       <circle cx={rNum(t.head[0] + Math.sin(th) * 7)} cy={rNum(t.head[1] - Math.cos(th) * 7)} r="2" fill={L.skin} />
       {(ghost ? [] : scene.follow || []).map((e, i) => <Follow key={i} e={e} j={t} i={i} />)}
     </Stage>
@@ -347,7 +362,12 @@ function FrontFigure({ scene, pose, showTrace, muscles, ghost, L, effort }) {
   const waist = cy + H * 0.72;
   const flare = 2 + 2.4 * (muscles.some(m => m.z === 'back') ? effort : 0.3);
   const n = rNum;
-  const torso = `M${n(X - sw - 3)} ${n(top + 3)} Q${n(X - sw - 2)} ${n(top - 3)} ${n(X - 6)} ${n(top - 4)} L${n(X + 6)} ${n(top - 4)} Q${n(X + sw + 2)} ${n(top - 3)} ${n(X + sw + 3)} ${n(top + 3)} Q${n(X + sw + flare)} ${n(cy + H * 0.36)} ${n(f.c + 10)} ${n(waist)} L${n(f.c + 11)} ${n(f.hy)} L${n(f.c - 11)} ${n(f.hy)} L${n(f.c - 10)} ${n(waist)} Q${n(X - sw - flare)} ${n(cy + H * 0.36)} ${n(X - sw - 3)} ${n(top + 3)}Z`;
+  const fem = L.body === 'f';
+  const wW = fem ? 8.6 : 10; // taille
+  const hW = fem ? 12.4 : 11; // hanches
+  const torso = `M${n(X - sw - 3)} ${n(top + 3)} Q${n(X - sw - 2)} ${n(top - 3)} ${n(X - 6)} ${n(top - 4)} L${n(X + 6)} ${n(top - 4)} Q${n(X + sw + 2)} ${n(top - 3)} ${n(X + sw + 3)} ${n(top + 3)} Q${n(X + sw + flare)} ${n(cy + H * 0.36)} ${n(f.c + wW)} ${n(waist)} L${n(f.c + hW)} ${n(f.hy)} L${n(f.c - hW)} ${n(f.hy)} L${n(f.c - wW)} ${n(waist)} Q${n(X - sw - flare)} ${n(cy + H * 0.36)} ${n(X - sw - 3)} ${n(top + 3)}Z`;
+  const braY = n(cy + H * 0.42);
+  const bra = `M${n(X - sw - 3)} ${n(top + 3)} Q${n(X - sw - 2)} ${n(top - 3)} ${n(X - 6)} ${n(top - 4)} L${n(X + 6)} ${n(top - 4)} Q${n(X + sw + 2)} ${n(top - 3)} ${n(X + sw + 3)} ${n(top + 3)} L${n(X + sw + 1.5)} ${braY} L${n(X - sw - 1.5)} ${braY}Z`;
   const scapX = 11 - 4 * effort;
   const shape = { X, cy, waist, sw, flare };
   return (
@@ -358,8 +378,9 @@ function FrontFigure({ scene, pose, showTrace, muscles, ghost, L, effort }) {
       {traces && traces.map((tr, k) => <Trace key={k} tr={tr} />)}
       {!scene.noLegs && sides.map((s, k) => <Leg key={'l' + k} h={s.hip} k={s.knee} a={s.ankle} t={[s.ankle[0] + (k === 0 ? -3 : 3), s.ankle[1] + 5]} L={L} />)}
       {!scene.noHead && <line x1={X} y1={n(cy)} x2={n(f.headC[0])} y2={n(f.headC[1])} stroke={L.skin} strokeWidth="6.5" strokeLinecap="round" />}
-      <path d={torso} fill={L.shirt} />
-      {!scene.noLegs && <path d={`M${f.c - 10.5} ${n(waist + 2)} L${f.c + 10.5} ${n(waist + 2)} L${f.c + 12.5} ${f.hy + 7} L${f.c - 12.5} ${f.hy + 7}Z`} fill={L.shorts} />}
+      <path d={torso} fill={L.top === 'bra' ? L.skin : L.shirt} />
+      {L.top === 'bra' && <path d={bra} fill={L.shirt} />}
+      {!scene.noLegs && <path d={`M${n(f.c - wW - 0.5)} ${n(waist + 2)} L${n(f.c + wW + 0.5)} ${n(waist + 2)} L${n(f.c + hW + 1.5)} ${f.hy + 7} L${n(f.c - hW - 1.5)} ${f.hy + 7}Z`} fill={L.shorts} />}
       {back
         ? (
           <g fill="none" stroke={L.line} strokeLinecap="round" strokeWidth="1.1">
@@ -383,8 +404,9 @@ function FrontFigure({ scene, pose, showTrace, muscles, ghost, L, effort }) {
   );
 }
 
-export function Figure({ scene, pose, showTrace = false, muscleText = '', ghost = false, bad = false, effort = 0.8, showMuscles = true }) {
-  const L = bad ? LOOK_BAD : LOOK;
+export function Figure({ scene, pose, showTrace = false, muscleText = '', ghost = false, bad = false, effort = 0.8, showMuscles = true, avatar = null }) {
+  const look = avatar ? lookFor(avatar) : currentLook();
+  const L = bad ? { ...look, ...BAD } : look;
   const muscles = muscleText && !ghost && showMuscles ? musclesOf(muscleText) : [];
   const common = { scene, pose, showTrace, muscles, ghost, L, effort };
   if (scene.view === 'top') return <TopFigure {...common} />;
@@ -399,7 +421,9 @@ export function Figure({ scene, pose, showTrace = false, muscleText = '', ghost 
   const front = [down[1] * flip, -down[0] * flip];
   const TL = Math.hypot(j.hip[0] - j.shoulder[0], j.hip[1] - j.shoulder[1]);
   const Q = (f, d) => [j.shoulder[0] + front[0] * f + down[0] * d * TL, j.shoulder[1] + front[1] * f + down[1] * d * TL];
-  const torso = `M${xy(Q(-5.7, -0.04))} Q${xy(Q(0, -0.16))} ${xy(Q(4.8, -0.02))} Q${xy(Q(8.2, 0.3))} ${xy(Q(5, 0.72))} L${xy(Q(5.8, 1.02))} L${xy(Q(-6.2, 1.02))} L${xy(Q(-5.7, 0.7))} Q${xy(Q(-7, 0.28))} ${xy(Q(-5.7, -0.04))}Z`;
+  const chest = L.body === 'f' ? 9.4 : 8.2;
+  const torso = `M${xy(Q(-5.7, -0.04))} Q${xy(Q(0, -0.16))} ${xy(Q(4.8, -0.02))} Q${xy(Q(chest, 0.3))} ${xy(Q(5, 0.72))} L${xy(Q(5.8, 1.02))} L${xy(Q(-6.2, 1.02))} L${xy(Q(-5.7, 0.7))} Q${xy(Q(-7, 0.28))} ${xy(Q(-5.7, -0.04))}Z`;
+  const bra = `M${xy(Q(-5.7, -0.04))} Q${xy(Q(0, -0.16))} ${xy(Q(4.8, -0.02))} Q${xy(Q(chest, 0.26))} ${xy(Q(7, 0.44))} L${xy(Q(-6.6, 0.44))} Q${xy(Q(-7, 0.24))} ${xy(Q(-5.7, -0.04))}Z`;
   const shorts = `M${xy(Q(5.4, 0.78))} L${xy(Q(-6, 0.76))} L${xy(Q(-6.9, 1.1))} L${xy(Q(6.3, 1.1))}Z`;
   const up = [j.headC[0] - j.shoulder[0], j.headC[1] - j.shoulder[1]];
   const farReach = !j.farElbow && scene.farHand ? ik(j.shoulder, scene.farHand, SEG.uarm, SEG.farm, 1) : null;
@@ -418,7 +442,8 @@ export function Figure({ scene, pose, showTrace = false, muscleText = '', ghost 
       {tr && tr.length > 2 && <Trace tr={tr} />}
       {/* buste, tête */}
       <line x1={rNum(j.shoulder[0])} y1={rNum(j.shoulder[1])} x2={rNum(j.headC[0])} y2={rNum(j.headC[1])} stroke={L.skin} strokeWidth="5.8" strokeLinecap="round" />
-      <path d={torso} fill={L.shirt} />
+      <path d={torso} fill={L.top === 'bra' ? L.skin : L.shirt} />
+      {L.top === 'bra' && <path d={bra} fill={L.shirt} />}
       <path d={shorts} fill={L.shorts} />
       {sideMuscles(j, muscles.filter(m => ['chest', 'back', 'core', 'glutes'].includes(m.z)), effort, Q, front)}
       <HeadSide c={j.headC} up={up} L={L} face={flip} />
