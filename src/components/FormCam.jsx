@@ -8,6 +8,7 @@ import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
 import { pickPerson } from '../form/pickPerson';
+import { beepOn, playRepBeep, setBeepOn, unlockBeep } from '../form/repBeep';
 import { lensesFor, nextZoom, savedLens, savedZoom, saveLens, saveZoom, zoomLevels, zoomText } from '../form/camZoom';
 
 // Filmer une série (4.19) : la caméra du téléphone, le squelette détecté dessiné par-dessus, le compteur de reps en direct.
@@ -44,12 +45,18 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
   const [zoom, setZoom] = useState(1);
   const [camReady, setCamReady] = useState(false);
   const trackRef = useRef(null);
+  // bip à chaque rep comptée (4.35), entendu dans les écouteurs pendant la série
+  const [beep, setBeep] = useState(beepOn);
+  const beepRef = useRef(beep);
+  beepRef.current = beep;
+  const toggleBeep = () => { const v = !beep; setBeep(v); setBeepOn(v); if (v) { unlockBeep(); playRepBeep(); } };
   const run = useRef(null);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
   useEffect(() => {
     let stopped = false, raf = 0, timer = 0, stream = null;
+    if (beepRef.current) unlockBeep();
     const r = { phase: 'loading', frames: [], visibleSince: null, recStart: 0, lastTs: 0, lostSince: null, count: 0, lastRepT: 0, countedAt: 0, aspect: 9 / 16, sec: 0, recorder: null, chunks: [], mime: '' };
     run.current = r;
     const go = p => { r.phase = p; if (!stopped) setPhase(p); };
@@ -190,6 +197,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         const n = liveCount(r.frames, P, { aspect: r.aspect });
         if (n > r.count) {
           r.count = n; r.lastRepT = ts; setCount(n);
+          if (beepRef.current) { playRepBeep(); r.beeps = (r.beeps || 0) + 1; if (window.__r2fPoseMock) window.__r2fPoseMock.beeps = r.beeps; }
           try { navigator.vibrate && navigator.vibrate(40); } catch (e) {}
         } else if (n < r.count) {
           // 4.32 : le calcul se corrige avec plus d'images (bonne personne retrouvée…) : le compteur suit, sans vibrer
@@ -308,6 +316,11 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           <p className="text-xs font-black text-pink-300 uppercase tracking-wider">Analyse vidéo</p>
           <p className="text-sm font-bold text-white truncate">{item.name}</p>
         </div>
+        {!P.iso && (
+          <button type="button" onClick={toggleBeep} aria-pressed={beep} aria-label={beep ? 'Bip à chaque rep : activé' : 'Bip à chaque rep : coupé'} title="Bip à chaque rep comptée" data-testid="form-beep-toggle" className={`nav-btn ${beep ? '' : 'opacity-50'}`}>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />{beep ? <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /> : <path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />}</svg>
+          </button>
+        )}
         <button type="button" onClick={switchCam} aria-label="Changer de caméra" title="Changer de caméra" data-testid="form-cam-switch" className="nav-btn"><Art name="repeat" size={20} bare /></button>
       </div>
 
@@ -345,6 +358,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
               <p className="text-base font-black text-white">Mets-toi en place</p>
               <p className="text-sm text-slate-300">{placementText(P)}</p>
               <p className="text-xs text-slate-400">L’analyse démarre toute seule dès que tout ton corps est visible.</p>
+              {!P.iso && <p className="text-xs text-slate-400" data-testid="form-beep-note">{beep ? 'Un bip à chaque rep validée (dans tes écouteurs s’ils sont branchés). Pas de bip = rep pas comptée.' : 'Bip à chaque rep coupé : touche le haut-parleur en haut pour le remettre.'}</p>}
               {calibMsg && <p className="text-xs font-bold text-emerald-300" data-testid="chin-calib-done">{calibMsg}</p>}
               {camReady && (zoomCaps || lenses.length > 1) && <p className="text-xs text-slate-400">{zoomCaps && zoomCaps.min < 0.95 ? 'Tu peux dézoomer (grand angle) ou zoomer en haut à gauche, avant que l’analyse démarre.' : lenses.length > 1 ? 'Change d’objectif (grand angle…) ou de zoom en haut à gauche, avant que l’analyse démarre.' : 'Tu peux zoomer en haut à gauche, avant que l’analyse démarre.'}</p>}
               {camReady && !zoomCaps && lenses.length < 2 && <p className="text-[11px] text-slate-500" data-testid="cam-zoom-none">Zoom et grand angle : ce téléphone ne les donne pas au navigateur. Recule le téléphone si tu n’es pas en entier dans l’image.</p>}

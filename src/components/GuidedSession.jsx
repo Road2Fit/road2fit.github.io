@@ -2,6 +2,7 @@ import { Art } from './Art';
 import { assistText } from '../lib/assist';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { safeLazy } from '../lib/safeLazy';
+import { beepOn, unlockBeep } from '../form/repBeep';
 import { playGameSound } from '../lib/sound';
 import { isBarbell, platesText } from '../lib/plates';
 import { PlatesDiagram } from './PlatesDiagram';
@@ -636,7 +637,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               })()}
             </div>
             {!sw && (
-              <button type="button" onClick={() => setCamOpen(true)} className="tap-free w-full py-1.5 text-sm font-bold text-slate-300 flex items-center justify-center gap-1" data-testid="form-cam-open">
+              <button type="button" onClick={() => { if (beepOn()) unlockBeep(); setCamOpen(true); }} className="tap-free w-full py-1.5 text-sm font-bold text-slate-300 flex items-center justify-center gap-1" data-testid="form-cam-open">
                 <Art name="camera" />Me filmer : le coach analyse ma série
               </button>
             )}

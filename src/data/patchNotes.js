@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.35',
+    date: '2026-11-12',
+    title: 'Un bip à chaque rep validée',
+    items: [
+      'Analyse vidéo : un bip à chaque rep comptée, que tu entends dans tes écouteurs pendant la série. Pas de bip = rep pas comptée.',
+      'Activé au départ ; le haut-parleur en haut de l’écran de la caméra le coupe ou le remet (réglage gardé).',
+    ],
+  },
+  {
     version: '4.34',
     date: '2026-11-12',
     title: 'Trois bugs corrigés',
