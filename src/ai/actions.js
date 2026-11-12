@@ -1,6 +1,9 @@
 // Changements proposés par le coach intelligent : vérifiés un par un (rien d'inconnu ni d'absurde ne passe), puis appliqués à l'état
 // seulement quand la personne appuie sur « Appliquer ». Fonctions pures, testées dans actions.test.js.
 import { coachRealEntries, getCoachSettings } from '../coach/settings';
+import { THEME_IDS, setDayType } from '../coach/dayTheme';
+import { coachPlanWeek } from '../coach/planning';
+import { getWeekStart } from '../lib/dates';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { SPORTS } from '../data/sports';
 import { makeQuestFromCatalog } from '../lib/questFactory';
@@ -111,6 +114,13 @@ export function normalizeAction(a, state, today) {
     case 'skip': {
       const dates = dateList(x.dates, today);
       if (dates.length) args = { dates };
+      break;
+    }
+    case 'day_theme': {
+      // « aujourd'hui je veux une séance de pousser, demain de tirer » (4.36)
+      const dates = dateList(x.dates || (x.date ? [x.date] : []), today);
+      const theme = x.theme === 'auto' ? null : THEME_IDS[x.theme];
+      if (dates.length && (theme || x.theme === 'auto')) args = { dates, theme };
       break;
     }
     case 'extra_session': {
@@ -260,6 +270,20 @@ export function applyAction(state, a, today) {
     }
     case 'skip':
       return withCoach({ gymSkips: [...new Set([...(coach.gymSkips || []), ...x.dates])].sort() });
+    case 'day_theme': {
+      // jour sans séance prévue : une séance en plus ce jour-là (avec ce thème)
+      let cs = coach;
+      const extra = new Set(coach.gymExtra || []);
+      x.dates.forEach(d => {
+        cs = { ...cs, dayTypes: setDayType(cs, d, x.theme, today) };
+        if (x.theme) {
+          let planned = false;
+          try { planned = coachPlanWeek(state, getWeekStart(d), today).planned.includes(d); } catch (e) { /* rien */ }
+          if (!planned) extra.add(d);
+        }
+      });
+      return withCoach({ dayTypes: cs.dayTypes, gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !(x.theme && x.dates.includes(d))) });
+    }
     case 'extra_session': {
       const extra = new Set(coach.gymExtra || []);
       x.add.forEach(d => extra.add(d));
@@ -293,7 +317,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */

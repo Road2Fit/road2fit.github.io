@@ -4,6 +4,7 @@ import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
 import { getAllEntries, isStartEntry } from '../lib/quests';
 import { sportInfo } from '../data/sports';
+import { dayTypeOf } from './dayTheme';
 
 // Contraintes d'un jour : volley (jeudi/vendredi par défaut), match, récupération
 // Volley un jour donné : jours habituels, sauf les dates « pas de volley », plus les volleys exceptionnels
@@ -193,6 +194,8 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
     extras.forEach(d => { planned.push(d); plannedTypes[d] = 'FB'; });
     planned.sort();
   }
+  // thème choisi par la personne pour un jour (4.36) : il remplace celui du coach
+  planned.forEach(d => { const t = dayTypeOf(coach, d); if (t) plannedTypes[d] = t; });
   const shortfall = Math.max(0, remaining - planned.filter(d => !extraSet.has(d)).length);
   const matchInWeek = days.some(d => (coach.matchDates || []).includes(d));
   return {

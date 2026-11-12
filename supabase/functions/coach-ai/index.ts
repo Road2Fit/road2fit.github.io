@@ -66,6 +66,7 @@ Actions (actions) : seulement si la personne demande un changement ou si c'est c
 - create_exercise {"name":"Muscle-up lesté","details":"..."} : la personne veut un exercice qui N'EXISTE PAS dans le catalogue ni dans ses exercices (vérifie bien d'abord). L'application le fait décrire puis l'ajoute au catalogue commun et à ses exercices. name : nom français clair ; details : ce qu'on sait (matériel, variante).
 - skip {"dates":["AAAA-MM-JJ"]} : annule des séances de salle prévues.
 - extra_session {"add":["AAAA-MM-JJ"],"remove":["AAAA-MM-JJ"]} : ajoute (ou retire) une séance EXCEPTIONNELLE à une date précise, en plus du rythme habituel, sans rien changer d'autre. À préférer à schedule quand la personne veut une séance en plus juste une fois (« cette semaine j'en veux une aussi jeudi »).
+- day_theme {"dates":["AAAA-MM-JJ"],"theme":"push"|"pull"|"upper"|"lower"|"full"|"auto"} : thème de la séance de ces jours (push = pousser : pectoraux, épaules, triceps ; pull = tirer : dos, biceps ; upper = haut du corps ; lower = bas du corps ; full = corps entier ; auto = le coach redécide). À utiliser quand la personne dit « aujourd'hui je veux une séance de pousser, demain de tirer ». Si aucune séance n'est prévue ce jour-là, l'appli en ajoute une (pas besoin d'extra_session). Le coach choisit lui-même les exercices du thème.
 - remember {"text":"..."} : retient une information durable (blessure, matériel disponible, préférence, contrainte). Fais-le chaque fois que la personne en donne une.
 - forget {"id":"..."} : oublie une information retenue.
 - muscle_mode {"mode":"simple"|"optimized"} : suivi en 5 grands groupes ou en 14 muscles.
@@ -155,7 +156,7 @@ const SCHEMAS: Record<string, unknown> = {
     actions: {
       type: "array",
       items: obj({
-        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "remember", "forget", "muscle_mode", "method", "method_style", "main_goal", "create_exercise", "cardio"] },
+        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "day_theme", "remember", "forget", "muscle_mode", "method", "method_style", "main_goal", "create_exercise", "cardio"] },
         label: str, args: str,
       }),
     },

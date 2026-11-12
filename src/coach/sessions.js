@@ -1,4 +1,5 @@
 import { coachSlotFor } from './planning';
+import { dayTypeOf, themeLabel } from './dayTheme';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
 import { coachOn, coachableQuests, isHomeDay, placeOf } from './equipment';
@@ -222,7 +223,14 @@ function coachBuildTypedSession(state, type, di, opts = {}) {
 
 // Construit la séance prévue (mode A/B ou mode 3 séances)
 export function coachBuildPlanned(state, slot, di, opts = {}) {
-  const s = slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
+  // thème choisi par la personne (4.36) : respecté même un jour où le coach éviterait les jambes, avec un avertissement
+  const chosen = dayTypeOf(state.coach, slot.iso || di.iso);
+  let s;
+  if (chosen) {
+    const legs = COACH_TYPES[chosen].legs && !di.legsOk;
+    s = coachBuildTypedSession(state, chosen, legs ? { ...di, legsOk: true } : di, opts);
+    s = { ...s, chosenType: chosen, notes: [`Séance « ${themeLabel(chosen)} » : c’est toi qui l’as choisie.`, ...(legs ? [`D’habitude le coach évite les jambes ce jour-là (${di.legsWhy}) : garde de la marge.`] : []), ...(s.notes || [])] };
+  } else s = slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
   // séance exceptionnellement à la maison (coach.homeDays) : repérée pour l'affichage et le « Machine prise ou pas le matériel ? »
   return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...s, home: true } : s;
 }

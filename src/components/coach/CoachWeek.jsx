@@ -3,6 +3,7 @@ import { sessionFocus } from '../../coach/focus';
 import { Art } from '../Art';
 import { COACH_TYPES, coachDayLabel } from '../../coach/settings';
 import { card } from './ui';
+import { DayThemePicker } from './DayTheme';
 
 const uniq = list => Array.from(new Set(list)).sort();
 
@@ -143,6 +144,7 @@ export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, p
                   : <button type="button" onClick={() => addSport(selDay.iso)} className={`${btn} bg-sky-700 border-sky-500 text-white`}>{sport.icon} + {sport.cap} ce jour</button>
               )}
             </div>
+            {selDay.gym === 'planned' && !plan && <DayThemePicker coach={coach} date={selDay.iso} today={today} updateCoach={updateCoach} prefix="week-theme" />}
           </div>
         );
       })()}

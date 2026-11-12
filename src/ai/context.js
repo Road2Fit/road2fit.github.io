@@ -1,5 +1,6 @@
 // Ce que le coach intelligent reçoit : un résumé texte compact des données utiles (jamais de photo, d'e-mail, de note de pesée ni de prénom).
 import { coachBalance, coachOverview } from '../coach/advice';
+import { dayTypeOf, themeLabel } from '../coach/dayTheme';
 import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
@@ -89,7 +90,9 @@ export function coachContext(state, today, { overview } = {}) {
   lines.push(`Séances de muscu déjà faites cette semaine (du lundi ${weekStart} à aujourd'hui) : ${doneWeek.size ? [...doneWeek].sort().join(', ') : 'aucune'}.`);
   try {
     const up = upcomingSessions(state, today, overview);
-    lines.push(`Séances prévues par l'appli avec les réglages actuels : ${up.length ? up.map(u => `${dayName(new Date(`${u}T00:00:00`).getDay())} ${u}`).join(', ') : 'aucune'}.`);
+    const ovr = overview || coachOverview(state, today);
+    const typeOf = u => { const p = ((ovr && ovr.plannedAll) || []).find(x => x.iso === u); const t = dayTypeOf(c, u) || (p && p.type); return t ? ` (${themeLabel(t) || t}${dayTypeOf(c, u) ? ', thème choisi par la personne' : ''})` : ''; };
+    lines.push(`Séances prévues par l'appli avec les réglages actuels : ${up.length ? up.map(u => `${dayName(new Date(`${u}T00:00:00`).getDay())} ${u}${typeOf(u)}`).join(', ') : 'aucune'}.`);
   } catch { /* rien */ }
   const p = c.profile || {};
   lines.push(`Profil : ${p.sex === 'f' ? 'femme' : 'homme'}${p.age ? `, ${p.age} ans` : ''}${p.heightCm ? `, ${p.heightCm} cm` : ''}${lastWeight(state) ? `, ${lastWeight(state)} kg` : ''}${state.targetWeightKg ? `, poids visé ${state.targetWeightKg} kg` : ''}.`);

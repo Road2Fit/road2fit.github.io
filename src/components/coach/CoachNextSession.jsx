@@ -15,6 +15,7 @@ import { sessionFocus } from '../../coach/focus';
 import { card } from './ui';
 import { CustomSetsEditor } from './CustomSetsEditor';
 import { HomeOnceToggle } from './CoachPlace';
+import { DayThemePicker } from './DayTheme';
 import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
@@ -146,6 +147,7 @@ export function CoachNextSession({
             })()}
           </div>
           {!plan && !preview && !ov.program && <HomeOnceToggle coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
+          {!plan && !preview && !ov.program && <DayThemePicker coach={coach} date={shownDate} today={today} updateCoach={updateCoach} />}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;

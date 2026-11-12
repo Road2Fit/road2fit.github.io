@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.36',
+    date: '2026-11-12',
+    title: 'Choisis le thème de ta séance',
+    items: [
+      'Sur ta prochaine séance : « Thème de la séance » avec Haut, Bas, Push (pousser : pectoraux, épaules, triceps), Pull (tirer : dos, biceps) ou Complet. Le coach refait la séance avec les bons exercices.',
+      'Pour un autre jour : touche-le dans « Ma semaine ». « Auto » rend la main au coach.',
+      'Tu peux aussi le demander au coach : « aujourd’hui je veux une séance de pousser, demain de tirer ».',
+    ],
+  },
+  {
     version: '4.35',
     date: '2026-11-12',
     title: 'Un bip à chaque rep validée',
