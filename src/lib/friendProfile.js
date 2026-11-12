@@ -68,6 +68,7 @@ export function buildFriendProfile(state, today) {
     sessionDays: dates.length,
     weekDays: dates.filter(d => d >= wk).length,
     sport: clip(state.coach && state.coach.sport, 30),
+    gameBest: Math.max(0, Math.floor(Number(state.gameBest) || 0)), // record du jeu pendant le repos (4.28)
     lastSession: lastDate
       ? { date: lastDate, items: entries.filter(e => e.date === lastDate).slice(0, 12).map(e => ({ name: clip(e.quest.name), icon: clip(e.quest.icon, 4), text: describeEntry(e) })) }
       : null,

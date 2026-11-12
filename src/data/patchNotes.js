@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.28',
+    date: '2026-11-12',
+    title: 'Ton record au jeu, chez tes amis',
+    items: [
+      'Onglet Amis : le record de chacun au jeu pendant le repos s’affiche dans la liste et sur son profil.',
+      'Ton record est maintenant gardé dans ta sauvegarde : tu le retrouves sur tous tes appareils.',
+    ],
+  },
+  {
     version: '4.27',
     date: '2026-11-12',
     title: 'Repos : les disques à préparer',

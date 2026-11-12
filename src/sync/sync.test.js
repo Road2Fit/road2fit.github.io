@@ -84,6 +84,12 @@ describe('mergeStates (fusion à trois voies)', () => {
     expect(m.quests[0].history.map(e => e.id)).toEqual(['e1', 'e3', 'e2']); // ordre chronologique
   });
 
+  it('record du jeu du repos : garde le meilleur des deux appareils (4.28)', () => {
+    const b = { ...base, gameBest: 50 };
+    expect(mergeStates(b, { ...b, gameBest: 180 }, { ...b, gameBest: 90 }).gameBest).toBe(180);
+    expect(mergeStates(b, { ...b, gameBest: 60 }, { ...b, gameBest: 120 }, { preferLocal: true }).gameBest).toBe(120);
+  });
+
   it('réunit les animations signalées comme fausses sur les deux appareils', () => {
     const f = id => ({ id, animId: 'squat', view: 'side', name: 'Squat', at: '2026-10-29T10:00:00Z' });
     const b = { ...base, animFlags: [f('af1')] };

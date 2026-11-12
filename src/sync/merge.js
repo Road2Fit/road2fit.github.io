@@ -135,6 +135,8 @@ function merge3(base, local, remote, ctx, key, parent) {
   if (key === 'heroName' && typeof local === 'string' && typeof remote === 'string' && (!local.trim() || !remote.trim())) {
     return local.trim() ? local : remote;
   }
+  // record du jeu du repos : le meilleur des deux appareils
+  if (key === 'gameBest' && typeof local === 'number' && typeof remote === 'number') return Math.max(local, remote);
   // EXP : les gains des deux appareils s'additionnent (ici pour le total et pour chaque semaine de `xpWeeks`)
   if ((key === 'xp' || parent === 'xpWeeks') && typeof local === 'number' && typeof remote === 'number') {
     return typeof base === 'number' ? Math.max(0, local + remote - base) : Math.max(local, remote);

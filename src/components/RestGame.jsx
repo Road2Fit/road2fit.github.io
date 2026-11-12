@@ -191,7 +191,11 @@ export function RestGame({ onClose }) {
         if (s.obstacles.some(o => hit(s, o))) {
           s.over = true;
           const sc = Math.floor(s.dist / 10);
-          if (sc > readBest()) { writeBest(sc); setBest(sc); }
+          if (sc > readBest()) {
+            writeBest(sc); setBest(sc);
+            // 4.28 : le record part dans la sauvegarde (App.jsx) et dans le profil vu par les amis
+            try { window.dispatchEvent(new CustomEvent('rondoufit-gamebest', { detail: sc })); } catch (e) { /* rien */ }
+          }
           setOver(true);
         }
         const sc = Math.floor(s.dist / 10);

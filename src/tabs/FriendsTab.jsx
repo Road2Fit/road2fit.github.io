@@ -120,7 +120,7 @@ export function FriendsTab({ friends, onOpenAccount, fphotos = null, photoShare 
                   <div className="font-black text-white truncate">{nameOf(f)}{rankOf(f) && <span data-testid="friend-rank" className="ml-1.5 text-pink-300">{rankOf(f)}</span>}</div>
                   <div className="text-xs text-slate-400">{s.lastSession ? `Dernière séance : ${dateFr(s.lastSession.date)}` : 'Pas encore de séance'}</div>
                 </div>
-                <div className="flex gap-1.5 shrink-0"><span className={chip}>Niv. {s.level || 1}</span>{s.streak > 0 && <span className={chip}>{s.streak} j</span>}</div>
+                <div className="flex gap-1.5 shrink-0"><span className={chip}>Niv. {s.level || 1}</span>{s.streak > 0 && <span className={chip}>{s.streak} j</span>}{s.gameBest > 0 && <span className={chip} title="Record au jeu du repos" data-testid="friend-row-game"><Art name="gamepad" />{s.gameBest}</span>}</div>
               </button>
             );
           })}
@@ -164,6 +164,7 @@ function FriendProfile({ friend, onBack, onRemove, fphotos }) {
           <span className={chip}>{s.sessionDays || 0} jour(s) d’entraînement</span>
           <span className={chip}>Cette semaine : {s.weekDays || 0} jour(s)</span>
           {s.sport && <span className={chip}>{cleanText(s.sport)}</span>}
+          {s.gameBest > 0 && <span className={chip} data-testid="friend-game-best"><Art name="gamepad" />Record au jeu du repos : {s.gameBest}</span>}
           <span className={chip}>{(s.exercises || []).length} exercice(s)</span>
         </div>
         <p className="text-xs text-slate-500">Profil mis à jour le {new Date(friend.updated_at).toLocaleDateString('fr-FR')}.</p>

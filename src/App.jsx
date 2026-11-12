@@ -165,6 +165,24 @@ export function App() {
     return () => window.removeEventListener('rondoufit-animflag', h);
   }, [setGameState, triggerToast]);
 
+  // Record du jeu du repos (4.28) : gardé dans la sauvegarde (synchronisée, publiée pour les amis) ET sur l'appareil
+  // (rondoufit:gameBest, lu par le jeu). Les deux se recopient le plus haut.
+  useEffect(() => {
+    const h = e => {
+      const v = Number(e.detail) || 0;
+      setGameState(prev => (v > (Number(prev.gameBest) || 0) ? { ...prev, gameBest: v } : prev));
+    };
+    window.addEventListener('rondoufit-gamebest', h);
+    return () => window.removeEventListener('rondoufit-gamebest', h);
+  }, [setGameState]);
+  useEffect(() => {
+    let local = 0;
+    try { local = Number(localStorage.getItem('rondoufit:gameBest')) || 0; } catch (e) { /* rien */ }
+    const saved = Number(gameState.gameBest) || 0;
+    if (local > saved) setGameState(prev => (local > (Number(prev.gameBest) || 0) ? { ...prev, gameBest: local } : prev));
+    else if (saved > local) { try { localStorage.setItem('rondoufit:gameBest', String(saved)); } catch (e) { /* rien */ } }
+  }, [gameState.gameBest, setGameState]);
+
   const {
     paidAchievementsRef, skipPRRef, undoInfo, registerUndo, handleUndo, weekData, records, achStats,
   } = useRewards({

@@ -106,7 +106,7 @@ export function useFriends({ gameState, setGameState, user, active = false, isLo
     t = setTimeout(run, PUBLISH_DEBOUNCE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on, code, gameState.quests, gameState.maxRecords, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode]);
+  }, [on, code, gameState.quests, gameState.maxRecords, gameState.xp, gameState.rankTrials, gameState.heroName, gameState.coach && gameState.coach.sport, gameState.muscleMode, gameState.gameBest]);
 
   const enable = () => {
     try { localStorage.setItem('rondoufit:friends', '1'); } catch { /* sans mémoire : valable pour cette session */ }

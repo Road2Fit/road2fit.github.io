@@ -29,6 +29,11 @@ describe('résumé de profil partagé avec les amis', () => {
     expect(json).not.toContain('84');
   });
 
+  it('partage le record du jeu du repos (4.28)', () => {
+    expect(buildFriendProfile({ ...state, gameBest: 245 }, TODAY).gameBest).toBe(245);
+    expect(buildFriendProfile({ ...state, gameBest: undefined }, TODAY).gameBest).toBe(0);
+  });
+
   it('le nom par défaut de l’édition Rondoudou n’est pas partagé comme prénom', () => {
     expect(buildFriendProfile({ ...state, heroName: 'Dresseur Rondoudou' }, TODAY).name).toBe('');
   });

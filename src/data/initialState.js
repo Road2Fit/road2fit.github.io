@@ -12,6 +12,7 @@ export const INITIAL_STATE = {
   muscleMode: 'simple',                         // suivi des muscles : 'simple' (5 grands groupes) ou 'optimized' (14 muscles précis)
   onboarded: false,
   voiceNextSeen: false,
+  gameBest: 0,                                  // record du jeu pendant le repos (4.28 : sauvegardé et montré aux amis)
   friendsPhotoShare: false,                     // montrer ma dernière photo de séance à mes amis (choix explicite, désactivé au départ)
   taggedSeenAt: '',                             // date ISO de la dernière visite de Souvenirs (pastille des photos où l'on m'a tagué)                         // onglet « Prochaine séance » de la dictée ouvert au moins une fois (sinon pastille sur le micro)
   aiConsent: false,

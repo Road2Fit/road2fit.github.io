@@ -8,13 +8,14 @@ afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
 
-async function logIn(srv, user, heroName) {
+async function logIn(srv, user, heroName, extra = {}) {
   const storage = {
     __classic: '1',
     'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }),
     'rondoufit:account': JSON.stringify({ session: user.session }),
     'rondoufit:lastUser': user.id,
     rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true, heroName }),
+    ...extra,
   };
   const h = await launch({ storage, fetchImpl: srv.fetch });
   open.push(h);
@@ -45,7 +46,8 @@ describe('amis : code à 7 caractères', () => {
 
   it('saisir le code d’un ami l’ajoute ; son profil montre dernière séance, maxima et exercices', async () => {
     const srv = fakeSupabase();
-    const a = await logIn(srv, srv.addUser('a@x.fr'), 'Léa');
+    // record du jeu du repos fait avant la 4.28 (gardé seulement sur le téléphone) : repris et partagé
+    const a = await logIn(srv, srv.addUser('a@x.fr'), 'Léa', { 'rondoufit:gameBest': '137' });
     const code = myCode(a);
     const b = await logIn(srv, srv.addUser('b@x.fr'), 'Max');
     expect(pageText(b)).toContain('Pas encore d’ami');
@@ -60,6 +62,7 @@ describe('amis : code à 7 caractères', () => {
     expect(p).toContain('Tractions Pronation');
     expect(p).toContain('Maxima');
     expect(p).toContain('Ses exercices');
+    expect(byTest(b, 'friend-game-best').textContent).toContain('137');
     // jamais le poids ni la sauvegarde complète
     expect(p).not.toMatch(/\d+ kg ➔|poids de départ/i);
     const shared = JSON.stringify([...srv.profiles.values()]);
