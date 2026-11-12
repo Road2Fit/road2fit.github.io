@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.33',
+    date: '2026-11-12',
+    title: 'Corriger ta série pendant le repos',
+    items: [
+      'Pendant le repos, « Série faite : 12 reps » avec − / + : corrige le nombre de reps (ou de secondes) de la série que tu viens de faire, avec ou sans vidéo. Par exemple 10 si la caméra en a vu 8 et que tu en avais prévu 12.',
+    ],
+  },
+  {
     version: '4.32',
     date: '2026-11-12',
     title: 'Analyse vidéo : moins perdue quand tu sors du cadre',

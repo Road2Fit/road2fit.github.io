@@ -157,6 +157,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // analyse vidéo de CETTE série (affichée pendant le repos) ; série faite sans caméra : l'ancienne analyse disparaît
     const fx = form ? { formLast: { result: form, questId: it.questId, j, noted: Number(reps[j]) || 0, at: Date.now(), ai: aiForm && form.ok ? { idle: true } : null }, formAuto: it.questId } : { formLast: null };
     if (!form) clearClip(); // vidéo de la série précédente non gardée : effacée
+    // 4.33 : la série qui vient d'être faite, pour corriger son nombre de reps pendant le repos
+    fx.lastSet = { questId: it.questId, j };
     const done = d.done.map((x, k) => (k === j ? true : x));
     // record battu sur cette série ? (seulement s'il y a déjà un historique) : fêté sur l'écran de repos
     let pr = null;
@@ -207,9 +209,18 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     const left = wdone.findIndex(v => !v);
     // 4.27 : l'analyse vidéo d'un exercice précédent ne reste pas affichée pendant les repos de l'échauffement
     clearClip();
-    startRest(w.restSec, left >= 0 ? `Échauffement ${left + 1} · ${warmRows[left].label}` : `${setLabel(0)} · ${setText(it, d, 0)}`, { formLast: null });
+    startRest(w.restSec, left >= 0 ? `Échauffement ${left + 1} · ${warmRows[left].label}` : `${setLabel(0)} · ${setText(it, d, 0)}`, { formLast: null, lastSet: null });
   };
   const setReps = (i, v) => patch(it.questId, { reps: d.reps.map((r, k) => (k === i ? Math.max(0, v) : r)) });
+  // 4.33 : corriger le nombre de reps (ou de secondes) de la série qui vient d'être faite, avec ou sans vidéo
+  const fixLastReps = n => setG(prev => {
+    const ls = prev.lastSet;
+    const dd = ls && prev.data[ls.questId];
+    if (!dd) return prev;
+    const v = Math.max(0, n);
+    const fl = prev.formLast && prev.formLast.questId === ls.questId && prev.formLast.j === ls.j ? { ...prev.formLast, noted: v } : prev.formLast;
+    return { ...prev, formLast: fl, data: { ...prev.data, [ls.questId]: { ...dd, reps: dd.reps.map((x, k) => (k === ls.j ? v : x)) } } };
+  });
   const fixFormReps = n => setG(prev => {
     const fl = prev.formLast;
     const dd = fl && prev.data[fl.questId];
@@ -357,6 +368,11 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   // 4.27 : pendant le repos, schéma des disques de la PROCHAINE série (échauffement ou travail) pour préparer la barre
   const restLoad = screen === 'rest' && it && d && it.kind === 'load' && isBarbell(it.name) ? (inWarm ? warmRows[warmIdx].load : j >= 0 ? loadsOf(d)[j] : null) : null;
   const restPlates = restLoad && platesText(restLoad) ? restLoad : null;
+  // 4.33 : série qui vient d'être faite (corrigeable pendant le repos)
+  const lastIt = g.lastSet ? items.find(x => x.questId === g.lastSet.questId) : null;
+  const lastData = lastIt ? g.data[lastIt.questId] : null;
+  const lastVal = lastData && lastData.done && lastData.done[g.lastSet.j] ? Number(lastData.reps[g.lastSet.j]) || 0 : null;
+  const lastStep = lastIt && lastIt.timed ? 5 : 1;
   const canBack = hist.current.stack.length > 0;
   const goBack = () => {
     const st = hist.current.stack;
@@ -506,6 +522,14 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                 <p className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white" data-testid="rest-left">{fmtT(restLeft)}</p>
               </div>
               </>)}
+              {lastVal !== null && (
+                <div className="flex items-center justify-center gap-2" data-testid="last-set-fix">
+                  <span className="text-xs font-bold text-slate-400">{g.lastSet.questId !== (it && it.questId) ? `${lastIt.name} · ` : ''}Série faite :</span>
+                  <button type="button" onClick={() => fixLastReps(lastVal - lastStep)} disabled={lastVal <= 0} aria-label={lastIt.timed ? 'Cinq secondes de moins' : 'Une rep de moins'} data-testid="last-set-minus" className="tap-free w-8 h-8 rounded-lg bg-slate-800 text-white text-lg font-black disabled:opacity-30">−</button>
+                  <span className="min-w-[4.5rem] text-center text-sm font-black text-white" data-testid="last-set-reps">{lastVal} {lastIt.timed ? 's' : lastVal > 1 ? 'reps' : 'rep'}</span>
+                  <button type="button" onClick={() => fixLastReps(lastVal + lastStep)} aria-label={lastIt.timed ? 'Cinq secondes de plus' : 'Une rep de plus'} data-testid="last-set-plus" className="tap-free w-8 h-8 rounded-lg bg-slate-800 text-white text-lg font-black">+</button>
+                </div>
+              )}
               {rest.next && <p className="text-base font-bold text-slate-200 text-center" data-testid="rest-next">{rest.next}</p>}
               {restPlates && <PlatesDiagram total={restPlates} testId="rest-plates" className="w-full" />}
               {adapt && (
