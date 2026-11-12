@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { coinsForLevel } from '../anim/shop';
 import { playGameSound } from '../lib/sound';
 
 /**
@@ -20,7 +21,7 @@ export function useLevelCelebration({ levelInfo, isLoaded, syncStatus, soundEnab
     } else {
       triggerToast(
         `Niveau ${levelInfo.level} atteint !`,
-        `Encore ${levelInfo.nextLevelXp - levelInfo.currentLevelXp} EXP pour le niveau ${levelInfo.level + 1}.`,
+        `+${coinsForLevel(levelInfo.level)} pièces pour la boutique de ton avatar. Encore ${levelInfo.nextLevelXp - levelInfo.currentLevelXp} EXP pour le niveau ${levelInfo.level + 1}.`,
         0,
         '🎉'
       );

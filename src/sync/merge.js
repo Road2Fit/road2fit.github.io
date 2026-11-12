@@ -21,6 +21,7 @@ const SET_KEYS = {
   gymExtra: true,
   deloadWeeks: true,
   rankTrials: true,
+  avatarOwned: true, // objets achetés dans la boutique de l'avatar (4.40) : jamais perdus d'un appareil à l'autre
 };
 
 export function deepEqual(a, b) {

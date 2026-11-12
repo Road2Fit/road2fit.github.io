@@ -35,8 +35,8 @@ describe('avatar des animations', () => {
   });
 
   it('valeurs inconnues ou absentes → défaut', () => {
-    expect(cleanAvatar({ skin: 'zzz', hair: 'scarf' })).toEqual({ ...AVATAR_DEFAULT, hair: 'scarf' });
-    expect(cleanAvatar(null)).toEqual(AVATAR_DEFAULT);
+    expect(cleanAvatar({ skin: 'zzz', hair: 'scarf' })).toEqual({ ...AVATAR_DEFAULT, hair: 'scarf', items: {} });
+    expect(cleanAvatar(null)).toEqual({ ...AVATAR_DEFAULT, items: {} });
   });
 
   it('chaque option se dessine dans les 4 vues (profil, face, dos, dessus)', () => {
@@ -72,5 +72,46 @@ describe('avatar des animations', () => {
     expect(count(long, '#4a5160')).toBeGreaterThan(count(tee, '#4a5160'));
     const bra = draw(sc, { ...AVATAR_DEFAULT, top: 'bra' });
     expect(count(bra, '#e8b48f')).toBeGreaterThan(count(tee, '#e8b48f'));
+  });
+});
+
+describe('boutique de l’avatar (4.40)', () => {
+  it('pièces : de plus en plus par niveau ; solde = gagné − prix des objets achetés', async () => {
+    const { coinsForLevel, coinsEarned, coinsLeft, canBuy, itemById, ITEMS } = await import('./shop');
+    expect(coinsForLevel(1)).toBe(0);
+    expect(coinsForLevel(2)).toBe(14);
+    expect(coinsForLevel(10)).toBeGreaterThan(coinsForLevel(5));
+    expect(coinsEarned(1)).toBe(30);
+    expect(coinsEarned(3)).toBe(30 + 14 + 16);
+    expect(coinsLeft(3, ['band_red'])).toBe(60 - 40);
+    expect(canBuy(itemById('band_red'), 1, [])).toBe(false);
+    expect(canBuy(itemById('socks_white'), 1, [])).toBe(true);
+    expect(canBuy(itemById('socks_white'), 50, ['socks_white'])).toBe(false);
+    expect(new Set(ITEMS.map(i => i.id)).size).toBe(ITEMS.length);
+    expect(ITEMS.length).toBeGreaterThanOrEqual(50);
+  });
+
+  it('chaque objet se dessine dans les 4 vues, sans erreur', async () => {
+    const { ITEMS } = await import('./shop');
+    const sc = scenes();
+    for (const it of ITEMS) {
+      for (const top of ['tee', 'bra']) {
+        const a = { ...AVATAR_DEFAULT, top, bottom: 'leggings', items: { [it.slot]: it.id } };
+        for (const [k, s] of Object.entries(sc)) {
+          const svg = draw(s, a);
+          expect(svg, `${it.id} ${k}`).not.toMatch(/NaN|undefined/);
+        }
+      }
+    }
+  });
+
+  it('un objet porté apparaît : couleur, motif, halo', () => {
+    const side = movementFor('squat').scene;
+    expect(draw(side, { ...AVATAR_DEFAULT, items: { head: 'cap_red' } })).toContain('#c2362b');
+    const camo = draw(side, { ...AVATAR_DEFAULT, items: { topPattern: 'top_camo' } });
+    expect(camo).toMatch(/<pattern id="r2f-camo-/);
+    expect(camo).toContain('url(#r2f-camo-');
+    expect(draw(side, { ...AVATAR_DEFAULT, items: { aura: 'aura_gold' } })).toContain('url(#r2f-aura-aura_gold)');
+    expect(cleanAvatar({ items: { head: 'nope', eyes: 'cap_red', waist: 'belt_neon' } }).items).toEqual({ waist: 'belt_neon' });
   });
 });
