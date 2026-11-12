@@ -122,6 +122,7 @@ function makeCtx(frames, meta) {
     win: Math.max(1, Math.round(fps * 0.15) | 1),
     torso: median(torso2),
     cache: {},
+    chinCal: isNum(meta.chinCal) ? meta.chinCal : 0,
   };
   ctx.C = f => (use3d && f.w ? f.w : f.p); // repères pour les angles du plan sagittal
   return ctx;
@@ -504,9 +505,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
   if (quality < 0.8 && !fallback) findings.push({ id: 'quality', level: 'info', title: 'Visibilité moyenne', detail: 'Une partie du corps sortait parfois de l’image : les mesures sont un peu moins précises.', fix: 'Recule un peu le téléphone.' });
 
   findings.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
-  const nWarn = findings.filter(f => f.level === 'warn').length, nTip = findings.filter(f => f.level === 'tip').length;
-  const score = Math.max(30, 100 - 20 * nWarn - 8 * nTip);
-  const verdict = score >= 90 ? 'Propre' : score >= 70 ? 'Correct' : 'À travailler';
+  const { score, verdict } = scoreOf(findings);
   const eM = median(ecc), cM = median(con);
   const showTempo = !['olympic', 'olympicOver', 'generic', 'mountain'].includes(P.id);
   const summary = [`${N} rep${N > 1 ? 's' : ''}`, showTempo && isNum(eM) ? `${P.words[1]} ${fmtS(eM)}` : null, showTempo && isNum(cM) ? `${P.words[0]} ${fmtS(cM)}` : null].filter(Boolean).join(' · ');
@@ -533,9 +532,94 @@ export function analyzeSet(frames, pattern, meta = {}) {
     score,
     verdict,
     summary,
+    ...(ctx.chin ? { chin: { ...ctx.chin, cal: ctx.chinCal } } : {}),
   };
 }
 const round2 = v => (isNum(v) ? Math.round(v * 100) / 100 : null);
+
+// ---------- menton et barre (tractions ; refait en 4.25) ----------
+// Avant 4.25 la barre était placée au bout des doigts (repères 19/20), que la détection place souvent bien AU-DESSUS de la
+// barre (doigts dessinés tendus), et le menton n'était regardé que sur une seule image : beaucoup de reps réussies étaient
+// jugées « menton sous la barre ». Maintenant :
+//  - barre = position médiane des poignets pendant toute la série (les mains ne quittent pas la barre ; le téléphone est
+//    posé), moins WRIST_TO_BAR (la barre est dans la paume, un peu au-dessus de l'articulation du poignet) ;
+//  - menton = nez + CHIN_BELOW (bas du visage) ;
+//  - pour chaque rep, le point le PLUS HAUT atteint par le menton pendant toute la rep ;
+//  - calibration personnelle `chinCal` (en longueurs de buste, + = le menton est en réalité plus haut que mesuré) : réglée
+//    avant la série (menton tenu au niveau de la barre, `chinCalibration`) ou après (« Mon menton passait la barre »).
+export const WRIST_TO_BAR = 0.13, CHIN_BELOW = 0.10, CHIN_TOL = 0.04, CHIN_UNDER = 0.12, CHIN_CAL_MAX = 0.3;
+function barY(ctx) {
+  const ys = [];
+  for (const f of ctx.F) {
+    const p = f.p;
+    if (!p || !(p[15].v >= VIS || p[16].v >= VIS)) continue;
+    const w = midOf(p, p, 15, 16), sh = midOf(p, p, 11, 12);
+    if (w.y < sh.y) ys.push(w.y); // mains au-dessus des épaules : sur la barre
+  }
+  return ys.length >= 5 ? median(ys) - WRIST_TO_BAR * (ctx.torso || 0.3) : NaN;
+}
+function chinMargins(ctx, reps) {
+  const T = ctx.torso || 0.3;
+  const bar = barY(ctx);
+  if (!isNum(bar)) return null;
+  const chinY = clean(ctx, ctx.F.map(f => (f.p && f.p[NOSE].v >= VIS ? f.p[NOSE].y + CHIN_BELOW * T : NaN)));
+  const raw = [], idx = [];
+  reps.forEach((r, i) => {
+    let best = NaN;
+    for (let k = r.start; k <= r.end; k++) if (isNum(chinY[k]) && !(chinY[k] >= best)) best = chinY[k];
+    if (isNum(best)) { raw.push(Math.round(((bar - best) / T) * 1000) / 1000); idx.push(i); }
+  });
+  return raw.length ? { raw, idx } : null;
+}
+/** Constat « menton » d'après les écarts menton – barre de chaque rep (+ = au-dessus) et la calibration. */
+export function chinFinding(raw, idx, cal = 0) {
+  if (!raw || !raw.length) return null;
+  const v = raw.map(x => x + (cal || 0));
+  const okK = v.map(x => x >= -CHIN_TOL);
+  const ok = okK.filter(Boolean).length, under = v.filter(x => x < -CHIN_UNDER).length;
+  const bad = idx.filter((_, k) => !okK[k]);
+  const n = v.length;
+  const calTxt = cal ? ' (calibration personnelle appliquée)' : '';
+  if (ok / n >= 0.8) return F('chin', 'good', 'Menton au niveau de la barre', `Sur ${ok}/${n} reps${calTxt}.`);
+  if (under / n >= 0.5) return F('chin', 'warn', 'Menton sous la barre', `Ton menton a atteint la barre sur ${ok}/${n} reps${calTxt}.`, 'Monte jusqu’à ce que le menton dépasse la barre ; sinon, prends un élastique ou fais des négatives (descentes lentes).', bad);
+  return F('chin', 'tip', 'Il manque un peu en haut', `Ton menton a atteint la barre sur ${ok}/${n} reps${calTxt}.`, 'Tire encore un peu à chaque rep, jusqu’au menton au-dessus de la barre.', bad);
+}
+function scoreOf(findings) {
+  const nWarn = findings.filter(f => f.level === 'warn').length, nTip = findings.filter(f => f.level === 'tip').length;
+  const score = Math.max(30, 100 - 20 * nWarn - 8 * nTip);
+  return { score, verdict: score >= 90 ? 'Propre' : score >= 70 ? 'Correct' : 'À travailler' };
+}
+/** Même analyse avec une autre calibration du menton (sans refilmer). */
+export function applyChinCal(result, cal) {
+  if (!result || !result.ok || !result.chin) return result;
+  const fnd = chinFinding(result.chin.raw, result.chin.idx, cal);
+  const findings = result.findings.filter(f => f.id !== 'chin');
+  if (fnd) findings.push(fnd);
+  findings.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
+  return { ...result, findings, ...scoreOf(findings), chin: { ...result.chin, cal } };
+}
+/** Calibration qui fait passer toutes les reps de cette série (« mon menton passait la barre »). */
+export function chinCalToPassAll(result) {
+  if (!result || !result.chin || !result.chin.raw.length) return null;
+  const need = -Math.min(...result.chin.raw) - CHIN_TOL + 0.01;
+  return Math.round(Math.max(-CHIN_CAL_MAX, Math.min(CHIN_CAL_MAX, need)) * 1000) / 1000;
+}
+/**
+ * Calibration en direct : la personne tient le menton juste au niveau de la barre. frames = les ~1,5 dernières secondes.
+ * Renvoie la calibration (écart à ajouter) quand la position est tenue immobile, sinon null.
+ */
+export function chinCalibration(frames, meta = {}) {
+  const ctx = makeCtx(frames, meta);
+  if (ctx.valid < 15 || ctx.t[ctx.t.length - 1] - ctx.t[0] < 1.2) return null;
+  const T = ctx.torso || 0.3;
+  const bar = barY(ctx);
+  const nose = ctx.F.filter(f => f.p && f.p[NOSE].v >= VIS).map(f => f.p[NOSE].y);
+  if (!isNum(bar) || nose.length < 15) return null;
+  if (quantile(nose, 0.9) - quantile(nose, 0.1) > 0.06 * T) return null; // pas immobile
+  const raw = (bar - (median(nose) + CHIN_BELOW * T)) / T;
+  if (Math.abs(raw) > 0.45) return null; // menton loin de la barre : pas en position
+  return Math.round(Math.max(-CHIN_CAL_MAX, Math.min(CHIN_CAL_MAX, -raw)) * 1000) / 1000;
+}
 
 // ---------- contrôles de technique ----------
 // FRONT_ONLY : mesures dans le plan de face (genoux, bassin, symétrie). Les autres demandent une vue de profil (2D) ou les repères 3D.
@@ -778,24 +862,12 @@ const CHECKS = {
     return F('top', 'tip', 'Amplitude courte en haut', `Coudes à ~${r0(median(v))}° au maximum de la contraction.`, fixes[P.id] || fixes.row);
   },
   chin(ctx, P, reps) {
-    // la barre est dans la main : au niveau des doigts (repères 19/20), sinon un peu au-dessus des poignets ;
-    // le menton est sous le nez (≈ 0,12 buste) : menton au niveau de la barre ⇔ nez ≥ 0,08 buste au-dessus d'elle
-    const T = ctx.torso || 0.3;
-    const v = perRep(reps, r => {
-      const f = ctx.F[r.turn];
-      if (!f.p || f.p[NOSE].v < VIS) return NaN;
-      let bar;
-      if (f.p[19].v >= VIS || f.p[20].v >= VIS) bar = midOf(f.p, f.p, 19, 20).y;
-      else if (f.p[15].v >= VIS || f.p[16].v >= VIS) bar = midOf(f.p, f.p, 15, 16).y - 0.13 * T;
-      else return NaN;
-      return (bar - f.p[NOSE].y) / T;
-    });
-    if (!v.length) return null;
-    const ok = v.filter(x => x >= 0.08).length, under = v.filter(x => x < -0.02).length;
-    TRACK.bad = v.idx.filter((_, k) => v[k] < 0.08);
-    if (ok / v.length >= 0.8) return F('chin', 'good', 'Menton au niveau de la barre', `Sur ${ok}/${v.length} reps.`);
-    if (under / v.length >= 0.5) return F('chin', 'warn', 'Menton sous la barre', `Ton menton a atteint la barre sur ${ok}/${v.length} reps.`, 'Monte jusqu’à ce que le menton dépasse la barre ; sinon, prends un élastique ou fais des négatives (descentes lentes).');
-    return F('chin', 'tip', 'Il manque un peu en haut', `Ton menton a atteint la barre sur ${ok}/${v.length} reps.`, 'Tire encore un peu à chaque rep, jusqu’au menton au-dessus de la barre.');
+    const m = chinMargins(ctx, reps);
+    if (!m) return null;
+    ctx.chin = m;
+    const out = chinFinding(m.raw, m.idx, ctx.chinCal);
+    TRACK.last = null; TRACK.bad = null;
+    return out;
   },
   kip(ctx, P, reps) {
     const hip = jointSeries(ctx, 'hip');

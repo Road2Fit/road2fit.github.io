@@ -47,7 +47,7 @@ const Points = ({ list, onPlay }) => (
   </ul>
 );
 
-export function FormReport({ form, onFixReps, onAskAi }) {
+export function FormReport({ form, onFixReps, onAskAi, onChinCal }) {
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
   const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
@@ -134,6 +134,15 @@ export function FormReport({ form, onFixReps, onAskAi }) {
       ) : (<>
         {!issues.length && <p className="text-sm font-bold text-emerald-300" data-testid="form-clean">Rien à corriger sur cette série.</p>}
         <Points list={list} onPlay={clip ? f => setPlay(f) : null} />
+        {onChinCal && r.chin && (
+          <div className="bg-slate-950 rounded-xl px-2.5 py-2 space-y-1.5" data-testid="chin-cal-box">
+            {r.findings.some(f => f.id === 'chin' && f.level !== 'good') && <>
+              <p className="text-xs text-slate-300">Ton menton passait la barre ? Dis-le à l’algorithme : il se cale sur toi pour les prochaines séries.</p>
+              <button type="button" onClick={() => onChinCal('pass')} className="w-full py-2 rounded-lg bg-slate-800 text-xs font-black text-white" data-testid="chin-cal-pass">Mon menton passait la barre</button>
+            </>}
+            {!!r.chin.cal && <button type="button" onClick={() => onChinCal('reset')} className="w-full py-1 text-[11px] font-bold text-slate-400 underline underline-offset-2" data-testid="chin-cal-reset">Calibration du menton appliquée · remettre à zéro</button>}
+          </div>
+        )}
         {!all && extra > 0 && <button type="button" onClick={() => setAll(true)} className="text-xs font-bold text-slate-400 underline underline-offset-2" data-testid="form-more">{extra > 1 ? `Voir les ${extra} autres points` : 'Voir l’autre point'}</button>}
       </>)}
       {clip && (

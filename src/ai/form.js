@@ -26,6 +26,11 @@ export function formContext(state, { item, setLabel, setText, result, earlier = 
     lines.push('Par rep (phase de retour / phase d’effort en s, pause au point d’inversion en s, amplitude relative 1 = complète, valeurs min-max du signal, inclinaison du buste en ° au point d’inversion, + = vers l’avant) :');
     (r.reps || []).forEach((p, i) => lines.push(`${i + 1}. retour ${p.ecc} / effort ${p.con} / pause ${p.hold} / ampl. ${p.depth} / ${p.lo}-${p.hi}${p.lean != null ? ` / buste ${p.lean}` : ''}`));
   }
+  if (r.chin && r.chin.raw && r.chin.raw.length) {
+    // en cm environ (buste ≈ 50 cm) ; + = menton au-dessus de la barre ; calibration personnelle déjà ajoutée
+    const cm = x => Math.round((x + (r.chin.cal || 0)) * 50);
+    lines.push(`Menton par rapport à la barre au plus haut de chaque rep (estimation, cm, + = au-dessus ; au niveau = réussi à ±2 cm) : ${r.chin.raw.map((x, k) => `rep ${r.chin.idx[k] + 1} : ${cm(x) > 0 ? '+' : ''}${cm(x)}`).join(', ')}${r.chin.cal ? ' (calibré par la personne : mesure ajustée à sa morphologie)' : ''}. La position de la barre est déduite des poignets : en cas de doute, ne contredis pas la personne.`);
+  }
   lines.push(`Constats de l’algorithme : ${(r.findings || []).map(f => `[${f.level}] ${f.title} : ${f.detail}`).join(' | ') || 'aucun'}.`);
   if (earlier.length) lines.push(`Séries filmées plus tôt sur cet exercice aujourd’hui : ${earlier.join(' | ')}.`);
   // historique de l'exercice et profil (ce qui permet de personnaliser)

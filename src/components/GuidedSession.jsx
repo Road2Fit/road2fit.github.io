@@ -15,6 +15,8 @@ import { FormReport } from './FormReport';
 import { painAdvice, painFor } from '../coach/pains';
 import { PainPicker } from './coach/CoachPains';
 import { clearClip } from '../form/clip';
+import { applyChinCal, chinCalToPassAll } from '../form/analyze';
+import { setChinCal } from '../form/calibration';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
 // analyse vidéo d'une série (4.19) : chargée seulement quand on filme
@@ -211,6 +213,15 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     const dd = fl && prev.data[fl.questId];
     if (!dd) return prev;
     return { ...prev, formLast: { ...fl, noted: n }, data: { ...prev.data, [fl.questId]: { ...dd, reps: dd.reps.map((r, k) => (k === fl.j ? n : r)) } } };
+  });
+  // calibration du menton (4.25) : « mon menton passait la barre » / remise à zéro ; l'analyse affichée est recalculée
+  const onChinCal = kind => setG(prev => {
+    const fl = prev.formLast;
+    if (!fl || !fl.result || !fl.result.chin) return prev;
+    const cal = kind === 'pass' ? chinCalToPassAll(fl.result) : 0;
+    if (cal == null) return prev;
+    setChinCal(cal);
+    return { ...prev, formLast: { ...fl, result: applyChinCal(fl.result, cal), ai: fl.ai && !fl.ai.pending ? { idle: true } : fl.ai } };
   });
   const stopFormAuto = () => { setCamOpen(false); setG(prev => ({ ...prev, formAuto: null })); };
   const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist], ...(Array.isArray(d.kinds) ? { kinds: [...d.kinds, 'work'] } : {}) });
@@ -473,7 +484,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                     <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
                   </div>
-                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} />
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -628,7 +639,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} />}
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);

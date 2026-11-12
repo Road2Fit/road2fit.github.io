@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeSet, liveCount, detectReps, bodyVisible } from './analyze';
+import { analyzeSet, liveCount, detectReps, bodyVisible, applyChinCal, chinCalToPassAll, chinCalibration } from './analyze';
 import { patternFor, PATTERNS, familyPatternMap } from './patterns';
 import { timeline, makeFrames, squatBody, curlBody, pushUpBody, frontSquatLm, plankBody, sideBody, toLandmarks, pullUpBody, frontRaiseLm } from './synth';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -157,6 +157,44 @@ describe('tractions', () => {
   it('élan des jambes (kipping)', () => {
     const fr = makeFrames(timeline({ reps: 5 }), d => pullUpBody(d, { kip: 50 }));
     expect(ids(analyzeSet(fr, P, { aspect: 9 / 16 }))).toContain('tip:kip');
+  });
+});
+
+describe('menton et barre (4.25)', () => {
+  const P = patternFor({ catalogId: 'pullups', name: 'Tractions' });
+  // la détection place souvent le bout des doigts bien au-dessus de la barre (main dessinée ouverte)
+  const fingersHigh = b => ({ ...b, idx: { x: b.idx.x, y: b.idx.y - 0.09 } });
+  it('doigts détectés au-dessus de la barre : les tractions complètes restent réussies', () => {
+    const fr = makeFrames(timeline({ reps: 6, p1: 1, p2: 1.4 }), d => fingersHigh(pullUpBody(d)), { noise: 0.002 });
+    const res = analyzeSet(fr, P, { aspect: 9 / 16 });
+    expect(res.repCount).toBe(6);
+    expect(ids(res)).toContain('good:chin');
+    expect(res.chin.raw.length).toBe(6);
+  });
+  it('« mon menton passait la barre » : la calibration fait passer les reps et s’applique ensuite', () => {
+    const fr = makeFrames(timeline({ reps: 6 }), d => pullUpBody(d, { top: 60 }));
+    const res = analyzeSet(fr, P, { aspect: 9 / 16 });
+    expect(ids(res).some(x => /^(warn|tip):chin$/.test(x))).toBe(true);
+    const cal = chinCalToPassAll(res);
+    expect(cal).toBeGreaterThan(0);
+    const fixed = applyChinCal(res, cal);
+    expect(ids(fixed)).toContain('good:chin');
+    expect(fixed.score).toBeGreaterThan(res.score);
+    // série suivante analysée avec la calibration enregistrée
+    expect(ids(analyzeSet(fr, P, { aspect: 9 / 16, chinCal: cal }))).toContain('good:chin');
+    // remise à zéro
+    expect(ids(applyChinCal(fixed, 0))).toEqual(ids(res));
+  });
+  it('calibration en direct : menton tenu au niveau de la barre, immobile', () => {
+    const still = Array.from({ length: 60 }, (_, i) => ({ t: i * 33, lm: toLandmarks(pullUpBody(0.85)) }));
+    const cal = chinCalibration(still, { aspect: 9 / 16 });
+    expect(cal).not.toBeNull();
+    // avec cette calibration, la même position est « au niveau de la barre »
+    const fr = makeFrames(timeline({ reps: 5 }), d => pullUpBody(d * 0.85));
+    expect(ids(analyzeSet(fr, P, { aspect: 9 / 16, chinCal: cal }))).toContain('good:chin');
+    // en mouvement : pas de calibration
+    const moving = makeFrames(timeline({ reps: 2, p1: 0.6, p2: 0.6, lead: 0, tail: 0 }), d => pullUpBody(d)).slice(0, 50);
+    expect(chinCalibration(moving, { aspect: 9 / 16 })).toBeNull();
   });
 });
 

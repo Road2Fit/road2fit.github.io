@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.25',
+    date: '2026-11-12',
+    title: 'Tractions : le menton mieux vu, et calibrable',
+    items: [
+      'Analyse vidéo des tractions : la barre est maintenant repérée par tes poignets (et non plus le bout des doigts, souvent mal placé) et le menton est mesuré au plus haut de chaque rep. Les reps où ton menton passe la barre ne devraient plus être comptées comme ratées.',
+      'Calibration du menton : avant la série, « Calibrer le menton » (garde le menton juste au niveau de la barre 2 secondes). Ou après, si l’analyse se trompe : « Mon menton passait la barre ». L’algorithme et le coach IA se calent sur toi pour les séries suivantes.',
+    ],
+  },
+  {
     version: '4.24',
     date: '2026-11-12',
     title: 'Analyse vidéo : c’est toi qui arrêtes',

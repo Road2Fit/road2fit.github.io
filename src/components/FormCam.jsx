@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Art } from './Art';
 import { loadPose, poseMock } from '../form/pose';
-import { analyzeSet, bodyVisible, liveCount } from '../form/analyze';
+import { analyzeSet, bodyVisible, chinCalibration, liveCount } from '../form/analyze';
+import { getChinCal, setChinCal } from '../form/calibration';
 import { patternFor, placementText } from '../form/patterns';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
@@ -31,6 +32,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
   const [err, setErr] = useState('');
   const [count, setCount] = useState(0);
   const [sec, setSec] = useState(0);
+  const usesChin = (P.checks || []).includes('chin');
+  const [calibMsg, setCalibMsg] = useState('');
   const [facing, setFacing] = useState(() => { try { return localStorage.getItem('rondoufit:formCam') || 'user'; } catch (e) { return 'user'; } });
   const run = useRef(null);
   const doneRef = useRef(onDone);
@@ -41,6 +44,9 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
     const r = { phase: 'loading', frames: [], visibleSince: null, recStart: 0, lastTs: 0, lostSince: null, count: 0, lastRepT: 0, countedAt: 0, aspect: 9 / 16, sec: 0, recorder: null, chunks: [], mime: '' };
     run.current = r;
     const go = p => { r.phase = p; if (!stopped) setPhase(p); };
+    // calibration du menton (4.25) : la personne tient le menton au niveau de la barre ; mesuré quand c'est immobile
+    r.startCalib = () => { if (r.phase === 'wait') { r.calib = []; r.calibAt = 0; setCalibMsg(''); go('calib'); } };
+    r.cancelCalib = () => { if (r.phase === 'calib') { r.visibleSince = null; go('wait'); } };
     const stopCam = () => {
       cancelAnimationFrame(raf);
       clearInterval(timer);
@@ -71,7 +77,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       clipP.then(() => stopCam());
       Promise.all([clipP, new Promise(ok => setTimeout(ok, 30))]).then(([clip]) => {
         if (stopped) return;
-        const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps });
+        const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps, chinCal: getChinCal() });
         if (clip) {
           const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
           setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name });
@@ -89,6 +95,22 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       const lm = res && res.lm;
       draw(lm);
       const visible = !!lm && bodyVisible(lm, P);
+      if (r.phase === 'calib') {
+        r.calib.push({ t: ts, lm: lm || null, wl: (res && res.wl) || null });
+        while (r.calib.length > 2 && ts - r.calib[0].t > 1500) r.calib.shift();
+        if (++r.calibAt % 10 === 0) {
+          const cal = chinCalibration(r.calib, { aspect: r.aspect });
+          if (cal != null) {
+            setChinCal(cal);
+            setCalibMsg('Menton calibré. Redescends : l’analyse démarre quand tu es en place.');
+            playGameSound('done', soundEnabled);
+            try { navigator.vibrate && navigator.vibrate([100, 60, 100]); } catch (e) {}
+            r.visibleSince = null;
+            go('wait');
+          }
+        }
+        return;
+      }
       if (r.phase === 'wait') {
         if (visible) {
           if (r.visibleSince == null) r.visibleSince = ts;
@@ -235,6 +257,14 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
               <p className="text-base font-black text-white">Mets-toi en place</p>
               <p className="text-sm text-slate-300">{placementText(P)}</p>
               <p className="text-xs text-slate-400">L’analyse démarre toute seule dès que tout ton corps est visible.</p>
+              {calibMsg && <p className="text-xs font-bold text-emerald-300" data-testid="chin-calib-done">{calibMsg}</p>}
+              {usesChin && <button type="button" onClick={() => run.current && run.current.startCalib && run.current.startCalib()} className="mt-1 px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-black text-white" data-testid="chin-calib">{getChinCal() ? 'Recalibrer le menton' : 'Calibrer le menton'}</button>}
+            </>)}
+            {phase === 'calib' && (<>
+              <p className="text-base font-black text-white">Calibrer le menton</p>
+              <p className="text-sm text-slate-300">Monte et garde le menton <b>juste au niveau de la barre</b>, sans bouger, 2 secondes (tu peux t’aider d’un banc).</p>
+              <p className="text-xs text-slate-400">Ça règle la mesure sur ton visage et ta prise. À refaire si tu changes la place du téléphone.</p>
+              <button type="button" onClick={() => run.current && run.current.cancelCalib && run.current.cancelCalib()} className="mt-1 px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-bold text-slate-200" data-testid="chin-calib-cancel">Annuler</button>
             </>)}
             {phase === 'analyzing' && <p className="text-base font-black text-white">Analyse de ta série…</p>}
             {phase === 'error' && <p className="text-sm font-bold text-rose-200" data-testid="form-cam-error">{err}</p>}
