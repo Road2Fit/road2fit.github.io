@@ -7,6 +7,8 @@ import { SPORTS, sportInfo } from '../data/sports';
 import { AccountForm } from '../components/AccountForm';
 import { OnboardingPast } from '../components/OnboardingPast';
 import { BEGINNER_STARTERS, LEVELS } from '../coach/experience';
+import { doable, homeStarters } from '../coach/equipment';
+import { PlacePicker } from '../components/coach/CoachPlace';
 import { BreakPicker, cleanExperience, ExperienceSources, ExpertFields, LevelPicker } from '../components/coach/ExperienceForm';
 
 // Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
@@ -19,7 +21,9 @@ const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
 
 const STEP_NAMES = { welcome: 'Bienvenue', you: 'Toi', goal: 'Objectif et muscles', org: 'Organisation', ex: 'Exercices', expert: 'Ton entraînement en détail', sport: 'Sport régulier', backup: 'Sauvegarde', done: 'Terminé' };
 const stepsFor = level => ['welcome', 'you', 'goal', 'org', 'ex', ...(level === 'expert' ? ['expert'] : []), 'sport', 'backup', 'done'];
-const starterSel = () => Object.fromEntries(BEGINNER_STARTERS.filter(byId).map(id => [id, {}]));
+// exercices de départ d'un débutant : machines simples en salle ; chez soi, un exercice par grand mouvement selon le matériel
+const starterIds = (place = 'gym', equipment = []) => (place === 'home' ? homeStarters({ place, equipment }) : BEGINNER_STARTERS).filter(byId);
+const starterSel = (place, equipment) => Object.fromEntries(starterIds(place, equipment).map(id => [id, {}]));
 
 function Toggle({ on, onClick, children, testid }) {
   return <button type="button" onClick={onClick} aria-pressed={on} data-testid={testid} className={chip(on)}>{children}</button>;
@@ -29,7 +33,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
-    gymDays: [], sport: '', sportDays: [], exercises: starterSel(), muscleMode: 'simple', level: 'beginner', experience: {},
+    gymDays: [], sport: '', sportDays: [], exercises: starterSel(), muscleMode: 'simple', level: 'beginner', experience: {}, place: 'gym', equipment: [],
   });
   const STEPS = stepsFor(a.level);
   const key = STEPS[step];
@@ -38,8 +42,15 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const toggleDay = (key, d) => patch({ [key]: a[key].includes(d) ? a[key].filter(x => x !== d) : [...a[key], d] });
   const setEx = (id, p) => patch({ exercises: { ...a.exercises, [id]: { ...(a.exercises[id] || {}), ...p } } });
   // débutant : exercices de départ cochés d'office ; avancé / expert : on part d'une liste vide (exercices déjà pratiqués)
-  const untouched = Object.keys(a.exercises).sort().join() === Object.keys(starterSel()).sort().join() && Object.values(a.exercises).every(v => !Object.keys(v).length);
-  const setLevel = level => patch({ level, exercises: level === 'beginner' ? (Object.keys(a.exercises).length ? a.exercises : starterSel()) : untouched ? {} : a.exercises });
+  const untouched = Object.keys(a.exercises).sort().join() === Object.keys(starterSel(a.place, a.equipment)).sort().join() && Object.values(a.exercises).every(v => !Object.keys(v).length);
+  const setLevel = level => patch({ level, exercises: level === 'beginner' ? (Object.keys(a.exercises).length ? a.exercises : starterSel(a.place, a.equipment)) : untouched ? {} : a.exercises });
+  // lieu ou matériel changé : la liste de départ suit (tant que la personne ne l'a pas modifiée), et ce qui n'est plus faisable est retiré
+  const setPlace = p => {
+    const place = p.place || a.place, equipment = p.equipment || a.equipment;
+    const coach = { place, equipment };
+    const exercises = a.level === 'beginner' && untouched ? starterSel(place, equipment) : Object.fromEntries(Object.entries(a.exercises).filter(([id]) => doable(byId(id), coach)));
+    patch({ ...p, exercises });
+  };
   const setXp = p => patch({ experience: { ...a.experience, ...p } });
   // « Raconte ton passé » : le récit lu par le coach intelligent remplit les réponses (la personne vérifie ensuite)
   const fromStory = h => {
@@ -64,9 +75,9 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const found = useMemo(() => {
     const q = stripAccents(search.trim().toLowerCase());
     if (q.length < 2) return [];
-    return EXERCISE_CATALOG.filter(c => c.type === 'strength' && !STARTER_EXERCISES.includes(c.id) && stripAccents(c.name.toLowerCase()).includes(q)).slice(0, 6);
-  }, [search]);
-  const base = a.level === 'beginner' ? BEGINNER_STARTERS : STARTER_EXERCISES;
+    return EXERCISE_CATALOG.filter(c => c.type === 'strength' && doable(c, { place: a.place, equipment: a.equipment }) && !STARTER_EXERCISES.includes(c.id) && stripAccents(c.name.toLowerCase()).includes(q)).slice(0, 6);
+  }, [search, a.place, a.equipment]);
+  const base = (a.level === 'beginner' ? starterIds(a.place, a.equipment) : STARTER_EXERCISES).filter(id => doable(byId(id), { place: a.place, equipment: a.equipment }));
   const listed = [...base, ...Object.keys(a.exercises).filter(id => !base.includes(id))].map(byId).filter(Boolean);
   const expert = a.level === 'expert';
 
@@ -138,6 +149,10 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
         {key === 'org' && (
           <section className="space-y-3">
             <h2 className="text-xl font-black text-white">Ton organisation</h2>
+            <div>
+              <p className={label}>Où tu t’entraînes</p>
+              <PlacePicker place={a.place} equipment={a.equipment} onChange={setPlace} chipClass={chip} />
+            </div>
             <div>
               <p className={label}>Séances de musculation par semaine</p>
               <div className="flex gap-2">{[1, 2, 3, 4, 5, 6].map(n => <Toggle key={n} on={a.sessionsPerWeek === n} onClick={() => patch({ sessionsPerWeek: n })}>{n}</Toggle>)}</div>

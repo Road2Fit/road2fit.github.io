@@ -2,6 +2,8 @@ import { coachSessionRecap } from '../coach/advice';
 import { coachKind, coachRealEntries } from '../coach/settings';
 import { computeExerciseTarget } from '../coach/targets';
 import { profileOpts } from '../coach/profiles';
+import { doable } from '../coach/equipment';
+import { painFor } from '../coach/pains';
 import { EXERCISE_CATALOG } from '../data/catalog';
 import { fineGroupOf } from '../data/muscles';
 import { makeQuestFromCatalog } from '../lib/questFactory';
@@ -103,13 +105,15 @@ export function useGuidedSession({
     if (!it || !q) return [];
     const muscle = fineGroupOf(q);
     const inSession = new Set(guided.items.map(x => x.questId));
-    const mine = (gameState.quests || []).filter(x => x.type === 'strength' && x.goalMode !== 'free_mode' && !inSession.has(x.id) && fineGroupOf(x) === muscle && coachKind(x) === coachKind(q) && !!x.timed === !!q.timed)
+    const mine = (gameState.quests || []).filter(x => x.type === 'strength' && doable(x, gameState.coach) && x.goalMode !== 'free_mode' && !inSession.has(x.id) && fineGroupOf(x) === muscle && coachKind(x) === coachKind(q) && !!x.timed === !!q.timed)
       .map(x => ({ questId: x.id, name: x.name }));
     const known = new Set((gameState.quests || []).map(x => x.catalogId));
-    const fromCatalog = EXERCISE_CATALOG.filter(c => c.type === 'strength' && !known.has(c.id) && c.unit === q.unit && fineGroupOf({ catalogId: c.id, name: c.name, category: c.category, type: 'strength' }) === muscle)
-      .slice(0, Math.max(0, 5 - mine.length))
+    const fromCatalog = EXERCISE_CATALOG.filter(c => c.type === 'strength' && doable(c, gameState.coach) && !known.has(c.id) && c.unit === q.unit && fineGroupOf({ catalogId: c.id, name: c.name, category: c.category, type: 'strength' }) === muscle)
+      .slice(0, Math.max(0, 8 - mine.length))
       .map(c => ({ catalogId: c.id, name: c.name, isNew: true }));
-    return [...mine, ...fromCatalog].slice(0, 5);
+    // zone douloureuse signalée : les exercices qui la sollicitent passent en dernier
+    const calm = x => (painFor({ catalogId: x.catalogId || ((gameState.quests || []).find(y => y.id === x.questId) || {}).catalogId, name: x.name }, gameState.coach) ? 1 : 0);
+    return [...mine, ...fromCatalog].sort((a, b) => calm(a) - calm(b)).slice(0, 5);
   };
   const swapExercise = (questId, choice) => {
     if (!guided || !choice) return;

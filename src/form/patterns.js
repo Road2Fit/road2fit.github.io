@@ -111,7 +111,7 @@ const FAMILY_PATTERN = {
   chestPressMachine: 'benchPress', chestPressIncline: 'benchPress', declineMachine: 'benchPress',
   fly: 'flyIn', cableFly: 'flyOpen', pecDeck: 'flyOpen', rearFly: 'rearFly', reversePecDeck: 'rearFly',
   pullover: 'pullover', pulloverCable: 'pulloverCon', pulloverMachine: 'pulloverCon',
-  pushUp: 'pushUp', pushUpFeet: 'pushUp', pushUpDiamond: 'pushUp',
+  pushUp: 'pushUp', pushUpFeet: 'pushUp', pushUpDiamond: 'pushUp', pushUpIncline: 'pushUp',
   dips: 'dip', benchDips: 'dip', dipMachine: 'dip', ringDips: 'dip', assistedDip: 'dip',
   pullUp: 'pullUp', chinUp: 'pullUp', assistedPullUp: 'pullUp', muscleUp: 'pullUp',
   pulldown: 'pulldown', pulldownMachine: 'pulldown', highRow: 'row',
@@ -124,9 +124,9 @@ const FAMILY_PATTERN = {
   lateralRaise: 'raise', frontRaise: 'frontRaise', extRotation: 'extRot',
   curl: 'curl', curlHammer: 'curl', curlIncline: 'curl', curlConcentration: 'curl', curlPreacher: 'curl', curlMachine: 'curl', wristCurl: 'wristCurl',
   pushdown: 'triExtUp', kickback: 'triExtUp', tricepsMachine: 'triExtUp', skull: 'triExtDown', overheadExt: 'triExtDown',
-  squat: 'squat', squatFront: 'squat', squatSmith: 'squat', goblet: 'squat', beltSquat: 'squat', olyOverheadSquat: 'squat', wallBall: 'squat',
+  squat: 'squat', squatBody: 'squat', squatFront: 'squat', squatSmith: 'squat', goblet: 'squat', beltSquat: 'squat', olyOverheadSquat: 'squat', wallBall: 'squat',
   hackSquat: 'machineLeg', legPress: 'machineLeg',
-  bulgarian: 'lunge', lunge: 'lunge', stepUp: 'lunge', sandbagLunge: 'lunge', pistol: 'pistol',
+  bulgarian: 'lunge', lunge: 'lunge', lungeBody: 'lunge', stepUp: 'lunge', sandbagLunge: 'lunge', pistol: 'pistol',
   calfPress: 'calf', calfStanding: 'calf', calfSeated: 'calf',
   legExt: 'legExt', legCurl: 'legCurl', standingLegCurl: 'legCurl',
   adductors: 'adductor', abductors: 'abductor', multiHip: 'multiHip', gluteKickback: 'kickback',
@@ -146,7 +146,7 @@ export const familyPatternMap = FAMILY_PATTERN;
 
 // réglages propres à certaines variantes (buste plus droit attendu au squat avant, au goblet…)
 const FAMILY_TWEAKS = {
-  squatFront: { trunkMax: 35 }, goblet: { trunkMax: 35 }, olyOverheadSquat: { trunkMax: 30 }, beltSquat: { trunkMax: 30 },
+  squatFront: { trunkMax: 35 }, goblet: { trunkMax: 35 }, squatBody: { trunkMax: 40 }, olyOverheadSquat: { trunkMax: 30 }, beltSquat: { trunkMax: 30 },
   squatSmith: { trunkMax: 40 }, wallBall: { trunkMax: 40 }, bulgarian: { trunkMax: 40 }, stepUp: { trunkMax: 40, checks: ['trunk', 'tempo', 'fade'] },
   curlConcentration: { checks: ['hang', 'topElbow', 'tempo', 'fade'] }, curlPreacher: { checks: ['hang', 'topElbow', 'tempo', 'fade'] },
   curlMachine: { checks: ['hang', 'topElbow', 'tempo', 'fade'] }, curlIncline: { checks: ['hang', 'topElbow', 'elbowStill', 'tempo', 'fade'] },

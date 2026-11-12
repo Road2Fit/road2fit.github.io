@@ -64,10 +64,13 @@ const NEW_STRENGTH_ROWS = [
   ['fp_db_pullover','Pull-over Haltère','Pectoraux','Haltères','kg',14,28,3,10,'🌊'],
   ['fp_decline_pushups','Pompes Pieds Surélevés','Pectoraux','Poids du corps','reps',8,20,3,15,'🛡️'],
   ['fp_diamond_pushups','Pompes Diamant','Pectoraux','Poids du corps','reps',6,15,3,12,'💎'],
+  ['home_incline_pushups','Pompes Mains Surélevées (chaise, banc)','Pectoraux','Poids du corps','reps',8,20,3,12,'🛡️'],
   // JAMBES
   ['fp_smith_squat','Squat Smith Machine','Jambes','Smith','kg',40,90,3,8,'🦵'],
   ['fp_front_squat','Front Squat Barre','Jambes','Barre','kg',30,70,3,6,'🦵'],
   ['fp_goblet','Squat Goblet (Haltère / Kettlebell)','Jambes','Kettlebell','kg',12,32,3,12,'🏺'],
+  ['home_squat','Squat au Poids du Corps','Jambes','Poids du corps','reps',12,30,3,15,'🦵'],
+  ['home_lunge','Fentes au Poids du Corps','Jambes','Poids du corps','reps',8,20,3,12,'🚶'],
   ['fp_bulgarian','Squat Bulgare Haltères','Jambes','Haltères','kg',8,22,3,8,'🇧🇬'],
   ['fp_hack_squat','Hack Squat Machine','Jambes','Machine à plaques','kg',40,120,3,10,'⚡'],
   ['fp_leg_press_h','Presse à Cuisses Horizontale','Jambes','Machine guidée','kg',60,140,3,10,'⚡'],

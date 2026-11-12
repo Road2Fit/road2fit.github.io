@@ -1,6 +1,7 @@
 import { coachSlotFor } from './planning';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
+import { coachableQuests } from './equipment';
 import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { profileOpts } from './profiles';
@@ -31,7 +32,7 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
   const arenaCount = a => ex.filter(e => e.arena === a).length;
   const arenaSets = a => ex.filter(e => e.arena === a).reduce((s, e) => s + e.sets, 0);
   const pool = () =>
-    (state.quests || []).filter(q => {
+    coachableQuests(state).filter(q => {
       if (q.type !== 'strength' || q.goalMode === 'free_mode') return false;
       if (ex.some(e => e.questId === q.id)) return false;
       const a = arenaOf(q);
@@ -161,7 +162,7 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
 // Construit une séance complète (liste d'exercices avec objectifs chiffrés), mode full body A/B
 function coachBuildSession(state, templateIdx, di, opts = {}) {
   const coach = getCoachSettings(state);
-  const templates = composeTemplates(state.quests, coach.sessionsPerWeek);
+  const templates = composeTemplates(coachableQuests(state), coach.sessionsPerWeek);
   const t = templates[templateIdx % templates.length];
   const notes = [];
   let quests = t.quests;
@@ -192,7 +193,7 @@ function coachTypedQuests(state, type, legsOk) {
   const arenas = COACH_TYPES[type].arenas;
   const caps = typedCaps(type);
   const side = COACH_TYPES[type].side;
-  const qs = (state.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode' && sideOk(side, q));
+  const qs = coachableQuests(state).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode' && sideOk(side, q));
   const lastDate = q => { const es = coachRealEntries(q); return es.length ? es[es.length - 1].date : ''; };
   const out = [];
   COACH_ARENAS.filter(a => arenas.includes(a) && (legsOk || !isLegArena(a))).forEach(a => {

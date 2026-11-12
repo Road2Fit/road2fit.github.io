@@ -48,11 +48,17 @@ export function useGameState() {
     setRawState(update);
   }, []);
 
+  const warned = useRef(false);
   // Enregistrement sur l'appareil à chaque changement, puis envoi différé vers le compte.
   useEffect(() => {
+    // 4.22 : un échec d'écriture (stockage du navigateur plein) n'est plus silencieux, et on prévient avant la limite (≈ 5 Mo)
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
-    } catch (e) {}
+      const json = JSON.stringify(gameState);
+      localStorage.setItem(STORAGE_KEY, json);
+      if (json.length > 3500000 && !warned.current) { warned.current = true; window.dispatchEvent(new CustomEvent('rondoufit-storage', { detail: { full: false } })); }
+    } catch (e) {
+      try { window.dispatchEvent(new CustomEvent('rondoufit-storage', { detail: { full: true } })); } catch (e2) { /* rien */ }
+    }
     if (fromRemote.current) { fromRemote.current = false; return; }
     if (!mounted.current) { mounted.current = true; return; }
     scheduleSync();

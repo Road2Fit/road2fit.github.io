@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.22',
+    date: '2026-11-12',
+    title: 'Chez toi ou en salle',
+    items: [
+      'Coach → Réglages → « Où tu t’entraînes » : en salle, chez toi ou les deux, avec ton matériel (haltères, barre, banc, barre de traction…). Chez toi, le coach ne programme que ce qui est faisable et te propose des remplaçants. Trois nouveaux exercices sans matériel : squat, fentes et pompes mains surélevées.',
+      '« J’ai mal quelque part » (Réglages du Coach ou menu de la séance) : les exercices qui sollicitent la zone sont marqués « à ménager », et le changement d’exercice propose d’abord ceux qui l’épargnent.',
+      'Rappel de séance : une notification le jour prévu (appli installée), ou tes prochaines séances dans ton agenda avec une alarme.',
+      'Bilan : « Tes 4 dernières semaines » en tête (séances faites sur prévues, progrès par exercice). Pour débuter : Lexique → « Les bases », et un repère « première fois » pour choisir ta charge.',
+      'L’appli s’ouvre plus vite (écrans chargés à la demande) et te prévient si le stockage du téléphone est plein.',
+    ],
+  },
+  {
     version: '4.21.3',
     date: '2026-11-10',
     title: 'Schéma à la bonne taille',

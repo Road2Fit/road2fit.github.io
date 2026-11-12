@@ -99,6 +99,8 @@ export async function launch({ storage: storage0 = {}, fetchImpl, empty = false,
   w.eval(PRELUDE);
   w.eval(code);
   await sleep(120);
+  // écrans chargés à la demande : tous préchargés ici (dans l'appli, ils le sont quelques secondes après l'ouverture)
+  if (w.__r2fWarm) { await w.__r2fWarm(); await sleep(30); }
   // L'appli s'ouvre sur le Coach ; la plupart des parcours partent de la page Exercices
   const h = { dom, w, doc: w.document, errors, close: () => w.close() };
   const tab = w.document.querySelector('[data-tab="quests"]');

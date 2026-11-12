@@ -5,6 +5,7 @@ import { coachDayInfo, coachNextTemplateIdx, coachPlanWeek } from './planning';
 import { coachBuildPlanned } from './sessions';
 import { COACH_ARENAS, COACH_TYPES, coachDayLabel, coachDaysBetween, coachKind, coachRealEntries, coachSetsOf, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
+import { coachableQuests } from './equipment';
 import { composeTemplates, computeExerciseTarget } from './targets';
 
 import { addDaysISO, getWeekStart } from '../lib/dates';
@@ -193,7 +194,7 @@ export function coachOverview(state, today, extra = {}) {
     return tp ? { iso, legs: COACH_TYPES[tp].legs && coachDayInfo(iso, coach).legsOk, upper: COACH_TYPES[tp].upper } : { iso, legs: true, upper: true };
   });
   const weeks = [w0p, coachPlanWeek(state, ws1, today, priorForW1)];
-  const templates = composeTemplates(state.quests, coach.sessionsPerWeek);
+  const templates = composeTemplates(coachableQuests(state), coach.sessionsPerWeek);
   const nextIdx = templates.length ? coachNextTemplateIdx(state, templates) : 0;
   const plannedAll = [];
   weeks.forEach(w => w.planned.forEach(d => plannedAll.push({ iso: d, week: w })));

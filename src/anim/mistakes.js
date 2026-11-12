@@ -18,7 +18,7 @@ import { GROUND, SEG, poseAt, solvePose } from './skeleton';
 const rad = d => (d * Math.PI) / 180;
 const deg = r => (r * 180) / Math.PI;
 
-const LEGS = new Set(['squat', 'fp_front_squat', 'fp_smith_squat', 'fp_goblet', 'fp_hack_squat', 'fp_bulgarian', 'fp_walking_lunge', 'fp_barbell_lunge', 'fp_step_up', 'fp_belt_squat', 'fp_wall_ball', 'fp_burpees']);
+const LEGS = new Set(['home_squat', 'home_lunge', 'squat', 'fp_front_squat', 'fp_smith_squat', 'fp_goblet', 'fp_hack_squat', 'fp_bulgarian', 'fp_walking_lunge', 'fp_barbell_lunge', 'fp_step_up', 'fp_belt_squat', 'fp_wall_ball', 'fp_burpees']);
 const BRIDGE = new Set(['fp_hip_thrust_bar', 'fp_hip_thrust_machine', 'fp_glute_bridge']);
 const SEATED_FREE = new Set(['fp_seated_row', 'fp_low_row_machine', 'fp_hammer_row', 'lat_pulldown', 'fp_close_pulldown', 'fp_hammer_pulldown', 'fp_vertical_traction', 'cable_crunch']);
 const HINGE_STANDING = new Set(['fp_rdl', 'fp_good_morning', 'fp_db_row', 'fp_kickback']); // flexion de hanche / buste penché

@@ -12,6 +12,8 @@ import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
 import { METHODS } from '../coach/methods';
 import { RestGame, restGameWasOpen } from './RestGame';
 import { FormReport } from './FormReport';
+import { painAdvice, painFor } from '../coach/pains';
+import { PainPicker } from './coach/CoachPains';
 import { clearClip } from '../form/clip';
 
 const MiniMovement = lazy(() => import('./MiniMovement'));
@@ -60,7 +62,7 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, pains = [], onTogglePain = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -229,6 +231,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const skipRpe = () => setG(prev => ({ ...prev, rpeAsk: null }));
   // retirer complètement un exercice de CETTE séance (rien n'est enregistré pour lui)
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [painOpen, setPainOpen] = useState(false); // « J'ai mal quelque part » déplié dans le menu
+  const painZone = it ? painFor(it, { pains }) : null;
   const removeExercise = () => {
     if (!it) return;
     const qid = it.questId;
@@ -552,6 +556,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               {it.kind === 'load' && !sw && isBarbell(it.name) && platesText(loadsOf(d)[j]) && (
                 <PlatesDiagram total={loadsOf(d)[j]} testId="set-plates" className="-mt-1" />
               )}
+              {painZone && !sw && <p className="text-center text-xs font-bold text-amber-300" data-testid="set-pain">{painAdvice(painZone)}</p>}
+              {!d.prev && !sw && !it.timed && !d.done.some(Boolean) && (
+                <p className="text-center text-xs text-slate-400" data-testid="set-first">{it.kind === 'load'
+                  ? `Première fois : prends une charge avec laquelle tu pourrais faire ${(Number(d.reps[j]) || 0) + 2} reps. Règle-la avec − et +.`
+                  : 'Première fois : arrête-toi quand il te reste 2 reps en réserve, et note ce que tu as fait.'}</p>
+              )}
               {d.prev && !sw && (() => {
                 const k = Math.min(j, d.prev.reps.length - 1);
                 const r = d.prev.reps[k];
@@ -674,7 +684,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                   <button type="button" onClick={skipExercise} className="py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">Passer l’exercice ▶</button>
                 </div>
                 <button type="button" onClick={() => { setMenu(false); openMovement({ catalogId: it.catalogId, name: it.name }); }} className="w-full py-3 rounded-xl bg-slate-800 text-sky-200 font-bold text-sm"><Art name="film" />Voir le mouvement</button>
-                {!d.done.some(Boolean) && <button type="button" onClick={() => setSwapOpen(v => !v)} aria-expanded={swapOpen} className="w-full py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm" data-testid="swap-open"><Art name="repeat" />Machine prise ? Changer d’exercice</button>}
+                <button type="button" onClick={() => { setMenu(false); window.dispatchEvent(new CustomEvent('rondoufit-lexicon', { detail: 'basics' })); }} className="w-full py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm" data-testid="guided-lexicon"><Art name="info" />Les mots de la séance (série, ressenti…)</button>
+                {!d.done.some(Boolean) && <button type="button" onClick={() => setSwapOpen(v => !v)} aria-expanded={swapOpen} className="w-full py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm" data-testid="swap-open"><Art name="repeat" />Machine prise ou pas le matériel ? Changer d’exercice</button>}
                 {swapOpen && !d.done.some(Boolean) && (() => {
                   const list = swapChoices(it.questId);
                   return (
@@ -689,6 +700,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     </div>
                   );
                 })()}
+                {onTogglePain && <button type="button" onClick={() => setPainOpen(v => !v)} aria-expanded={painOpen} className="w-full py-3 rounded-xl bg-slate-800 text-amber-200 font-bold text-sm" data-testid="pain-open"><Art name="warn" />J’ai mal quelque part</button>}
+                {onTogglePain && painOpen && <PainPicker pains={pains} onToggle={onTogglePain} />}
                 {!confirmRemove
                   ? <button type="button" onClick={() => setConfirmRemove(true)} className="w-full py-3 rounded-xl bg-slate-800 text-rose-300 font-bold text-sm" data-testid="remove-exercise">Supprimer l’exercice de la séance</button>
                   : <button type="button" onClick={removeExercise} className="w-full py-3 rounded-xl bg-rose-600 text-white font-black text-sm" data-testid="remove-exercise-confirm">Oui, retirer {it.name}{d.done.some(Boolean) ? ' (ses séries faites ne seront pas enregistrées)' : ''}</button>}

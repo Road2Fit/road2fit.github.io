@@ -26,8 +26,8 @@ export function squat({ tool = 'barbell' }) {
     };
   }
   const foot = tool === 'smith' ? [166, ANKLE_Y] : FOOT;
-  const down = tool === 'front' ? { hip: [128, 150], torso: -72 } : tool === 'goblet' ? { hip: [128, 150], torso: -78 } : { hip: [128, 151], torso: -60 };
-  const armPose = { barbell: [118, -70], front: [10, -140], smith: [118, -70], goblet: null };
+  const down = tool === 'front' ? { hip: [128, 150], torso: -72 } : tool === 'goblet' || tool === 'body' ? { hip: [128, 150], torso: -78 } : { hip: [128, 151], torso: -60 };
+  const armPose = { barbell: [118, -70], front: [10, -140], smith: [118, -70], goblet: null, body: [10, 20] }; // body : bras tendus devant soi
   const mk = s => {
     const base = { foot, footBend: -1 };
     if (tool === 'goblet') {
@@ -36,8 +36,8 @@ export function squat({ tool = 'barbell' }) {
     }
     return P(s.hip, s.torso, { ...base, arm: armPose[tool] });
   };
-  const eq = tool === 'smith' ? [line([128, -20], [128, G], 3), line([180, -20], [180, G], 3)] : tool === 'goblet' ? [] : [line([96, 30], [96, G], 4), line([96, 30], [108, 30], 3, '#94a3b8')];
-  const fol = tool === 'goblet' ? [ball('wrist', 9)] : [{ k: 'plate', at: 'shoulder', r: 12, dx: tool === 'front' ? 8 : -3, dy: tool === 'front' ? 2 : -4 }];
+  const eq = tool === 'smith' ? [line([128, -20], [128, G], 3), line([180, -20], [180, G], 3)] : tool === 'goblet' || tool === 'body' ? [] : [line([96, 30], [96, G], 4), line([96, 30], [108, 30], 3, '#94a3b8')];
+  const fol = tool === 'body' ? [] : tool === 'goblet' ? [ball('wrist', 9)] : [{ k: 'plate', at: 'shoulder', r: 12, dx: tool === 'front' ? 8 : -3, dy: tool === 'front' ? 2 : -4 }];
   return { keys: [mk(up), mk(down)], trace: tool === 'goblet' ? 'wrist' : 'shoulder', loop: 'pingpong', equip: eq, follow: fol };
 }
 
@@ -55,11 +55,11 @@ export function wallSit() {
 }
 
 // ---------------- Fentes et step-up ----------------
-export function lunge({ barbell = false }) {
+export function lunge({ barbell = false, body = false }) {
   const mk = hipY => P([150, hipY], -90, { foot: [186, ANKLE_Y], footBend: -1, farFoot: [112, 190], arm: barbell ? [118, -70] : [90, 90] });
   return {
     keys: [mk(118), mk(156)], trace: 'hip', loop: 'pingpong', equip: [],
-    follow: barbell ? [{ k: 'plate', at: 'shoulder', r: 11, dx: -3, dy: -4 }] : [db('wrist', 8)],
+    follow: body ? [] : barbell ? [{ k: 'plate', at: 'shoulder', r: 11, dx: -3, dy: -4 }] : [db('wrist', 8)],
   };
 }
 

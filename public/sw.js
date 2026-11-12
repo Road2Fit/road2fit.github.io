@@ -62,3 +62,26 @@ self.addEventListener('notificationclick', (event) => {
     return c ? c.focus() : self.clients.openWindow('./');
   }));
 });
+
+// Rappel le jour de la séance (4.22, src/lib/sessionReminder.js) : quand le navigateur réveille le service worker
+// (« periodic background sync », appli installée), on lit les prochaines séances laissées par l'appli et, si l'une est
+// aujourd'hui et qu'on n'a pas encore prévenu aujourd'hui, on affiche une notification.
+const PLAN_CACHE = 'r2f-data';
+const PLAN_URL = './__r2f-plan.json';
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+async function remindSession() {
+  const cache = await caches.open(PLAN_CACHE);
+  const hit = await cache.match(PLAN_URL);
+  if (!hit) return;
+  const plan = await hit.json();
+  const today = todayIso();
+  if (!Array.isArray(plan.dates) || !plan.dates.includes(today) || plan.notified === today) return;
+  if (new Date().getHours() < 7) return; // pas de notification en pleine nuit : on réessaiera au prochain réveil
+  await self.registration.showNotification('Séance prévue aujourd’hui', {
+    body: plan.title || 'Ton coach a préparé ta séance.', tag: 'rondoufit-session-day', icon: './neutral/icon-192.png', badge: './neutral/favicon-48.png',
+  });
+  await cache.put(PLAN_URL, new Response(JSON.stringify({ ...plan, notified: today }), { headers: { 'Content-Type': 'application/json' } }));
+}
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'r2f-session-day') event.waitUntil(remindSession().catch(() => {}));
+});

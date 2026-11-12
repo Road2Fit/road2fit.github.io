@@ -57,11 +57,13 @@ export function machinePress({ hammer = false, incline = false }) {
 }
 
 // ---------------- Pompes et variantes ----------------
-export function pushUp({ feetUp = 0, narrow = false }) {
+export function pushUp({ feetUp = 0, narrow = false, handsUp = 0 }) {
+  // handsUp : mains posées sur un support (chaise, banc) : le corps est incliné, la pompe est plus facile
   const ankle = [70, 190 - feetUp];
-  const handX = shoulderXFor(ankle, 142);
-  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY), shY], { hand: [handX, 196], handBend: 1 });
+  const handX = shoulderXFor(ankle, 142 - handsUp);
+  const mk = shY => plank(ankle, [shoulderXFor(ankle, shY - handsUp), shY - handsUp], { hand: [handX, 196 - handsUp], handBend: 1 });
   const eq = [];
+  if (handsUp) eq.push(rect(handX - 22, 196 - handsUp + 4, 44, handsUp, '#475569', 3));
   if (feetUp) eq.push(rect(46, 190 - feetUp + 4, 50, feetUp + 6, '#475569', 3));
   return { keys: [mk(142), mk(172)], trace: 'shoulder', loop: 'pingpong', equip: eq, follow: [], narrow };
 }

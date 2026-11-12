@@ -6,6 +6,7 @@ import { coachRound, coachStep } from '../coach/settings';
 import { estimateOneRm } from './maxima';
 import { isTimedCatalog } from './quests';
 import { detrainFactor, experienceCoachPatch, LEVELS } from '../coach/experience';
+import { PLACES } from '../coach/equipment';
 
 // Assistant d'accueil : transforme les réponses d'un nouvel utilisateur en réglages du coach, poids, exercices et records.
 // Fonction pure (testée) : l'interface est dans modals/OnboardingModal.jsx.
@@ -47,6 +48,7 @@ const num = v => {
 /**
  * answers = { name, sex, age, heightCm, weightKg, targetKg, goal, sessionsPerWeek, sessionMinutes, gymDays: [0-6], sportDays: [0-6],
  *             level: 'beginner'|'advanced'|'expert', experience: { years, breakMonths, weeklySets, rir, methods, priorities, periodization, deloadEvery, limits },
+ *             place: 'gym'|'home'|'both', equipment: [identifiants de HOME_EQUIPMENT],
  *             exercises: [{ catalogId, kg?, reps?, date?, workSets?, workReps?, workKg? }] }
  * (kg + reps = « j'ai soulevé kg pour reps répétitions » ; reps vide ou 1 = charge maximale ; exercices en répétitions : reps seulement ;
  *  workSets × workReps à workKg = séance type actuelle d'un expert, elle sert de charge de départ.)
@@ -66,6 +68,8 @@ export function applyOnboarding(prev, a, today) {
     // l'objectif choisi ici devient aussi l'objectif du coach (sinon le Coach le redemandait aussitôt)
     mainGoal: prev.coach && prev.coach.mainGoal ? prev.coach.mainGoal : goalFromOnboarding(goal.id, w, target, today),
     sport: a.sport || '',
+    place: PLACES.some(p => p.id === a.place) ? a.place : 'gym',
+    equipment: Array.isArray(a.equipment) ? a.equipment : [],
     volleyDays: (a.sportDays || []).map(Number).sort(),
     gymSlots: gymDays.reduce((o, d) => ({ ...o, [d]: { start: '18:00', end: '19:30' } }), {}),
   };

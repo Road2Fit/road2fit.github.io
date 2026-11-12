@@ -3,6 +3,8 @@ import { coachBalance, coachOverview } from '../coach/advice';
 import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
+import { equipmentLine } from '../coach/equipment';
+import { painsLine } from '../coach/pains';
 import { cardioLine } from '../coach/cardio';
 import { analyzeProgram } from '../coach/program';
 import { activeProfile } from '../coach/profiles';
@@ -93,6 +95,8 @@ export function coachContext(state, today, { overview } = {}) {
   lines.push(`Profil : ${p.sex === 'f' ? 'femme' : 'homme'}${p.age ? `, ${p.age} ans` : ''}${p.heightCm ? `, ${p.heightCm} cm` : ''}${lastWeight(state) ? `, ${lastWeight(state)} kg` : ''}${state.targetWeightKg ? `, poids visé ${state.targetWeightKg} kg` : ''}.`);
   const gym = Object.keys(c.gymSlots || {}).map(Number).sort((a, b) => toAiDay(a) - toAiDay(b));
   lines.push(experienceLine(state));
+  lines.push(equipmentLine(state));
+  if (painsLine(state)) lines.push(painsLine(state));
   lines.push(cardioLine(state, today));
   lines.push(`Réglages : ${c.splitMode === 'trio' ? '3 séances par semaine (mode 3 séances)' : `${c.sessionsPerWeek} séances de muscu par semaine`}, durée ${Number(c.sessionMinutes) ? `${c.sessionMinutes} min` : 'libre'}, jours de salle : ${gym.length ? gym.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ') : 'non précisés'}.`);
   lines.push(`Sport régulier : ${c.sport || 'aucun'}${(c.volleyDays || []).length ? `, jours : ${c.volleyDays.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ')}` : ''}. Matchs à venir : ${(c.matchDates || []).filter(d => d >= today).slice(0, 6).join(', ') || 'aucun'}.`);

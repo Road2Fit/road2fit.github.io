@@ -105,6 +105,15 @@ export const FAMILIES = {
     e: ['Bassin qui s’affaisse ou qui monte.', 'Coudes écartés à 90°.'],
     p: ['Descends', 'Repousse'],
   },
+  pushUpIncline: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
+    m: 'Pectoraux, triceps, avant des épaules, gainage',
+    s: ['Mains sur un support stable (chaise calée contre un mur, banc, bord de table), un peu plus larges que les épaules.', 'Recule les pieds : corps aligné de la tête aux talons, ventre et fessiers contractés.'],
+    g: ['Descends la poitrine vers le support, coudes à environ 45°.', 'Repousse jusqu’à bras tendus sans creuser le dos.'],
+    e: ['Support qui glisse (cale-le contre un mur).', 'Bassin qui s’affaisse ou qui monte.', 'Coudes écartés à 90°.'],
+    p: ['Descends', 'Repousse'],
+    safe: 'Plus le support est haut, plus c’est facile : baisse-le peu à peu jusqu’aux pompes au sol.',
+  },
   pushUpFeet: {
     eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Haut des pectoraux, épaules, triceps',
@@ -439,6 +448,14 @@ export const FAMILIES = {
     p: ['Descends en contrôle', 'Remonte en poussant'],
     safe: 'Utilise un rack avec des butées de sécurité réglées sous la position basse.',
   },
+  squatBody: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
+    m: 'Quadriceps, fessiers, ischio-jambiers',
+    s: ['Debout, pieds largeur des épaules, pointes légèrement ouvertes.', 'Bras tendus devant toi pour l’équilibre, ventre gainé.'],
+    g: ['Descends en poussant les fesses vers l’arrière, genoux dans l’axe des pieds, jusqu’à avoir les cuisses parallèles au sol.', 'Pousse dans les talons pour remonter, buste droit.'],
+    e: ['Genoux qui rentrent vers l’intérieur.', 'Talons qui décollent.', 'Dos arrondi en bas.'],
+    p: ['Descends en contrôle', 'Remonte en poussant'],
+  },
   squatFront: {
     eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
     m: 'Quadriceps, fessiers, abdominaux',
@@ -492,6 +509,14 @@ export const FAMILIES = {
     m: 'Quadriceps, fessiers, équilibre',
     s: ['Debout, haltères (ou barre) en main, un grand pas en avant.', 'Buste droit, ventre gainé.'],
     g: ['Descends en pliant les deux genoux jusqu’à environ 90°.', 'Pousse dans le talon avant pour remonter (ou pour faire le pas suivant).'],
+    e: ['Pas trop petit (genou qui dépasse).', 'Buste penché.', 'Genou avant qui rentre.'],
+    p: ['Descends en contrôle', 'Remonte en poussant'],
+  },
+  lungeBody: {
+    eff: 1, // phase d'effort (expire) = la 2e : la 1re est la descente / l'étirement
+    m: 'Quadriceps, fessiers, équilibre',
+    s: ['Debout, mains sur les hanches, un grand pas en avant.', 'Buste droit, ventre gainé.'],
+    g: ['Descends en pliant les deux genoux jusqu’à environ 90°, le genou arrière près du sol.', 'Pousse dans le talon avant pour remonter, puis change de jambe.'],
     e: ['Pas trop petit (genou qui dépasse).', 'Buste penché.', 'Genou avant qui rentre.'],
     p: ['Descends en contrôle', 'Remonte en poussant'],
   },
@@ -1083,7 +1108,7 @@ export const INFO_FAMILY = {
   fp_preacher_bar: 'curlPreacher', fp_preacher_machine: 'curlMachine', fp_biceps_machine: 'curlMachine', fp_wrist_curl: 'wristCurl',
   fp_pushdown: 'pushdown', fp_pushdown_bar: 'pushdown', fp_skull: 'skull', fp_overhead_ext_db: 'overheadExt', fp_overhead_ext_cable: 'overheadExt', fp_kickback: 'kickback', fp_triceps_machine: 'tricepsMachine',
   squat: 'squat', fp_front_squat: 'squatFront', fp_smith_squat: 'squatSmith', fp_goblet: 'goblet', fp_bulgarian: 'bulgarian', fp_hack_squat: 'hackSquat', fp_wall_sit: 'wallSit',
-  fp_walking_lunge: 'lunge', fp_barbell_lunge: 'lunge', fp_step_up: 'stepUp',
+  home_lunge: 'lungeBody', home_squat: 'squatBody', home_incline_pushups: 'pushUpIncline', fp_walking_lunge: 'lunge', fp_barbell_lunge: 'lunge', fp_step_up: 'stepUp',
   leg_press: 'legPress', fp_leg_press_h: 'legPress', fp_leg_press_45: 'legPress', fp_calf_press: 'calfPress', fp_leg_ext: 'legExt', fp_leg_curl_seat: 'legCurl', fp_leg_curl_lying: 'legCurl',
   fp_adductors: 'adductors', fp_abductors: 'abductors', fp_calf_standing: 'calfStanding', fp_calf_seated: 'calfSeated',
   deadlift: 'deadlift', fp_sumo: 'deadliftSumo', fp_trapbar: 'trapBar', fp_rdl: 'rdl', fp_good_morning: 'goodMorning',

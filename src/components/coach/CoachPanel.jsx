@@ -23,6 +23,9 @@ import { CoachChat } from './CoachChat';
 import { CoachGoal } from './CoachGoal';
 import { customFromSets } from '../../coach/methods';
 import { CoachExperience } from './CoachExperience';
+import { CoachPlace, EquipNotice } from './CoachPlace';
+import { CoachPains } from './CoachPains';
+import { CoachReminders, useSessionReminder } from './CoachReminders';
 import { CoachPast } from './CoachPast';
 import { programSession, programCoachOff } from '../../coach/program';
 import { CoachObjectives } from './CoachObjectives';
@@ -176,6 +179,7 @@ export function CoachPanel({
     [gameState.quests, today]
   );
 
+  useSessionReminder(gameState); // rappel le jour de la séance : dates tenues à jour pour le service worker
   const updateCoach = patch =>
     setGameState(prev => ({ ...prev, coach: { ...getCoachSettings(prev), ...patch } }));
   const toggleMatch = iso => {
@@ -414,6 +418,7 @@ export function CoachPanel({
       )}
       {/* QUESTIONS À RÉPONDRE UNE FOIS : petites notifications en haut ; une fois répondues, elles disparaissent
           (on retrouve le réglage dans la page Réglages) */}
+      <EquipNotice gameState={gameState} setGameState={setGameState} />
       <CardioInvite gameState={gameState} setGameState={setGameState} />
       {!hasGoal && (
         <section data-testid="notif-goal" className="rounded-2xl border border-pink-400/50 bg-slate-900/80 px-3 py-1.5 flex items-center gap-2">
@@ -634,6 +639,9 @@ export function CoachPanel({
       <div className="space-y-4 page-in" data-testid="coach-settings-page" key="reglages">
         <CoachGoal gameState={gameState} setGameState={setGameState} />
         <CoachProgram gameState={gameState} setGameState={setGameState} inSettings={!!coach.noCoach && !coach.program} />
+        <CoachPlace gameState={gameState} setGameState={setGameState} />
+        <CoachPains gameState={gameState} setGameState={setGameState} />
+        <CoachReminders gameState={gameState} setGameState={setGameState} />
         <CoachCardio gameState={gameState} setGameState={setGameState} />
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />

@@ -1,47 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CoachPanel } from './components/coach/CoachPanel';
-import { GuidedSession } from './components/GuidedSession';
 import { aiStatus, callAi } from './ai/client';
+import { togglePain } from './coach/pains';
+import { getCoachSettings } from './coach/settings';
 import { formContext, normalizeFormAi } from './ai/form';
-import { PhotoCalendar } from './components/photos/PhotoCalendar';
 import { PhotoReminder } from './components/photos/PhotoReminder';
 import { RestTimer } from './components/RestTimer';
-import { SessionRecap } from './components/SessionRecap';
 import { CoachBanner } from './components/CoachBanner';
 
 import { getTodayISODate } from './lib/dates';
-import { BilanTab } from './tabs/BilanTab';
 import { DailySummary } from './components/DailySummary';
-import { JournalTab } from './tabs/JournalTab';
-import { LevelUpModal } from './modals/LevelUpModal';
-import { LogSessionModal } from './modals/LogSessionModal';
-import { QuestFormModal } from './modals/QuestFormModal';
-import { QuestsTab } from './tabs/QuestsTab';
-import { QuickCardioModal } from './modals/QuickCardioModal';
-import { ResetModal } from './modals/ResetModal';
 import { BottomNav, SubTabs, TabBar } from './components/TabBar';
-import { MoreSheet } from './modals/MoreSheet';
-import { FriendsTab } from './tabs/FriendsTab';
 import { useFriendPhotos } from './hooks/useFriendPhotos';
 import { useFriends } from './hooks/useFriends';
 import { QuickAddMenu } from './components/QuickAddMenu';
 import { UpdateBanner } from './components/UpdateBanner';
 import { PatchNotes } from './components/PatchNotes';
 import { MovementHost } from './components/MovementHost';
-import { VoiceWorkoutAssistant } from './components/VoiceWorkoutAssistant';
 import { playGameSound } from './lib/sound';
 import { ToastBanner } from './components/ToastBanner';
-import { TrophiesTab } from './tabs/TrophiesTab';
 import { UndoBar } from './components/UndoBar';
-import { WeightTab } from './tabs/WeightTab';
 import { AppHeader } from './components/header/AppHeader';
 import { useDataTransfer } from './hooks/useDataTransfer';
 import { useDerivedStats } from './hooks/useDerivedStats';
 import { useLevelCelebration } from './hooks/useLevelCelebration';
 import { useRankTrial } from './hooks/useRankTrial';
-import { RankTrialModal } from './modals/RankTrialModal';
-import { RewardsModal } from './modals/RewardsModal';
-import { RankUpModal } from './modals/RankUpModal';
 import { useGameState } from './hooks/useGameState';
 import { useGuidedSession } from './hooks/useGuidedSession';
 import { useLevelUp } from './hooks/useLevelUp';
@@ -52,16 +35,61 @@ import { useQuickCardio } from './hooks/useQuickCardio';
 import { useRewards } from './hooks/useRewards';
 import { useToast } from './hooks/useToast';
 import { useWeightLog } from './hooks/useWeightLog';
-import { OnboardingModal } from './modals/OnboardingModal';
-import { LexiconModal } from './modals/LexiconModal';
-import { ImportCsvModal } from './modals/ImportCsvModal';
 import './data/sharedExercises'; // catalogue commun (exercices créés par le coach) : copie locale chargée tout de suite
 import { useSharedExercises } from './hooks/useSharedExercises';
 import { needsOnboarding } from './lib/onboarding';
 import { NEUTRAL } from './edition';
-import { AccountModal } from './modals/AccountModal';
 import { readRecoveryToken } from './components/AccountForm';
 import { hasArena } from './data/muscles';
+
+// Écrans chargés à la demande (4.22) : l'appli s'ouvre plus vite, chaque onglet ou fenêtre arrive quand on l'ouvre.
+// Tous les écrans sont ensuite préchargés en arrière-plan, quelques secondes après l'ouverture : l'appli reste
+// utilisable hors connexion (le service worker garde chaque fichier dès qu'il a été chargé une fois).
+const LOADERS = [];
+if (typeof window !== 'undefined') {
+  const warm = () => LOADERS.reduce((p, l) => p.then(l).catch(() => {}), Promise.resolve());
+  window.addEventListener('load', () => setTimeout(warm, 4000), { once: true });
+  window.__r2fWarm = warm; // tests : tout précharger d'un coup
+}
+function lz(loader, name) {
+  // pas de React.lazy / Suspense : un écran déjà chargé s'affiche tout de suite (aucune attente), sinon dès son arrivée
+  let Comp = null, pending = null;
+  const load = () => pending || (pending = loader().then(m => { Comp = m[name]; }, e => { pending = null; throw e; }));
+  LOADERS.push(load);
+  return function Lazy(props) {
+    const [, force] = useState(0);
+    useEffect(() => {
+      if (Comp) return undefined;
+      let on = true;
+      load().then(() => { if (on) force(n => n + 1); }).catch(() => {});
+      return () => { on = false; };
+    }, []);
+    return Comp ? <Comp {...props} /> : null;
+  };
+}
+const GuidedSession = lz(() => import('./components/GuidedSession'), 'GuidedSession');
+const PhotoCalendar = lz(() => import('./components/photos/PhotoCalendar'), 'PhotoCalendar');
+const SessionRecap = lz(() => import('./components/SessionRecap'), 'SessionRecap');
+const BilanTab = lz(() => import('./tabs/BilanTab'), 'BilanTab');
+const JournalTab = lz(() => import('./tabs/JournalTab'), 'JournalTab');
+const LevelUpModal = lz(() => import('./modals/LevelUpModal'), 'LevelUpModal');
+const LogSessionModal = lz(() => import('./modals/LogSessionModal'), 'LogSessionModal');
+const QuestFormModal = lz(() => import('./modals/QuestFormModal'), 'QuestFormModal');
+const QuestsTab = lz(() => import('./tabs/QuestsTab'), 'QuestsTab');
+const QuickCardioModal = lz(() => import('./modals/QuickCardioModal'), 'QuickCardioModal');
+const ResetModal = lz(() => import('./modals/ResetModal'), 'ResetModal');
+const MoreSheet = lz(() => import('./modals/MoreSheet'), 'MoreSheet');
+const FriendsTab = lz(() => import('./tabs/FriendsTab'), 'FriendsTab');
+const VoiceWorkoutAssistant = lz(() => import('./components/VoiceWorkoutAssistant'), 'VoiceWorkoutAssistant');
+const TrophiesTab = lz(() => import('./tabs/TrophiesTab'), 'TrophiesTab');
+const WeightTab = lz(() => import('./tabs/WeightTab'), 'WeightTab');
+const RankTrialModal = lz(() => import('./modals/RankTrialModal'), 'RankTrialModal');
+const RewardsModal = lz(() => import('./modals/RewardsModal'), 'RewardsModal');
+const RankUpModal = lz(() => import('./modals/RankUpModal'), 'RankUpModal');
+const OnboardingModal = lz(() => import('./modals/OnboardingModal'), 'OnboardingModal');
+const LexiconModal = lz(() => import('./modals/LexiconModal'), 'LexiconModal');
+const ImportCsvModal = lz(() => import('./modals/ImportCsvModal'), 'ImportCsvModal');
+const AccountModal = lz(() => import('./modals/AccountModal'), 'AccountModal');
 
 export function App() {
   const { gameState, setGameState, setGameStateAuto, sync, isLoaded } = useGameState();
@@ -94,8 +122,23 @@ export function App() {
   );
 
   const { toast, triggerToast, dismissToast } = useToast();
+  // stockage du téléphone plein ou presque : on le dit (sinon les dernières séances pourraient ne pas être gardées)
+  useEffect(() => {
+    const on = e => (e.detail && e.detail.full
+      ? triggerToast('Sauvegarde impossible sur cet appareil', 'Le stockage du navigateur est plein. Connecte ton compte (Plus → Mon compte) ou exporte tes données.', 0, '⚠️')
+      : triggerToast('Stockage presque plein', 'Pense à connecter ton compte ou à exporter tes données (menu Plus).', 0, '⚠️'));
+    window.addEventListener('rondoufit-storage', on);
+    return () => window.removeEventListener('rondoufit-storage', on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [obOpen, setObOpen] = useState(false);
   const [lexOpen, setLexOpen] = useState(false);
+  // ouvrir le lexique depuis ailleurs (séance guidée : « Les mots de la séance ») : événement rondoufit-lexicon, detail 'basics'
+  useEffect(() => {
+    const on = e => setLexOpen(e.detail === 'basics' ? 'basics' : true);
+    window.addEventListener('rondoufit-lexicon', on);
+    return () => window.removeEventListener('rondoufit-lexicon', on);
+  }, []);
   const [csvOpen, setCsvOpen] = useState(false);
   useEffect(() => { setQuestFilter('all'); }, [gameState.muscleMode]); // les groupes changent avec le mode : on repart de « tous »
   const openSync = () => setAccountOpen(true); // la sauvegarde est le compte de l'application
@@ -246,6 +289,8 @@ onFinish={handleFinishGuided}
 onMinimize={() => setGuidedOpen(false)}
 onCancel={() => { setGuided(null); setGuidedOpen(false); }}
  soundEnabled={gameState.soundEnabled !== false}
+ pains={(gameState.coach && gameState.coach.pains) || []}
+ onTogglePain={zone => setGameState(prev => { const c = getCoachSettings(prev); return { ...prev, coach: { ...c, pains: togglePain(c, zone, getTodayISODate()) } }; })}
  aiForm={aiStatus(gameState) === 'ok' ? args => callAi('form', { context: formContext(gameState, args) }, { timeoutMs: 60000 }).then(normalizeFormAi) : null}
 swapChoices={swapChoices}
 onSwap={swapExercise}
@@ -389,7 +434,7 @@ setGameState={setGameState}
       <BottomNav activeTab={activeTab} moreOpen={moreOpen} onOpenMore={() => setMoreOpen(true)} setActiveTab={goToTab} badges={tabBadges} />
       {accountOpen && <AccountModal sync={sync} recovery={recovery} heroName={gameState.heroName} onRenameHero={name => setGameState(prev => ({ ...prev, heroName: name }))} onClose={() => { setAccountOpen(false); setRecovery(null); }} />}
       <MovementHost />
-      {lexOpen && <LexiconModal onClose={() => setLexOpen(false)} />}
+      {lexOpen && <LexiconModal start={lexOpen === 'basics' ? 'basics' : ''} onClose={() => setLexOpen(false)} />}
       {csvOpen && <ImportCsvModal gameState={gameState} setGameState={setGameState} triggerToast={triggerToast} onClose={() => setCsvOpen(false)} />}
       {(obOpen || (NEUTRAL && isLoaded && needsOnboarding(gameState))) && (
         <OnboardingModal sync={sync} setGameState={setGameState} triggerToast={triggerToast} onDone={() => setObOpen(false)} />
