@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.24',
+    date: '2026-11-12',
+    title: 'Analyse vidéo : c’est toi qui arrêtes',
+    items: [
+      'Me filmer : la vidéo ne s’arrête plus toute seule. Fais toutes tes reps, puis touche « Série terminée » : le coach analyse ensuite.',
+      'Comptage des reps plus fiable : un mouvement trop bref (un point du squelette qui « saute ») ou quelques pas pour aller jusqu’au téléphone ne comptent plus comme des répétitions.',
+    ],
+  },
+  {
     version: '4.23',
     date: '2026-11-12',
     title: 'Où ça fait mal, et séance à la maison',

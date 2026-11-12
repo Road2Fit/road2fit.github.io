@@ -8,8 +8,8 @@ import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
 
 // Filmer une série (4.19) : la caméra du téléphone, le squelette détecté dessiné par-dessus, le compteur de reps en direct.
-// L'enregistrement démarre tout seul quand le corps est entièrement visible depuis 1 s, et s'arrête tout seul
-// (plus de nouvelle rep depuis 8 s, ou 4 s une fois le nombre prévu atteint, ou corps sorti de l'image 2,5 s) ou avec le bouton.
+// L'enregistrement démarre tout seul quand le corps est entièrement visible depuis 1 s ; depuis 4.24 il ne s'arrête QUE
+// quand la personne appuie sur « Série terminée » (ou au bout de 4 min).
 // Puis l'analyse (form/analyze.js) est rendue à la séance guidée, qui l'affiche pendant le repos.
 // 4.20 : la série est aussi enregistrée (MediaRecorder, en mémoire seulement : form/clip.js) pour revoir l'extrait d'un
 // point relevé et, si la personne le choisit, garder la vidéo.
@@ -117,15 +117,16 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       r.lastTs = ts;
       if (r.frames.length < MAX_FRAMES) r.frames.push({ t: ts, lm: lm || null, wl: (res && res.wl) || null });
       if (visible) r.lostSince = null; else if (r.lostSince == null) r.lostSince = ts;
-      const lost = r.lostSince != null && ts - r.lostSince > 2500;
       if (P.iso) {
         const s = Math.floor((ts - r.recStart) / 1000);
         if (s !== r.sec) { r.sec = s; setSec(s); }
-        if (holdTarget > 0 && ts - r.recStart >= holdTarget * 1000) {
+        // temps visé atteint : signal seulement, c'est la personne qui arrête (4.24)
+        if (holdTarget > 0 && !r.holdSignaled && ts - r.recStart >= holdTarget * 1000) {
+          r.holdSignaled = true;
           playGameSound('done', soundEnabled);
           try { navigator.vibrate && navigator.vibrate([150, 80, 300]); } catch (e) {}
-          finish();
-        } else if (lost && ts - r.recStart > 5000) finish();
+        }
+        if (r.frames.length >= MAX_FRAMES) finish();
         return;
       }
       if (r.frames.length - r.countedAt >= 10) {
@@ -136,8 +137,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           try { navigator.vibrate && navigator.vibrate(40); } catch (e) {}
         }
       }
-      const idle = ts - r.lastRepT;
-      if (r.count > 0 && (idle > 8000 || (targetReps > 0 && r.count >= targetReps && idle > 4000) || lost)) finish();
+      // plus d'arrêt automatique (4.24, demande de Gabin) : la personne appuie sur « Série terminée » quand toutes ses reps
+      // sont faites ; seule limite, la durée maximale d'enregistrement.
       if (r.frames.length >= MAX_FRAMES) finish();
     };
 
@@ -224,6 +225,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
             <p className="flex items-center gap-1.5 text-xs font-black text-rose-300"><span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />ANALYSE EN COURS</p>
             <p className="text-6xl font-black text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)] leading-none" data-testid="form-cam-count">{P.iso ? `${sec} s` : count}</p>
             <p className="text-xs font-bold text-slate-200 drop-shadow">{P.iso ? (holdTarget ? `sur ${holdTarget} s` : 'tenue') : targetReps ? `sur ${targetReps} reps` : 'reps'}</p>
+            <p className="text-[11px] font-bold text-slate-300 drop-shadow" data-testid="form-cam-count-note">compte indicatif</p>
           </div>
         )}
         {phase !== 'rec' && (
@@ -242,6 +244,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
 
       <div className="shrink-0 px-4 pt-3 pb-4 space-y-2 max-w-md w-full mx-auto">
         {info && <p className="text-center text-sm font-bold text-slate-300">{info}</p>}
+        {phase === 'rec' && <p className="text-center text-xs text-slate-400" data-testid="form-cam-manual">La vidéo tourne jusqu’à ce que tu appuies : termine toutes tes reps, puis touche le bouton.</p>}
         {phase === 'rec' ? (
           <button type="button" onClick={() => run.current && run.current.finish && run.current.finish()} data-key className="w-full py-4 rounded-2xl text-lg font-black text-white bg-pink-600 active:bg-pink-500" data-testid="form-cam-stop">{P.iso ? '■ Stop' : 'Série terminée'}</button>
         ) : (

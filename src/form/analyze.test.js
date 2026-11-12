@@ -237,6 +237,37 @@ describe('cas limites', () => {
   });
 });
 
+describe('pas de fausses reps (4.24)', () => {
+  const P = patternFor({ catalogId: 'squat', name: 'Squat' });
+  // marche de profil : à chaque pas le genou se plie, et les pieds avancent
+  const walk = (fr, t0, x0, steps, dir = 1) => {
+    const per = 0.6, fps = 30;
+    for (let i = 0; i <= steps * per * fps; i++) {
+      const t = i / fps, ph = (t % per) / per, bend = Math.sin(ph * Math.PI);
+      const b = sideBody({ x0: x0 + dir * 0.08 * (t / per), thigh: 30 * bend, shin: -60 * bend });
+      fr.push({ t: (t0 + t) * 1000, lm: toLandmarks(b) });
+    }
+    return fr;
+  };
+  it('aucune rep faite, la personne marche jusqu’au téléphone pour arrêter : 0 rep', () => {
+    const fr = makeFrames(timeline({ reps: 0, lead: 4, tail: 0 }), () => squatBody(0));
+    walk(fr, fr[fr.length - 1].t / 1000 + 0.033, 0.2, 2);
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(0);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).reason).toBe('nomove');
+  });
+  it('4 squats puis la personne marche : 4 reps', () => {
+    const fr = makeFrames(timeline({ reps: 4, tail: 0.5 }), d => squatBody(d));
+    walk(fr, fr[fr.length - 1].t / 1000 + 0.033, 0.2, 2);
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(4);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).repCount).toBe(4);
+  });
+  it('repères qui « sautent » une fraction de seconde : pas de rep', () => {
+    const fr = makeFrames(timeline({ reps: 0, lead: 6 }), (d, t, i) => (i % 40 >= 20 && i % 40 < 24 ? squatBody(1) : squatBody(0)));
+    expect(liveCount(fr, P, { aspect: 9 / 16 })).toBe(0);
+    expect(analyzeSet(fr, P, { aspect: 9 / 16 }).ok).toBe(false);
+  });
+});
+
 describe('extraits vidéo : reps concernées par chaque point', () => {
   const P = patternFor({ catalogId: 'squat', name: 'Squat' });
   it('amplitude qui baisse → les 2 dernières reps, avec leurs horaires', () => {

@@ -390,6 +390,30 @@ export function detectReps(t, s, { rest = null, min = 0 } = {}) {
   return { reps, R, lo, hi, rest, u };
 }
 
+// ---------- fausses reps (4.24) ----------
+// Une rep compte seulement si le mouvement dure au moins MIN_REP_S (un tremblement ou un repère qui « saute » est plus bref)
+// et si les pieds restent en place (marcher vers le téléphone pour l'arrêter plie aussi les genoux). Exceptions : les
+// mouvements où les pieds bougent normalement (fentes marchées, suspension, haltérophilie, mountain climbers, marche chargée).
+export const MIN_REP_S = 0.45;
+const MAX_FEET_TRAVEL = 0.2; // en longueurs de buste (un pas déplace le milieu des chevilles d’environ un demi-pas)
+const FEET_MOVE = new Set(['lunge', 'pullUp', 'legRaise', 'olympic', 'mountain', 'carry', 'hang']);
+function feetX(ctx) {
+  if (ctx.cache.feetX) return ctx.cache.feetX;
+  const T = ctx.torso || 0.3;
+  const raw = ctx.F.map(f => (f.p && (f.p[27].v >= 0.5 || f.p[28].v >= 0.5) ? midOf(f.p, f.p, 27, 28).x / T : NaN));
+  return (ctx.cache.feetX = clean(ctx, raw));
+}
+function realReps(ctx, P, reps) {
+  const fx = FEET_MOVE.has(P.id) ? null : feetX(ctx);
+  return reps.filter(r => {
+    if (!(ctx.t[r.end] - ctx.t[r.start] >= MIN_REP_S)) return false;
+    if (!fx) return true;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = r.start; i <= r.end; i++) if (isNum(fx[i])) { lo = Math.min(lo, fx[i]); hi = Math.max(hi, fx[i]); }
+    return !(hi - lo > MAX_FEET_TRAVEL);
+  });
+}
+
 function restFor(P) {
   if (!P.conDir) return null;
   return (P.first === 'ecc') === (P.conDir > 0) ? 'hi' : 'lo';
@@ -415,9 +439,11 @@ export function liveCount(frames, pattern, meta = {}) {
   if (!ctx.valid) return 0;
   let s = mainRaw(ctx, P);
   let rest = restFor(P);
-  if (!s || coverage(s) < 0.5) { s = motionSeries(ctx); rest = null; }
+  let fallback = false;
+  if (!s || coverage(s) < 0.5) { s = motionSeries(ctx); rest = null; fallback = true; }
   if (!s) return 0;
-  return detectReps(ctx.t, s, { rest, min: P.min || 0 }).reps.length;
+  // mêmes réglages que l'analyse complète (avant 4.24, le compte en direct n'avait pas de seuil sur le signal de secours)
+  return realReps(ctx, P, detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 }).reps).length;
 }
 
 /**
@@ -441,6 +467,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
     if (!s) return fail('framing', 'Ton corps n’était pas assez visible pour analyser la série.', P);
   }
   const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 });
+  det.reps = realReps(ctx, P, det.reps);
   if (!det.reps.length) return fail('nomove', 'Je n’ai pas vu de répétition nette.', P);
   ctx.main = s;
   ctx.det = det;
