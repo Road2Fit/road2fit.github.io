@@ -396,13 +396,41 @@ export function detectReps(t, s, { rest = null, min = 0 } = {}) {
 // et si les pieds restent en place (marcher vers le téléphone pour l'arrêter plie aussi les genoux). Exceptions : les
 // mouvements où les pieds bougent normalement (fentes marchées, suspension, haltérophilie, mountain climbers, marche chargée).
 export const MIN_REP_S = 0.45;
-const MAX_FEET_TRAVEL = 0.2; // en longueurs de buste (un pas déplace le milieu des chevilles d’environ un demi-pas)
-const FEET_MOVE = new Set(['lunge', 'pullUp', 'legRaise', 'olympic', 'mountain', 'carry', 'hang']);
-function feetX(ctx) {
-  if (ctx.cache.feetX) return ctx.cache.feetX;
+// 4.29 (vidéo réelle d'un développé couché) : le filtre « les pieds ne bougent pas » (4.24) jetait 8 vraies reps sur 9
+// (chevilles mal vues derrière le banc, qui « tremblent ») et gardait le moment où la personne se relève (chevilles
+// invisibles). Remplacé par : le corps revient là où la rep a commencé (position médiane au début contre à la fin).
+function startEndShift(a, r, u = null) {
+  const n = r.end - r.start + 1, k = Math.max(2, Math.floor(n / 3));
+  const pick = (i0, i1, atRest) => {
+    const v = [];
+    for (let i = i0; i <= i1; i++) if (isNum(a[i]) && (!atRest || (u && isNum(u[i]) && u[i] <= 0.25))) v.push(a[i]);
+    return v.length >= 2 ? median(v) : NaN;
+  };
+  // images où l'articulation suivie est à sa position de départ (avant le point d'inversion, puis après) : un raté de
+  // détection au milieu de la rep ne compte pas
+  let a0 = u ? pick(r.a, r.turn, true) : NaN, a1 = u ? pick(r.turn, r.b, true) : NaN;
+  if (!isNum(a0)) a0 = pick(r.start, r.start + k - 1, false);
+  if (!isNum(a1)) a1 = pick(r.end - k + 1, r.end, false);
+  return isNum(a0) && isNum(a1) ? Math.abs(a1 - a0) : NaN;
+}
+// 4.29 : une vraie rep revient là où elle a commencé (épaules ET bassin). Se relever du banc, s'installer, marcher
+// finissent ailleurs : écartés (sauf mouvements qui se déplacent : fentes marchées, haltérophilie, mountain climbers,
+// marche chargée).
+const RETURN_MAX = 0.35; // en longueurs de buste
+const TRAVELS = new Set(['lunge', 'olympic', 'mountain', 'carry']);
+function midSeries(ctx, a, b, axis) {
+  const k = `mid.${a}.${axis}`;
+  if (ctx.cache[k]) return ctx.cache[k];
   const T = ctx.torso || 0.3;
-  const raw = ctx.F.map(f => (f.p && (f.p[27].v >= 0.5 || f.p[28].v >= 0.5) ? midOf(f.p, f.p, 27, 28).x / T : NaN));
-  return (ctx.cache.feetX = clean(ctx, raw));
+  return (ctx.cache[k] = clean(ctx, ctx.F.map(f => (f.p && (f.p[a].v >= VIS || f.p[b].v >= VIS) ? midOf(f.p, f.p, a, b)[axis] / T : NaN))));
+}
+function bodyShift(ctx, r, u = null) {
+  let worst = 0;
+  for (const [a, b] of [[11, 12], [23, 24]]) {
+    const dx = startEndShift(midSeries(ctx, a, b, 'x'), r, u), dy = startEndShift(midSeries(ctx, a, b, 'y'), r, u);
+    if (isNum(dx) && isNum(dy)) worst = Math.max(worst, Math.hypot(dx, dy));
+  }
+  return worst;
 }
 // 4.26 (encore 2 reps de trop) : aux tractions, lâcher la barre puis marcher jusqu'au téléphone plie les coudes
 // (et le filtre des pieds ne s'applique pas : les jambes bougent sous la barre). Donc :
@@ -443,15 +471,14 @@ function trimEdges(ctx, reps) {
   while (b > a && out(b)) b--;
   return reps.slice(a, b + 1);
 }
-function realReps(ctx, P, reps) {
-  const fx = FEET_MOVE.has(P.id) ? null : feetX(ctx);
+// 4.29 : le contrôle « le corps revient au même endroit » remplace celui des pieds (chevilles souvent mal vues : banc,
+// matériel devant les jambes), qui jetait de vraies reps. Marcher déplace aussi le bassin, donc reste écarté.
+function realReps(ctx, P, reps, u = null) {
   const kept = reps.filter(r => {
     if (!(ctx.t[r.end] - ctx.t[r.start] >= MIN_REP_S)) return false;
     if (HANDS_UP.has(P.id) && handsUpShare(ctx, r) < 0.7) return false;
-    if (!fx) return true;
-    let lo = Infinity, hi = -Infinity;
-    for (let i = r.start; i <= r.end; i++) if (isNum(fx[i])) { lo = Math.min(lo, fx[i]); hi = Math.max(hi, fx[i]); }
-    return !(hi - lo > MAX_FEET_TRAVEL);
+    if (!TRAVELS.has(P.id) && bodyShift(ctx, r, u) > RETURN_MAX) return false;
+    return true;
   });
   return trimEdges(ctx, kept);
 }
@@ -485,7 +512,8 @@ export function liveCount(frames, pattern, meta = {}) {
   if (!s || coverage(s) < 0.5) { s = motionSeries(ctx); rest = null; fallback = true; }
   if (!s) return 0;
   // mêmes réglages que l'analyse complète (avant 4.24, le compte en direct n'avait pas de seuil sur le signal de secours)
-  return realReps(ctx, P, detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 }).reps).length;
+  const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 });
+  return realReps(ctx, P, det.reps, det.u).length;
 }
 
 /**
@@ -509,7 +537,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
     if (!s) return fail('framing', 'Ton corps n’était pas assez visible pour analyser la série.', P);
   }
   const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0 });
-  det.reps = realReps(ctx, P, det.reps);
+  det.reps = realReps(ctx, P, det.reps, det.u);
   if (!det.reps.length) return fail('nomove', 'Je n’ai pas vu de répétition nette.', P);
   ctx.main = s;
   ctx.det = det;
@@ -1128,3 +1156,4 @@ export function bodyVisible(lm, pattern) {
   };
   return need('l') || need('r');
 }
+

@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.29',
+    date: '2026-11-12',
+    title: 'Analyse vidéo : le bon nombre de reps',
+    items: [
+      'Le comptage a été réglé sur une vraie vidéo de développé couché : les 9 reps sont comptées, et le moment où tu t’assois ou te relèves ne l’est plus.',
+      'Une rep compte si ton corps revient à sa place à la fin. Te relever, t’installer ou marcher n’en sont pas. Les pieds mal vus (cachés par le banc) ne font plus rater de vraies reps.',
+    ],
+  },
+  {
     version: '4.28',
     date: '2026-11-12',
     title: 'Ton record au jeu, chez tes amis',
