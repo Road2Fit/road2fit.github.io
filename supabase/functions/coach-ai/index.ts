@@ -200,11 +200,13 @@ const SCHEMAS: Record<string, unknown> = {
 
 const TASKS: Record<string, { model: string; prompt: string; effort: string; maxTokens: number }> = {
   dictation: { model: FAST, prompt: DICTATION, effort: "low", maxTokens: 8000 },
-  form: { model: SMART, prompt: FORM, effort: "low", maxTokens: 3000 },
+  // 13/11/2026 (choix de Gabin, coût) : extraction et commentaire de mesures sur Haiku 5.5 ; la discussion avec le coach
+  // (beaucoup de règles à suivre en même temps) reste sur Sonnet tant que le test comparatif ne montre pas que Haiku suffit.
+  form: { model: FAST, prompt: FORM, effort: "low", maxTokens: 3000 },
   coach: { model: SMART, prompt: COACH, effort: "medium", maxTokens: 10000 },
-  program: { model: SMART, prompt: PROGRAM, effort: "medium", maxTokens: 16000 },
-  history: { model: SMART, prompt: HISTORY, effort: "medium", maxTokens: 10000 },
-  exercise: { model: SMART, prompt: EXERCISE, effort: "medium", maxTokens: 4000 },
+  program: { model: FAST, prompt: PROGRAM, effort: "medium", maxTokens: 16000 },
+  history: { model: FAST, prompt: HISTORY, effort: "medium", maxTokens: 10000 },
+  exercise: { model: FAST, prompt: EXERCISE, effort: "medium", maxTokens: 4000 },
 };
 
 const clip = (v: unknown, n: number) => String(v ?? "").slice(0, n);
@@ -303,13 +305,21 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) return json(503, { error: "not_configured" });
 
+  // 0. Test comparatif des modèles (temporaire) : actif seulement tant que le secret EVAL_TOKEN existe sur le projet
+  //    (posé pour le test puis retiré) ; pas de compte, pas de quota, rien d'écrit ; modèle choisi par evalModel.
+  const evalTok = Deno.env.get("EVAL_TOKEN") || "";
+  const isEval = evalTok.length >= 32 && req.headers.get("x-eval-token") === evalTok;
+
   // 1. Personne connectée ?
   const supaUrl = Deno.env.get("SUPABASE_URL") || "";
   const auth = req.headers.get("Authorization") || "";
   const anon = req.headers.get("apikey") || Deno.env.get("SUPABASE_ANON_KEY") || "";
-  if (!/^Bearer .+/.test(auth)) return json(401, { error: "auth" });
-  const who = await fetch(`${supaUrl}/auth/v1/user`, { headers: { Authorization: auth, apikey: anon } }).catch(() => null);
-  if (!who || !who.ok) return json(401, { error: "auth" });
+  let who: Response | null = null;
+  if (!isEval) {
+    if (!/^Bearer .+/.test(auth)) return json(401, { error: "auth" });
+    who = await fetch(`${supaUrl}/auth/v1/user`, { headers: { Authorization: auth, apikey: anon } }).catch(() => null);
+    if (!who || !who.ok) return json(401, { error: "auth" });
+  }
 
   // 2. Demande valide ?
   const raw = await req.text();
@@ -321,6 +331,7 @@ Deno.serve(async (req) => {
   if (!conf) return json(400, { error: "bad_task" });
   let messages;
   try { messages = buildMessages(task, body); } catch { return json(400, { error: "bad_messages" }); }
+  const model = isEval && body.evalModel === "fast" ? FAST : isEval && body.evalModel === "smart" ? SMART : conf.model;
 
   // 3. Limite du jour de la personne + budget du mois de toute l'appli (ai_take_quota2, docs/supabase-phase1.sql).
   //    Base pas encore à jour (fonction absente) : ancienne limite du jour seule.
@@ -329,8 +340,8 @@ Deno.serve(async (req) => {
     headers: { Authorization: auth, apikey: anon, "Content-Type": "application/json" },
     body: JSON.stringify({ p_limit: DAILY_LIMIT }),
   }).catch(() => null);
-  let q = await quota("ai_take_quota2");
-  if (q && q.status === 404) {
+  let q = isEval ? null : await quota("ai_take_quota2");
+  if (isEval) { /* test comparatif : pas de quota */ } else if (q && q.status === 404) {
     q = await quota("ai_take_quota");
     if (!q || !q.ok) return json(500, { error: "quota_unavailable" });
     if ((await q.json()) !== true) return json(429, { error: "quota" });
@@ -345,14 +356,14 @@ Deno.serve(async (req) => {
   const client = new Anthropic({ apiKey });
   try {
     // Sonnet : si ses garde-fous refusent à tort, l'API relance la demande sur un autre modèle (fallbacks). Haiku n'a pas cette option.
-    const extra = conf.model === SMART ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {};
+    const extra = model === SMART ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" } : {};
     if (task === "exercise") {
       let research = "";
       try { research = await researchExercise(client, body.text); } catch { /* recherche indisponible : connaissances du modèle */ }
       if (research) messages[0].content += `\n\nRecherche web sur cet exercice (sources consultées à l'instant) :\n${research}`;
     }
-    const res: any = await (conf.model === SMART ? client.beta.messages : client.messages).create({
-      model: conf.model,
+    const res: any = await (model === SMART ? client.beta.messages : client.messages).create({
+      model,
       max_tokens: conf.maxTokens,
       ...extra,
       output_config: { effort: conf.effort, format: { type: "json_schema", schema: SCHEMAS[task] } },
@@ -368,7 +379,8 @@ Deno.serve(async (req) => {
     const text = (res.content || []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
     let data;
     try { data = JSON.parse(text); } catch { return json(502, { error: "bad_output" }); }
-    if (task === "exercise") data = await saveSharedExercise(data, supaUrl, auth, anon, who as Response);
+    if (task === "exercise" && !isEval) data = await saveSharedExercise(data, supaUrl, auth, anon, who as Response);
+    if (isEval) data = { ...data, usage: { input: res.usage?.input_tokens || 0, output: res.usage?.output_tokens || 0, cacheRead: res.usage?.cache_read_input_tokens || 0, cacheWrite: res.usage?.cache_creation_input_tokens || 0 } };
     // analyse de série : la consommation est renvoyée pour être affichée (comparaison algorithme / coach IA)
     if (task === "form") data.usage = { input: res.usage?.input_tokens || 0, output: res.usage?.output_tokens || 0 };
     return json(200, { ok: true, data, model: res.model });
