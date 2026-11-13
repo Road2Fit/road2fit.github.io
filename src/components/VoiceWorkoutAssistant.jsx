@@ -433,7 +433,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 setInterimText('');
                 setSpokenText(e.target.value);
               }}
-              placeholder={isNext ? 'Dicte ou colle ta prochaine séance (ex : jeudi, développé couché 4×8 à 60 kg, tractions 3×6, squat 5×5 à 80 kg)…' : "Dicte toute ta séance ici (ex: J'ai fait du développer coucher 50 kg 3x8, des tracons élastique 10 kg 6 6 4, un ip trust 80 kg 4x10 et 4 km de course en 24 min)..."}
+              placeholder={isNext ? 'Dicte ou colle ta prochaine séance (ex : jeudi, développé couché 4×8 à 60 kg, tractions 3×6, squat 5×5 à 80 kg)…' : 'Dicte toute ta séance ici…'}
               className="flex-1 bg-slate-950 border border-pink-500/50 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-pink-400"
             />
             <div className="flex sm:flex-col gap-2 shrink-0">
@@ -459,21 +459,6 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
           </div>
 
           {/* Bouton de test avec fautes de frappe volontaires + 4 exercices en une seule phrase */}
-          {!isNext && <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-slate-400 font-bold">Tester une phrase complète avec fautes :</span>
-            <button
-              type="button"
-              onClick={() =>
-                setSpokenText(
-                  "Aujourd'hui j'ai fait du développer coucher à 50 kilos 3 séries de 8 des tracons avec élastique 10 kilos 6 6 et 4 répétitions un ip trust à 80 kilos 4 fois 10 et 4,5 km de footing en 26 minutes"
-                )
-              }
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-pink-500/40 text-pink-300 font-semibold"
-            >
-              Tester : « développer coucher 50kg 3×8 + tracons élastique 10kg 6-6-4 + ip trust 80kg 4×10 + footing 4,5km »
-            </button>
-          </div>}
-
           {aiOn ? (
             <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="voice-ai">
               {aiState === 'loading' && <span className="text-sky-300 font-bold animate-pulse"><Art name="sparkle" size={16} />Le coach lit ta séance…</span>}
