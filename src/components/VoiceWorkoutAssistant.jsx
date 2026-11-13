@@ -422,7 +422,6 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 </button>
               ))}
             </div>
-            {isNext && <p className="text-xs text-slate-300" data-testid="voice-next-help">Dicte ou colle la séance que tu veux faire : le coach la proposera à la place de la sienne. Tu pourras toujours l’ajuster ou revenir à sa proposition.</p>}
             <div className="space-y-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <textarea
