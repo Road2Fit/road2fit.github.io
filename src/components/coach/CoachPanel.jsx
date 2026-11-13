@@ -26,6 +26,7 @@ import { CoachExperience } from './CoachExperience';
 import { CoachPlace, EquipNotice } from './CoachPlace';
 import { homeDaysOf, isHomeDay } from '../../coach/equipment';
 import { CoachPains } from './CoachPains';
+import { CoachPlyo } from './CoachPlyo';
 import { CoachReminders, useSessionReminder } from './CoachReminders';
 import { CoachPast } from './CoachPast';
 import { programSession, programCoachOff } from '../../coach/program';
@@ -647,6 +648,7 @@ export function CoachPanel({
         <CoachPains gameState={gameState} setGameState={setGameState} />
         <CoachReminders gameState={gameState} setGameState={setGameState} />
         <CoachCardio gameState={gameState} setGameState={setGameState} />
+        <CoachPlyo gameState={gameState} setGameState={setGameState} />
         <CoachExperience gameState={gameState} setGameState={setGameState} onOpenMaxima={onGoTab ? () => onGoTab('quests') : null} />
         <CoachPast gameState={gameState} setGameState={setGameState} />
         {/* FORME DES SÉRIES : variée (pyramides, dégressives, supersets…) ou classique */}
@@ -704,7 +706,7 @@ export function CoachPanel({
 
         {/* VOLLEY */}
         {(coach.volleyDays || []).length > 0 && (
-          <CoachVolley gameState={gameState} onAddExercise={onAddExercise} sport={sportInfo(coach.sport)} />
+          <CoachVolley gameState={gameState} setGameState={setGameState} onAddExercise={onAddExercise} sport={sportInfo(coach.sport)} />
         )}
 
         {/* SOURCES */}

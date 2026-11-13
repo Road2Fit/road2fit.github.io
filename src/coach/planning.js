@@ -1,4 +1,5 @@
 import { coachCycleInfo, coachIsDeloadWeek } from './cycle';
+import { dayStyleOf, plyoWeekDays } from './contraction';
 import { COACH_TYPES, COACH_TYPE_ORDER, chosenRotation, coachDaysBetween, coachDow, coachSplitRotation, coachTimeToMin, getCoachSettings } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
@@ -198,10 +199,11 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
   }
   // thème choisi par la personne pour un jour (4.36) : il remplace celui du coach
   planned.forEach(d => { const t = dayTypeOf(coach, d); if (t) plannedTypes[d] = t; });
+  const plyoDays = plyoWeekDays(coach, planned, info);
   const shortfall = Math.max(0, remaining - planned.filter(d => !extraSet.has(d)).length);
   const matchInWeek = days.some(d => (coach.matchDates || []).includes(d));
   return {
-    weekStart, coach, matchInWeek, remaining, shortfall, trio, split, plannedTypes,
+    weekStart, coach, matchInWeek, remaining, shortfall, trio, split, plannedTypes, plyoDays,
     deload: coachIsDeloadWeek(coach, weekStart),
     cycle: coachCycleInfo(coach, weekStart),
     days: info.map(i => ({
@@ -211,6 +213,8 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       // une journée peut cumuler la muscu et le sport (journée double) : les deux sont donnés séparément
       gym: strengthDays.has(i.iso) ? 'done' : planned.includes(i.iso) ? 'planned' : null,
       extra: extraSet.has(i.iso),
+      plyo: plyoDays.includes(i.iso),
+      style: dayStyleOf(coach, i.iso),
       skipped: (coach.gymSkips || []).includes(i.iso),
       sportKind: i.isMatch ? 'match' : i.isVolley ? 'sport' : null
     })),

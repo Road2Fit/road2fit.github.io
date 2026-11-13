@@ -8,6 +8,7 @@ import { beepOn, unlockBeep } from '../form/repBeep';
 import { playGameSound } from '../lib/sound';
 import { isBarbell, platesText } from '../lib/plates';
 import { PlatesDiagram } from './PlatesDiagram';
+import { HoldTimer } from './HoldTimer';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { restText } from '../coach/rest';
@@ -633,6 +634,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               {it.kind === 'load' && !sw && isBarbell(it.name) && platesText(loadsOf(d)[j]) && (
                 <PlatesDiagram total={loadsOf(d)[j]} testId="set-plates" className="-mt-1" />
               )}
+              {plan && plan[j] && plan[j].hold > 0 && !sw && <HoldTimer key={`${it.questId}-${j}`} seconds={plan[j].hold} reps={plan[j].holdEach ? Number(d.reps[j]) || 1 : 1} where={plan[j].where || ''} />}
+              {plan && plan[j] && plan[j].ecc > 0 && !sw && <p className="text-center text-sm font-black text-violet-200" data-testid="set-ecc">Descente lente : compte {plan[j].ecc} s à chaque rep</p>}
               {painZone && !sw && <p className="text-center text-xs font-bold text-amber-300" data-testid="set-pain">{painAdvice(painZone)}</p>}
               {!d.prev && !sw && !it.timed && !d.done.some(Boolean) && (
                 <p className="text-center text-xs text-slate-400" data-testid="set-first">{it.kind === 'load'

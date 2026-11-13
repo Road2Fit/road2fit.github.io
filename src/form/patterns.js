@@ -141,6 +141,9 @@ const FAMILY_PATTERN = {
   plank: 'plank', sidePlank: 'plank', hollow: 'holdOnly', handstand: 'plank', frontLever: 'plank', planche: 'plank',
   wallSit: 'wallSit', deadHang: 'hang', lSit: 'lSit', farmersCarry: 'carry', sledPush: 'carry', sledPull: 'carry',
   burpeeBroadJump: 'generic', burpee: 'generic', mountain: 'mountain',
+  plyoSquatJump: 'generic', plyoCmj: 'generic', plyoTuckJump: 'generic', plyoBoxJump: 'generic', plyoDropJump: 'generic', plyoBroadJump: 'generic',
+  plyoSplitJump: 'generic', plyoSingleLegHop: 'generic', plyoPogo: 'generic', plyoApproachJump: 'generic', plyoBlockJump: 'generic',
+  plyoClapPushUp: 'pushUp', plyoBallSlam: 'generic', plyoChestPass: 'generic',
 };
 export const familyPatternMap = FAMILY_PATTERN;
 

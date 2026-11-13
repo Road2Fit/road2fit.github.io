@@ -13,7 +13,7 @@ export function coachSuggestExercises(state, arena, count = 3) {
   // chez soi : seulement ce qui est faisable avec le matériel, le plus simple d'abord
   const pref = placeOf(coach) === 'home' ? ['Poids du corps', '', 'Haltères', 'Kettlebell', 'Barre', 'Banc'] : ['Machine guidée', 'Hammer Strength', 'Poulie', 'Smith', 'Haltères', 'Barre', 'Poids du corps'];
   return EXERCISE_CATALOG
-    .filter(c => c.type === 'strength' && doable(c, coach) && arenaOf(c) === arena && !owned.has(c.id) && !ownedNames.has(stripAccents(c.name)))
+    .filter(c => c.type === 'strength' && !/^ply_/.test(String(c.id || '')) && doable(c, coach) && arenaOf(c) === arena && !owned.has(c.id) && !ownedNames.has(stripAccents(c.name)))
     .sort((a, b) => {
       const ca = coachIsCompound(a.name) ? 0 : 1, cb = coachIsCompound(b.name) ? 0 : 1;
       if (ca !== cb) return ca - cb;

@@ -1,7 +1,7 @@
 import { PROFILES } from './profiles';
 import { restFor } from './rest';
 import { assistChangeText, assistText, nextAssistDown } from '../lib/assist';
-import { normalizeForProgress } from './methods';
+import { CONTRACTION_METHODS, normalizeForProgress } from './methods';
 import { decideProfileTarget } from './profileTarget';
 import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
 
@@ -20,8 +20,10 @@ export function computeExerciseTarget(q, opts = {}) {
   const R = Math.max(1, Number(q.goalReps) || 6);
   const goalAssist = Number(q.goalAssistanceKg) || 0;
   const entries = coachRealEntries(q);
+  const normal = entries.filter(e => !CONTRACTION_METHODS.includes(e.method));
+  const progEntries = normal.length ? normal : entries; // une séance d'isométrie ou d'excentrique ne règle pas la charge habituelle
   // dernière séance, quelle que soit sa forme (pyramide, dégressives, séance dictée…) : ramenée à ce qui juge la progression
-  const last = normalizeForProgress(entries[entries.length - 1] || null, kind, R);
+  const last = normalizeForProgress(progEntries[progEntries.length - 1] || null, kind, R);
   const arena = arenaOf(q);
   const compound = coachIsCompound(q.name);
   const boss = evaluateQuestProgress(q).isBossDefeated;
@@ -119,7 +121,7 @@ export function computeExerciseTarget(q, opts = {}) {
       change = 'hold';
       reps = padded.map(r => Math.min(R, Math.max(1, r + inc)));
       reason = `Dernière fois : ${padded.join(' - ')}${T ? ' s' : ''}. On garde la même ${holdWord} et on vise +${inc}${T ? ' s' : ' rép'} par série (objectif ${R}${T ? ' s' : ''}).`;
-      const prev = entries[entries.length - 2];
+      const prev = progEntries[progEntries.length - 2];
       if (prev) {
         const pSets = Array.from({ length: sets }, (_, i) => Number(coachSetsOf(prev, sets, R)[i]) || 0);
         const sameLoad = kind === 'load' ? Number(prev.value) === Number(last.value) : Number(prev.assistanceKg || 0) === Number(last.assistanceKg || 0);

@@ -16,4 +16,8 @@ export const BASICS = [
   { t: 'Séance', means: 'Un entraînement complet : quelques exercices, chacun avec ses séries.' },
   { t: 'Groupe musculaire', means: 'Les muscles travaillés par un exercice (pectoraux, dos, jambes…). Le coach répartit le travail sur la semaine.' },
   { t: 'Record', means: 'Ta meilleure performance sur un exercice. L’appli le fête quand tu le bats.' },
+  { t: 'Concentrique', means: 'Le muscle se raccourcit en déplaçant la charge : la montée d’un curl, la poussée d’un développé.' },
+  { t: 'Excentrique', means: 'Le muscle freine la charge en s’allongeant : la descente. On y est plus fort qu’à la montée ; une descente lente se travaille exprès.' },
+  { t: 'Isométrique', means: 'Le muscle force sans que l’articulation bouge : tenir une position (en haut d’une traction, gainage, chaise contre le mur).' },
+  { t: 'Pliométrie', means: 'Un étirement rapide suivi aussitôt d’une contraction explosive : sauts, rebonds, lancers. Pour la détente et la vitesse.' },
 ];
