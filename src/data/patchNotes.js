@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.40',
+    date: '2026-11-13',
+    title: 'La boutique de ton avatar',
+    items: [
+      'Profil → « Mon avatar » → onglet « Boutique » : 61 objets pour ton personnage (casquettes, bandeaux, lunettes, barbes, chaînes, médaille, montre, gants, ceinture de force, genouillères, chaussettes, motifs de maillot, chaussures dorées, halos…).',
+      'Chaque niveau gagné te rapporte des pièces, de plus en plus : +14 au niveau 2, +30 au niveau 10, +50 au niveau 20. Tu commences avec 30 pièces.',
+      '« Essayer » montre l’objet sur l’aperçu sans rien dépenser ; « Acheter » le paie et le met ; ensuite « Porter » ou « Retirer » quand tu veux.',
+      'Juste pour le style : aucun effet sur ton entraînement. Tes achats sont gardés sur tous tes appareils.',
+    ],
+  },
+  {
     version: '4.39',
     date: '2026-11-13',
     title: 'Ton avatar dans les animations',
