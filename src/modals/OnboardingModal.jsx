@@ -10,6 +10,8 @@ import { BEGINNER_STARTERS, LEVELS } from '../coach/experience';
 import { doable, homeStarters } from '../coach/equipment';
 import { PlacePicker } from '../components/coach/CoachPlace';
 import { BreakPicker, cleanExperience, ExperienceSources, ExpertFields, LevelPicker } from '../components/coach/ExperienceForm';
+import { AvatarLookRows, AvatarPreview } from '../components/AvatarEditor';
+import { cleanAvatar } from '../anim/avatar';
 
 // Assistant d'accueil (édition neutre) : quelques écrans courts pour régler le coach d'après la personne.
 // Tout est modifiable ensuite (onglet Coach, Exercices, Mes maxima, ⚙️).
@@ -19,8 +21,8 @@ const chip = on => `px-3 py-2 rounded-xl border text-sm font-bold ${on ? 'bg-sky
 const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mer'], [4, 'Jeu'], [5, 'Ven'], [6, 'Sam'], [0, 'Dim']];
 const byId = id => EXERCISE_CATALOG.find(c => c.id === id);
 
-const STEP_NAMES = { welcome: 'Bienvenue', you: 'Toi', goal: 'Objectif et muscles', org: 'Organisation', ex: 'Exercices', expert: 'Ton entraînement en détail', sport: 'Sport régulier', backup: 'Sauvegarde', done: 'Terminé' };
-const stepsFor = level => ['welcome', 'you', 'goal', 'org', 'ex', ...(level === 'expert' ? ['expert'] : []), 'sport', 'backup', 'done'];
+const STEP_NAMES = { welcome: 'Bienvenue', you: 'Toi', goal: 'Objectif et muscles', org: 'Organisation', ex: 'Exercices', expert: 'Ton entraînement en détail', sport: 'Sport régulier', avatar: 'Ton avatar', backup: 'Sauvegarde', done: 'Terminé' };
+const stepsFor = level => ['welcome', 'you', 'goal', 'org', 'ex', ...(level === 'expert' ? ['expert'] : []), 'sport', 'avatar', 'backup', 'done'];
 // exercices de départ d'un débutant : machines simples en salle ; chez soi, un exercice par grand mouvement selon le matériel
 const starterIds = (place = 'gym', equipment = []) => (place === 'home' ? homeStarters({ place, equipment }) : BEGINNER_STARTERS).filter(byId);
 const starterSel = (place, equipment) => Object.fromEntries(starterIds(place, equipment).map(id => [id, {}]));
@@ -33,7 +35,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
   const [step, setStep] = useState(0);
   const [a, setA] = useState({
     name: '', sex: 'm', age: '', heightCm: '', weightKg: '', targetKg: '', goal: 'nsp', sessionsPerWeek: 3, sessionMinutes: 60,
-    gymDays: [], sport: '', sportDays: [], exercises: starterSel(), muscleMode: 'simple', level: 'beginner', experience: {}, place: 'gym', equipment: [],
+    gymDays: [], sport: '', sportDays: [], exercises: starterSel(), muscleMode: 'simple', level: 'beginner', experience: {}, place: 'gym', equipment: [], avatar: null,
   });
   const STEPS = stepsFor(a.level);
   const key = STEPS[step];
@@ -241,6 +243,16 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
           </section>
         )}
 
+        {key === 'avatar' && (
+          <section className="space-y-3" data-testid="ob-avatar">
+            <h2 className="text-xl font-black text-white">Ton avatar</h2>
+            <p className="text-sm text-slate-300">C’est le personnage qui te montre chaque exercice en animation. Habille-le à ton goût (tu pourras le changer à tout moment depuis ton profil, et gagner des accessoires en montant de niveau).</p>
+            <div className="sticky top-0 z-10 bg-slate-900 pb-1"><AvatarPreview avatar={cleanAvatar(a.avatar)} /></div>
+            <AvatarLookRows a={cleanAvatar(a.avatar)} set={(k, v) => patch({ avatar: { ...cleanAvatar(a.avatar), [k]: v } })} />
+            {a.avatar && <button type="button" onClick={() => patch({ avatar: null })} data-testid="ob-avatar-reset" className="w-full py-2 rounded-xl bg-slate-800 text-slate-100 text-sm font-bold">Personnage par défaut</button>}
+          </section>
+        )}
+
         {key === 'backup' && (
           <section className="space-y-3" data-testid="ob-backup">
             <h2 className="text-xl font-black text-white">Ton compte ☁️</h2>
@@ -258,6 +270,7 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
               <li>Suivi des muscles : {a.muscleMode === 'optimized' ? 'optimisé (14 muscles)' : 'simplifié (5 grands groupes)'}</li>
               <li>Profil de travail : {(GOALS.find(g => g.id === a.goal) || {}).label}</li>
               <li>{Object.keys(a.exercises).length} exercice(s) créé(s) avec ta charge de départ</li>
+              <li>Avatar : {a.avatar ? 'personnalisé' : 'personnage par défaut'}</li>
               {a.sport && <li>{sportInfo(a.sport).icon} {sportInfo(a.sport).cap} pris en compte ({a.sportDays.length} jour(s) par semaine)</li>}
               <li>{sync.configured ? 'Sauvegarde automatique réglée' : '⚠️ Sauvegarde automatique non réglée : tes données ne sont que sur ce téléphone'}</li>
             </ul>

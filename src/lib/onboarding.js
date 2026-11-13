@@ -1,4 +1,5 @@
 import { EXERCISE_CATALOG } from '../data/catalog';
+import { cleanAvatar } from '../anim/avatar';
 import { normalizeArenaGroup } from '../data/arenas';
 import { PROFILES, pctForReps } from '../coach/profiles';
 import { suggestStart } from '../coach/startSuggestion';
@@ -91,6 +92,8 @@ export function applyOnboarding(prev, a, today) {
     quests: [...(prev.quests || [])],
     muscleMode: a.muscleMode === 'optimized' ? 'optimized' : 'simple',
     onboarded: true,
+    // avatar choisi dans l'assistant (4.44) ; rien choisi : on garde l'existant
+    ...(a.avatar ? { avatar: cleanAvatar(a.avatar) } : {}),
   };
 
   return addKnownExercises(state, a.exercises || [], today, { known, factor, origin: 'l’assistant d’accueil' });

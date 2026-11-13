@@ -7,7 +7,7 @@ afterEach(() => { while (open.length) open.pop().close(); });
 const TIMEOUT = 120000;
 const STORAGE = { __classic: '1', 'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }) };
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
-const next = async h => clickEl(h, byTest(h, 'ob-next'));
+const next = async h => { await clickEl(h, byTest(h, 'ob-next')); if (byTest(h, 'ob-avatar')) await clickEl(h, byTest(h, 'ob-next')); }; // l'étape avatar (4.44) est passée
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const start = async (srv, extra = {}) => { const h = await launch({ empty: true, storage: { ...STORAGE, ...extra }, fetchImpl: srv.fetch }); open.push(h); await advance(h, 300); return h; };
 

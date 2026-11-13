@@ -9,7 +9,7 @@ const TIMEOUT = 120000;
 const NEUTRAL = { __classic: '1' };
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
-const next = async h => clickEl(h, byTest(h, 'ob-next'));
+const next = async h => { await clickEl(h, byTest(h, 'ob-next')); if (byTest(h, 'ob-avatar')) await clickEl(h, byTest(h, 'ob-next')); }; // l'étape avatar (4.44) est passée
 const fill = async (h, id, v) => setInput(h, h.doc.getElementById(id), v);
 
 describe('suivi des muscles : deux modes', () => {
@@ -40,6 +40,28 @@ describe('suivi des muscles : deux modes', () => {
     await clickEl(h, byTest(h, 'toggle-muscle-mode'));
     await advance(h, 400);
     expect(saved(h).muscleMode).toBe('simple');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('assistant d’accueil : étape « Ton avatar » (4.44), choix enregistré', async () => {
+    const h = await launch({ empty: true, storage: NEUTRAL });
+    open.push(h);
+    await advance(h, 300);
+    await fill(h, 'ob-name', 'Léa');
+    const raw = () => clickEl(h, byTest(h, 'ob-next'));
+    await raw();
+    await fill(h, 'ob-age', '28'); await fill(h, 'ob-h', '168'); await fill(h, 'ob-w', '64'); await fill(h, 'ob-t', '60');
+    for (let i = 0; i < 8 && !byTest(h, 'ob-avatar'); i++) await raw();
+    expect(byTest(h, 'ob-avatar')).toBeTruthy();
+    expect(byTest(h, 'avatar-preview').querySelectorAll('svg').length).toBeGreaterThan(0);
+    await clickEl(h, byTest(h, 'avatar-hair-curly'));
+    await clickEl(h, byTest(h, 'avatar-topColor-lime'));
+    expect(byTest(h, 'avatar-hair-curly').getAttribute('aria-pressed')).toBe('true');
+    for (let i = 0; i < 4 && !byTest(h, 'ob-finish'); i++) await clickEl(h, byTest(h, 'ob-next'));
+    expect(byTest(h, 'ob-done').textContent).toContain('Avatar : personnalisé');
+    await clickEl(h, byTest(h, 'ob-finish'));
+    await advance(h, 400);
+    expect(saved(h).avatar).toMatchObject({ hair: 'curly', topColor: 'lime' });
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 

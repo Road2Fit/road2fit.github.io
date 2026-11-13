@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.44',
+    date: '2026-11-13',
+    title: 'Ton avatar dès l’accueil',
+    items: [
+      'Nouvelle étape « Ton avatar » dans l’assistant d’accueil d’un nouveau compte : peau, silhouette, cheveux, haut, bas et chaussures, avec l’aperçu animé.',
+      'Rien d’obligatoire : « Suivant » garde le personnage par défaut. Tout reste modifiable ensuite dans le profil → Mon avatar.',
+    ],
+  },
+  {
     version: '4.43',
     date: '2026-11-13',
     title: 'Séances mixtes et exercices de ton sport',

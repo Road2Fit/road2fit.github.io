@@ -122,6 +122,20 @@ function Shop({ a, level, owned, tryOn, setTryOn, onBuy, onWear, onNumber }) {
   );
 }
 
+// réglages d'apparence (peau, silhouette, cheveux, haut, bas, chaussures) : « Mon avatar » et l'assistant d'accueil (4.44)
+export function AvatarLookRows({ a, set }) {
+  const row = (title, children) => <div className="space-y-1.5"><p className="text-xs font-black text-slate-300 uppercase tracking-wide">{title}</p>{children}</div>;
+  return (<>
+    {row('Peau', <Swatches k="skin" list={SKINS} value={a.skin} set={set} />)}
+    {row('Silhouette', <Chips k="body" list={BODIES} value={a.body} set={set} />)}
+    {row('Cheveux', <><Chips k="hair" list={HAIRS} value={a.hair} set={set} /><Swatches k="hairColor" list={HAIR_COLORS} value={a.hairColor} set={set} /></>)}
+    {row('Haut', <><Chips k="top" list={TOPS} value={a.top} set={set} /><Swatches k="topColor" list={CLOTH_COLORS} value={a.topColor} set={set} /></>)}
+    {row('Bas', <><Chips k="bottom" list={BOTTOMS} value={a.bottom} set={set} /><Swatches k="bottomColor" list={CLOTH_COLORS} value={a.bottomColor} set={set} /></>)}
+    {row('Chaussures', <Swatches k="shoeColor" list={CLOTH_COLORS} value={a.shoeColor} set={set} />)}
+  </>);
+}
+export { Preview as AvatarPreview };
+
 export function AvatarEditor({ avatar, onChange, onClose, level = 1, owned = [], onBuy = null }) {
   const a = cleanAvatar(avatar);
   const [tab, setTab] = useState('look');
@@ -130,7 +144,6 @@ export function AvatarEditor({ avatar, onChange, onClose, level = 1, owned = [],
   const wear = (slot, id) => { const items = { ...(a.items || {}) }; if (id) items[slot] = id; else delete items[slot]; onChange({ ...a, items }); };
   const buy = it => { if (!onBuy || !canBuy(it, level, owned)) return; onBuy(it); setTryOn(t => ({ ...t, [it.slot]: undefined })); };
   const shown = { ...a, items: { ...(a.items || {}), ...Object.fromEntries(Object.entries(tryOn).filter(([, v]) => v)) } };
-  const row = (title, children) => <div className="space-y-1.5"><p className="text-xs font-black text-slate-300 uppercase tracking-wide">{title}</p>{children}</div>;
   const tabBtn = (id, label) => (
     <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} data-testid={`avatar-tab-${id}`}
       className={`flex-1 py-2 rounded-lg text-sm font-black ${tab === id ? 'bg-slate-700 text-white' : 'text-slate-400'}`}>{label}</button>
@@ -150,14 +163,7 @@ export function AvatarEditor({ avatar, onChange, onClose, level = 1, owned = [],
           {onBuy && <div className="flex gap-1 bg-slate-950 rounded-xl p-1" role="tablist">{tabBtn('look', 'Apparence')}{tabBtn('shop', 'Boutique')}</div>}
           {tab === 'shop' && onBuy ? (
             <Shop a={a} level={level} owned={owned} tryOn={tryOn} setTryOn={setTryOn} onBuy={buy} onWear={wear} onNumber={v => onChange({ ...a, number: v })} />
-          ) : (<>
-            {row('Peau', <Swatches k="skin" list={SKINS} value={a.skin} set={set} />)}
-            {row('Silhouette', <Chips k="body" list={BODIES} value={a.body} set={set} />)}
-            {row('Cheveux', <><Chips k="hair" list={HAIRS} value={a.hair} set={set} /><Swatches k="hairColor" list={HAIR_COLORS} value={a.hairColor} set={set} /></>)}
-            {row('Haut', <><Chips k="top" list={TOPS} value={a.top} set={set} /><Swatches k="topColor" list={CLOTH_COLORS} value={a.topColor} set={set} /></>)}
-            {row('Bas', <><Chips k="bottom" list={BOTTOMS} value={a.bottom} set={set} /><Swatches k="bottomColor" list={CLOTH_COLORS} value={a.bottomColor} set={set} /></>)}
-            {row('Chaussures', <Swatches k="shoeColor" list={CLOTH_COLORS} value={a.shoeColor} set={set} />)}
-          </>)}
+          ) : <AvatarLookRows a={a} set={set} />}
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={() => onChange(null)} className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-100 text-sm font-bold" data-testid="avatar-reset">Personnage par défaut</button>
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-pink-600 text-white text-sm font-black">Terminé</button>

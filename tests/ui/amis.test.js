@@ -10,7 +10,7 @@ const NEUTRAL = { __classic: '1' }; // lien public : version classique
 const saved = h => JSON.parse(h.w.localStorage.getItem('rondoudou_save_v1'));
 const ob = h => h.doc.querySelector('[data-testid="onboarding"]');
 const byTest = (h, id) => h.doc.querySelector(`[data-testid="${id}"]`);
-const next = async h => clickEl(h, byTest(h, 'ob-next'));
+const next = async h => { await clickEl(h, byTest(h, 'ob-next')); if (byTest(h, 'ob-avatar')) await clickEl(h, byTest(h, 'ob-next')); }; // l'étape avatar (4.44) est passée
 const fill = async (h, id, v) => setInput(h, h.doc.getElementById(id), v);
 
 describe('édition neutre pour les amis', () => {
