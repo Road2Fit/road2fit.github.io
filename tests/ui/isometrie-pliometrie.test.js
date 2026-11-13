@@ -21,7 +21,8 @@ describe('isométrie et pliométrie', () => {
     const h = await launch({ openCoach: true });
     open.push(h);
     await clickEl(h, q(h, 'coach-page-seance'));
-    expect(q(h, 'day-theme-style-normal').getAttribute('aria-pressed')).toBe('true');
+    expect(q(h, 'day-theme-style-auto').getAttribute('aria-pressed')).toBe('true');
+    expect(q(h, 'day-theme-style-auto-note').textContent).toMatch(/le coach choisit/);
     await clickEl(h, q(h, 'day-theme-style-iso'));
     expect(Object.values(saved(h).coach.dayStyles)).toEqual(['iso']);
     expect(q(h, 'day-theme-style-note').textContent).toMatch(/Pauses isométriques : .*3 à 5 s/);

@@ -108,6 +108,32 @@ describe('séance axée sur une façon de travailler', () => {
   });
 });
 
+describe('Auto et Normale (4.45)', () => {
+  it('Normale + Pliométrie : sauts en tête, séries classiques sur le reste', () => {
+    const first = coachOverview(base(), TODAY).first.iso;
+    const s = coachOverview(base({ dayStyles: { [first]: ['normal', 'plyo'] } }, [...QUESTS, ...PLYO]), TODAY).session;
+    expect(s.exercises.some(e => /^j/.test(e.questId))).toBe(true);
+    s.exercises.filter(e => !/^j/.test(e.questId)).forEach(e => expect(e.method).toBe('straight'));
+    expect(s.notes.join(' ')).toMatch(/Séries normales \+ Pliométrie/);
+  });
+
+  it('Normale + Pauses iso : mélange de séries classiques et de pauses', () => {
+    const first = coachOverview(base(), TODAY).first.iso;
+    const s = coachOverview(base({ dayStyles: { [first]: ['normal', 'iso'] } }), TODAY).session;
+    const used = new Set(s.exercises.filter(e => !e.timed).map(e => e.method));
+    expect([...used].sort()).toEqual(['iso_pause', 'straight']);
+  });
+
+  it('coach IA : « auto » retire le choix, « normal » est une façon combinable', () => {
+    const st = base({ dayStyles: { [TODAY]: 'iso' } });
+    const a = normalizeAction({ type: 'day_style', args: JSON.stringify({ dates: [TODAY], styles: ['auto'] }) }, st, TODAY);
+    expect(a.args.style).toBeNull();
+    expect(applyAction(st, a, TODAY).coach.dayStyles[TODAY]).toBeUndefined();
+    const b = normalizeAction({ type: 'day_style', args: JSON.stringify({ dates: [TODAY], styles: ['normal', 'plyo'] }) }, st, TODAY);
+    expect(b.args.style).toEqual(['normal', 'plyo']);
+  });
+});
+
 describe('séance mixte (4.43)', () => {
   it('toggleDayStyle : plusieurs façons pour un jour, ancienne valeur (texte) comprise', () => {
     let m = toggleDayStyle({ dayStyles: { '2026-11-10': 'iso' } }, '2026-11-10', 'expl', TODAY);

@@ -1,12 +1,12 @@
 import { DAY_THEMES, dayTypeOf, setDayType } from '../../coach/dayTheme';
-import { DAY_STYLES, dayStylesOf, plyoPackFor, plyoQuests, setDayStyle, toggleDayStyle } from '../../coach/contraction';
+import { AUTO_HELP, DAY_STYLES, dayStylesOf, plyoPackFor, plyoQuests, setDayStyle, toggleDayStyle } from '../../coach/contraction';
 import { EXERCISE_CATALOG } from '../../data/catalog';
 import { makeQuestFromCatalog } from '../../lib/questFactory';
 
 /**
  * 4.36 : choisir le thème de la séance d'un jour (haut, bas, push, pull, complet) ; « Auto » = le coach décide.
  * 4.42-4.43 : et la ou les façons de travailler (pauses iso, tenues iso, excentrique, explosif, pliométrie) : plusieurs à la
- * fois = séance mixte ; « Normale » = séries classiques. Pliométrie sans exercice de sauts suivi : ceux du sport sont ajoutés.
+ * fois = séance mixte (Normale + Pliométrie, Normale + Pauses iso…) ; « Auto » = le coach gère tout (rien de choisi). Pliométrie sans exercice de sauts suivi : ceux du sport sont ajoutés.
  */
 export function DayThemePicker({ coach, date, today, updateCoach, gameState = null, setGameState = null, prefix = 'day-theme' }) {
   if (!date || !updateCoach) return null;
@@ -45,9 +45,10 @@ export function DayThemePicker({ coach, date, today, updateCoach, gameState = nu
       <div className="space-y-1">
         <p className="text-xs font-bold text-slate-400">Façon de travailler <span className="font-normal text-slate-500">(plusieurs possibles)</span></p>
         <div className="flex flex-wrap gap-1.5">
-          {chip('normal', 'Normale', !sty.length, () => updateCoach({ dayStyles: setDayStyle(coach, date, null, today) }), `${prefix}-style-normal`)}
+          {chip('auto', 'Auto', !sty.length, () => updateCoach({ dayStyles: setDayStyle(coach, date, null, today) }), `${prefix}-style-auto`)}
           {DAY_STYLES.map(s => chip(s.id, s.short, sty.includes(s.id), () => toggle(s.id), `${prefix}-style-${s.id}`))}
         </div>
+        {!sty.length && <p className="text-[11px] text-slate-400" data-testid={`${prefix}-style-auto-note`}>{AUTO_HELP}</p>}
         {sty.length > 0 && (
           <ul className="space-y-0.5" data-testid={`${prefix}-style-note`}>
             {DAY_STYLES.filter(s => sty.includes(s.id)).map(s => <li key={s.id} className="text-[11px] text-slate-400"><b className="text-slate-200">{s.label}</b> : {s.help}</li>)}

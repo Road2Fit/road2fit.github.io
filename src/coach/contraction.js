@@ -94,8 +94,10 @@ export function capPlyoBlock(targets, contacts) {
 }
 
 // ---------- Façon de travailler choisie pour un jour ----------
-// coach.dayStyles = { 'AAAA-MM-JJ': 'iso' | 'iso_hold' | 'ecc' | 'expl' | 'plyo' } ; rien = le coach décide (séries classiques)
+// coach.dayStyles = { 'AAAA-MM-JJ': 'normal' | 'iso' | 'iso_hold' | 'ecc' | 'expl' | 'plyo' (ou un tableau : séance mixte) } ;
+// rien = Auto : le coach décide de la forme de chaque exercice (comme avant)
 export const DAY_STYLES = [
+  { id: 'normal', label: 'Séries normales', short: 'Normale', method: 'straight', help: 'Séries classiques : chaque rep a sa montée (concentrique) et sa descente (excentrique) à vitesse naturelle, sans arrêt ni effet particulier.' },
   { id: 'iso', label: 'Pauses isométriques', short: 'Pauses iso', method: 'iso_pause', help: 'Tu fais tes répétitions, mais à chaque rep tu t’arrêtes 3 à 5 s au point le plus dur (tractions : menton au-dessus de la barre). Moins de reps, un peu moins lourd.' },
   { id: 'iso_hold', label: 'Tenues isométriques', short: 'Tenues iso', method: 'iso_hold', help: 'Pas de répétitions : tu tiens une seule position sans bouger, 20 à 30 s, 3 ou 4 fois. C’est plus long que les pauses.' },
   { id: 'ecc', label: 'Excentrique (descente lente)', short: 'Excentrique', method: 'eccentric', help: 'La descente dure 4 à 5 s, la montée reste normale (tractions et dips : négatives).' },
@@ -103,6 +105,7 @@ export const DAY_STYLES = [
   { id: 'plyo', label: 'Pliométrie (sauts)', short: 'Pliométrie', method: null, help: 'Des sauts en début de séance, à la place d’un ou deux exercices (la séance garde sa durée).' },
 ];
 export const STYLE_IDS = DAY_STYLES.map(s => s.id);
+export const AUTO_HELP = 'Auto : le coach choisit lui-même la forme de chaque exercice (séries classiques le plus souvent, autre forme seulement quand une étude montre un intérêt pour toi). Tu ne touches à rien.';
 export const styleInfo = id => DAY_STYLES.find(s => s.id === id) || null;
 
 /** Façons de travailler choisies pour ce jour (plusieurs possibles : séance mixte). */

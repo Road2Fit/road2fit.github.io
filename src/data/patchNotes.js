@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.45',
+    date: '2026-11-13',
+    title: 'Façon de travailler : Auto et Normale',
+    items: [
+      '« Auto » : le coach gère tout, tu ne touches à rien (c’est le réglage de départ).',
+      '« Normale » (séries classiques) se combine maintenant avec les autres : par exemple Normale + Pliométrie = des sauts en début de séance, puis tes séries habituelles.',
+      'Le coach intelligent comprend aussi « séance normale avec des sauts » et « laisse le coach décider ».',
+    ],
+  },
+  {
     version: '4.44',
     date: '2026-11-13',
     title: 'Ton avatar dès l’accueil',

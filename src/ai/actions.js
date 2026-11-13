@@ -127,11 +127,11 @@ export function normalizeAction(a, state, today) {
       break;
     }
     case 'day_style': {
-      // « aujourd'hui je veux une séance axée sur l'isométrie » (4.42) : iso | iso_hold | ecc | expl | plyo | normal
+      // « aujourd'hui je veux une séance axée sur l'isométrie » (4.42) : normal | iso | iso_hold | ecc | expl | plyo, plusieurs = séance mixte ; auto = le coach décide
       const dates = dateList(x.dates || (x.date ? [x.date] : []), today);
       const raw = Array.isArray(x.styles) ? x.styles : x.style !== undefined ? [x.style] : [];
       const ok = raw.filter(v => STYLE_IDS.includes(v));
-      const style = raw.includes('normal') || (raw.length && !ok.length && raw.every(v => v === 'normal')) ? null : ok.length ? (ok.length > 1 ? ok : ok[0]) : undefined;
+      const style = raw.includes('auto') ? null : ok.length ? (ok.length > 1 ? ok : ok[0]) : undefined;
       if (dates.length && style !== undefined) args = { dates, style };
       break;
     }
@@ -213,7 +213,7 @@ function defaultLabel(type, args, state) {
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
-  if (type === 'day_style') return args.style ? `Séance « ${[].concat(args.style).join(' + ')} » le ${args.dates.join(', ')}` : 'Revenir à des séances normales';
+  if (type === 'day_style') return args.style ? `Séance « ${[].concat(args.style).join(' + ')} » le ${args.dates.join(', ')}` : 'Laisser le coach décider (auto)';
   if (type === 'plyo') return `Pliométrie : ${args.perWeek !== null ? `${args.perWeek} séance${args.perWeek > 1 ? 's' : ''} avec des sauts par semaine` : 'exercices de sauts'}${args.add.length ? `, ${args.add.length} exercice${args.add.length > 1 ? 's' : ''} ajouté${args.add.length > 1 ? 's' : ''}` : ''}`;
   if (type === 'cardio') return args.on === false ? 'Arrêter le cardio du coach' : 'Régler le cardio du coach';
   return 'Changer un réglage du coach';
