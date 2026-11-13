@@ -9,6 +9,8 @@ import { capPlyoBlock, dayStyleOf, holdPoint, isPlyo, missingPlyo, plyoWeekDays,
 import { coachableQuests } from './equipment';
 import { applyAction, normalizeAction } from '../ai/actions';
 import { EXERCISE_CATALOG } from '../data/catalog';
+import { SPORTS } from '../data/sports';
+import { SPORT_PERF } from '../data/sportPerf';
 
 const q = (id, name, category, extra = {}) => ({ id, name, category, type: 'strength', unit: 'kg', goalMode: 'sets_reps', level: 1, startValue: 40, currentValue: 40, goalValue: 80, goalSets: 3, goalReps: 8, setDetails: [8, 8, 8], history: [], ...extra });
 const ply = (id, cat) => { const c = EXERCISE_CATALOG.find(x => x.id === cat); return q(id, c.name, c.category, { catalogId: cat, unit: 'reps', goalReps: c.defaultGoalReps || 5, goalSets: 3, currentValue: 5, startValue: 5, goalValue: 8 }); };
@@ -141,6 +143,28 @@ describe('pliométrie', () => {
     expect(plyoWeekDays({ plyo: { perWeek: 2 } }, planned, noLegs)).toEqual(['2026-11-10', '2026-11-12']);
     const st = base({ plyo: { perWeek: 2 } }, [...QUESTS, ...PLYO]);
     expect(coachPlanWeek(st, TODAY, TODAY).plyoDays.length).toBe(2);
+  });
+
+  it('chaque sport de l’appli a son programme : exercices existants, au moins une étude, sauts seulement si conseillés', () => {
+    for (const sp of SPORTS) {
+      const p = SPORT_PERF[sp.id];
+      expect(p, sp.id).toBeTruthy();
+      expect(p.focus.length, sp.id).toBeGreaterThan(5);
+      expect(p.sources.length, sp.id).toBeGreaterThan(0);
+      p.sources.forEach(x => { expect(x.url.startsWith('https:'), sp.id).toBe(true); expect(['✔', '◐']).toContain(x.mark); });
+      p.pack.forEach(id => expect(EXERCISE_CATALOG.some(c => c.id === id), `${sp.id} : ${id}`).toBe(true));
+      if (p.perWeek === 0) expect(p.pack.some(id => /^ply_/.test(id)), sp.id).toBe(false);
+      else expect(p.pack.some(id => /^ply_/.test(id)), sp.id).toBe(true);
+    }
+  });
+
+  it('coach IA : programme d’un sport sans sauts (escalade : force des doigts)', () => {
+    const st = base({ sport: 'escalade' });
+    const a = normalizeAction({ type: 'plyo', args: JSON.stringify({ perWeek: 0, sport: 'escalade', add: true }) }, st, TODAY);
+    expect(a.args.add).toEqual(expect.arrayContaining(['fp_dead_hang']));
+    const s2 = applyAction(st, a, TODAY);
+    expect(s2.quests.some(x => x.catalogId === 'fp_dead_hang')).toBe(true);
+    expect(s2.coach.plyo.perWeek).toBe(0);
   });
 
   it('pack du volley : saut d’attaque et de contre', () => {

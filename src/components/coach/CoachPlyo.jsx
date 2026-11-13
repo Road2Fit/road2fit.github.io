@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { EXERCISE_CATALOG } from '../../data/catalog';
 import { CONTRACTION_SOURCES } from '../../data/contractionSources';
-import { CONTRACTION_MODES, JUMP_SPORTS, missingPlyo, plyoPackFor, plyoPerWeek } from '../../coach/contraction';
+import { CONTRACTION_MODES, missingPlyo, perfSport, plyoPackFor, plyoPerWeek } from '../../coach/contraction';
 import { getCoachSettings } from '../../coach/settings';
 import { sportInfo } from '../../data/sports';
 import { makeQuestFromCatalog } from '../../lib/questFactory';
@@ -16,7 +16,7 @@ export function CoachPlyo({ gameState, setGameState }) {
   const [open, setOpen] = useState(false);
   const coach = getCoachSettings(gameState);
   const per = plyoPerWeek(coach);
-  const sport = JUMP_SPORTS.includes(coach.sport) ? coach.sport : null;
+  const sport = perfSport(coach.sport);
   const pack = plyoPackFor(sport);
   const missing = missingPlyo(gameState, sport);
   const setPer = n => setGameState(prev => ({ ...prev, coach: { ...prev.coach, plyo: { ...((prev.coach && prev.coach.plyo) || {}), perWeek: n } } }));

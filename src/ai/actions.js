@@ -2,7 +2,7 @@
 // seulement quand la personne appuie sur « Appliquer ». Fonctions pures, testées dans actions.test.js.
 import { coachRealEntries, getCoachSettings } from '../coach/settings';
 import { THEME_IDS, setDayType } from '../coach/dayTheme';
-import { STYLE_IDS, missingPlyo, setDayStyle } from '../coach/contraction';
+import { STYLE_IDS, missingPlyo, perfSport, setDayStyle } from '../coach/contraction';
 import { coachPlanWeek } from '../coach/planning';
 import { getWeekStart } from '../lib/dates';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -136,7 +136,7 @@ export function normalizeAction(a, state, today) {
     case 'plyo': {
       // pliométrie : séances avec des sauts par semaine (0 à 3) et exercices de sauts à ajouter (pack général ou du sport)
       const perWeek = inRange(x.perWeek, 0, 3);
-      const sport = ['volley', 'basket', 'handball'].includes(x.sport) ? x.sport : ['volley', 'basket', 'handball'].includes(coach.sport) ? coach.sport : null;
+      const sport = perfSport(x.sport) || perfSport(coach.sport);
       const add = x.add === false ? [] : missingPlyo(state, sport);
       if (perWeek !== null || add.length) args = { perWeek: perWeek === null ? null : Math.round(perWeek), add };
       break;

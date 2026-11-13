@@ -7,6 +7,7 @@
 //    `ply_*`), qui améliorent la détente (Markovic 2007 ; volleyeurs : Ramirez-Campillo 2020).
 // Le coach ne les impose pas : il les propose quand la personne le demande (séance du jour, exercice, préparation d'un sport).
 import { EXERCISE_CATALOG } from '../data/catalog';
+import { SPORT_PERF, sportPerf } from '../data/sportPerf';
 
 export const CONTRACTION_MODES = [
   { id: 'concentric', label: 'Concentrique', short: 'Le muscle se raccourcit en déplaçant la charge : la montée d’un curl, la poussée d’un développé.' },
@@ -56,17 +57,12 @@ const UPPER_PLYO = new Set(['ply_clap_pushup', 'ply_mb_slam', 'ply_mb_chest_pass
 export const isLegPlyo = q => isPlyo(q) && !UPPER_PLYO.has(q.catalogId);
 
 /**
- * Exercices de pliométrie proposés : général, ou propre à un sport. Volley : saut d'attaque et de contre, saut vertical,
- * chevilles (pogo), box jump. Du plus simple au plus exigeant.
+ * Programme de performance de chaque sport (data/sportPerf.js) : exercices proposés (sauts, lancers, ou exercices de force
+ * pour l'escalade et le vélo), séances avec des sauts conseillées, études. Sport non précisé : programme général.
  */
-export const PLYO_PACKS = {
-  general: ['ply_squat_jump', 'ply_pogo', 'ply_box_jump', 'ply_broad_jump', 'ply_clap_pushup'],
-  volley: ['ply_cmj', 'ply_pogo', 'ply_approach_jump', 'ply_block_jump', 'ply_box_jump'],
-  basket: ['ply_cmj', 'ply_pogo', 'ply_box_jump', 'ply_single_leg_hop', 'ply_broad_jump'],
-  handball: ['ply_cmj', 'ply_single_leg_hop', 'ply_split_jump', 'ply_mb_chest_pass', 'ply_box_jump'],
-};
-export const JUMP_SPORTS = ['volley', 'basket', 'handball'];
-export const plyoPackFor = sport => PLYO_PACKS[sport] || PLYO_PACKS.general;
+export const PERF_SPORTS = Object.keys(SPORT_PERF).filter(id => id !== 'autre');
+export const perfSport = id => (SPORT_PERF[id] ? id : null);
+export const plyoPackFor = sport => sportPerf(sport).pack;
 
 /**
  * Nombre de contacts au sol par séance : repère courant des guides d'entraînement (pas une étude) :
@@ -145,7 +141,7 @@ export function plyoWeekDays(coach, planned, info) {
   return chosen.sort();
 }
 
-/** Ajoute à la liste les exercices de pliométrie d'un pack qui ne sont pas encore suivis (identifiants du catalogue). */
+/** Exercices du programme d'un sport pas encore suivis (identifiants du catalogue). */
 export function missingPlyo(state, sport) {
   const have = new Set(((state && state.quests) || []).map(q => q.catalogId));
   return plyoPackFor(sport).filter(id => !have.has(id) && EXERCISE_CATALOG.some(c => c.id === id));
