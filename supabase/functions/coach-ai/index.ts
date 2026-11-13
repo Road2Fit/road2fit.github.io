@@ -203,7 +203,8 @@ const TASKS: Record<string, { model: string; prompt: string; effort: string; max
   // 13/11/2026 (choix de Gabin, coût) : extraction et commentaire de mesures sur Haiku 5.5 ; la discussion avec le coach
   // (beaucoup de règles à suivre en même temps) reste sur Sonnet tant que le test comparatif ne montre pas que Haiku suffit.
   form: { model: FAST, prompt: FORM, effort: "low", maxTokens: 3000 },
-  coach: { model: SMART, prompt: COACH, effort: "medium", maxTokens: 10000 },
+  // 13/11/2026 : discussion aussi sur Haiku (test comparatif tools/coach-eval.mjs : 47/48 contre 46/48 pour Sonnet, 15 fois moins cher)
+  coach: { model: FAST, prompt: COACH, effort: "medium", maxTokens: 10000 },
   program: { model: FAST, prompt: PROGRAM, effort: "medium", maxTokens: 16000 },
   history: { model: FAST, prompt: HISTORY, effort: "medium", maxTokens: 10000 },
   exercise: { model: FAST, prompt: EXERCISE, effort: "medium", maxTokens: 4000 },
