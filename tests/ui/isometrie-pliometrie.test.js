@@ -24,7 +24,15 @@ describe('isométrie et pliométrie', () => {
     expect(q(h, 'day-theme-style-normal').getAttribute('aria-pressed')).toBe('true');
     await clickEl(h, q(h, 'day-theme-style-iso'));
     expect(Object.values(saved(h).coach.dayStyles)).toEqual(['iso']);
-    expect(q(h, 'day-theme-style-note').textContent).toMatch(/Isométrie/);
+    expect(q(h, 'day-theme-style-note').textContent).toMatch(/Pauses isométriques : .*3 à 5 s/);
+    // la charge reste dans le résumé de l'exercice
+    expect([...h.doc.querySelectorAll('[data-testid="ex-line2"]')].some(el => /tiens \d s · [\d,.]+ kg|tiens \d s · aide/.test(el.textContent))).toBe(true);
+    // séance mixte : tenues en plus
+    await clickEl(h, q(h, 'day-theme-style-iso_hold'));
+    expect(Object.values(saved(h).coach.dayStyles)).toEqual([['iso', 'iso_hold']]);
+    expect(q(h, 'day-theme-style-note').textContent).toMatch(/Tenues isométriques : .*20 à 30 s/);
+    expect(q(h, 'day-theme-style-note').textContent).toMatch(/Séance mixte/);
+    await clickEl(h, q(h, 'day-theme-style-iso_hold'));
     await clickEl(h, q(h, 'start-today') || q(h, 'start-early'));
     await advance(h, 700);
     await toSetScreen(h);
@@ -38,6 +46,21 @@ describe('isométrie et pliométrie', () => {
     await advance(h, secs * 1000 + 400);
     expect(q(h, 'hold-start').disabled).toBe(false);
     expect(q(h, 'hold-start').textContent).toMatch(/rep 2|Encore/);
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
+  it('Pliométrie sur la prochaine séance : les sauts du sport sont ajoutés et remplacent des exercices', async () => {
+    const h = await launch({ openCoach: true });
+    open.push(h);
+    await clickEl(h, q(h, 'coach-page-seance'));
+    const before = [...h.doc.querySelectorAll('[data-testid="next-ex"]')].length;
+    await clickEl(h, q(h, 'day-theme-style-plyo'));
+    const s = saved(h);
+    expect(Object.values(s.coach.dayStyles)).toEqual(['plyo']);
+    expect(s.quests.filter(x => /^ply_/.test(x.catalogId || '')).length).toBeGreaterThan(0);
+    const names = [...h.doc.querySelectorAll('[data-testid="next-ex"]')].map(el => el.textContent);
+    expect(names.some(t => /Saut|Sautillements|Box Jump|Pompes Claquées/.test(t))).toBe(true);
+    expect(names.length).toBeLessThanOrEqual(before + 3);
     expect(h.errors).toEqual([]);
   }, 120000);
 

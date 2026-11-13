@@ -625,6 +625,8 @@ export function CoachPanel({
       <CoachWeek
         coach={coach}
         updateCoach={updateCoach}
+        gameState={gameState}
+        setGameState={setGameState}
         sport={sportInfo(coach.sport)}
         dayShort={dayShort}
         first={first}

@@ -147,7 +147,7 @@ export function CoachNextSession({
             })()}
           </div>
           {!plan && !preview && !ov.program && <HomeOnceToggle coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
-          {!plan && !preview && !ov.program && <DayThemePicker coach={coach} date={shownDate} today={today} updateCoach={updateCoach} />}
+          {!plan && !preview && !ov.program && <DayThemePicker coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;
@@ -168,7 +168,7 @@ export function CoachNextSession({
                       <p className="font-extrabold text-white text-sm truncate">{e.icon} {e.name}</p>
                       <p className="text-sm flex items-center gap-1 min-w-0 whitespace-nowrap overflow-hidden" data-testid="ex-line2">
                         <span className="shrink-0 inline-flex" title={b[1]} aria-label={b[1]} data-testid="change-badge">{b[0]}</span>
-                        <span className="text-pink-300 font-black truncate min-w-0" data-testid={e.plan ? 'method-chip' : undefined}>{e.plan ? (planShort(e) || `${(METHODS[e.method] || {}).label} · ${e.sets} séries`) : `${repsTxt}${loadTxt}`}</span>
+                        <span className="text-pink-300 font-black truncate min-w-0" data-testid={e.plan ? 'method-chip' : undefined}>{e.plan ? (planShort(e) ? `${planShort(e)}${e.kind === 'load' && e.plan[0].load > 0 ? ` · ${coachFmt(e.plan[0].load)} kg` : e.kind === 'assisted' && e.plan[0].assist ? ` · ${assistText(e.plan[0].assist)}` : ''}` : `${(METHODS[e.method] || {}).label} · ${e.sets} séries`) : `${repsTxt}${loadTxt}`}</span>
                         {e.superset && <span className="shrink-0 text-sky-300 font-bold">· sup. {e.superset.id}</span>}
                         {painFor(e, coach) && <span className="shrink-0 text-amber-300 font-bold" data-testid="ex-pain" title={painAdvice(painFor(e, coach))}>· à ménager</span>}
                         {!e.plan && e.restSec > 0 && <span className="shrink-0 inline-flex items-center gap-0.5 text-slate-400" data-testid="rest-chip" title={`Repos ${restText(e.superset && e.superset.first ? 15 : e.restSec)}`}>· <Art name="timer" size={13} bare />{restShort(e.superset && e.superset.first ? 15 : e.restSec)}</span>}

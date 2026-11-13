@@ -1,5 +1,5 @@
 import { coachCycleInfo, coachIsDeloadWeek } from './cycle';
-import { dayStyleOf, plyoWeekDays } from './contraction';
+import { dayStyleOf, dayStylesOf, plyoWeekDays } from './contraction';
 import { COACH_TYPES, COACH_TYPE_ORDER, chosenRotation, coachDaysBetween, coachDow, coachSplitRotation, coachTimeToMin, getCoachSettings } from './settings';
 import { normalizeArenaGroup } from '../data/arenas';
 import { addDaysISO } from '../lib/dates';
@@ -215,6 +215,7 @@ export function coachPlanWeek(state, weekStart, today, prior = []) {
       extra: extraSet.has(i.iso),
       plyo: plyoDays.includes(i.iso),
       style: dayStyleOf(coach, i.iso),
+      styles: dayStylesOf(coach, i.iso),
       skipped: (coach.gymSkips || []).includes(i.iso),
       sportKind: i.isMatch ? 'match' : i.isVolley ? 'sport' : null
     })),

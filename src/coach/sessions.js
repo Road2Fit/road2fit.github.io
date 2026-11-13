@@ -1,5 +1,5 @@
 import { coachSlotFor } from './planning';
-import { capPlyoBlock, dayStyleOf, plyoContacts, plyoQuests, styleInfo } from './contraction';
+import { capPlyoBlock, dayStylesOf, isLegPlyo, plyoContacts, plyoQuests, stylesLabel } from './contraction';
 import { getExperience } from './experience';
 import { dayTypeOf, themeLabel } from './dayTheme';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
@@ -144,7 +144,14 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
       const exp = getExperience(state);
       const contacts = plyoContacts(exp && exp.level);
       const block = capPlyoBlock(pq.map(q => computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso, deload: eff.deload })), eff.deload ? Math.round(contacts * 0.6) : contacts);
-      exercises = [...block, ...exercises.filter(e => !block.some(b => b.questId === e.questId))];
+      // les sauts REMPLACENT un ou deux exercices (la séance garde sa durée) : d'abord l'isolation de la même région
+      const others = exercises.filter(e => !block.some(b => b.questId === e.questId));
+      const legs = block.some(b => isLegPlyo(pq.find(q => q.id === b.questId)));
+      const nDrop = Math.min(block.length, Math.max(0, others.length - 3));
+      const score = (e, i) => (e.compound ? 20 : 0) + (isLegArena(e.arena) === legs ? 0 : 10) - i / 100;
+      const drop = others.map((e, i) => [e, score(e, i)]).sort((a, b) => a[1] - b[1]).slice(0, nDrop).map(x => x[0]);
+      exercises = [...block, ...others.filter(e => !drop.includes(e))];
+      if (drop.length) notes.push(`Pliométrie : ${drop.map(e => e.name).join(' et ')} laissé${drop.length > 1 ? 's' : ''} de côté aujourd’hui pour faire place aux sauts.`);
       notes.push(`Pliométrie : les sauts d’abord, quand tu es frais, après l’échauffement (environ ${block.reduce((n, e) => n + e.sets * e.targetReps[0], 0)} répétitions au total). Chaque saut au maximum, réception propre, repos complet.`);
     } else notes.push('Séance avec pliométrie prévue, mais tu ne suis encore aucun exercice de sauts : ajoute-les depuis Coach → Réglages → Pliométrie.');
   }
@@ -240,9 +247,10 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
   // thème choisi par la personne (4.36) : respecté même un jour où le coach éviterait les jambes, avec un avertissement
   const chosen = dayTypeOf(state.coach, slot.iso || di.iso);
   // façon de travailler (4.42) : jour « Pliométrie » choisi, ou jour de sauts prévu par le coach (coach.plyo.perWeek)
-  const style = dayStyleOf(state.coach, slot.iso || di.iso);
-  const plyoDay = style === 'plyo' || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
-  opts = { ...opts, dayStyle: style };
+  const styles = dayStylesOf(state.coach, slot.iso || di.iso);
+  const style = styles[0] || null;
+  const plyoDay = styles.includes('plyo') || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
+  opts = { ...opts, dayStyle: styles };
   if (plyoDay) opts = { ...opts, plyo: true };
   let s;
   if (chosen) {
@@ -250,7 +258,7 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
     s = coachBuildTypedSession(state, chosen, legs ? { ...di, legsOk: true } : di, opts);
     s = { ...s, chosenType: chosen, notes: [`Séance « ${themeLabel(chosen)} » : c’est toi qui l’as choisie.`, ...(legs ? [`D’habitude le coach évite les jambes ce jour-là (${di.legsWhy}) : garde de la marge.`] : []), ...(s.notes || [])] };
   } else s = slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
-  if (style) s = { ...s, style, notes: [`Façon de travailler : « ${styleInfo(style).label} », c’est toi qui l’as choisie.`, ...(s.notes || [])] };
+  if (style) s = { ...s, style, styles, notes: [`Façon de travailler : « ${stylesLabel(styles)} », c’est toi qui l’as choisie.`, ...(s.notes || [])] };
   else if (plyoDay) s = { ...s, style: 'plyo' };
   // séance exceptionnellement à la maison (coach.homeDays) : repérée pour l'affichage et le « Machine prise ou pas le matériel ? »
   return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...s, home: true } : s;

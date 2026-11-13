@@ -10,7 +10,7 @@ const uniq = list => Array.from(new Set(list)).sort();
 // « Ma semaine » : chaque jour peut cumuler la muscu ET le sport (journée double). Toucher un jour (à venir) ouvre ses
 // réglages : séance de muscu en plus juste ce jour-là (coach.gymExtra, sans changer le reste de la semaine), salle annulée
 // (coach.gymSkips), sport en plus ou annulé (coach.volleyExtra / volleySkips).
-export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, plan, plannedMap, sport, today, updateCoach }) {
+export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, plan, plannedMap, sport, today, updateCoach, gameState = null, setGameState = null }) {
   // cardio du coach : séance prévue ou faite ce jour-là (le cœur se travaille comme un muscle)
   const cardioOf = iso => {
     for (const cw of cardioWeeks) {
@@ -144,7 +144,7 @@ export function CoachWeek({ coach = {}, cardioWeeks = [], dayShort, first, ov, p
                   : <button type="button" onClick={() => addSport(selDay.iso)} className={`${btn} bg-sky-700 border-sky-500 text-white`}>{sport.icon} + {sport.cap} ce jour</button>
               )}
             </div>
-            {selDay.gym === 'planned' && !plan && <DayThemePicker coach={coach} date={selDay.iso} today={today} updateCoach={updateCoach} prefix="week-theme" />}
+            {selDay.gym === 'planned' && !plan && <DayThemePicker coach={coach} date={selDay.iso} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} prefix="week-theme" />}
           </div>
         );
       })()}

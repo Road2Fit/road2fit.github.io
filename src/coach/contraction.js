@@ -96,26 +96,53 @@ export function capPlyoBlock(targets, contacts) {
 // ---------- Façon de travailler choisie pour un jour ----------
 // coach.dayStyles = { 'AAAA-MM-JJ': 'iso' | 'iso_hold' | 'ecc' | 'expl' | 'plyo' } ; rien = le coach décide (séries classiques)
 export const DAY_STYLES = [
-  { id: 'iso', label: 'Isométrie (pauses)', short: 'Iso', method: 'iso_pause' },
-  { id: 'iso_hold', label: 'Isométrie (tenues)', short: 'Tenues', method: 'iso_hold' },
-  { id: 'ecc', label: 'Excentrique (descente lente)', short: 'Excentrique', method: 'eccentric' },
-  { id: 'expl', label: 'Explosif (montée rapide)', short: 'Explosif', method: 'explosive' },
-  { id: 'plyo', label: 'Pliométrie (sauts)', short: 'Pliométrie', method: null },
+  { id: 'iso', label: 'Pauses isométriques', short: 'Pauses iso', method: 'iso_pause', help: 'Tu fais tes répétitions, mais à chaque rep tu t’arrêtes 3 à 5 s au point le plus dur (tractions : menton au-dessus de la barre). Moins de reps, un peu moins lourd.' },
+  { id: 'iso_hold', label: 'Tenues isométriques', short: 'Tenues iso', method: 'iso_hold', help: 'Pas de répétitions : tu tiens une seule position sans bouger, 20 à 30 s, 3 ou 4 fois. C’est plus long que les pauses.' },
+  { id: 'ecc', label: 'Excentrique (descente lente)', short: 'Excentrique', method: 'eccentric', help: 'La descente dure 4 à 5 s, la montée reste normale (tractions et dips : négatives).' },
+  { id: 'expl', label: 'Explosif (montée rapide)', short: 'Explosif', method: 'explosive', help: 'Montée la plus rapide possible, peu de reps, loin de l’échec : de préférence sur les gros exercices.' },
+  { id: 'plyo', label: 'Pliométrie (sauts)', short: 'Pliométrie', method: null, help: 'Des sauts en début de séance, à la place d’un ou deux exercices (la séance garde sa durée).' },
 ];
 export const STYLE_IDS = DAY_STYLES.map(s => s.id);
 export const styleInfo = id => DAY_STYLES.find(s => s.id === id) || null;
 
-export function dayStyleOf(coach, iso) {
-  const s = coach && coach.dayStyles && coach.dayStyles[iso];
-  return STYLE_IDS.includes(s) ? s : null;
+/** Façons de travailler choisies pour ce jour (plusieurs possibles : séance mixte). */
+export function dayStylesOf(coach, iso) {
+  const v = coach && coach.dayStyles && coach.dayStyles[iso];
+  const arr = Array.isArray(v) ? v : v ? [v] : [];
+  return STYLE_IDS.filter(id => arr.includes(id));
 }
+export const dayStyleOf = (coach, iso) => dayStylesOf(coach, iso)[0] || null;
+export const stylesLabel = list => list.map(s => (styleInfo(s) || {}).label).filter(Boolean).join(' + ');
 
-/** Nouveau `coach.dayStyles` : `style` pour ce jour (null = le coach décide) ; les jours passés sont retirés. */
+/** Nouveau `coach.dayStyles` : `style` (une ou plusieurs façons, null = normale) pour ce jour ; les jours passés sont retirés. */
 export function setDayStyle(coach, iso, style, today) {
   const m = {};
-  Object.entries((coach && coach.dayStyles) || {}).forEach(([d, s]) => { if (d >= today && d !== iso && STYLE_IDS.includes(s)) m[d] = s; });
-  if (style && STYLE_IDS.includes(style)) m[iso] = style;
+  Object.keys((coach && coach.dayStyles) || {}).forEach(d => {
+    if (d < today || d === iso) return;
+    const a = dayStylesOf(coach, d);
+    if (a.length) m[d] = a.length > 1 ? a : a[0];
+  });
+  const want = Array.isArray(style) ? style : style ? [style] : [];
+  const list = STYLE_IDS.filter(id => want.includes(id));
+  if (list.length) m[iso] = list.length > 1 ? list : list[0];
   return m;
+}
+/** Ajoute ou retire une façon de travailler pour ce jour (les autres restent : séance mixte). */
+export function toggleDayStyle(coach, iso, style, today) {
+  const cur = dayStylesOf(coach, iso);
+  return setDayStyle(coach, iso, cur.includes(style) ? cur.filter(x => x !== style) : [...cur, style], today);
+}
+
+/**
+ * Séance mixte : forme de l'exercice parmi les façons choisies qui lui conviennent. L'explosif va aux gros exercices
+ * (pas à l'isolation s'il y a un autre choix) ; sinon on alterne d'un exercice à l'autre (k = rang de l'exercice).
+ * @param methods méthodes candidates (déjà filtrées : celles qui conviennent à l'exercice)
+ */
+export function pickMixed(methods, compound, k) {
+  if (!methods.length) return null;
+  const list = compound ? methods : methods.filter(m => m !== 'explosive');
+  const use = list.length ? list : methods;
+  return use[k % use.length];
 }
 
 /** Séances de pliométrie par semaine voulues (0 à 3) : coach.plyo.perWeek. */
@@ -128,7 +155,7 @@ export const plyoPerWeek = coach => Math.max(0, Math.min(3, Math.round(Number(co
  * @param planned dates prévues (triées) ; info : coachDayInfo de chaque jour de la semaine
  */
 export function plyoWeekDays(coach, planned, info) {
-  const chosen = planned.filter(d => dayStyleOf(coach, d) === 'plyo');
+  const chosen = planned.filter(d => dayStylesOf(coach, d).includes('plyo'));
   const want = plyoPerWeek(coach);
   const gap = (a, b) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86400000;
   for (const d of planned) {

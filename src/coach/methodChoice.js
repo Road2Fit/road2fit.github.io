@@ -10,7 +10,7 @@
 // Dans tous les cas : forme choisie pour un exercice (quest.coachMethod) d'abord ; semaine allégée, chronométré, geste en
 // apprentissage → séries classiques.
 import { methodFits, withMethod } from './methods';
-import { dayStyleOf, isPlyo, styleInfo } from './contraction';
+import { dayStylesOf, isPlyo, pickMixed, styleInfo, stylesLabel } from './contraction';
 import { profileOpts } from './profiles';
 import { entriesBeforeMethods, knowsExercise, knownMethods, priorityArenas } from './experience';
 import { getCoachSettings } from './settings';
@@ -78,6 +78,10 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
   const prio = priorityArenas(state);
   const prioBoost = new Set();
   const known = knownMethods(state);
+  // façons de travailler du jour (séance faite en avance : celles du jour PRÉVU, passées par dayStyle) ; plusieurs = séance mixte
+  const styles = dayStyle !== undefined ? (Array.isArray(dayStyle) ? dayStyle : dayStyle ? [dayStyle] : []) : dayStylesOf(coach, iso);
+  const styleMethods = styles.map(x => (styleInfo(x) || {}).method).filter(Boolean);
+  let mixK = 0;
 
   let out = exercises.map(e => {
     if (e.dictated) return e; // séance dictée : forme de séries telle quelle
@@ -97,10 +101,15 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
     } else if (q.coachMethod && q.coachMethod !== 'auto') return withMethod(ex, q.coachMethod, 'Forme de séries choisie par toi (Ajuster).');
     // sauts et lancers : toujours en pliométrie (peu de reps, repos complet)
     if (isPlyo(q) || isPlyo(e)) return withMethod(ex, 'plyo', METHOD_WHY.plyo);
-    // façon de travailler choisie pour ce jour (isométrie, excentrique, explosif) : sur tous les exercices où elle a du sens
-    // séance faite en avance : la façon de travailler est celle du jour prévu (dayStyle), pas celle d'aujourd'hui
-    const ds = styleInfo(dayStyle !== undefined ? dayStyle : dayStyleOf(coach, iso));
-    if (ds && ds.method && !ex.timed && methodFits(ds.method, ex)) return withMethod(ex, ds.method, `Séance « ${ds.label} » choisie. ${METHOD_WHY[ds.method] || ''}`);
+    // façon(s) de travailler choisie(s) pour ce jour : sur tous les exercices où elles ont du sens ; plusieurs = réparties
+    if (styleMethods.length && !ex.timed) {
+      const m = pickMixed(styleMethods.filter(x => methodFits(x, ex)), !!ex.compound, mixK);
+      if (m) {
+        mixK += 1;
+        const head = styleMethods.length > 1 ? `Séance mixte (${stylesLabel(styles.filter(x => x !== 'plyo'))}) : pour cet exercice, ${(styleInfo(styles.find(x => (styleInfo(x) || {}).method === m)) || {}).label.toLowerCase()}.` : `Séance « ${stylesLabel(styles.filter(x => x !== 'plyo'))} » choisie.`;
+        return withMethod(ex, m, `${head} ${METHOD_WHY[m] || ''}`);
+      }
+    }
     if (style === 'classic') return withMethod(ex, 'straight', '');
     if (deload) return withMethod(ex, 'straight', 'Semaine allégée : séries classiques.');
     if (ex.timed) return withMethod(ex, 'straight', '');

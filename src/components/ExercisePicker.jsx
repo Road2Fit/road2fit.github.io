@@ -3,13 +3,25 @@ import { normalizeSlang } from '../data/slang';
 import { EXERCISE_CATALOG, normSearch } from '../data/catalog';
 import { FINE_GROUPS, fineGroupOf, isOptimized, secondGroupOf } from '../data/muscles';
 import { isTimedCatalog } from '../lib/quests';
+import { DEFAULT_SPORT, sportInfo } from '../data/sports';
+import { sportPerf } from '../data/sportPerf';
+
+/** 4.43 : exercices adaptés au sport de la personne (prévention + programme de performance) ; null si aucun sport précisé. */
+export function sportExercises(sportId) {
+  const id = sportId === undefined ? DEFAULT_SPORT : sportId;
+  if (!id) return null;
+  const sp = sportInfo(id);
+  const ids = [...new Set([...(sp.exercises || []), ...sportPerf(sp.id).pack])].filter(x => EXERCISE_CATALOG.some(c => c.id === x));
+  return { sport: sp, ids };
+}
 
 // Sélecteur d'exercice avec barre de recherche
 // `compat` + `onSelectOther` (changement d'exercice) : TOUS les exercices du muscle sont listés ; ceux qui ne se mesurent pas comme l'exercice actuel
 // (kg / répétitions / durée) sont marqués et passent par `onSelectOther`.
 export const unitLabel = c => (isTimedCatalog(c) ? 'durée' : c.unit === 'kg' ? 'charge en kg' : 'répétitions');
 
-export function ExercisePicker({ value, onSelect, accept, allowCustom = true, compat, onSelectOther, onCreateAi = null }) {
+export function ExercisePicker({ value, onSelect, accept, allowCustom = true, compat, onSelectOther, onCreateAi = null, sportId }) {
+  const mySport = sportExercises(sportId);
   const [query, setQuery] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [aiMsg, setAiMsg] = useState('');
@@ -23,8 +35,8 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
   const [filter, setFilter] = useState('all');
   const optimized = isOptimized();
   const FILTERS = optimized
-    ? [['all', 'Tous'], ...FINE_GROUPS.map(g => [g.id, `${g.icon} ${g.id === 'Hanches' ? 'Adducteurs' : g.id.replace('Ischio-jambiers', 'Ischios')}`]), ['cardio', 'Cardio']]
-    : [['all', 'Tous'], ['Dos', 'Dos'], ['Pectoraux', 'Pecs'], ['Jambes', 'Jambes'], ['Épaules & Bras', 'Épaules/Bras'], ['Abdominaux', 'Abdos'], ['cardio', 'Cardio']];
+    ? [['all', 'Tous'], ...(mySport ? [['sport', `${mySport.sport.icon} ${mySport.sport.cap}`]] : []), ...FINE_GROUPS.map(g => [g.id, `${g.icon} ${g.id === 'Hanches' ? 'Adducteurs' : g.id.replace('Ischio-jambiers', 'Ischios')}`]), ['cardio', '❤ Cardio']]
+    : [['all', 'Tous'], ...(mySport ? [['sport', `${mySport.sport.icon} ${mySport.sport.cap}`]] : []), ['Dos', 'Dos'], ['Pectoraux', 'Pecs'], ['Jambes', 'Jambes'], ['Épaules & Bras', 'Épaules/Bras'], ['Abdominaux', 'Abdos'], ['cardio', '❤ Cardio']];
   const ORDER = optimized ? [...FINE_GROUPS.map(g => g.id), 'Course & Cardio', 'Volley-ball'] : ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux', 'Course & Cardio', 'Volley-ball'];
   const groupOf = c => (optimized ? fineGroupOf({ ...c, catalogId: c.id }) : c.category);
   const tokens = normSearch(query).split(/\s+/).filter(Boolean);
@@ -32,12 +44,12 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
   const results = EXERCISE_CATALOG
     .filter(c => {
       if (accept && !accept(c)) return false;
-      const inFilter = filter === 'all' || (filter === 'cardio' ? c.type === 'cardio' : (groupOf(c) === filter || (optimized && secondGroupOf({ ...c, catalogId: c.id }) === filter)) && c.type !== 'cardio');
+      const inFilter = filter === 'all' || (filter === 'sport' ? !!mySport && mySport.ids.includes(c.id) : filter === 'cardio' ? c.type === 'cardio' : (groupOf(c) === filter || (optimized && secondGroupOf({ ...c, catalogId: c.id }) === filter)) && c.type !== 'cardio');
       if (!inFilter) return false;
       const hay = normSearch(`${c.name} ${c.category} ${c.equip || ''} ${c.brands || ''}`);
       return tokens.every(t => hay.includes(t)) || (slangTokens.join(' ') !== tokens.join(' ') && slangTokens.every(t => hay.includes(t)));
     })
-    .sort((a, b) => ORDER.indexOf(groupOf(a)) - ORDER.indexOf(groupOf(b)));
+    .sort((a, b) => (filter === 'sport' ? mySport.ids.indexOf(a.id) - mySport.ids.indexOf(b.id) : ORDER.indexOf(groupOf(a)) - ORDER.indexOf(groupOf(b))));
   const selected = EXERCISE_CATALOG.find(c => c.id === value);
   return (
     <div className="space-y-2">
@@ -58,6 +70,7 @@ export function ExercisePicker({ value, onSelect, accept, allowCustom = true, co
             key={id}
             type="button"
             onClick={() => setFilter(id)}
+            data-testid={`picker-filter-${id}`}
             className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
               filter === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'
             }`}

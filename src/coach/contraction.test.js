@@ -5,7 +5,7 @@ import { coachOverview } from './advice';
 import { coachPlanWeek } from './planning';
 import { buildPlan, methodFits, withMethod } from './methods';
 import { computeExerciseTarget } from './targets';
-import { capPlyoBlock, dayStyleOf, holdPoint, isPlyo, missingPlyo, plyoWeekDays, setDayStyle } from './contraction';
+import { capPlyoBlock, dayStyleOf, dayStylesOf, holdPoint, isPlyo, missingPlyo, pickMixed, plyoWeekDays, setDayStyle, toggleDayStyle } from './contraction';
 import { coachableQuests } from './equipment';
 import { applyAction, normalizeAction } from '../ai/actions';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -95,7 +95,7 @@ describe('séance axée sur une façon de travailler', () => {
     const first = coachOverview(base(), TODAY).first.iso;
     const s = coachOverview(base({ dayStyles: { [first]: 'iso' } }), TODAY).session;
     expect(s.style).toBe('iso');
-    expect(s.notes.join(' ')).toMatch(/Isométrie/);
+    expect(s.notes.join(' ')).toMatch(/Pauses isométriques/);
     const strength = s.exercises.filter(e => !e.timed);
     expect(strength.length).toBeGreaterThan(0);
     strength.forEach(e => expect(e.method).toBe('iso_pause'));
@@ -108,7 +108,46 @@ describe('séance axée sur une façon de travailler', () => {
   });
 });
 
+describe('séance mixte (4.43)', () => {
+  it('toggleDayStyle : plusieurs façons pour un jour, ancienne valeur (texte) comprise', () => {
+    let m = toggleDayStyle({ dayStyles: { '2026-11-10': 'iso' } }, '2026-11-10', 'expl', TODAY);
+    expect(m['2026-11-10']).toEqual(['iso', 'expl']);
+    expect(dayStylesOf({ dayStyles: m }, '2026-11-10')).toEqual(['iso', 'expl']);
+    expect(dayStyleOf({ dayStyles: m }, '2026-11-10')).toBe('iso');
+    m = toggleDayStyle({ dayStyles: m }, '2026-11-10', 'iso', TODAY);
+    expect(m['2026-11-10']).toBe('expl');
+  });
+
+  it('pickMixed : explosif réservé aux gros exercices, sinon alternance', () => {
+    expect(pickMixed(['iso_pause', 'explosive'], false, 0)).toBe('iso_pause');
+    expect(pickMixed(['iso_pause', 'explosive'], false, 1)).toBe('iso_pause');
+    expect([0, 1].map(k => pickMixed(['iso_pause', 'explosive'], true, k))).toEqual(['iso_pause', 'explosive']);
+    expect(pickMixed(['explosive'], false, 0)).toBe('explosive');
+  });
+
+  it('iso + explosif + excentrique : les façons sont réparties entre les exercices', () => {
+    const first = coachOverview(base(), TODAY).first.iso;
+    const s = coachOverview(base({ dayStyles: { [first]: ['iso', 'expl', 'ecc'] } }), TODAY).session;
+    const used = new Set(s.exercises.filter(e => !e.timed).map(e => e.method));
+    expect(used.size).toBeGreaterThanOrEqual(2);
+    [...used].forEach(m => expect(['iso_pause', 'explosive', 'eccentric']).toContain(m));
+    s.exercises.filter(e => e.method === 'explosive').forEach(e => expect(e.compound).toBeTruthy());
+    expect(s.notes.join(' ')).toMatch(/Pauses isométriques \+ Excentrique.*\+ Explosif/);
+  });
+});
+
 describe('pliométrie', () => {
+  it('les sauts REMPLACENT un ou deux exercices (la séance garde sa durée)', () => {
+    const first = coachOverview(base(), TODAY).first.iso;
+    const normal = coachOverview(base({}, [...QUESTS, ...PLYO]), TODAY).session;
+    const s = coachOverview(base({ dayStyles: { [first]: 'plyo' } }, [...QUESTS, ...PLYO]), TODAY).session;
+    const jumps = s.exercises.filter(e => /^j/.test(e.questId)).length;
+    const strength = s.exercises.length - jumps;
+    expect(strength).toBeGreaterThanOrEqual(Math.min(3, normal.exercises.length));
+    expect(strength).toBeLessThan(normal.exercises.length);
+    expect(s.notes.join(' ')).toMatch(/laissés? de côté aujourd’hui pour faire place aux sauts/);
+  });
+
   it('les sauts ne sont jamais programmés dans une séance normale', () => {
     const st = base({}, [...QUESTS, ...PLYO]);
     expect(coachableQuests(st).some(isPlyo)).toBe(false);

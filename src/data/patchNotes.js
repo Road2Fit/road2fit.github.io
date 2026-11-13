@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.43',
+    date: '2026-11-13',
+    title: 'Séances mixtes et exercices de ton sport',
+    items: [
+      'Façon de travailler : tu peux en choisir plusieurs à la fois (par exemple pauses iso + explosif). Le coach les répartit : l’explosif sur les gros exercices, les autres en alternance.',
+      'Chaque façon est expliquée sous les boutons. Pauses iso = tes répétitions avec un arrêt de 3 à 5 s à chaque rep ; tenues iso = une seule position tenue 20 à 30 s, sans répétitions (plus long).',
+      'Pliométrie : des sauts arrivent en début de séance et remplacent un ou deux exercices. Si tu n’en suivais aucun, ceux de ton sport sont ajoutés tout seuls.',
+      'La charge reste affichée dans le résumé de chaque exercice (« 4 × 5 · tiens 5 s · 47,5 kg »), même en isométrie ou en explosif.',
+      'Nouvel exercice : un onglet avec ton sport (par exemple Volley) liste tous les exercices adaptés, et « Cardio » a son logo cœur.',
+    ],
+  },
+  {
     version: '4.42',
     date: '2026-11-13',
     title: 'Isométrie, excentrique, explosif et pliométrie',

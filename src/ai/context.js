@@ -1,7 +1,7 @@
 // Ce que le coach intelligent reçoit : un résumé texte compact des données utiles (jamais de photo, d'e-mail, de note de pesée ni de prénom).
 import { coachBalance, coachOverview } from '../coach/advice';
 import { dayTypeOf, themeLabel } from '../coach/dayTheme';
-import { dayStyleOf, isPlyo, plyoPerWeek, styleInfo } from '../coach/contraction';
+import { dayStylesOf, isPlyo, plyoPerWeek, stylesLabel } from '../coach/contraction';
 import { sportPerf } from '../data/sportPerf';
 import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
@@ -93,7 +93,7 @@ export function coachContext(state, today, { overview } = {}) {
   try {
     const up = upcomingSessions(state, today, overview);
     const ovr = overview || coachOverview(state, today);
-    const typeOf = u => { const p = ((ovr && ovr.plannedAll) || []).find(x => x.iso === u); const t = dayTypeOf(c, u) || (p && p.type); const st = dayStyleOf(c, u); const pl = ((ovr && ovr.weeks) || []).some(w => (w.plyoDays || []).includes(u)); const extra = [st ? `façon de travailler « ${styleInfo(st).label} » (style "${st}") choisie` : '', !st && pl ? 'avec des sauts (pliométrie) en début de séance' : ''].filter(Boolean).join(', '); return t || extra ? ` (${[t ? `${themeLabel(t) || t}${dayTypeOf(c, u) ? ', thème choisi par la personne' : ''}` : '', extra].filter(Boolean).join(' ; ')})` : ''; };
+    const typeOf = u => { const p = ((ovr && ovr.plannedAll) || []).find(x => x.iso === u); const t = dayTypeOf(c, u) || (p && p.type); const sts = dayStylesOf(c, u); const st = sts.length ? sts : null; const pl = ((ovr && ovr.weeks) || []).some(w => (w.plyoDays || []).includes(u)); const extra = [st ? `façon de travailler « ${stylesLabel(st)} » (styles ${JSON.stringify(st)}) choisie` : '', !st && pl ? 'avec des sauts (pliométrie) en début de séance' : ''].filter(Boolean).join(', '); return t || extra ? ` (${[t ? `${themeLabel(t) || t}${dayTypeOf(c, u) ? ', thème choisi par la personne' : ''}` : '', extra].filter(Boolean).join(' ; ')})` : ''; };
     lines.push(`Séances prévues par l'appli avec les réglages actuels : ${up.length ? up.map(u => `${dayName(new Date(`${u}T00:00:00`).getDay())} ${u}${typeOf(u)}`).join(', ') : 'aucune'}.`);
   } catch { /* rien */ }
   const p = c.profile || {};

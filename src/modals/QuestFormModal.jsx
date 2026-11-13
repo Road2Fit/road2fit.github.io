@@ -15,7 +15,7 @@ export function QuestFormModal({
   formType, formUnit, handleSaveQuestForm, handleSelectCatalogExercise, setFormCategory,
   setFormCurrentValue, setFormCustomName, setFormGoalAssistanceKg, setFormGoalMode, setFormGoalReps,
   setFormGoalSets, setFormGoalValue, setFormStartAssistanceKg, setFormStartValue, setFormTimed,
-  setFormUnit, setQuestModalOpen,
+  setFormUnit, setQuestModalOpen, formSport,
 }) {
   const [swapOpen, setSwapOpen] = useState(false);
   return (
@@ -72,7 +72,7 @@ export function QuestFormModal({
                       <label className="block text-xs font-bold text-slate-300 mb-1.5">
                         {pick('Choisir un exercice dans le Pokédex', 'Choisir un exercice dans la liste')}
                       </label>
-                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} onCreateAi={createWithAi} />
+                      <ExercisePicker value={formCatalogId} onSelect={handleSelectCatalogExercise} onCreateAi={createWithAi} sportId={formSport} />
                       {formSuggestion && (
                         <p className="mt-2 text-xs text-sky-200 bg-sky-950/40 border border-sky-500/30 rounded-lg p-2">{formSuggestion}</p>
                       )}
