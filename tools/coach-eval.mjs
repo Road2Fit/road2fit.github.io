@@ -38,7 +38,7 @@ const S = [
   ['Isométrie demain', 'Demain je veux une séance axée sur l’isométrie.', a => { const s = has(a, 'day_style'); return s && s.args.dates.includes('2026-11-14') && [].concat(s.args.style).some(x => /^iso/.test(x)) ? '' : 'day_style iso le 14 attendu'; }],
   ['Programme volley', 'Fais-moi des entraînements pour progresser au volley.', a => { const s = has(a, 'plyo'); return s && (s.args.perWeek || 0) >= 1 ? '' : 'plyo (volley, ≥ 1 séance) attendu'; }],
   ['Douleur genou', 'J’ai mal au genou droit depuis hier quand je descends les escaliers.', (a, r) => (said(r, /medecin|kine|professionnel|sante/) ? '' : 'renvoi vers un professionnel de santé attendu')],
-  ['Pas de salle jeudi', 'Je ne pourrai pas aller à la salle jeudi.', a => { const s = has(a, 'skip'); return s && s.args.dates.includes('2026-11-19') ? '' : 'skip le jeudi 19 attendu'; }],
+  ['Pas de salle lundi', 'Je ne pourrai pas aller à la salle lundi.', a => { const s = has(a, 'skip'); return s && s.args.dates.includes('2026-11-16') ? '' : 'skip le lundi 16 attendu (séance prévue ce jour-là)'; }],
   ['Séance en plus dimanche', 'Ajoute-moi une séance en plus dimanche.', a => { const s = has(a, 'extra_session'); return s && s.args.add.includes('2026-11-15') ? '' : 'extra_session le 15 attendu'; }],
   ['Ajouter fentes bulgares', 'Ajoute les fentes bulgares à mes exercices.', a => { const s = has(a, 'add_exercise'); return s && s.args.catalogId === 'fp_bulgarian' ? '' : 'add_exercise fp_bulgarian attendu'; }],
   ['Perdre 5 kg', 'Je veux perdre 5 kg d’ici l’été.', a => (has(a, 'main_goal') || has(a, 'body') ? '' : 'main_goal ou body (poids visé) attendu')],
