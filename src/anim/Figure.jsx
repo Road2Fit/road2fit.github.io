@@ -1,6 +1,6 @@
 import { musclesOf } from './muscles';
 import { currentLook, lookFor } from './avatar';
-import { Aura, HeadBackSide, HeadFrontBack, HeadFrontItems, HeadSideItems, HeadTopItems, LegItems, NeckFront, NeckSide, NumberFront, PatternDefs, Strap, WaistFront, WaistSide, WristItems, handColor } from './avatarItems';
+import { Aura, HeadBackSide, HeadFrontBack, HeadFrontItems, HeadSideItems, HeadTopItems, LegItems, LogoSide, NeckFront, NeckSide, NumberFront, PatternDefs, Strap, WaistFront, WaistSide, WristItems, handColor } from './avatarItems';
 import { ik, poseAt, SEG, solveFront, solvePose, solveTop, tracePath, traceFront, traceTop } from './skeleton';
 
 // Dessin SVG d'une scène à un instant donné : décor (machine, banc…), personnage habillé, muscles (rouges, selon l'effort), charge, trajet.
@@ -464,6 +464,7 @@ export function Figure({ scene, pose, showTrace = false, muscleText = '', ghost 
       {L.top === 'bra' && <path d={bra} fill={L.shirt} />}
       <path d={shorts} fill={L.shorts} />
       {L.items && <WaistSide L={L} Q={Q} xy={xy} />}
+      {L.items && <LogoSide L={L} Q={Q} xy={xy} />}
       {L.items && <NeckSide L={L} Q={Q} xy={xy} />}
       {sideMuscles(j, muscles.filter(m => ['chest', 'back', 'core', 'glutes'].includes(m.z)), effort, Q, front)}
       <HeadSide c={j.headC} up={up} L={L} face={flip} />

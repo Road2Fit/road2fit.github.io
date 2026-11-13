@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Figure } from '../anim/Figure';
 import { movementFor } from '../anim/resolve';
 import { poseAt, tempoU } from '../anim/skeleton';
-import { AVATAR_DEFAULT, BODIES, BOTTOMS, CLOTH_COLORS, HAIRS, HAIR_COLORS, SKINS, TOPS, cleanAvatar } from '../anim/avatar';
+import { AVATAR_DEFAULT, BODIES, BOTTOMS, CLOTH_COLORS, HAIRS, HAIR_COLORS, SKINS, TOPS, cleanAvatar, cleanNumber } from '../anim/avatar';
 import { ITEMS, SLOTS, canBuy, coinsForLevel, coinsLeft } from '../anim/shop';
 
 // « Mon avatar » (4.39) : le personnage des animations d'exercices, habillé à son goût. Ouvert depuis le profil.
@@ -57,8 +57,19 @@ const Chips = ({ k, list, value, set }) => (
   </div>
 );
 
+// numéro du maillot : modifiable librement (champ vide permis pendant la saisie), enregistré dès qu'il n'est pas vide
+function NumberField({ value, onNumber }) {
+  const [txt, setTxt] = useState(value);
+  return (
+    <input type="text" maxLength={3} value={txt} aria-label="Numéro du maillot" data-testid="shop-number-input"
+      onChange={e => { const v = cleanNumber(e.target.value); setTxt(v); if (v) onNumber(v); }}
+      onBlur={() => { if (!txt) setTxt(value); }} onFocus={e => e.target.select()}
+      className="w-14 px-2 py-1 rounded-lg bg-slate-900 border border-pink-400 text-white text-sm font-black text-center" />
+  );
+}
+
 // Boutique (4.40) : pièces gagnées à chaque niveau, objets à essayer (aperçu), acheter, porter ou retirer
-function Shop({ a, level, owned, tryOn, setTryOn, onBuy, onWear }) {
+function Shop({ a, level, owned, tryOn, setTryOn, onBuy, onWear, onNumber }) {
   const [slot, setSlot] = useState('head');
   const left = coinsLeft(level, owned);
   const list = ITEMS.filter(it => it.slot === slot);
@@ -90,6 +101,11 @@ function Shop({ a, level, owned, tryOn, setTryOn, onBuy, onWear }) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white truncate">{it.name}</p>
                 <p className="text-[11px] text-slate-400">{mine ? (on ? 'Porté' : 'À toi') : `${it.price} pièces`}</p>
+                {it.kind === 'number' && mine && (
+                  <label className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-300">Numéro
+                    <NumberField value={a.number || '23'} onNumber={onNumber} />
+                  </label>
+                )}
               </div>
               {mine ? (
                 <button type="button" onClick={() => onWear(slot, on ? null : it.id)} data-testid={`shop-wear-${it.id}`} className={`shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-black ${on ? 'bg-slate-800 text-slate-200' : 'bg-pink-600 text-white'}`}>{on ? 'Retirer' : 'Porter'}</button>
@@ -133,7 +149,7 @@ export function AvatarEditor({ avatar, onChange, onClose, level = 1, owned = [],
           <div className="sticky top-0 z-10 bg-slate-900 -mx-1 px-1 pb-1"><Preview avatar={shown} /></div>
           {onBuy && <div className="flex gap-1 bg-slate-950 rounded-xl p-1" role="tablist">{tabBtn('look', 'Apparence')}{tabBtn('shop', 'Boutique')}</div>}
           {tab === 'shop' && onBuy ? (
-            <Shop a={a} level={level} owned={owned} tryOn={tryOn} setTryOn={setTryOn} onBuy={buy} onWear={wear} />
+            <Shop a={a} level={level} owned={owned} tryOn={tryOn} setTryOn={setTryOn} onBuy={buy} onWear={wear} onNumber={v => onChange({ ...a, number: v })} />
           ) : (<>
             {row('Peau', <Swatches k="skin" list={SKINS} value={a.skin} set={set} />)}
             {row('Silhouette', <Chips k="body" list={BODIES} value={a.body} set={set} />)}

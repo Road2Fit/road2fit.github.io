@@ -93,6 +93,7 @@ export const ITEMS = [
   { id: 'top_camo', slot: 'topPattern', kind: 'camo', name: 'Haut camouflage', price: 180 },
   { id: 'top_stars', slot: 'topPattern', kind: 'stars', name: 'Haut étoilé', price: 200 },
   { id: 'top_number', slot: 'topPattern', kind: 'number', name: 'Maillot numéro 23', price: 160 },
+  { id: 'top_logo', slot: 'topPattern', kind: 'logo', name: 'T-shirt Road2Fit (logo haltère)', price: 50, c: '#141414', c2: '#c6ff3d' },
   { id: 'top_check', slot: 'topPattern', kind: 'check', name: 'Haut à carreaux', price: 150 },
   { id: 'bottom_stripe', slot: 'bottomPattern', kind: 'sideStripe', name: 'Bandes sur le côté', price: 90, c: '#f1f5f9' },
   { id: 'bottom_stripe_red', slot: 'bottomPattern', kind: 'sideStripe', name: 'Bandes rouges sur le côté', price: 90, c: '#d9483b' },

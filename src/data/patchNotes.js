@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.41',
+    date: '2026-11-13',
+    title: 'T-shirt Road2Fit et maillot à ton numéro',
+    items: [
+      'Nouveau dans la boutique (Motif du haut) : le t-shirt Road2Fit, noir avec l’haltère néon du logo, pour 50 pièces.',
+      'Maillot numéro : une fois acheté, écris le numéro que tu veux (jusqu’à 3 caractères, chiffres ou lettres) dans la case « Numéro ».',
+      'Les objets de tête (bandeau, bonnet, casquette, bob, casque, couronne…) s’adaptent maintenant à ta coiffure, même avec des cheveux bouclés ou un foulard, et ne cachent plus les yeux.',
+    ],
+  },
+  {
     version: '4.40',
     date: '2026-11-13',
     title: 'La boutique de ton avatar',

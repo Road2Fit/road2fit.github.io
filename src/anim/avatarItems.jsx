@@ -43,7 +43,22 @@ export function Aura({ L, c, r }) {
 }
 
 // ---------- tête, vue de profil (repère local) ----------
-const DOME_S = 'M-9.5 0.6 A9.6 9.6 0 0 1 9.3 -2.4 Q0 -3.4 -9.5 0.6Z';
+const DOME_S = 'M-9.6 0 A9.7 9.7 0 0 1 9.2 -3.4 Q0 -4.4 -9.6 0Z';
+
+// Les objets de tête suivent la coiffure : cheveux bouclés ou foulard = tête plus grosse (même centre et même rayon que
+// le dessin des cheveux dans Figure.jsx). Rayon de base 9.5 (tête + cheveux courts).
+const HAIR_FIT = {
+  side: { curly: [-1, -1.4, 10.8], scarf: [-0.6, -0.2, 10.6] },
+  front: { curly: [0, -1.5, 11], scarf: [0, 0, 10.8] },
+  back: { curly: [0, 0, 11], scarf: [0, 0, 10.8] },
+};
+export function hairFit(L, view) {
+  const v = (HAIR_FIT[view] || {})[L.hairStyle];
+  return v ? { dx: v[0], dy: v[1], s: v[2] / 9.5 } : null;
+}
+const fitted = (fit, x, y, child) => (fit
+  ? <g transform={`translate(${n(x + fit.dx)} ${n(y + fit.dy)}) scale(${fit.s.toFixed(3)}) translate(${n(-x)} ${n(-y)})`}>{child}</g>
+  : child);
 /** Objets derrière la tête (avant la peau) */
 export function HeadBackSide({ L }) {
   const h = L.items && L.items.head;
@@ -69,14 +84,16 @@ export function HeadSideItems({ L }) {
   }
   if (h) {
     const k = h.kind;
-    if (k === 'band') out.push(<g key="h">{h.glow && <path d="M-9.6 -1.8 Q0 -7 9.3 -3.6 L8.9 0 Q0 -2.6 -9.8 1.2Z" fill={h.c} opacity="0.35" />}<path d="M-9.2 -2.2 Q0 -6.2 8.9 -3.2 L8.5 -0.6 Q0 -3.4 -9.4 0.6Z" fill={h.c} /></g>);
-    if (k === 'cap') out.push(<g key="h"><path d={DOME_S} fill={h.c} /><path d="M8.6 -2.6 L15.5 -1.4 L15.2 0 L8.4 -0.8Z" fill={h.c2} /></g>);
-    if (k === 'capBack') out.push(<path key="h" d={DOME_S} fill={h.c} />);
-    if (k === 'beanie') out.push(<g key="h"><path d="M-10 1 A10.2 10.6 0 0 1 9.8 -2.4 Q0 -3.4 -10 1Z" fill={h.c} /><path d="M-9.8 0.8 L9.6 -2.2 L9.9 0.6 L-9.6 3.4Z" fill={h.c2} /></g>);
-    if (k === 'bob') out.push(<g key="h"><path d={DOME_S} fill={h.c} /><line x1="-13.4" y1="1.4" x2="13.8" y2="-2.4" stroke={h.c2} strokeWidth="2.6" strokeLinecap="round" /></g>);
-    if (k === 'bandana') out.push(<g key="h"><path d={DOME_S} fill={h.c} /><circle cx="2" cy="-6" r="0.8" fill={h.c2} /><circle cx="-3" cy="-5.4" r="0.8" fill={h.c2} /><circle cx="6" cy="-4.6" r="0.8" fill={h.c2} /></g>);
-    if (k === 'headphones') out.push(<g key="h"><path d="M-0.7 0.7 L-1.6 -10.4" stroke={h.c} strokeWidth="2.2" strokeLinecap="round" /><circle cx="-0.7" cy="0.7" r="3.7" fill={h.c} /><circle cx="-0.7" cy="0.7" r="1.9" fill={h.c2} /></g>);
-    if (k === 'crown') out.push(<path key="h" d="M-5.5 -8 L-6 -12.6 L-3 -10 L0 -13.6 L3 -10 L6 -12.6 L5.5 -8Z" fill={h.c} stroke={h.c2} strokeWidth="0.6" />);
+    const hats = [];
+    if (k === 'band') hats.push(<g key="h">{h.glow && <path d="M-10.2 -2.6 Q0 -9.6 8.6 -6.2 L9.4 -2.2 Q0 -4.8 -10.4 0.6Z" fill={h.c} opacity="0.35" />}<path d="M-9.7 -3.2 Q0 -8.6 8.2 -5.4 L8.8 -2.9 Q0 -5.6 -9.9 -0.2Z" fill={h.c} /></g>);
+    if (k === 'cap') hats.push(<g key="h"><path d={DOME_S} fill={h.c} /><path d="M8.4 -3.6 L15.5 -2.4 L15.2 -1 L8.2 -2Z" fill={h.c2} /></g>);
+    if (k === 'capBack') hats.push(<path key="h" d={DOME_S} fill={h.c} />);
+    if (k === 'beanie') hats.push(<g key="h"><path d="M-10 -1.6 A10.2 10.6 0 0 1 9.2 -6.2 Q0 -7 -10 -1.6Z" fill={h.c} /><path d="M-9.9 -2.2 L9 -6.6 L9.4 -4 L-9.9 0.6Z" fill={h.c2} /></g>);
+    if (k === 'bob') hats.push(<g key="h"><path d={DOME_S} fill={h.c} /><line x1="-13.4" y1="-0.6" x2="13.6" y2="-5.2" stroke={h.c2} strokeWidth="2.6" strokeLinecap="round" /></g>);
+    if (k === 'bandana') hats.push(<g key="h"><path d={DOME_S} fill={h.c} /><circle cx="2" cy="-6.4" r="0.8" fill={h.c2} /><circle cx="-3" cy="-5.8" r="0.8" fill={h.c2} /><circle cx="6" cy="-5.2" r="0.8" fill={h.c2} /></g>);
+    if (k === 'headphones') hats.push(<g key="h"><path d="M-0.7 0.7 L-1.6 -10.4" stroke={h.c} strokeWidth="2.2" strokeLinecap="round" /><circle cx="-0.7" cy="0.7" r="3.7" fill={h.c} /><circle cx="-0.7" cy="0.7" r="1.9" fill={h.c2} /></g>);
+    if (k === 'crown') hats.push(<path key="h" d="M-5.5 -8 L-6 -12.6 L-3 -10 L0 -13.6 L3 -10 L6 -12.6 L5.5 -8Z" fill={h.c} stroke={h.c2} strokeWidth="0.6" />);
+    if (hats.length) out.push(<g key="hats">{fitted(hairFit(L, 'side'), 0, 0, hats)}</g>);
   }
   return out.length ? <g>{out}</g> : null;
 }
@@ -107,14 +124,16 @@ export function HeadFrontItems({ L, x, y, back }) {
   }
   if (h) {
     const k = h.kind;
-    if (k === 'band') out.push(<g key="h">{h.glow && <rect x={n(x - 10.2)} y={n(y - 6)} width="20.4" height="4.6" rx="2" fill={h.c} opacity="0.35" />}<rect x={n(x - 9.5)} y={n(y - 5.2)} width="19" height="3" rx="1.2" fill={h.c} /></g>);
-    if (k === 'cap') out.push(<g key="h"><path d={dome} fill={h.c} />{!back && <ellipse cx={x} cy={n(y - 1.4)} rx="9.4" ry="2.4" fill={h.c2} />}</g>);
-    if (k === 'capBack') out.push(<g key="h"><path d={dome} fill={h.c} />{back && <ellipse cx={x} cy={n(y - 1.4)} rx="9.4" ry="2.4" fill={h.c2} />}</g>);
-    if (k === 'beanie') out.push(<g key="h"><path d={`M${n(x - 10)} ${n(y - 0.4)} A10 10.8 0 0 1 ${n(x + 10)} ${n(y - 0.4)} Z`} fill={h.c} /><rect x={n(x - 10)} y={n(y - 3.4)} width="20" height="3.4" rx="1" fill={h.c2} /></g>);
-    if (k === 'bob') out.push(<g key="h"><path d={dome} fill={h.c} /><ellipse cx={x} cy={n(y - 1.2)} rx="14" ry="2.4" fill={h.c2} /></g>);
-    if (k === 'bandana') out.push(<g key="h"><path d={dome} fill={h.c} /><circle cx={n(x - 4)} cy={n(y - 5)} r="0.8" fill={h.c2} /><circle cx={n(x + 3)} cy={n(y - 6.4)} r="0.8" fill={h.c2} /></g>);
-    if (k === 'headphones') out.push(<g key="h"><path d={`M${n(x - 10.2)} ${n(y + 1)} A10.4 11 0 0 1 ${n(x + 10.2)} ${n(y + 1)}`} fill="none" stroke={h.c} strokeWidth="2.2" /><ellipse cx={n(x - 10.2)} cy={n(y + 1.4)} rx="2.6" ry="4" fill={h.c} /><ellipse cx={n(x + 10.2)} cy={n(y + 1.4)} rx="2.6" ry="4" fill={h.c} /></g>);
-    if (k === 'crown') out.push(<path key="h" d={`M${n(x - 6.5)} ${n(y - 7)} L${n(x - 6.5)} ${n(y - 12.5)} L${n(x - 3.2)} ${n(y - 9.5)} L${x} ${n(y - 13.5)} L${n(x + 3.2)} ${n(y - 9.5)} L${n(x + 6.5)} ${n(y - 12.5)} L${n(x + 6.5)} ${n(y - 7)}Z`} fill={h.c} stroke={h.c2} strokeWidth="0.6" />);
+    const hats = [];
+    if (k === 'band') hats.push(<g key="h">{h.glow && <rect x={n(x - 10.2)} y={n(y - 6)} width="20.4" height="4.6" rx="2" fill={h.c} opacity="0.35" />}<rect x={n(x - 9.5)} y={n(y - 5.2)} width="19" height="3" rx="1.2" fill={h.c} /></g>);
+    if (k === 'cap') hats.push(<g key="h"><path d={dome} fill={h.c} />{!back && <ellipse cx={x} cy={n(y - 2.6)} rx="9.4" ry="2" fill={h.c2} />}</g>);
+    if (k === 'capBack') hats.push(<g key="h"><path d={dome} fill={h.c} />{back && <ellipse cx={x} cy={n(y - 2.6)} rx="9.4" ry="2" fill={h.c2} />}</g>);
+    if (k === 'beanie') hats.push(<g key="h"><path d={`M${n(x - 10)} ${n(y - 1.6)} A10 10.8 0 0 1 ${n(x + 10)} ${n(y - 1.6)} Z`} fill={h.c} /><rect x={n(x - 10)} y={n(y - 4.6)} width="20" height="3.4" rx="1" fill={h.c2} /></g>);
+    if (k === 'bob') hats.push(<g key="h"><path d={dome} fill={h.c} /><ellipse cx={x} cy={n(y - 2.8)} rx="14" ry="1.8" fill={h.c2} /></g>);
+    if (k === 'bandana') hats.push(<g key="h"><path d={dome} fill={h.c} /><circle cx={n(x - 4)} cy={n(y - 5)} r="0.8" fill={h.c2} /><circle cx={n(x + 3)} cy={n(y - 6.4)} r="0.8" fill={h.c2} /></g>);
+    if (k === 'headphones') hats.push(<g key="h"><path d={`M${n(x - 10.2)} ${n(y + 1)} A10.4 11 0 0 1 ${n(x + 10.2)} ${n(y + 1)}`} fill="none" stroke={h.c} strokeWidth="2.2" /><ellipse cx={n(x - 10.2)} cy={n(y + 1.4)} rx="2.6" ry="4" fill={h.c} /><ellipse cx={n(x + 10.2)} cy={n(y + 1.4)} rx="2.6" ry="4" fill={h.c} /></g>);
+    if (k === 'crown') hats.push(<path key="h" d={`M${n(x - 6.5)} ${n(y - 7)} L${n(x - 6.5)} ${n(y - 12.5)} L${n(x - 3.2)} ${n(y - 9.5)} L${x} ${n(y - 13.5)} L${n(x + 3.2)} ${n(y - 9.5)} L${n(x + 6.5)} ${n(y - 12.5)} L${n(x + 6.5)} ${n(y - 7)}Z`} fill={h.c} stroke={h.c2} strokeWidth="0.6" />);
+    if (hats.length) out.push(<g key="hats">{fitted(hairFit(L, back ? 'back' : 'front'), x, y, hats)}</g>);
   }
   return out.length ? <g>{out}</g> : null;
 }
@@ -125,14 +144,15 @@ export function HeadTopItems({ L, c, th }) {
   if (!h) return null;
   const [x, y] = [n(c[0]), n(c[1])];
   const fx = Math.sin(th); const fy = -Math.cos(th);
+  const big = L.hairStyle === 'curly' ? 10.6 / 9.4 : 1;
   if (h.kind === 'crown') return <circle cx={x} cy={y} r="6.4" fill="none" stroke={h.c} strokeWidth="2.4" />;
-  if (h.kind === 'band') return <circle cx={x} cy={y} r="9" fill="none" stroke={h.c} strokeWidth="2" />;
+  if (h.kind === 'band') return <circle cx={x} cy={y} r={n(9.2 * big)} fill="none" stroke={h.c} strokeWidth="2" />;
   if (h.kind === 'headphones') return <line x1={n(x - Math.cos(th) * 10)} y1={n(y - Math.sin(th) * 10)} x2={n(x + Math.cos(th) * 10)} y2={n(y + Math.sin(th) * 10)} stroke={h.c} strokeWidth="2.4" />;
   const visor = h.kind === 'cap' ? 1 : h.kind === 'capBack' ? -1 : 0;
   return (
     <g>
-      {h.kind === 'bob' && <circle cx={x} cy={y} r="13" fill={h.c2} />}
-      <circle cx={x} cy={y} r={h.kind === 'beanie' ? 10.2 : 9.6} fill={h.c} />
+      {h.kind === 'bob' && <circle cx={x} cy={y} r={n(13 * big)} fill={h.c2} />}
+      <circle cx={x} cy={y} r={n((h.kind === 'beanie' ? 10.2 : 9.6) * big)} fill={h.c} />
       {visor !== 0 && <ellipse cx={n(x + fx * visor * 10)} cy={n(y + fy * visor * 10)} rx="5" ry="3" transform={`rotate(${n((th * 180) / Math.PI)} ${n(x + fx * visor * 10)} ${n(y + fy * visor * 10)})`} fill={h.c2} />}
     </g>
   );
@@ -187,11 +207,34 @@ export function WaistFront({ L, c, waist, hy, wW, back }) {
   return <g><rect x={n(c - wW - 1.4)} y={n(waist - 0.6)} width={n(2 * wW + 2.8)} height={n(h)} rx="1" fill={it.c} />{!back && <rect x={n(c - 2.2)} y={n(waist - 0.2)} width="4.4" height={n(h - 0.8)} rx="0.8" fill="none" stroke={it.c2} strokeWidth="1.1" />}</g>;
 }
 
-// ---------- maillot numéro ----------
+// ---------- t-shirt Road2Fit : l'haltère néon du logo (même dessin que tools/make-neutral-icons.mjs, grille de 512) ----------
+export function LogoMark({ x, y, w }) {
+  const k = w / 360;
+  const shape = (stroke, sw) => (
+    <g fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="128" y="170" width="68" height="172" rx="20" /><rect x="316" y="170" width="68" height="172" rx="20" />
+      <path d="M86 216V296M426 216V296M196 256H316" />
+    </g>
+  );
+  return (
+    <g transform={`translate(${n(x - 256 * k)} ${n(y - 256 * k)}) scale(${k.toFixed(4)})`} data-logo="r2f">
+      {shape('#c6ff3d', 60)}{shape('#c6ff3d', 26)}{shape('#f4ffd6', 8)}
+    </g>
+  );
+}
+export function LogoSide({ L, Q, xy }) {
+  const it = L.items && L.items.topPattern;
+  if (!it || it.kind !== 'logo' || L.top === 'bra') return null;
+  const p = Q(2.6, 0.32);
+  return <LogoMark x={p[0]} y={p[1]} w={5.5} />;
+}
+
+// ---------- maillot numéro (et logo du t-shirt Road2Fit) ----------
 export function NumberFront({ L, X, y, back }) {
   const it = L.items && L.items.topPattern;
+  if (it && it.kind === 'logo' && L.top !== 'bra') return <LogoMark x={X} y={n(y - (back ? 3.5 : 6.5))} w={back ? 17 : 12} />;
   if (!it || it.kind !== 'number' || L.top === 'bra') return null;
-  return <text x={X} y={n(y)} fontSize={back ? 11 : 8} fontWeight="900" textAnchor="middle" fill={L.numberInk || '#f8fafc'} fontFamily="sans-serif">23</text>;
+  return <text x={X} y={n(y)} fontSize={(back ? 11 : 8) * (Array.from(L.number || '23').length > 2 ? 0.75 : 1)} fontWeight="900" textAnchor="middle" fill={L.numberInk || '#f8fafc'} fontFamily="sans-serif">{L.number || '23'}</text>;
 }
 
 // ---------- bras : poignets et mains ----------

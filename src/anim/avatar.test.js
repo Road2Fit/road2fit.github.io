@@ -114,4 +114,22 @@ describe('boutique de l’avatar (4.40)', () => {
     expect(draw(side, { ...AVATAR_DEFAULT, items: { aura: 'aura_gold' } })).toContain('url(#r2f-aura-aura_gold)');
     expect(cleanAvatar({ items: { head: 'nope', eyes: 'cap_red', waist: 'belt_neon' } }).items).toEqual({ waist: 'belt_neon' });
   });
+
+  it('numéro du maillot nettoyé (3 caractères max) et logo Road2Fit dans les 4 vues', async () => {
+    const { cleanNumber } = await import('./avatar');
+    expect(cleanNumber(' 10 ')).toBe('10');
+    expect(cleanNumber('ABCD')).toBe('ABC');
+    expect(cleanNumber('<b>')).toBe('b');
+    expect(cleanNumber(null)).toBe('');
+    expect(cleanAvatar({ number: '99' }).number).toBe('99');
+    expect(cleanAvatar({})).not.toHaveProperty('number');
+    const sc = scenes();
+    const num = draw(sc.front, { ...AVATAR_DEFAULT, number: '77', items: { topPattern: 'top_number' } });
+    expect(num).toContain('>77<');
+    for (const [k, s] of Object.entries(sc)) {
+      const svg = draw(s, { ...AVATAR_DEFAULT, items: { topPattern: 'top_logo' } });
+      expect(svg, k).not.toMatch(/NaN|scale(0)/);
+      if (k !== 'top') expect(svg, k).toContain('data-logo="r2f"');
+    }
+  });
 });
