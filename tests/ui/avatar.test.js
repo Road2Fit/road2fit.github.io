@@ -33,3 +33,36 @@ describe('mon avatar', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 });
+
+describe('boutique de l’avatar', () => {
+  it('essayer, acheter avec ses pièces, porter, retirer', async () => {
+    const h = await launch();
+    open.push(h);
+    await clickEl(h, q(h, 'profile-button'));
+    await clickEl(h, q(h, 'profile-avatar'));
+    for (let i = 0; i < 20 && !q(h, 'avatar-editor'); i++) await advance(h, 50);
+    await clickEl(h, q(h, 'avatar-tab-shop'));
+    const coins = () => Number(q(h, 'shop-coins').textContent.match(/\d+/)[0]);
+    const c0 = coins();
+    expect(c0).toBeGreaterThanOrEqual(30);
+    // essayer : visible dans l'aperçu, rien d'acheté
+    await clickEl(h, q(h, 'shop-try-cap_red'));
+    expect(q(h, 'avatar-preview').innerHTML).toContain('#c2362b');
+    expect(saved(h).avatarOwned || []).toEqual([]);
+    // acheter : pièces retirées, objet porté
+    await clickEl(h, q(h, 'shop-slot-socks'));
+    await clickEl(h, q(h, 'shop-buy-socks_white'));
+    expect(saved(h).avatarOwned).toEqual(['socks_white']);
+    expect(saved(h).avatar.items).toEqual({ socks: 'socks_white' });
+    expect(coins()).toBe(c0 - 30);
+    // retirer puis remettre
+    await clickEl(h, q(h, 'shop-wear-socks_white'));
+    expect(saved(h).avatar.items).toEqual({});
+    await clickEl(h, q(h, 'shop-wear-socks_white'));
+    expect(saved(h).avatar.items).toEqual({ socks: 'socks_white' });
+    // trop cher
+    await clickEl(h, q(h, 'shop-slot-aura'));
+    if (coins() < 400) expect(q(h, 'shop-buy-aura_neon').disabled).toBe(true);
+    expect(h.errors).toEqual([]);
+  }, 120000);
+});

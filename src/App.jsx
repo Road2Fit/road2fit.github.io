@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { coinsLeft } from './anim/shop';
 import { formFlags } from './sync/supabase';
 import { SUPABASE, supabaseReady } from './config';
 import { CoachPanel } from './components/coach/CoachPanel';
@@ -415,7 +416,14 @@ setGameState={setGameState}
 
       {/* MODALE 7 : RÉCOMPENSES DE NIVEAU */}
       {avatarOpen && (
-        <AvatarEditor avatar={gameState.avatar} onChange={a => setGameState(prev => ({ ...prev, avatar: a }))} onClose={() => setAvatarOpen(false)} />
+        <AvatarEditor avatar={gameState.avatar} onChange={a => setGameState(prev => ({ ...prev, avatar: a }))} onClose={() => setAvatarOpen(false)}
+          level={levelInfo.level} owned={gameState.avatarOwned || []}
+          onBuy={it => setGameState(prev => {
+            const own = prev.avatarOwned || [];
+            if (own.includes(it.id) || coinsLeft(levelInfo.level, own) < it.price) return prev;
+            const av = prev.avatar || {};
+            return { ...prev, avatarOwned: [...own, it.id], avatar: { ...av, items: { ...(av.items || {}), [it.slot]: it.id } } };
+          })} />
       )}
       {rewardsOpen && (
         <RewardsModal gameState={gameState} levelInfo={levelInfo} onClose={() => setRewardsOpen(false)} setGameState={setGameState} />
