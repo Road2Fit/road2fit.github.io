@@ -38,8 +38,11 @@ describe('charge différente d’une série à l’autre', () => {
   it('coach : assez de séries réussies à la charge plus lourde → on monte à partir d’elle', () => {
     const e = entry('a', '2026-10-19', [8, 8, 8, 8, 8], 17.5, { setLoads: [15, 17.5, 17.5, 17.5, 17.5] });
     const t = computeExerciseTarget(curl([e]), { today: TODAY }); // 4 séries à 17,5 = l'objectif
-    expect(t.load).toBeGreaterThan(17.5);
+    // 4.46 : +2,5 kg sur 17,5 ferait +14 % d'un coup (repère ACSM 2 à 10 %) → on monte d'abord les répétitions à 17,5 kg
     expect(t.change).toBe('up');
+    expect(t.load).toBe(17.5);
+    expect(Math.min(...t.targetReps)).toBe(9);
+    expect(t.reason).toMatch(/d’abord les répétitions/);
   });
 
   it('coach : 17,5 pas tenu sur toutes les séries (une seule série faite à cette charge) → on garde 17,5 et on vise l’objectif', () => {

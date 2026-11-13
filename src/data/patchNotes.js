@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.46',
+    date: '2026-11-13',
+    title: 'Séries et répétitions vérifiées sur tout le catalogue',
+    items: [
+      'Sauts : ils gardent leur forme (par exemple 3 × 5 au saut vertical, 4 × 4 au box jump) au lieu du 3 × 8 de ton profil. Ceux que tu venais d’ajouter sont corrigés tout seuls.',
+      'Même chose pour l’haltérophilie (séries courtes de 1 à 5), les épreuves HYROX (un trajet = une répétition), les figures de calisthénie (muscle-up, pistol…) et les burpees, mountain climbers et wall balls.',
+      'Profil Puissance : les 3 à 5 répétitions lourdes ne concernent plus que les gros exercices. L’isolation et la prévention (rotation externe de l’épaule, curl…) restent entre 8 et 12.',
+      'Charges légères : quand le plus petit cran ferait plus de +10 % d’un coup (haltère de 4 kg…), le coach monte d’abord les répétitions, puis la charge.',
+      'Poirier, L-sit et front lever sont bien chronométrés (en secondes) ; les pompes pseudo-planche se comptent en répétitions.',
+    ],
+  },
+  {
     version: '4.45',
     date: '2026-11-13',
     title: 'Façon de travailler : Auto et Normale',

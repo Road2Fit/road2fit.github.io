@@ -114,6 +114,18 @@ export const WEIGHT_PROFILE_WHY = {
 };
 
 /** Profil réellement utilisé à une date : choisi par la personne (ou par cycle), sinon déduit de l'objectif de poids. */
+/**
+ * Profil appliqué à UN exercice (4.46) : en Puissance, seuls les exercices poly-articulaires passent à 3-5 reps lourdes ;
+ * l'isolation et la prévention (rotation externe, Pallof, curl…) restent en 8 à 12 reps (risque inutile de charger lourd
+ * une petite articulation). Les autres profils s'appliquent tels quels.
+ */
+export function profileFor(id, compound) {
+  const P = id ? PROFILES[id] : null;
+  if (!P) return null;
+  if (P.id === 'puissance' && !compound) return { ...PROFILES.hypertrophie, id: 'puissance', label: 'Puissance (isolation : 8 à 12 reps)' };
+  return P;
+}
+
 export function activeProfile(state, iso) {
   const coach = getCoachSettings(state || {});
   const p = coachProfileAt(coach, iso);

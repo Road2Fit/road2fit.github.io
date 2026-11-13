@@ -2,17 +2,20 @@
 // Exercices chronométrés (gainage, planche, chaise murale…) : les « répétitions » sont des secondes
 const TIMED_IDS = new Set(['fp_plank', 'fp_side_plank', 'fp_wall_sit', 'fp_dead_hang', 'fp_hollow_hold', 'fp_superman_hold']);
 
-const TIMED_NAME_RE = /gainage|planche|plank|chaise murale|wall sit|dead hang|suspension [aà] la barre|hollow|superman|isometri/i;
+const TIMED_NAME_RE = /\(en secondes\)|gainage|planche|plank|chaise murale|wall sit|dead hang|suspension [aà] la barre|hollow|superman|isometri/i;
+// mots de mouvement : jamais une tenue, même si le nom contient « planche » (pompes pseudo-planche), sauf « (en secondes) »
+const NOT_TIMED_RE = /pompes|push.?up/i;
+const timedName = name => { const n = timedNameOf(name); return /\(en secondes\)/i.test(n) || (TIMED_NAME_RE.test(n) && !NOT_TIMED_RE.test(n)); };
 
 const timedNameOf = name => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-export const isTimedCatalog = c => !!c && c.type !== 'cardio' && (c.timed === true || TIMED_IDS.has(c.id) || TIMED_NAME_RE.test(timedNameOf(c.name)));
+export const isTimedCatalog = c => !!c && c.type !== 'cardio' && (c.timed === true || TIMED_IDS.has(c.id) || timedName(c.name));
 
 export const isTimedQuest = q => {
   if (!q || q.type === 'cardio' || q.unit === 'kg') return false;
   if (q.timed === true) return true;
   if (q.timed === false) return false;
-  return TIMED_IDS.has(q.catalogId) || TIMED_NAME_RE.test(timedNameOf(q.name));
+  return TIMED_IDS.has(q.catalogId) || timedName(q.name);
 };
 
 export const repUnit = q => (isTimedQuest(q) ? 's' : 'reps');

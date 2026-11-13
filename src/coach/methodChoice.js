@@ -11,6 +11,7 @@
 // apprentissage → séries classiques.
 import { methodFits, withMethod } from './methods';
 import { dayStylesOf, isPlyo, pickMixed, styleInfo, stylesLabel } from './contraction';
+import { repSchemeOf } from './repScheme';
 import { profileOpts } from './profiles';
 import { entriesBeforeMethods, knowsExercise, knownMethods, priorityArenas } from './experience';
 import { getCoachSettings } from './settings';
@@ -101,6 +102,9 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
     } else if (q.coachMethod && q.coachMethod !== 'auto') return withMethod(ex, q.coachMethod, 'Forme de séries choisie par toi (Ajuster).');
     // sauts et lancers : toujours en pliométrie (peu de reps, repos complet)
     if (isPlyo(q) || isPlyo(e)) return withMethod(ex, 'plyo', METHOD_WHY.plyo);
+    // haltérophilie, épreuves HYROX, figures, condition physique : séries simples, la forme propre de l'exercice (repScheme.js)
+    const scheme = repSchemeOf(q.catalogId ? q : e);
+    if (scheme) return withMethod(ex, 'straight', scheme.why);
     // façon(s) de travailler choisie(s) pour ce jour : sur tous les exercices où elles ont du sens ; plusieurs = réparties
     if (styleMethods.length && !ex.timed) {
       const m = pickMixed(styleMethods.filter(x => methodFits(x, ex)), !!ex.compound, mixK);

@@ -1,4 +1,5 @@
-import { PROFILES } from './profiles';
+import { profileFor } from './profiles';
+import { repSchemeOf } from './repScheme';
 import { restFor } from './rest';
 import { assistChangeText, assistText, nextAssistDown } from '../lib/assist';
 import { CONTRACTION_METHODS, normalizeForProgress } from './methods';
@@ -36,8 +37,10 @@ export function computeExerciseTarget(q, opts = {}) {
 
   // Profil de travail choisi (puissance / hypertrophie / endurance de force) : il fixe la fourchette de répétitions,
   // les séries, le repos et la charge ; sans profil (« automatique »), c'est l'ancien calcul ci-dessous.
-  const pr = opts.profile && PROFILES[opts.profile] && !T
-    ? decideProfileTarget({ q, P: PROFILES[opts.profile], kind, last, today, opts, boss, load, assist, compound, goalAssist })
+  const scheme = repSchemeOf(q);
+  const P = scheme || T ? null : profileFor(opts.profile, compound);
+  const pr = P
+    ? decideProfileTarget({ q, P, kind, last, today, opts, boss, load, assist, compound, goalAssist })
     : null;
   if (pr) {
     sets = pr.sets;
@@ -90,6 +93,13 @@ export function computeExerciseTarget(q, opts = {}) {
       } else if (rpe >= 9 && excess < 2) {
         change = 'hold';
         reason = `Séance précédente ressentie très dure (RPE ${rpe}) : on consolide la même ${holdWord} une séance de plus.`;
+      } else if (kind === 'load' && !scheme && stepL / Math.max(0.1, load) > 0.1 && minReps < R + topExtra(R)) {
+        // charge légère (haltère de 4 kg, poulie…) : le plus petit cran ferait +15 à +50 % d'un coup. Double progression :
+        // +1 rép par série jusqu'à R + quelques reps, puis le cran de charge en repartant de R (ACSM 2009 : +2 à 10 %).
+        const top = R + topExtra(R);
+        change = 'up';
+        reps = Array(sets).fill(Math.min(top, minReps + 1));
+        reason = `${minReps} reps réussies partout. À ${load} kg, le plus petit cran (+${stepL} kg) ferait +${Math.round((stepL / Math.max(0.1, load)) * 100)} % d’un coup : on monte d’abord les répétitions (jusqu’à ${top}), puis la charge.`;
       } else if (kind === 'load') {
         let pct = excess >= 2 ? 0.05 : excess === 1 ? 0.035 : 0.025;
         const easy = rpe <= 6; // ressenti facile : on peut monter un peu plus fort
@@ -116,7 +126,7 @@ export function computeExerciseTarget(q, opts = {}) {
         change = 'goal';
         reason = T ? 'Objectif de durée atteint ! Valide le niveau suivant dans l’onglet Exercices.' : 'Objectif de répétitions atteint ! Valide le niveau suivant dans l’onglet Exercices.';
       }
-      reps = Array(sets).fill(R);
+      if (!reps) reps = Array(sets).fill(R);
     } else {
       change = 'hold';
       reps = padded.map(r => Math.min(R, Math.max(1, r + inc)));
@@ -176,13 +186,16 @@ export function computeExerciseTarget(q, opts = {}) {
   return {
     questId: q.id, catalogId: q.catalogId, name: q.name, icon: q.icon, arena, kind, compound,
     // repos calculé pour CET exercice et cette charge (coach/rest.js) ; profil endurance : repos courts voulus (≤ 90 s, ACSM 2009)
-    restSec: restOf(q, arena, reps, T, compound, opts.profile), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
-    profile: pr ? opts.profile : null, repRange: pr ? [pr.lo, pr.hi] : null,
+    restSec: restOf(q, arena, reps, T, compound, pr ? opts.profile : null), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
+    profile: pr ? opts.profile : null, scheme: scheme ? scheme.id : null, repRange: pr ? [pr.lo, pr.hi] : null,
     load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, manualSets: !!(manual && choice.sets), suggested,
     // réglage annulé par « Revenir à la proposition du coach » : on peut le remettre tant qu'aucune séance n'a été faite
     canRestore: !manual && !!(q.coachOverridePrev && q.coachOverridePrev.entries === entries.length)
   };
 }
+
+// répétitions en plus avant de monter un cran de charge trop gros (charge légère) : 8 → 11, 10 → 14, 12 → 16
+const topExtra = R => Math.max(2, Math.round(R * 0.35));
 
 const restOf = (q, arena, reps, timed, compound, profile) => {
   const sec = restFor({ name: q.name, reps: Math.min(...reps.map(Number).filter(n => n > 0), 99), timed, compound, arena }).sec;
