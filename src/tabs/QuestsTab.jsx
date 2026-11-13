@@ -332,7 +332,7 @@ export function QuestsTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1" role="group" aria-label="Filtrer par muscle">
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0" role="group" aria-label="Filtrer par muscle" data-testid="muscle-filters">
         <button
           onClick={() => setQuestFilter('all')}
           className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition ${

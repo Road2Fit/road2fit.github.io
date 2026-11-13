@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.47',
+    date: '2026-11-13',
+    title: 'Prêt pour les premiers testeurs',
+    items: [
+      'Réglages → « Confidentialité et mentions légales » : ce que l’appli fait de tes données, noir sur blanc. À la création d’un compte, il faut l’accepter ; les comptes existants le confirment une fois.',
+      'Réglages → Mon compte → « Supprimer mon compte » : efface ton compte et toutes tes données, en ligne et sur le téléphone.',
+      'Réglages → « Signaler un problème / une idée » : ton message arrive directement au créateur de l’appli. Les plantages sont aussi signalés tout seuls (sans tes données).',
+      'Coach : une seule question à la fois en haut de la page (la suivante vient après), la page ne défile plus pour rien.',
+      'Exercices : sur ordinateur, tous les groupes sont visibles (et la molette fait glisser les rangées). Dictée : sous-titre raccourci.',
+    ],
+  },
+  {
     version: '4.46',
     date: '2026-11-13',
     title: 'Séries et répétitions vérifiées sur tout le catalogue',

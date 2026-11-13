@@ -400,7 +400,7 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
                 <div>
                   <h3 className="text-sm font-black text-white">{pick('Micro Magique de Rondoudou', 'Dictée vocale')}</h3>
                   <p className="text-xs text-slate-300">
-                    Dicte toute ta séance en une seule phrase, même avec des fautes de retranscription (ex: <em>« tracon »</em>, <em>« ip trust »</em>, <em>« skouat »</em>).
+                    Dicte toute ta séance en une seule phrase.
                   </p>
                 </div>
               </div>

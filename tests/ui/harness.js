@@ -312,6 +312,31 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       }
       return res(200, (srv.formFlags || []).filter(x => x.user_id === uid));
     }
+    // ---- Phase « 10 testeurs » (reproduit docs/supabase-phase1.sql) : suppression de compte, signalements, erreurs ----
+    if (u.pathname === '/rest/v1/rpc/delete_my_account') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT' });
+      const email = [...users.entries()].find(([, v]) => v.id === uid)[0];
+      users.delete(email);
+      saves.delete(uid); srv.photos.delete(uid); srv.history.delete(uid); srv.profiles.delete(uid); srv.friendships.delete(uid);
+      srv.feedback = (srv.feedback || []).filter(x => x.user_id !== uid);
+      srv.deleted = [...(srv.deleted || []), uid];
+      for (const [t, id] of tokens) if (id === uid) tokens.delete(t);
+      return res(204, null);
+    }
+    if (u.pathname === '/rest/v1/feedback') {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT' });
+      if (method === 'POST') {
+        if (!['bug', 'idee', 'autre'].includes(body.kind) || String(body.message || '').length < 3) return res(400, { message: 'check' });
+        srv.feedback = [...(srv.feedback || []), { ...body, user_id: uid }];
+        return res(201, null);
+      }
+    }
+    if (u.pathname === '/rest/v1/app_errors') {
+      srv.appErrors = [...(srv.appErrors || []), ...(Array.isArray(body) ? body : [body])];
+      return res(201, null);
+    }
     // ---- Catalogue commun : exercices créés par le coach (lecture seule) ----
     if (u.pathname === '/rest/v1/shared_exercises') {
       if (!tokens.get(bearer)) return res(401, { message: 'JWT' });

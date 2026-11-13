@@ -143,8 +143,8 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
     scheduleSync(50);
   }, [applyRemote, scheduleSync, stateRef]);
 
-  const signUp = useCallback(async (email, password, invite) => {
-    const r = await supabase.signUp(SUPABASE, email.trim(), password, invite);
+  const signUp = useCallback(async (email, password, invite, consent = null) => {
+    const r = await supabase.signUp(SUPABASE, email.trim(), password, invite, consent);
     if (r.session) adoptSession(r.session);
     return r;
   }, [adoptSession]);
@@ -163,6 +163,19 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
     setAccountState(null);
     setStatus('off');
     isLoaded.current = true;
+  }, []);
+
+  // Supprimer mon compte : toutes les données en ligne (cascade côté serveur), puis celles de ce téléphone, puis on recharge.
+  const deleteAccount = useCallback(async () => {
+    await supabase.deleteAccount(SUPABASE);
+    store.writeAccount(null);
+    try {
+      Object.keys(localStorage).filter(k => /^rondou|^rondoufit|^rondoudou/.test(k)).forEach(k => localStorage.removeItem(k));
+      if (window.indexedDB) window.indexedDB.deleteDatabase('rondoufit_photos');
+    } catch { /* stockage indisponible */ }
+    cfgRef.current = null;
+    setAccountState(null);
+    setStatus('off');
   }, []);
 
   // Versions précédentes (historique automatique côté serveur) : liste, puis restauration d'une version.
@@ -204,5 +217,5 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
 
   const user = accountOn ? account.session.user : null;
   const needsLogin = !!(account && account.expired && !accountOn);
-  return { configured, status, error, lastSync, syncNow, scheduleSync, isLoaded, accountEnabled: supabaseReady(SUPABASE), user, needsLogin, signUp, signIn, signOut, listVersions, restoreVersion };
+  return { configured, status, error, lastSync, syncNow, scheduleSync, isLoaded, accountEnabled: supabaseReady(SUPABASE), user, needsLogin, signUp, signIn, signOut, deleteAccount, listVersions, restoreVersion };
 }

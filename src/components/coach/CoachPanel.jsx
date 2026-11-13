@@ -421,7 +421,9 @@ export function CoachPanel({
         </section>
       )}
       {/* QUESTIONS À RÉPONDRE UNE FOIS : petites notifications en haut ; une fois répondues, elles disparaissent
-          (on retrouve le réglage dans la page Réglages) */}
+          (on retrouve le réglage dans la page Réglages). 4.47 (retour de Gabin : la page redevenait défilante) : UNE seule
+          question à la fois (classe one-question : seul le premier enfant présent s'affiche), la suivante vient après. */}
+      <div className="one-question" data-testid="coach-questions">
       <EquipNotice gameState={gameState} setGameState={setGameState} />
       <CardioInvite gameState={gameState} setGameState={setGameState} />
       {!hasGoal && (
@@ -446,6 +448,7 @@ export function CoachPanel({
           <button type="button" onClick={() => setSheet('program')} data-testid="program-open" className="shrink-0 px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-black">Répondre</button>
         </section>
       )}
+      </div>
       {/* EN HAUT : deux petits encadrés côte à côte. Prochaine séance → fenêtre pour la voir et la modifier ;
           cardio → résumé de la séance (Lancer / Déjà faite). */}
       {(() => {

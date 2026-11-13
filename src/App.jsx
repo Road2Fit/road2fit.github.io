@@ -89,6 +89,9 @@ const WeightTab = lz(() => import('./tabs/WeightTab'), 'WeightTab');
 const RankTrialModal = lz(() => import('./modals/RankTrialModal'), 'RankTrialModal');
 const RewardsModal = lz(() => import('./modals/RewardsModal'), 'RewardsModal');
 const AvatarEditor = lz(() => import('./components/AvatarEditor'), 'AvatarEditor');
+const PrivacyPolicy = lz(() => import('./components/PrivacyPolicy'), 'PrivacyPolicy');
+const FeedbackModal = lz(() => import('./components/FeedbackModal'), 'FeedbackModal');
+const PrivacyConsent = lz(() => import('./components/PrivacyConsent'), 'PrivacyConsent');
 const RankUpModal = lz(() => import('./modals/RankUpModal'), 'RankUpModal');
 const OnboardingModal = lz(() => import('./modals/OnboardingModal'), 'OnboardingModal');
 const LexiconModal = lz(() => import('./modals/LexiconModal'), 'LexiconModal');
@@ -219,6 +222,19 @@ export function App() {
   const [rewardsOpen, setRewardsOpen] = useState(false);
   // « Mon avatar » (4.39) : ouvert depuis le profil par l'événement rondoufit-avatar
   const [avatarOpen, setAvatarOpen] = useState(false);
+  // 4.47 : confidentialité (rondoufit-privacy), « Signaler un problème » (rondoufit-feedback), accord des comptes existants
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [consentLater, setConsentLater] = useState(false);
+  useEffect(() => {
+    const p = () => setPrivacyOpen(true);
+    const f = () => setFeedbackOpen(true);
+    const c = e => { if (e.detail && e.detail.version) setGameState(prev => ({ ...prev, privacyConsent: e.detail })); };
+    window.addEventListener('rondoufit-privacy', p);
+    window.addEventListener('rondoufit-feedback', f);
+    window.addEventListener('rondoufit-consent', c);
+    return () => { window.removeEventListener('rondoufit-privacy', p); window.removeEventListener('rondoufit-feedback', f); window.removeEventListener('rondoufit-consent', c); };
+  }, [setGameState]);
   useEffect(() => {
     const h = () => setAvatarOpen(true);
     window.addEventListener('rondoufit-avatar', h);
@@ -413,6 +429,12 @@ setGameState={setGameState}
         <ResetModal handleResetAll={handleResetAll} setConfirmResetOpen={setConfirmResetOpen} />
       )}
 
+
+      {sync.user && isLoaded && !consentLater && !(gameState.privacyConsent && gameState.privacyConsent.version) && (
+        <PrivacyConsent onAccept={c => setGameState(prev => ({ ...prev, privacyConsent: c }))} onLater={() => setConsentLater(true)} />
+      )}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} loggedIn={!!sync.user} screen={activeTab} />}
+      {privacyOpen && <PrivacyPolicy onClose={() => setPrivacyOpen(false)} />}
 
       {/* MODALE 7 : RÉCOMPENSES DE NIVEAU */}
       {avatarOpen && (

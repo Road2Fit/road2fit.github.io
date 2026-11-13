@@ -3,7 +3,14 @@ name: Déployer sur GitHub Pages
 on:
   push:
     branches: [main]
+  # Retour arrière (4.47) : onglet Actions → « Déployer sur GitHub Pages » → Run workflow → écrire la version à remettre
+  # en ligne (ex. v4.46). Vide = la dernière version de main. Chaque publication porte une étiquette vX.Y (git tag).
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à remettre en ligne (ex. v4.46) ; vide = la dernière"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -19,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22

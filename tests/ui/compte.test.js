@@ -21,6 +21,9 @@ async function signUp(h, email, password, invite) {
   await setInput(h, byTest(h, 'acc-email'), email);
   await setInput(h, byTest(h, 'acc-password'), password);
   await setInput(h, byTest(h, 'acc-invite'), invite);
+  // 4.47 : sans l'accord (politique de confidentialité), le bouton reste grisé
+  expect(byTest(h, 'acc-submit').disabled).toBe(true);
+  await clickEl(h, byTest(h, 'acc-consent'));
   await clickEl(h, byTest(h, 'acc-submit'));
   await advance(h, 2500);
 }
@@ -54,7 +57,9 @@ describe('compte dans l’application', () => {
     expect(byTest(h, 'account-email').textContent).toBe('lea@example.fr');
     await advance(h, 3000);
     expect(byTest(h, 'account-status').textContent).toContain('Sauvegarde automatique activée');
-    expect(srv.saves.size).toBe(0); // appareil neuf, rien à envoyer : on n'écrase ni ne crée rien tant qu'il n'y a pas de donnée
+    // 4.47 : l'accord donné à l'inscription (politique de confidentialité) est la première donnée : il part dans SA ligne
+    expect(srv.saves.size).toBeLessThanOrEqual(1);
+    if (srv.saves.size) expect([...srv.saves.values()][0].data.privacyConsent.version).toBeTruthy();
     expect(h.w.localStorage.getItem('rondoufit:github')).toBeNull();
     expect(h.w.localStorage.getItem('rondoudou_save_v1')).not.toContain('motdepasse1');
     // une modification part toute seule, sans bouton

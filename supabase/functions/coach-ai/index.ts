@@ -322,14 +322,24 @@ Deno.serve(async (req) => {
   let messages;
   try { messages = buildMessages(task, body); } catch { return json(400, { error: "bad_messages" }); }
 
-  // 3. Limite du jour
-  const q = await fetch(`${supaUrl}/rest/v1/rpc/ai_take_quota`, {
+  // 3. Limite du jour de la personne + budget du mois de toute l'appli (ai_take_quota2, docs/supabase-phase1.sql).
+  //    Base pas encore à jour (fonction absente) : ancienne limite du jour seule.
+  const quota = (fn: string) => fetch(`${supaUrl}/rest/v1/rpc/${fn}`, {
     method: "POST",
     headers: { Authorization: auth, apikey: anon, "Content-Type": "application/json" },
     body: JSON.stringify({ p_limit: DAILY_LIMIT }),
   }).catch(() => null);
-  if (!q || !q.ok) return json(500, { error: "quota_unavailable" });
-  if ((await q.json()) !== true) return json(429, { error: "quota" });
+  let q = await quota("ai_take_quota2");
+  if (q && q.status === 404) {
+    q = await quota("ai_take_quota");
+    if (!q || !q.ok) return json(500, { error: "quota_unavailable" });
+    if ((await q.json()) !== true) return json(429, { error: "quota" });
+  } else {
+    if (!q || !q.ok) return json(500, { error: "quota_unavailable" });
+    const r = await q.json();
+    if (r === "global") return json(429, { error: "budget" });
+    if (r !== "ok") return json(429, { error: "quota" });
+  }
 
   // 4. Appel à Claude (catalogue en bloc mis en cache : identique pour tout le monde)
   const client = new Anthropic({ apiKey });

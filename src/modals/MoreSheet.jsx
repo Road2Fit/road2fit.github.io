@@ -67,6 +67,14 @@ export function MoreSheet({ badges = null, activeTab, gameState, importInputRef,
             <Art name="book" size={22} bare />
             <span>Lexique de la salle (DC, RDL, top set, pump…)</span>
           </button>
+          <button onClick={close(() => window.dispatchEvent(new CustomEvent('rondoufit-feedback')))} className={row} data-testid="open-feedback">
+            <Art name="bulb" size={22} bare />
+            <span>Signaler un problème / une idée</span>
+          </button>
+          <button onClick={close(() => window.dispatchEvent(new CustomEvent('rondoufit-privacy')))} className={row} data-testid="open-privacy">
+            <Art name="shield" size={22} bare />
+            <span>Confidentialité et mentions légales</span>
+          </button>
           <button onClick={close(onOpenOnboarding)} className={row} data-testid="open-onboarding">
             <Art name="compass" size={22} bare />
             <span>Assistant d’accueil (régler le coach)</span>

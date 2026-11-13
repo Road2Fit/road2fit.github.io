@@ -1,3 +1,4 @@
+import { reportError } from '../lib/errorReport';
 import { Component } from 'react';
 import { STORAGE_KEY } from '../config';
 
@@ -35,7 +36,7 @@ export function CrashScreen({ message }) {
 export class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error) { console.error('RondouFit : écran planté', error); }
+  componentDidCatch(error) { console.error('RondouFit : écran planté', error); reportError(error, 'écran Oups'); }
   render() {
     return this.state.error ? <CrashScreen message={String(this.state.error && this.state.error.message || '')} /> : this.props.children;
   }

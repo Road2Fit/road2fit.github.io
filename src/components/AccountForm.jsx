@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { PRIVACY_VERSION } from './PrivacyPolicy';
+
+const openPrivacy = () => window.dispatchEvent(new CustomEvent('rondoufit-privacy'));
 import * as supabase from '../sync/supabase';
 import { SUPABASE } from '../config';
 
@@ -16,6 +19,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [invite, setInvite] = useState('');
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null); // { ok, text }
   const run = async fn => {
@@ -36,6 +40,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
         </div>
         {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`}>{msg.text}</p>}
         <Versions sync={sync} />
+        {sync.deleteAccount && <DeleteAccount sync={sync} />}
       </div>
     );
   }
@@ -72,7 +77,9 @@ export function AccountForm({ sync, recovery = null, onDone }) {
     e.preventDefault();
     run(async () => {
       if (signup) {
-        const r = await sync.signUp(email, password, invite);
+        const agreed = { version: PRIVACY_VERSION, at: new Date().toISOString() };
+        const r = await sync.signUp(email, password, invite, agreed);
+        window.dispatchEvent(new CustomEvent('rondoufit-consent', { detail: agreed }));
         if (r.needsConfirmation) setMsg({ ok: true, text: 'Compte créé. Ouvre l’e-mail de confirmation reçu, puis reviens te connecter ici.' }), setMode('signin');
       } else {
         await sync.signIn(email, password);
@@ -88,7 +95,13 @@ export function AccountForm({ sync, recovery = null, onDone }) {
       <div><label className={label} htmlFor="acc-email">E-mail</label><input id="acc-email" type="email" autoComplete="email" autoCapitalize="none" value={email} onChange={e => setEmail(e.target.value)} className={field} placeholder="toi@exemple.fr" data-testid="acc-email" /></div>
       <div><label className={label} htmlFor="acc-pw">Mot de passe {signup && <span className="font-normal text-slate-500">(6 caractères minimum, mieux : une phrase)</span>}</label><input id="acc-pw" type="password" autoComplete={signup ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} className={field} data-testid="acc-password" /></div>
       {signup && <div><label className={label} htmlFor="acc-invite">Code d’invitation (donné par Gabin)</label><input id="acc-invite" value={invite} onChange={e => setInvite(e.target.value)} autoCapitalize="none" autoCorrect="off" className={field} data-testid="acc-invite" /></div>}
-      <button type="submit" disabled={busy || !validEmail || tooShort || (signup && !invite.trim())} data-testid="acc-submit" className={`${btn} bg-sky-600 text-white w-full`}>{busy ? '…' : signup ? 'Créer mon compte' : 'Me connecter'}</button>
+      {signup && (
+        <label className="flex items-start gap-2 text-xs text-slate-300" data-testid="acc-consent-row">
+          <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" data-testid="acc-consent" />
+          <span>J’ai lu la <button type="button" onClick={openPrivacy} className="underline font-bold text-sky-300" data-testid="acc-privacy-link">politique de confidentialité</button> et j’accepte que mes données, y compris de santé (poids, douleurs, photos), soient enregistrées pour faire fonctionner l’appli. Je sais que ce n’est pas un avis médical.</span>
+        </label>
+      )}
+      <button type="submit" disabled={busy || !validEmail || tooShort || (signup && (!invite.trim() || !consent))} data-testid="acc-submit" className={`${btn} bg-sky-600 text-white w-full`}>{busy ? '…' : signup ? 'Créer mon compte' : 'Me connecter'}</button>
       {!signup && <button type="button" onClick={() => { setMode('forgot'); setMsg(null); }} className="text-xs font-bold text-sky-300 underline">Mot de passe oublié ?</button>}
       {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`} data-testid="acc-msg">{msg.text}</p>}
       {sync.needsLogin && <p className="text-sm font-bold text-amber-300">Ta session a expiré : reconnecte-toi.</p>}
@@ -134,6 +147,37 @@ function Versions({ sync }) {
           {msg && <p className={`text-xs font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`}>{msg.text}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+// « Supprimer mon compte » (RGPD) : en deux temps, avec le mot SUPPRIMER à écrire, pour éviter tout accident.
+function DeleteAccount({ sync }) {
+  const [open, setOpen] = useState(false);
+  const [word, setWord] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const go = async () => {
+    setBusy(true); setMsg(null);
+    try {
+      await sync.deleteAccount();
+      setMsg({ ok: true, text: 'Ton compte et toutes tes données ont été supprimés.' });
+      setTimeout(() => { try { window.location.reload(); } catch { /* jsdom */ } }, 1500);
+    } catch (e) { setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) }); } finally { setBusy(false); }
+  };
+  return (
+    <div className="border-t border-slate-800 pt-3 space-y-2" data-testid="account-delete-zone">
+      <button type="button" onClick={() => setOpen(o => !o)} className="text-xs font-bold text-rose-300 underline" data-testid="account-delete-open">{open ? 'Annuler' : 'Supprimer mon compte'}</button>
+      {open && (
+        <div className="rounded-xl border border-rose-500/50 bg-rose-950/30 p-3 space-y-2">
+          <p className="text-xs text-rose-100">Ton compte et <b>toutes</b> tes données en ligne (séances, photos, profil ami, versions précédentes) seront supprimés <b>définitivement</b>, ainsi que les données de ce téléphone. Pense à exporter tes données avant si tu veux les garder (Réglages → Exporter).</p>
+          <label className="block text-xs text-rose-100">Écris <b>SUPPRIMER</b> pour confirmer :
+            <input value={word} onChange={e => setWord(e.target.value)} autoCapitalize="characters" className="mt-1 w-full bg-slate-950 border border-rose-500/50 rounded-lg px-2 py-1.5 text-sm text-white" data-testid="account-delete-word" />
+          </label>
+          <button type="button" disabled={busy || word.trim().toUpperCase() !== 'SUPPRIMER'} onClick={go} className="w-full py-2 rounded-xl bg-rose-600 text-white text-sm font-black disabled:opacity-40" data-testid="account-delete-confirm">{busy ? '…' : 'Supprimer définitivement'}</button>
+        </div>
+      )}
+      {msg && <p className={`text-xs font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`} data-testid="account-delete-msg">{msg.text}</p>}
     </div>
   );
 }

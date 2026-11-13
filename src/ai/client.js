@@ -24,6 +24,7 @@ const MESSAGES = {
   network: 'Pas de connexion internet pour le coach intelligent.',
   not_configured: 'Le coach intelligent n’est pas encore branché (la clé de l’API manque sur le serveur).',
   quota: 'Tu as beaucoup sollicité le coach intelligent aujourd’hui : réessaie demain.',
+  budget: 'Le coach intelligent a atteint son budget du mois pendant la phase de test : il revient le 1er du mois. Tout le reste de l’appli fonctionne.',
   auth: 'Session expirée : reconnecte-toi à ton compte.',
   refused: 'Le coach intelligent n’a pas pu traiter cette demande.',
   timeout: 'Le coach intelligent met trop de temps à répondre, réessaie.',

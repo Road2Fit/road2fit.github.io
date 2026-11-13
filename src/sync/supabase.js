@@ -69,8 +69,9 @@ function toSession(r) {
   return { access_token: r.access_token, refresh_token: r.refresh_token, expires_at: expiresAt, user: { id: r.user && r.user.id, email: r.user && r.user.email } };
 }
 
-export async function signUp(cfg, email, password, invite) {
-  const r = await call(cfg, 'POST', '/auth/v1/signup', { body: { email, password, data: { invite: invite || '' } } });
+export async function signUp(cfg, email, password, invite, consent = null) {
+  // consent : version de la politique de confidentialité acceptée + date (gardé avec le compte)
+  const r = await call(cfg, 'POST', '/auth/v1/signup', { body: { email, password, data: { invite: invite || '', ...(consent ? { privacy: consent } : {}) } } });
   const session = toSession(r);
   // Si le projet demande de confirmer l'e-mail, il n'y a pas encore de session.
   return session ? { session } : { needsConfirmation: true };
@@ -278,6 +279,23 @@ export const friends = {
 /** Photos partagées entre amis (docs/supabase-photos-amis.sql) : ma dernière photo de séance (si je l'active) et mes photos
  *  où je tague des amis mutuels. Les photos des autres ne se lisent que par les fonctions (friend_last_photo, photos_tagged_me). */
 /** Signalements d'une analyse vidéo fausse (4.38, table form_flags : chacun n'écrit et ne lit que les siens). */
+/** Supprime le compte connecté et TOUTES ses données en ligne (fonction delete_my_account, docs/supabase-phase1.sql). */
+export async function deleteAccount(cfg) {
+  const s = await freshSession(cfg);
+  await call(cfg, 'POST', '/rest/v1/rpc/delete_my_account', { token: s.access_token, body: {} });
+}
+
+/** « Signaler un problème / une idée » (table feedback) : seulement avec un compte connecté. */
+export const feedback = {
+  async send(cfg, { kind, message, appVersion = '', device = '', screen = '' }) {
+    const s = await freshSession(cfg);
+    await call(cfg, 'POST', '/rest/v1/feedback', {
+      token: s.access_token, headers: { Prefer: 'return=minimal' },
+      body: { kind, message: String(message || '').slice(0, 2000), app_version: String(appVersion).slice(0, 20), device: String(device).slice(0, 200), screen: String(screen).slice(0, 60) },
+    });
+  },
+};
+
 export const formFlags = {
   async send(cfg, data) {
     const s = await freshSession(cfg);

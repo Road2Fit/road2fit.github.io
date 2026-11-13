@@ -115,7 +115,8 @@ export function OnboardingModal({ sync, setGameState, onDone, triggerToast }) {
               <p className={label}>Ton niveau réel en musculation</p>
               <LevelPicker level={a.level} onChange={setLevel} />
             </div>
-            <p className="text-xs text-slate-500">Tes données restent sur ton téléphone (et dans ta sauvegarde personnelle, à l’étape Sauvegarde). Personne d’autre n’y a accès. Les conseils du coach sont des repères généraux, pas un avis médical.</p>
+            <p className="text-xs text-slate-500">Tes données restent sur ton téléphone (et dans ta sauvegarde personnelle, à l’étape Sauvegarde). Personne d’autre n’y a accès. <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('rondoufit-privacy'))} className="underline font-bold text-sky-300" data-testid="ob-privacy">Confidentialité</button></p>
+            <p className="text-xs font-bold text-amber-200" data-testid="ob-medical">Les conseils du coach sont des repères généraux appuyés sur des études, pas un avis médical. En cas de douleur, de maladie, de grossesse ou de reprise après une blessure, demande d’abord l’avis d’un médecin. Réservé aux 15 ans et plus.</p>
           </section>
         )}
 

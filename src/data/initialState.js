@@ -25,7 +25,8 @@ export const INITIAL_STATE = {
   rankTrials: [],                               // niveaux des rangs dont l'épreuve est réussie
   cosmetics: { theme: pick('rose', 'ardoise'), accessory: 'none', title: '' },
   avatar: null, // avatar des animations (4.39, anim/avatar.js) : null = personnage par défaut
-  avatarOwned: [], // objets achetés dans la boutique de l'avatar (4.40, anim/shop.js)
+  avatarOwned: [],
+  privacyConsent: null, // 4.47 : { version, at } : accord sur la politique de confidentialité (comptes en ligne) // objets achetés dans la boutique de l'avatar (4.40, anim/shop.js)
   animFlags: [],                                // animations signalées comme fausses : { id, animId, view, name, at }
   maxRecords: {},                               // records réels saisis dans l'onglet « Mes maxima » (clé = id de l'exercice)
   unlockedAchievements: [],
