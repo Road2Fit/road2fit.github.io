@@ -2,6 +2,7 @@
 // seulement quand la personne appuie sur « Appliquer ». Fonctions pures, testées dans actions.test.js.
 import { coachRealEntries, getCoachSettings } from '../coach/settings';
 import { THEME_IDS, setDayType } from '../coach/dayTheme';
+import { STYLE_IDS, missingPlyo, perfSport, setDayStyle } from '../coach/contraction';
 import { coachPlanWeek } from '../coach/planning';
 import { getWeekStart } from '../lib/dates';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -125,6 +126,21 @@ export function normalizeAction(a, state, today) {
       if (dates.length && (theme || x.theme === 'auto')) args = { dates, theme };
       break;
     }
+    case 'day_style': {
+      // « aujourd'hui je veux une séance axée sur l'isométrie » (4.42) : iso | iso_hold | ecc | expl | plyo | normal
+      const dates = dateList(x.dates || (x.date ? [x.date] : []), today);
+      const style = x.style === 'normal' ? null : STYLE_IDS.includes(x.style) ? x.style : undefined;
+      if (dates.length && style !== undefined) args = { dates, style };
+      break;
+    }
+    case 'plyo': {
+      // pliométrie : séances avec des sauts par semaine (0 à 3) et exercices de sauts à ajouter (pack général ou du sport)
+      const perWeek = inRange(x.perWeek, 0, 3);
+      const sport = perfSport(x.sport) || perfSport(coach.sport);
+      const add = x.add === false ? [] : missingPlyo(state, sport);
+      if (perWeek !== null || add.length) args = { perWeek: perWeek === null ? null : Math.round(perWeek), add };
+      break;
+    }
     case 'extra_session': {
       const add = dateList(x.add || x.dates, today);
       const remove = Array.isArray(x.remove) ? x.remove.map(String).filter(d => ISO.test(d)) : [];
@@ -146,7 +162,7 @@ export function normalizeAction(a, state, today) {
       const q = strengthQuest(state, x.questId);
       if (!q) break;
       const kind = q.unit === 'kg' ? 'load' : Number(q.currentAssistanceKg) !== 0 ? 'assisted' : 'reps';
-      if (x.method === 'auto' || (x.method !== 'custom' && METHODS[x.method] && methodFits(x.method, { kind }))) args = { questId: q.id, method: x.method };
+      if (x.method === 'auto' || (x.method !== 'custom' && METHODS[x.method] && methodFits(x.method, { kind, catalogId: q.catalogId }))) args = { questId: q.id, method: x.method };
       break;
     }
     case 'method_style':
@@ -195,6 +211,8 @@ function defaultLabel(type, args, state) {
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
+  if (type === 'day_style') return args.style ? `Séance axée « ${args.style} » le ${args.dates.join(', ')}` : 'Revenir à des séances normales';
+  if (type === 'plyo') return `Pliométrie : ${args.perWeek !== null ? `${args.perWeek} séance${args.perWeek > 1 ? 's' : ''} avec des sauts par semaine` : 'exercices de sauts'}${args.add.length ? `, ${args.add.length} exercice${args.add.length > 1 ? 's' : ''} ajouté${args.add.length > 1 ? 's' : ''}` : ''}`;
   if (type === 'cardio') return args.on === false ? 'Arrêter le cardio du coach' : 'Régler le cardio du coach';
   return 'Changer un réglage du coach';
 }
@@ -287,6 +305,26 @@ export function applyAction(state, a, today) {
       });
       return withCoach({ dayTypes: cs.dayTypes, gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !(x.theme && x.dates.includes(d))) });
     }
+    case 'day_style': {
+      // jour sans séance prévue : une séance en plus ce jour-là (avec cette façon de travailler)
+      let cs = coach;
+      const extra = new Set(coach.gymExtra || []);
+      x.dates.forEach(d => {
+        cs = { ...cs, dayStyles: setDayStyle(cs, d, x.style, today) };
+        if (x.style) {
+          let planned = false;
+          try { planned = coachPlanWeek(state, getWeekStart(d), today).planned.includes(d); } catch (e) { /* rien */ }
+          if (!planned) extra.add(d);
+        }
+      });
+      return withCoach({ dayStyles: cs.dayStyles, gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !(x.style && x.dates.includes(d))) });
+    }
+    case 'plyo': {
+      const have = new Set((state.quests || []).map(q => q.catalogId));
+      const fresh = x.add.filter(id => !have.has(id)).map(id => EXERCISE_CATALOG.find(c => c.id === id)).filter(Boolean).map(c => makeQuestFromCatalog(c, state, today, 'pliométrie (coach intelligent)').quest);
+      const plyo = x.perWeek === null ? coach.plyo : { ...(coach.plyo || {}), perWeek: x.perWeek };
+      return { ...state, quests: [...state.quests, ...fresh], coach: { ...coach, plyo } };
+    }
     case 'extra_session': {
       const extra = new Set(coach.gymExtra || []);
       x.add.forEach(d => extra.add(d));
@@ -320,7 +358,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], day_style: ['dayStyles', 'gymExtra', 'gymSkips'], plyo: ['plyo'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */

@@ -5,6 +5,7 @@
 // (série lourde, séries fractionnées). Le coach les alterne pour varier, gagner du temps et viser l'objectif choisi.
 import { pctForReps } from './profiles';
 import { coachRound, coachStep } from './settings';
+import { holdPoint, negativesFit } from './contraction';
 
 const r1 = x => Math.round(x * 10) / 10;
 
@@ -54,6 +55,32 @@ export const METHODS = {
     how: 'Séries classiques, mais la dernière : autant de répétitions propres que possible. Le coach s’en sert pour régler la suite.',
     kinds: ['load', 'assisted', 'reps'],
   },
+  // ---- façons de faire travailler le muscle (4.42) : isométrique, excentrique, explosif, pliométrique ----
+  iso_pause: {
+    label: 'Pause isométrique', short: 'Chaque répétition marque un arrêt de quelques secondes au point le plus dur.',
+    how: 'Fais la répétition, tiens la position indiquée quelques secondes sans bouger, puis termine. Moins de répétitions et un peu moins lourd : l’effort dure plus longtemps.',
+    kinds: ['load', 'assisted', 'reps'], contraction: 'isometric',
+  },
+  iso_hold: {
+    label: 'Tenue isométrique', short: 'Une seule position tenue longtemps (20 à 30 s), sans bouger.',
+    how: 'Mets-toi dans la position indiquée et tiens-la sans bouger le temps demandé, en respirant. Arrête si la position se dégrade.',
+    kinds: ['load', 'assisted', 'reps'], contraction: 'isometric',
+  },
+  eccentric: {
+    label: 'Excentrique (descente lente)', short: 'La descente dure 4 à 5 s ; la montée reste normale.',
+    how: 'Freine la charge pendant toute la descente (compte 4 à 5 s), puis remonte normalement. Aux tractions et aux dips : « négatives » (monte avec un appui ou un saut, redescends seul lentement).',
+    kinds: ['load', 'assisted', 'reps'], contraction: 'eccentric',
+  },
+  explosive: {
+    label: 'Concentrique explosif', short: 'Montée la plus rapide possible, descente contrôlée, loin de l’échec.',
+    how: 'Pousse ou tire le plus vite possible à chaque montée, même si la charge bouge lentement : c’est l’intention qui compte. Arrête la série dès que la vitesse baisse nettement.',
+    kinds: ['load', 'assisted', 'reps'], contraction: 'concentric',
+  },
+  plyo: {
+    label: 'Pliométrie', short: 'Sauts ou lancers explosifs, peu de répétitions, repos complet.',
+    how: 'Chaque répétition au maximum (hauteur, distance, vitesse) avec une réception propre. Arrête dès que la qualité baisse. Repos complet (1 min 30 à 2 min).',
+    kinds: ['reps'], contraction: 'plyometric', plyoOnly: true,
+  },
   // forme réglée série par série par la personne (quest.coachCustom) : le coach la reprend à chaque séance
   custom: {
     label: 'Personnalisée', short: 'Tes séries, réglées une par une.',
@@ -68,6 +95,10 @@ export const methodLabel = id => (METHODS[id] || METHODS.straight).label;
 export function methodFits(id, e) {
   const m = METHODS[id];
   if (!m) return false;
+  // la pliométrie ne vaut que pour les exercices de sauts / lancers ; ces exercices-là gardent leur forme
+  const plyoEx = !!(e && /^ply_/.test(String(e.catalogId || '')));
+  if (m.plyoOnly) return plyoEx;
+  if (plyoEx && id !== 'straight' && id !== 'custom') return false;
   const k = e.timed ? 'timed' : e.kind === 'load' ? 'load' : e.kind === 'assisted' ? 'assisted' : 'reps';
   return m.kinds.includes(k);
 }
@@ -148,6 +179,34 @@ export function buildPlan(id, e) {
       const half = Math.ceil(R / 2);
       return Array.from({ length: N }, (_, i) => set(R, W * 1.025, 'cluster', `Série ${i + 1} : ${half} + ${R - half} reps, 20 s de pause au milieu`));
     }
+    case 'iso_pause': {
+      // moins de répétitions (≈ 60 %), un peu moins lourd ou un peu plus d'aide : chaque rep dure plus longtemps
+      const reps = Math.max(2, Math.min(6, Math.round(R * 0.6)));
+      const hold = R <= 6 ? 3 : 5;
+      const where = holdPoint(e);
+      return Array.from({ length: N }, (_, i) => ({ ...set(reps, W * 0.85, 'iso', `Série ${i + 1} : ${reps} reps, tiens ${hold} s ${where} à chaque rep`, rest, e.kind === 'assisted' ? A + 5 : A), hold, holdEach: true, where }));
+    }
+    case 'iso_hold': {
+      const hold = e.kind === 'load' ? 20 : 30;
+      const where = holdPoint(e);
+      return Array.from({ length: Math.min(4, Math.max(3, N)) }, (_, i) => ({ ...set(1, W, 'hold', `Tenue ${i + 1} : ${hold} s ${where}`, Math.max(rest, 90)), hold, where }));
+    }
+    case 'eccentric': {
+      if (e.kind !== 'load' && negativesFit(e)) {
+        // négatives : on est plus fort en freinant, donc moins d'aide (Roig 2009 : excentrique à plus haute intensité)
+        const reps = Math.max(3, Math.min(6, Math.round(R / 2)));
+        return Array.from({ length: N }, (_, i) => ({ ...set(reps, 0, 'ecc', `Série ${i + 1} : ${reps} négatives, descente en 5 s (monte avec un appui ou un saut)`, rest, Math.max(0, A - 10)), ecc: 5 }));
+      }
+      const reps = Math.max(3, R - 2);
+      return Array.from({ length: N }, (_, i) => ({ ...set(reps, W * 0.95, 'ecc', `Série ${i + 1} : ${reps} reps, descente en 4 s`), ecc: 4 }));
+    }
+    case 'explosive': {
+      // loin de l'échec (Pareja-Blanco 2017 : s'arrêter tôt garde la vitesse) ; intention d'aller vite (Behm et Sale 1993)
+      const reps = Math.max(2, R - 3);
+      return Array.from({ length: N }, (_, i) => set(reps, W * 0.9, 'expl', `Série ${i + 1} : ${reps} reps, montée la plus rapide possible`, Math.max(rest, 120)));
+    }
+    case 'plyo':
+      return (e.targetReps || Array(N).fill(R)).slice(0, N).map((r, i) => set(r, 0, 'plyo', `Série ${i + 1} : ${r} répétitions au maximum, réception propre`, Math.max(rest, 90)));
     case 'amrap': {
       const base = straight();
       base[base.length - 1] = { ...base[base.length - 1], kind: 'amrap', label: `${base[base.length - 1].label} : le plus possible (objectif ${R}+)` };
@@ -193,13 +252,32 @@ export function normalizeForProgress(entry, kind, R) {
   return { ...rest, value: equiv, setDetails: Array(e.setDetails.length).fill(R), sets: e.setDetails.length, equivalentOf: { best: Math.round(best), heaviest } };
 }
 
+/** Résumé court d'une forme « façon de travailler » pour la ligne de l'exercice (« 4 × 5 · tiens 5 s »), sinon null. */
+export function planShort(e) {
+  const p = e && Array.isArray(e.plan) && e.plan[0];
+  if (!p) return null;
+  const n = e.plan.length;
+  if (e.method === 'iso_pause') return `${n} × ${p.reps} · tiens ${p.hold} s`;
+  if (e.method === 'iso_hold') return `${n} tenues de ${p.hold} s`;
+  if (e.method === 'eccentric') return `${n} × ${p.reps} · descente ${p.ecc} s`;
+  if (e.method === 'explosive') return `${n} × ${p.reps} explosives`;
+  if (e.method === 'plyo') return `${n} × ${p.reps} · au max`;
+  return null;
+}
+
+/** Formes « façon de travailler » : leurs séances ne servent pas à régler la charge habituelle de l'exercice. */
+export const CONTRACTION_METHODS = ['iso_pause', 'iso_hold', 'eccentric', 'explosive'];
+
 /** Durée estimée (minutes) d'un plan : environ 40 s par série + le repos qui suit. */
-export const planMinutes = plan => plan.reduce((s, p) => s + 0.65 + (Number(p.rest) || 0) / 60, 0);
+export const planMinutes = plan => plan.reduce((s, p) => s + 0.65 + (Number(p.hold) || 0) * (p.holdEach ? p.reps : 1) / 60 + (Number(p.rest) || 0) / 60, 0);
 
 /** Applique une méthode à un objectif d'exercice : séries, répétitions et charges détaillées. */
 export function withMethod(e, id, why = '') {
   const mid = methodFits(id, e) ? id : 'straight';
   if (mid === 'straight') return { ...e, method: 'straight', plan: null, methodWhy: why };
   const plan = buildPlan(mid, e);
-  return { ...e, method: mid, methodWhy: why, plan, sets: plan.length, targetReps: plan.map(p => p.reps) };
+  // isométrie : où tenir ; excentrique : durée de la descente (affichés dans « Pourquoi ? / Ajuster »)
+  const p0 = plan[0] || {};
+  const extra = p0.where ? ` Position à tenir : ${p0.where}${p0.hold ? `, ${p0.hold} s${p0.holdEach ? ' à chaque rep' : ''}` : ''}.` : p0.ecc ? ` Descente en ${p0.ecc} s à chaque rep.` : '';
+  return { ...e, method: mid, methodWhy: `${why}${extra}`.trim(), plan, sets: plan.length, targetReps: plan.map(p => p.reps) };
 }

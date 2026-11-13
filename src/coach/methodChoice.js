@@ -9,13 +9,19 @@
 //  - 'classic' : toujours des séries classiques.
 // Dans tous les cas : forme choisie pour un exercice (quest.coachMethod) d'abord ; semaine allégée, chronométré, geste en
 // apprentissage → séries classiques.
-import { withMethod } from './methods';
+import { methodFits, withMethod } from './methods';
+import { dayStyleOf, isPlyo, styleInfo } from './contraction';
 import { profileOpts } from './profiles';
 import { entriesBeforeMethods, knowsExercise, knownMethods, priorityArenas } from './experience';
 import { getCoachSettings } from './settings';
 
 export const METHOD_WHY = {
   straight: 'Séries classiques : la base la plus étudiée, efficace pour tout.',
+  iso_pause: 'Pause isométrique : l’effort dure plus longtemps à l’angle travaillé ; la force gagnée en isométrique est surtout gagnée autour de cet angle (Lum et Barbosa 2019).',
+  iso_hold: 'Tenue isométrique : gains de force et de muscle à toutes les intensités, plus de muscle quand la position est étirée (revue Oranchuk 2019).',
+  eccentric: 'Excentrique : on est plus fort en freinant ; plus de force qu’en concentrique quand la charge est plus haute (méta-analyse Roig 2009), muscle comparable (Schoenfeld 2017).',
+  explosive: 'Explosif : c’est l’intention d’aller vite qui entraîne la vitesse (Behm et Sale 1993) ; s’arrêter loin de l’échec garde la vitesse et la détente (Pareja-Blanco 2017).',
+  plyo: 'Pliométrie : améliore la détente verticale (méta-analyse Markovic 2007 ; chez les volleyeurs, Ramirez-Campillo 2020), même à faible volume.',
   pyramid: 'Pyramide montante : de la variété et une montée en charge progressive ; à volume égal, aussi efficace que des séries classiques (Angleri 2017).',
   reverse_pyramid: 'Pyramide inversée : la série la plus lourde quand tu es frais, puis du volume plus léger.',
   top_backoff: 'Série lourde + séries allégées : du travail lourd pour la force, puis du volume propre.',
@@ -60,7 +66,7 @@ function pairSupersets(exs, ok) {
  * @param opts { iso, deload, minutes } minutes = durée visée de la séance (0 = libre)
  * @returns { exercises, notes[] }
  */
-export function applyMethods(state, exercises, { iso, deload = false, minutes = 0 } = {}) {
+export function applyMethods(state, exercises, { iso, deload = false, minutes = 0, dayStyle } = {}) {
   const coach = getCoachSettings(state);
   const style = ['variety', 'classic'].includes(coach.methodStyle) ? coach.methodStyle : 'evidence';
   const goal = coach.mainGoal && typeof coach.mainGoal === 'object' ? coach.mainGoal : null;
@@ -89,6 +95,12 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
     if (q.coachMethod === 'custom') {
       if (Array.isArray(q.coachCustom) && q.coachCustom.length) return withMethod({ ...ex, custom: q.coachCustom }, 'custom', 'Ta forme personnalisée : le coach la reprend à chaque séance, avec des charges qui suivent ta progression.');
     } else if (q.coachMethod && q.coachMethod !== 'auto') return withMethod(ex, q.coachMethod, 'Forme de séries choisie par toi (Ajuster).');
+    // sauts et lancers : toujours en pliométrie (peu de reps, repos complet)
+    if (isPlyo(q) || isPlyo(e)) return withMethod(ex, 'plyo', METHOD_WHY.plyo);
+    // façon de travailler choisie pour ce jour (isométrie, excentrique, explosif) : sur tous les exercices où elle a du sens
+    // séance faite en avance : la façon de travailler est celle du jour prévu (dayStyle), pas celle d'aujourd'hui
+    const ds = styleInfo(dayStyle !== undefined ? dayStyle : dayStyleOf(coach, iso));
+    if (ds && ds.method && !ex.timed && methodFits(ds.method, ex)) return withMethod(ex, ds.method, `Séance « ${ds.label} » choisie. ${METHOD_WHY[ds.method] || ''}`);
     if (style === 'classic') return withMethod(ex, 'straight', '');
     if (deload) return withMethod(ex, 'straight', 'Semaine allégée : séries classiques.');
     if (ex.timed) return withMethod(ex, 'straight', '');

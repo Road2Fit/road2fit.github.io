@@ -1,4 +1,6 @@
 import { coachSlotFor } from './planning';
+import { capPlyoBlock, dayStyleOf, plyoContacts, plyoQuests, styleInfo } from './contraction';
+import { getExperience } from './experience';
 import { dayTypeOf, themeLabel } from './dayTheme';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
 import { coachSuggestExercises } from './suggest';
@@ -134,7 +136,19 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   const target = coachTargetMinutes(coach, di.iso, opts);
   if (slot && slot.min > 0) notes.push(`Créneau de salle : ${slot.start}–${slot.end} (${slot.min} min)${target && target < (Number(coach.sessionMinutes) || 0) ? ` : séance adaptée à ${target} min.` : '.'}`);
   exercises = coachFitDuration(state, exercises, di, eff, target, notes);
-  const meth = applyMethods(state, exercises, { iso: di.iso, deload: eff.deload, minutes: target || 0 });
+  if (opts.plyo) {
+    // pliométrie : en début de séance, frais, après l'échauffement ; nombre de contacts au sol limité
+    const last = q => (q.history || []).map(h => h.date).sort().pop() || '';
+    const pq = plyoQuests(state, di.legsOk).sort((a, b) => (last(a) < last(b) ? -1 : last(a) > last(b) ? 1 : 0));
+    if (pq.length) {
+      const exp = getExperience(state);
+      const contacts = plyoContacts(exp && exp.level);
+      const block = capPlyoBlock(pq.map(q => computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso, deload: eff.deload })), eff.deload ? Math.round(contacts * 0.6) : contacts);
+      exercises = [...block, ...exercises.filter(e => !block.some(b => b.questId === e.questId))];
+      notes.push(`Pliométrie : les sauts d’abord, quand tu es frais, après l’échauffement (environ ${block.reduce((n, e) => n + e.sets * e.targetReps[0], 0)} répétitions au total). Chaque saut au maximum, réception propre, repos complet.`);
+    } else notes.push('Séance avec pliométrie prévue, mais tu ne suis encore aucun exercice de sauts : ajoute-les depuis Coach → Réglages → Pliométrie.');
+  }
+  const meth = applyMethods(state, exercises, { iso: di.iso, deload: eff.deload, minutes: target || 0, dayStyle: opts.dayStyle });
   exercises = meth.exercises;
   notes.push(...meth.notes);
   const w = Number(state.userWeightKg) || 82;
@@ -225,12 +239,19 @@ function coachBuildTypedSession(state, type, di, opts = {}) {
 export function coachBuildPlanned(state, slot, di, opts = {}) {
   // thème choisi par la personne (4.36) : respecté même un jour où le coach éviterait les jambes, avec un avertissement
   const chosen = dayTypeOf(state.coach, slot.iso || di.iso);
+  // façon de travailler (4.42) : jour « Pliométrie » choisi, ou jour de sauts prévu par le coach (coach.plyo.perWeek)
+  const style = dayStyleOf(state.coach, slot.iso || di.iso);
+  const plyoDay = style === 'plyo' || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
+  opts = { ...opts, dayStyle: style };
+  if (plyoDay) opts = { ...opts, plyo: true };
   let s;
   if (chosen) {
     const legs = COACH_TYPES[chosen].legs && !di.legsOk;
     s = coachBuildTypedSession(state, chosen, legs ? { ...di, legsOk: true } : di, opts);
     s = { ...s, chosenType: chosen, notes: [`Séance « ${themeLabel(chosen)} » : c’est toi qui l’as choisie.`, ...(legs ? [`D’habitude le coach évite les jambes ce jour-là (${di.legsWhy}) : garde de la marge.`] : []), ...(s.notes || [])] };
   } else s = slot.type ? coachBuildTypedSession(state, slot.type, di, opts) : coachBuildSession(state, slot.templateIdx, di, opts);
+  if (style) s = { ...s, style, notes: [`Façon de travailler : « ${styleInfo(style).label} », c’est toi qui l’as choisie.`, ...(s.notes || [])] };
+  else if (plyoDay) s = { ...s, style: 'plyo' };
   // séance exceptionnellement à la maison (coach.homeDays) : repérée pour l'affichage et le « Machine prise ou pas le matériel ? »
   return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...s, home: true } : s;
 }

@@ -2,6 +2,18 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.42',
+    date: '2026-11-13',
+    title: 'Isométrie, excentrique, explosif et pliométrie',
+    items: [
+      'Prochaine séance (ou un jour de « Ma semaine ») → « Façon de travailler » : Iso (pauses), Tenues, Excentrique, Explosif ou Pliométrie. Le coach adapte chaque exercice : aux tractions en isométrie, par exemple, 5 reps en tenant 5 s en haut, menton au-dessus de la barre.',
+      'Pendant la séance guidée : un chrono de tenue (bip à la fin) pour l’isométrie, et le rappel « descente lente » pour l’excentrique.',
+      '14 exercices de pliométrie (squat sauté, box jump, sautillements, saut d’attaque et de contre au volley, pompes claquées, médecine-ball…), avec leur animation. Coach → Réglages → « Pliométrie et façons de travailler » : 0 à 3 séances avec des sauts par semaine, toujours en début de séance.',
+      'Chaque sport a son programme de performance (carte du sport) : détente au volley et en danse, sprint au football et au rugby, vitesse de service au tennis, départs en natation, économie de course, force des doigts en escalade (isométrie), force des jambes à vélo… Un bouton le met en place. Le coach intelligent comprend « fais-moi des entraînements pour progresser en <ton sport> » et « séance axée sur l’isométrie ».',
+      'Les études sur lesquelles le coach s’appuie sont dans la même carte (Markovic 2007, Ramirez-Campillo 2020, Oranchuk 2019, Roig 2009…).',
+    ],
+  },
+  {
     version: '4.41',
     date: '2026-11-13',
     title: 'T-shirt Road2Fit et maillot à ton numéro',

@@ -197,6 +197,21 @@ const NEW_STRENGTH_ROWS = [
   ['cal_archer_pushup','Pompes Archer','Pectoraux','Poids du corps','reps',4,12,3,8,'🏹'],
   ['cal_pseudo_planche','Pompes Pseudo-Planche','Épaules & Bras','Poids du corps','reps',5,15,3,10,'🤸'],
   ['cal_dragon_flag','Dragon Flag','Abdominaux','Poids du corps','reps',3,10,3,6,'🐉'],
+  // PLIOMÉTRIE (4.42) : sauts et lancers explosifs ; peu de répétitions, repos complet, qualité avant tout
+  ['ply_squat_jump','Squat Sauté (Pliométrie)','Jambes','Poids du corps','reps',4,8,3,5,'🚀'],
+  ['ply_cmj','Saut Vertical avec Élan des Bras (Pliométrie)','Jambes','Poids du corps','reps',3,6,3,5,'🚀'],
+  ['ply_tuck_jump','Saut Genoux Poitrine (Pliométrie)','Jambes','Poids du corps','reps',3,6,3,4,'🚀'],
+  ['ply_box_jump','Box Jump (Saut sur Caisse)','Jambes','Caisse / banc solide','reps',3,6,4,4,'🚀'],
+  ['ply_drop_jump','Saut en Contrebas (Drop Jump)','Jambes','Caisse / banc solide','reps',3,6,3,4,'⚡'],
+  ['ply_broad_jump','Saut en Longueur Pieds Joints','Jambes','Poids du corps','reps',3,6,4,3,'🚀'],
+  ['ply_split_jump','Fentes Sautées','Jambes','Poids du corps','reps',4,8,3,6,'🦵'],
+  ['ply_single_leg_hop','Sauts sur une Jambe','Jambes','Poids du corps','reps',4,8,3,5,'🦶'],
+  ['ply_pogo','Sautillements Chevilles (Pogo Jumps)','Jambes','Poids du corps','reps',10,20,3,10,'🦶'],
+  ['ply_approach_jump','Saut d’Attaque avec Élan (Volley)','Jambes','Poids du corps','reps',3,6,4,3,'🏐'],
+  ['ply_block_jump','Saut de Contre (Volley)','Jambes','Poids du corps','reps',4,8,3,5,'🏐'],
+  ['ply_clap_pushup','Pompes Claquées (Pliométrie)','Pectoraux','Poids du corps','reps',3,8,3,5,'💥'],
+  ['ply_mb_slam','Lancer de Médecine-Ball au Sol (Slam)','Dos','Médecine-ball','reps',6,10,3,6,'💥'],
+  ['ply_mb_chest_pass','Passe Poitrine au Médecine-Ball contre le Mur','Pectoraux','Médecine-ball','reps',6,10,3,6,'💥'],
 ];
 
 const mkCardio = (id, name, unit, mode, start, goal, dur, icon) => ({

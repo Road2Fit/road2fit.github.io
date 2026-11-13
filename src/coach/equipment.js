@@ -91,7 +91,9 @@ export function coachableQuests(state, iso = null) {
   const coach = (state && state.coach) || {};
   const qs = (state && state.quests) || [];
   // les exercices ajoutés pour une séance exceptionnelle à la maison (homeOnly) ne sont pas programmés en salle
-  return placeOn(coach, iso) === 'home' ? qs.filter(q => q.type !== 'strength' || doableAtHome(q, coach)) : qs.filter(q => !q.homeOnly || placeOf(coach) !== 'gym');
+  const base = placeOn(coach, iso) === 'home' ? qs.filter(q => q.type !== 'strength' || doableAtHome(q, coach)) : qs.filter(q => !q.homeOnly || placeOf(coach) !== 'gym');
+  // sauts et lancers (pliométrie, 4.42) : ajoutés seulement en début de séance les jours de pliométrie (sessions.js)
+  return base.filter(q => !/^ply_/.test(String(q.catalogId || '')));
 }
 
 /** Réglages du coach comme si la personne s'entraînait chez elle (pour préparer une séance exceptionnelle à la maison). */

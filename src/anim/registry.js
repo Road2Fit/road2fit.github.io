@@ -5,6 +5,7 @@ import { externalRotation, facePull, frontRaise, lateralRaise, overheadPress, re
 import { assistedDip, beltSquat, deadliftMachine, declineMachine, highRow, pallof, pulloverMachine, rotaryTorso, shrugMachine, standingLegCurl, woodchop, woodchopFront } from './scenes-new';
 import { abMachine, hsObliqueCrunch, tgTotalAbdominal, abWheel, cableCrunch, captainChair, crunch, hangingRaise, hollowHold, plankHold } from './scenes-core';
 import { bulgarianSquat, burpee, calfRaise, deadlift, gluteBridge, gluteKickback, goodMorning, hipMachine, hipThrust, legCurl, legExtension, legPress, lunge, mountainClimber, multiHip, squat, stepUp, wallBall, wallSit } from './scenes-legs';
+import { approachJump, ballSlam, blockJump, boxJump, broadJump, chestPass, clapPushUp, dropJump, pogo, singleLegHop, splitJump, squatJump } from './scenes-plyo';
 import { benchPress, dips, fly, machinePress, pullover, pushUp } from './scenes-push';
 import { cleanAndJerk, farmersCarry, frontLever, handstand, jerk, lSit, muscleUp, olyLift, overheadSquat, pistolSquat, plancheHold, sledPull, sledPush } from './scenes-oly';
 
@@ -202,6 +203,21 @@ add('cal_archer_pullup', 'Tractions archer', pullUp({}));
 add('cal_archer_pushup', 'Pompes archer', pushUp({}));
 add('cal_pseudo_planche', 'Pompes pseudo-planche', pushUp({}));
 add('cal_dragon_flag', 'Dragon flag', crunch({ legRaise: true }));
+// pliométrie (4.42)
+add('ply_squat_jump', 'Squat sauté', squatJump({ swing: false }));
+add('ply_cmj', 'Saut vertical avec élan des bras', squatJump({ swing: true }));
+add('ply_tuck_jump', 'Saut genoux poitrine', squatJump({ swing: true, tuck: true }));
+add('ply_box_jump', 'Box jump', boxJump());
+add('ply_drop_jump', 'Saut en contrebas', dropJump());
+add('ply_broad_jump', 'Saut en longueur', broadJump());
+add('ply_split_jump', 'Fentes sautées', splitJump());
+add('ply_single_leg_hop', 'Sauts sur une jambe', singleLegHop());
+add('ply_pogo', 'Sautillements chevilles', pogo());
+add('ply_approach_jump', 'Saut d’attaque (volley)', approachJump());
+add('ply_block_jump', 'Saut de contre (volley)', blockJump());
+add('ply_clap_pushup', 'Pompes claquées', clapPushUp());
+add('ply_mb_slam', 'Slam au médecine-ball', ballSlam());
+add('ply_mb_chest_pass', 'Passe poitrine au médecine-ball', chestPass());
 
 alt(['bench_press', 'fp_incline_barbell', 'fp_decline_barbell'], 'feet', 'Vue depuis les pieds', { ...lyingPressFront({}), elbows: 9 });
 alt('fp_close_grip_bench', 'feet', 'Vue depuis les pieds', { ...lyingPressFront({ grip: 16 }), elbows: 2 });

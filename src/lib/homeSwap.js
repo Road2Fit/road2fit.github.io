@@ -15,7 +15,7 @@ export function homeAlternative(q, state) {
   const muscle = fineGroupOf(q);
   const owned = new Set((state.quests || []).map(x => x.catalogId));
   const list = EXERCISE_CATALOG
-    .filter(c => c.type === 'strength' && !owned.has(c.id) && doableAtHome(c, coach) && fineOfCatalog(c) === muscle && !/\(en secondes\)/.test(c.name) === !q.timed)
+    .filter(c => c.type === 'strength' && !/^ply_/.test(String(c.id || '')) && !owned.has(c.id) && doableAtHome(c, coach) && fineOfCatalog(c) === muscle && !/\(en secondes\)/.test(c.name) === !q.timed)
     .sort((a, b) => (a.unit === q.unit ? 0 : 1) - (b.unit === q.unit ? 0 : 1) || ORDER.indexOf(a.equip || '') - ORDER.indexOf(b.equip || ''));
   return list[0] || null;
 }
