@@ -57,7 +57,7 @@ export function OnboardingPast({ sync, weightKg, onConsent, onResult }) {
             <button type="button" onClick={send} disabled={busy} className="flex-1 h-11 rounded-xl bg-sky-600 disabled:bg-slate-800 text-white text-sm font-black" data-testid="ob-past-send">{busy ? 'Le coach lit…' : 'Envoyer au coach'}</button>
           </div>
           {speech.error && <p className="text-xs text-amber-300" role="alert" data-testid="mic-error">{speech.error}</p>}
-          <p className="text-[11px] text-slate-500">Ton récit est lu par le coach intelligent (le modèle Claude, d’Anthropic). Jamais tes photos, ton e-mail ni ton mot de passe.</p>
+          <p className="text-[11px] text-slate-500">Ton récit est lu par le coach IA. Jamais tes photos, ton e-mail ni ton mot de passe.</p>
         </>
       )}
       {err && <p className="text-xs text-rose-300">{err}</p>}

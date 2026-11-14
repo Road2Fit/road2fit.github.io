@@ -37,7 +37,7 @@ describe('phase 10 testeurs', () => {
     await clickEl(h, q(h, 'privacy-consent-read'));
     for (let i = 0; i < 10 && !q(h, 'privacy-policy'); i++) await advance(h, 100);
     const t = q(h, 'privacy-policy').textContent;
-    ['pas un avis médical', 'Supabase', 'Anthropic', 'Supprimer mon compte', 'CNIL', '15 ans'].forEach(w => expect(t).toContain(w));
+    ['pas un avis médical', 'Supabase', 'coach IA', 'Supprimer mon compte', 'CNIL', '15 ans'].forEach(w => expect(t).toContain(w));
     await clickEl(h, q(h, 'privacy-close'));
     await clickEl(h, q(h, 'privacy-consent-accept'));
     expect(saved(h).privacyConsent.version).toBeTruthy();

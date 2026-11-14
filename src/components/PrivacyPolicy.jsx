@@ -41,7 +41,7 @@ export function PrivacyPolicy({ onClose }) {
 
           <S title="Ce qui est partagé, et seulement si tu le choisis">
             <p><b>Amis</b> : si tu actives les amis, ton prénom ou pseudo, ton niveau, tes exercices, maxima et dernière séance sont visibles par les personnes qui ont ton code. Jamais ton poids, tes notes ni ta sauvegarde. Tes photos, seulement si tu actives leur partage.</p>
-            <p><b>Coach intelligent</b> (si tu l’actives) : pour te répondre, un résumé de ton entraînement et de ton profil est envoyé à Anthropic (États-Unis), qui fournit le modèle d’IA : exercices, séances, réglages du coach, sport, âge, taille, poids et poids visé, douleurs que tu as déclarées. Jamais ton e-mail, ton prénom ni tes photos. Ce que tu dictes ou écris au coach lui est aussi envoyé.</p>
+            <p><b>Coach intelligent</b> (si tu l’actives) : pour te répondre, un résumé de ton entraînement et de ton profil est envoyé au prestataire qui fait fonctionner le coach IA (situé aux États-Unis) : exercices, séances, réglages du coach, sport, âge, taille, poids et poids visé, douleurs que tu as déclarées. Jamais ton e-mail, ton prénom ni tes photos. Ce que tu dictes ou écris au coach lui est aussi envoyé.</p>
             <p><b>Analyse vidéo</b> : la vidéo est analysée sur ton téléphone et n’est ni enregistrée en ligne ni envoyée. Si tu signales une analyse fausse, seuls les points du squelette (des chiffres, pas d’image) sont envoyés.</p>
           </S>
 

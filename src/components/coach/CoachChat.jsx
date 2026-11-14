@@ -67,7 +67,7 @@ function CoachChatBody({ gameState, setGameState, overview }) {
   if (status === 'no_consent') {
     return card(
       <div className="space-y-2">
-        <p className="text-xs text-slate-300">Pour te répondre, le coach intelligent (le modèle Claude, d’Anthropic) reçoit tes exercices, tes séances récentes et les réglages du coach. Jamais tes photos, ton e-mail, ton mot de passe ni tes notes de pesée. Tu peux le couper quand tu veux.</p>
+        <p className="text-xs text-slate-300">Pour te répondre, le coach IA reçoit tes exercices, tes séances récentes et les réglages du coach. Jamais tes photos, ton e-mail, ton mot de passe ni tes notes de pesée. Tu peux le couper quand tu veux.</p>
         <button type="button" data-testid="ai-consent" onClick={() => setGameState(prev => ({ ...prev, aiConsent: true }))} className="w-full py-3 rounded-xl bg-pink-600 text-white text-sm font-black"><Art name="sparkle" size={18} />Activer le coach intelligent</button>
       </div>
     );
