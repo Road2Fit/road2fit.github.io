@@ -173,6 +173,8 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
       Object.keys(localStorage).filter(k => /^rondou|^rondoufit|^rondoudou/.test(k)).forEach(k => localStorage.removeItem(k));
       if (window.indexedDB) window.indexedDB.deleteDatabase('rondoufit_photos');
     } catch { /* stockage indisponible */ }
+    store.writeSynced(null);
+    store.clearDirty();
     cfgRef.current = null;
     setAccountState(null);
     setStatus('off');
@@ -200,6 +202,10 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
     };
     const onOnline = () => scheduleSync(500);
     const onPhotoChange = () => scheduleSync(3000);
+    // 4.47.5 : un AUTRE onglet (ou l'appli installée) vient d'enregistrer : on se remet à jour tout de suite
+    // (fusion avec la sauvegarde en ligne), au lieu de garder de vieilles données affichées.
+    const onStorage = e => { if (e.key === 'rondoudou_save_v1' || e.key === 'rondoufit:sync') scheduleSync(400); };
+    window.addEventListener('storage', onStorage);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
     window.addEventListener('rondoufit-photos-local', onPhotoChange);
@@ -210,6 +216,7 @@ export function useCloudSync({ stateRef, version, applyRemote }) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', onOnline);
       window.removeEventListener('rondoufit-photos-local', onPhotoChange);
+      window.removeEventListener('storage', onStorage);
       clearInterval(poll);
       clearTimeout(timer.current);
     };

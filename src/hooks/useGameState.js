@@ -57,6 +57,7 @@ export function useGameState() {
     try {
       const json = JSON.stringify(gameState);
       localStorage.setItem(STORAGE_KEY, json);
+      store.persistTabMarkers(); // 4.47.5 : les marqueurs de synchro de CET onglet vont avec ses données (voir sync/storage.js)
       if (json.length > 3500000 && !warned.current) { warned.current = true; window.dispatchEvent(new CustomEvent('rondoufit-storage', { detail: { full: false } })); }
     } catch (e) {
       try { window.dispatchEvent(new CustomEvent('rondoufit-storage', { detail: { full: true } })); } catch (e2) { /* rien */ }

@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.47.5',
+    date: '2026-11-14',
+    title: 'Sauvegarde plus sûre',
+    items: [
+      'Corrigé : une page de l’appli restée ouverte longtemps (deuxième onglet, ou appli installée + navigateur) pouvait effacer des séances notées ailleurs.',
+      'Une page restée ouverte se met à jour dès qu’une autre page enregistre.',
+      'Le serveur garde maintenant une copie de secours à chaque fois qu’une sauvegarde contient moins de séances qu’avant.',
+    ],
+  },
+  {
     version: '4.47.4',
     date: '2026-11-14',
     title: 'Coach IA',
