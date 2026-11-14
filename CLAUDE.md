@@ -211,6 +211,7 @@ Objectif rappelé par Gabin : une appli pour n'importe qui, quel que soit son ni
 - **Coach IA** : la fonction Edge appelle `ai_take_quota2` (repli sur `ai_take_quota` si la base n'est pas à jour) ; budget du mois atteint → 429 `budget` (message dans client.js). Changer le budget : `update app_settings set num = N where key = 'ai_monthly_calls'`.
 - **Retour arrière** : chaque version publiée porte une étiquette git `vX.Y` (à poser à CHAQUE publication : `git tag v4.47 && git push --tags`) ; Actions → « Déployer sur GitHub Pages » → Run workflow → version (`deploy.yml`, entrée `version`).
 - **Page Coach (retour de Gabin : redevenue défilante)** : les questions « à répondre une fois » sont dans `.one-question` (`coach-questions`) : UNE seule visible (CSS `.one-question > * + * { display: none }`). Mesure sans le panneau du navigateur : page de test dans `public/__dbg/` (supprimée après) qui charge l'appli dans un cadre 375 × 812 + capture d'écran par Edge sans fenêtre (`msedge --headless --screenshot`).
+- **Rappel photo (4.47.3, retour de Gabin)** : `PhotoReminder` (`photo-reminder`) est une notification FIXE en haut de l'écran (comme `ToastBanner`, z-60, fond opaque, `toast-in`) : dans la page, elle se mêlait à « Parle à ton coach » sur téléphone.
 - **Rangées qui défilent sur le côté** (`no-scrollbar`) : `lib/hScroll.js` (molette → défilement horizontal) ; groupes de l'onglet Exercices à la ligne sur ordinateur (`md:flex-wrap`).
 - Tests : `tests/ui/testeurs.test.js` (faux serveur : `rpc/delete_my_account`, `feedback`, `app_errors`).
 

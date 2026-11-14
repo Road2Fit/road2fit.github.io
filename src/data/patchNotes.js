@@ -2,6 +2,12 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.47.3',
+    date: '2026-11-14',
+    title: 'Rappel photo en haut',
+    items: ['Le rappel « pense à ta photo » arrive maintenant en haut de l’écran, sur fond plein : il ne cache plus « Parle à ton coach ».'],
+  },
+  {
     version: '4.47.2',
     date: '2026-11-13',
     title: 'Dictée : prochaine séance',
