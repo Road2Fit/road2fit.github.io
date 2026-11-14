@@ -76,7 +76,9 @@ export function VoiceWorkoutAssistant({ gameState, setGameState, selectedDate, t
   const [isOpen, setIsOpen] = useState(false);
   // ouverture depuis le bouton « + » (QuickAddMenu)
   useEffect(() => {
-    const h = () => { setIsOpen(true); setTimeout(() => inputRef.current?.focus(), 100); };
+    // 4.47.6 (demande de Gabin) : sur écran tactile, PAS de clavier ouvert d'office : on choisit le micro ou la case
+    const touch = () => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } };
+    const h = () => { setIsOpen(true); if (!touch()) setTimeout(() => inputRef.current?.focus(), 100); };
     window.addEventListener('rondoufit-voice', h);
     return () => window.removeEventListener('rondoufit-voice', h);
   }, []);
