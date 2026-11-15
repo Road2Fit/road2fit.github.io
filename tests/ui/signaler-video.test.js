@@ -28,14 +28,18 @@ function framesFor(name, reps) {
 }
 
 describe('signaler une analyse vidéo fausse', () => {
-  it('images allégées : 15 par seconde au plus, 3 décimales, sans image', () => {
+  it('images allégées : 30 par seconde au plus, 3 décimales, sans image', () => {
     const frames = Array.from({ length: 90 }, (_, i) => ({ t: 1000 + i * 33.3, lm: [{ x: 0.123456, y: 0.5, z: 0, visibility: 0.99 }], wl: null }));
     const c = compactFrames(frames);
-    expect(c.length).toBeLessThanOrEqual(46);
+    expect(c.length).toBe(90); // 4.47.9 : la vraie cadence est gardée
+    expect(compactFrames(frames, 15).length).toBeLessThanOrEqual(46);
+    // 20 images par seconde : toutes gardées (avant : une sur deux)
+    expect(compactFrames(Array.from({ length: 40 }, (_, i) => ({ t: i * 50, lm: null, wl: null }))).length).toBe(40);
     expect(c[0]).toEqual({ t: 0, lm: [[0.123, 0.5, 0, 0.99]], wl: null });
     const d = buildFlag({ series: { frames, aspect: 0.56 }, result: { ok: true, repCount: 8 }, item: { name: 'Squat' }, problems: ['count', 'nope'], trueReps: 10 });
     expect(d.problems).toEqual(['count']);
     expect(d.trueReps).toBe(10);
+    expect(d.capture).toEqual({ fps: 30, empty: 0, n: 90 });
     expect(JSON.stringify(d)).not.toMatch(/blob:|data:image|base64/);
   });
 

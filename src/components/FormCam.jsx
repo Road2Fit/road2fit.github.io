@@ -73,7 +73,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       const rec = r.recorder;
       r.recorder = null; r.chunks = [];
       if (rec) { rec.onstop = null; try { rec.stop(); } catch (e) { /* rien */ } }
-      r.frames = []; r.count = 0; r.countedAt = 0; r.sec = 0; r.holdSignaled = false; r.visibleSince = null;
+      r.frames = []; r.count = 0; r.countedAt = 0; r.countedTs = 0; r.sec = 0; r.holdSignaled = false; r.visibleSince = null;
       setCount(0); setSec(0);
       go('wait');
     };
@@ -211,8 +211,10 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         if (r.frames.length >= MAX_FRAMES) finish();
         return;
       }
-      if (r.frames.length - r.countedAt >= 10) {
-        r.countedAt = r.frames.length;
+      // 4.47.9 : toutes les 0,3 s (au moins 3 nouvelles images) au lieu de toutes les 10 images : à 10 images par seconde
+      // le bip arrivait jusqu'à 1 s après la rep
+      if (r.frames.length - r.countedAt >= 3 && ts - (r.countedTs || 0) >= 300) {
+        r.countedAt = r.frames.length; r.countedTs = ts;
         const n = liveCount(r.frames, P, { aspect: r.aspect });
         if (n > r.count) {
           r.count = n; r.lastRepT = ts; setCount(n);
@@ -289,7 +291,10 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           let res = null;
           try { res = pose.detect(v, ts, crop); } catch (e) { crop = null; crops.reset(); }
           onFrame(res, ts, v.videoWidth / v.videoHeight);
-          crop = crops.next(r.found ? r.track : null, !!r.found, v.videoWidth, v.videoHeight);
+          // zoom seulement pendant la série : à la mise en place l'image entière permet de trouver la personne au premier
+          // plan même si quelqu'un d'autre a été vu avant (sinon le morceau resterait fixé sur cette autre personne)
+          if (r.phase === 'rec') crop = crops.next(r.found ? r.track : null, !!r.found, v.videoWidth, v.videoHeight);
+          else if (crop) { crop = null; crops.reset(); }
         }
         raf = requestAnimationFrame(tick);
       };

@@ -19,8 +19,12 @@ export const FLAG_PROBLEMS = [
 const r3 = x => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null);
 const pts = lm => (Array.isArray(lm) ? lm.map(p => (p ? [r3(p.x), r3(p.y), r3(p.z), r3(p.visibility)] : null)) : null);
 
-/** Images allégées : au plus `fps` images par seconde, 3 décimales ; t en ms depuis le début. */
-export function compactFrames(frames, fps = 15) {
+/**
+ * Images allégées : au plus `fps` images par seconde, 3 décimales ; t en ms depuis le début.
+ * 4.47.9 : 30 par défaut et marge de 30 % (avant : 15 et une marge d'1 ms, qui ramenait une vidéo à 20 img/s à 10 img/s :
+ * les signalements rejoués voyaient moitié moins d'images que l'appli).
+ */
+export function compactFrames(frames, fps = 30) {
   const list = Array.isArray(frames) ? frames : [];
   if (!list.length) return [];
   const t0 = list[0].t;
@@ -29,13 +33,22 @@ export function compactFrames(frames, fps = 15) {
   let next = -Infinity;
   list.forEach(f => {
     if (f.t < next) return;
-    next = f.t + step - 1;
+    next = f.t + step * 0.7;
     out.push({ t: Math.round(f.t - t0), lm: pts(f.lm), wl: pts(f.wl) });
   });
   return out;
 }
 
 const MAX_CHARS = 2_500_000;
+
+/** Cadence réelle de la détection pendant la série et part d'images où personne n'a été trouvé (pour le diagnostic). */
+export function captureStats(frames) {
+  const list = Array.isArray(frames) ? frames : [];
+  if (list.length < 2) return null;
+  const dur = (list[list.length - 1].t - list[0].t) / 1000;
+  const empty = list.filter(f => !f.lm).length;
+  return { fps: dur > 0 ? Math.round(((list.length - 1) / dur) * 10) / 10 : null, empty: Math.round((empty / list.length) * 100) / 100, n: list.length };
+}
 
 /** Contenu du signalement envoyé. */
 export function buildFlag({ series, result, item, problems = [], trueReps = null, note = '', noted = null, appVersion = '' }) {
@@ -56,9 +69,10 @@ export function buildFlag({ series, result, item, problems = [], trueReps = null
       reps: (r.reps || []).map(x => ({ t0: x.t0, t1: x.t1 })),
       holdSec: r.holdSec ?? null, view: r.view || '', chin: r.chin ? { raw: r.chin.raw, cal: r.chin.cal } : null,
     },
+    capture: captureStats(series && series.frames),
     camera: series ? { aspect: series.aspect, mirror: !!series.mirror, targetReps: series.targetReps || 0, chinCal: series.chinCal ?? null } : null,
   };
-  let fps = 15;
+  let fps = 30;
   let frames = compactFrames(series && series.frames, fps);
   let data = { ...base, frames };
   while (JSON.stringify(data).length > MAX_CHARS && fps > 2) {
