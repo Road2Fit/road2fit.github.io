@@ -8,19 +8,20 @@ export function ClipPlayer({ clip, reps = [], finding = null, onClose }) {
   const canvasRef = useRef(null);
   const list = finding && Array.isArray(finding.reps) ? finding.reps.filter(i => reps[i]) : [];
   const [sel, setSel] = useState(list.length ? list[0] : -1); // -1 = toute la série
-  const [slow, setSlow] = useState(true);
+  // vitesse : 0,5 (ralenti, au départ), 1, ou 2 (4.47.7, demande de Gabin : revoir vite toute la série)
+  const [speed, setSpeed] = useState(0.5);
   const seg = sel >= 0 && reps[sel] ? { a: reps[sel].t0 || 0, b: reps[sel].t1 || 0 } : null;
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return undefined;
-    try { v.playbackRate = slow ? 0.5 : 1; } catch (e) {}
+    try { v.playbackRate = speed; } catch (e) {}
     if (seg) { try { v.currentTime = seg.a; } catch (e) {} }
     const p = v.play && v.play();
     if (p && p.catch) p.catch(() => {});
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sel, slow]);
+  }, [sel, speed]);
 
   useEffect(() => {
     let raf = 0;
@@ -46,9 +47,10 @@ export function ClipPlayer({ clip, reps = [], finding = null, onClose }) {
         </button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-black text-white truncate">{finding ? finding.title : 'Ta série'}</p>
-          <p className="text-xs text-slate-400 truncate">{sel >= 0 ? `Rep ${sel + 1}` : 'Toute la série'}{slow ? ' · ralenti' : ''}</p>
+          <p className="text-xs text-slate-400 truncate">{sel >= 0 ? `Rep ${sel + 1}` : 'Toute la série'}{speed === 0.5 ? ' · ralenti' : speed === 2 ? ' · ×2' : ''}</p>
         </div>
-        <button type="button" onClick={() => setSlow(v => !v)} className={`px-3 py-2 rounded-xl text-xs font-black ${slow ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-200'}`} data-testid="clip-slow">Ralenti</button>
+        <button type="button" onClick={() => setSpeed(v => (v === 0.5 ? 1 : 0.5))} aria-pressed={speed === 0.5} className={`px-3 py-2 rounded-xl text-xs font-black ${speed === 0.5 ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-200'}`} data-testid="clip-slow">Ralenti</button>
+        <button type="button" onClick={() => setSpeed(v => (v === 2 ? 1 : 2))} aria-pressed={speed === 2} className={`px-3 py-2 rounded-xl text-xs font-black ${speed === 2 ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-200'}`} data-testid="clip-fast">×2</button>
       </div>
       <div className="relative flex-1 min-h-0">
         <div className="absolute inset-0" style={mirror}>

@@ -181,6 +181,12 @@ describe('analyse vidéo de la série', () => {
     expect(q(h, 'clip-player')).toBeTruthy();
     expect(q(h, 'clip-video').getAttribute('src')).toBe('blob:test-clip');
     expect(q(h, 'clip-reps').textContent).toMatch(/Rep [0-9]/);
+    // 4.47.7 : ×2 (et ralenti au départ)
+    expect(q(h, 'clip-slow').getAttribute('aria-pressed')).toBe('true');
+    await clickEl(h, q(h, 'clip-fast'));
+    expect(q(h, 'clip-fast').getAttribute('aria-pressed')).toBe('true');
+    expect(q(h, 'clip-slow').getAttribute('aria-pressed')).toBe('false');
+    expect(q(h, 'clip-video').playbackRate).toBe(2);
     await clickEl(h, q(h, 'clip-all'));
     await clickEl(h, q(h, 'clip-close'));
     expect(q(h, 'clip-player')).toBeNull();

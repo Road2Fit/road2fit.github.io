@@ -39,7 +39,7 @@ export const PATTERNS = {
                 checks: ['hipLock', 'tempo', 'fade'] },
   superman:   { label: 'superman', signal: 'limbsUp', first: 'con', conDir: 1, view: 'side', words: UP, min: 0.08,
                 checks: ['topPause', 'tempo', 'fade'] },
-  benchPress: { label: 'développé couché', signal: 'elbow', first: 'ecc', conDir: 1, view: 'side', words: PUSH, min: 35, depth: 95, depthWarn: 120, lock: 150,
+  benchPress: { label: 'développé couché', signal: 'elbow', hiddenTurn: true, returnMax: 0.6, first: 'ecc', conDir: 1, view: 'side', words: PUSH, min: 35, depth: 95, depthWarn: 120, lock: 150,
                 checks: ['depthElbow', 'lock', 'bounce', 'tempo', 'fade', 'speed'] },
   pushUp:     { label: 'pompe', signal: 'elbow', first: 'ecc', conDir: 1, view: 'side', words: PUSH, min: 30, depth: 100, depthWarn: 125, lock: 150,
                 checks: ['depthElbow', 'lock', 'bodyLine', 'tempo', 'fade', 'speed'] },
@@ -95,6 +95,9 @@ export const PATTERNS = {
   olympic:    { label: 'haltérophilie', signal: 'wristUp', first: 'con', conDir: 1, view: 'side', words: UP, min: 0.5, checks: ['fullExt', 'fade'] },
   olympicOver:{ label: 'haltérophilie', signal: 'wristUp', first: 'con', conDir: 1, view: 'side', words: UP, min: 0.5, checks: ['fullExt', 'lockOverOly', 'fade'] },
   mountain:   { label: 'mountain climbers', signal: 'legAlt', first: 'con', conDir: 1, view: 'side', words: ['montée de genou', 'retour'], min: 25, checks: ['bodyLine', 'fade'] },
+  // 4.47.7 (vidéos réelles de sauts) : un saut = le bassin quitte sa hauteur habituelle (au sol) vers le haut, puis revient.
+  // On compte les envols : repos = au sol, départ possible debout, montée sur une caisse = un saut, pas de contrôle « revenir au même endroit ».
+  jump:       { label: 'saut', signal: 'hipY', first: 'con', conDir: -1, view: 'side', words: ['saut', 'réception'], min: 0.3, restMax: 0.4, startRest: true, minRep: 0.3, checks: [] },
   generic:    { label: 'mouvement', signal: 'hipY', first: 'ecc', conDir: -1, view: 'side', words: UP, min: 0.25, checks: ['fade'] },
   // tenues (pas de répétitions) : durée et position
   plank:      { label: 'gainage', iso: true, hold: 'line', view: 'side', checks: ['holdLine'] },
@@ -141,14 +144,15 @@ const FAMILY_PATTERN = {
   plank: 'plank', sidePlank: 'plank', hollow: 'holdOnly', handstand: 'plank', frontLever: 'plank', planche: 'plank',
   wallSit: 'wallSit', deadHang: 'hang', lSit: 'lSit', farmersCarry: 'carry', sledPush: 'carry', sledPull: 'carry',
   burpeeBroadJump: 'generic', burpee: 'generic', mountain: 'mountain',
-  plyoSquatJump: 'generic', plyoCmj: 'generic', plyoTuckJump: 'generic', plyoBoxJump: 'generic', plyoDropJump: 'generic', plyoBroadJump: 'generic',
-  plyoSplitJump: 'generic', plyoSingleLegHop: 'generic', plyoPogo: 'generic', plyoApproachJump: 'generic', plyoBlockJump: 'generic',
+  plyoSquatJump: 'jump', plyoCmj: 'jump', plyoTuckJump: 'jump', plyoBoxJump: 'jump', plyoDropJump: 'jump', plyoBroadJump: 'jump',
+  plyoSplitJump: 'jump', plyoSingleLegHop: 'jump', plyoPogo: 'jump', plyoApproachJump: 'jump', plyoBlockJump: 'jump',
   plyoClapPushUp: 'pushUp', plyoBallSlam: 'generic', plyoChestPass: 'generic',
 };
 export const familyPatternMap = FAMILY_PATTERN;
 
 // réglages propres à certaines variantes (buste plus droit attendu au squat avant, au goblet…)
 const FAMILY_TWEAKS = {
+  plyoBoxJump: { travels: true }, // 4.47.7 : monter sur la caisse, en descendre, revenir : le corps change de place à chaque saut
   squatFront: { trunkMax: 35 }, goblet: { trunkMax: 35 }, squatBody: { trunkMax: 40 }, olyOverheadSquat: { trunkMax: 30 }, beltSquat: { trunkMax: 30 },
   squatSmith: { trunkMax: 40 }, wallBall: { trunkMax: 40 }, bulgarian: { trunkMax: 40 }, stepUp: { trunkMax: 40, checks: ['trunk', 'tempo', 'fade'] },
   curlConcentration: { checks: ['hang', 'topElbow', 'tempo', 'fade'] }, curlPreacher: { checks: ['hang', 'topElbow', 'tempo', 'fade'] },

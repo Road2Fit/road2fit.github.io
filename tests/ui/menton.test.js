@@ -123,6 +123,23 @@ describe('calibration du menton', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+  it('4.47.7 : le zoom reste visible pendant la série ; y toucher revient à la mise en place', async () => {
+    const h = await launch();
+    open.push(h);
+    expect(await toPullUps(h)).toBe(true);
+    const camera = { zoom: { min: 0.5, max: 4 }, now: 1, devices: [] };
+    const frames = makeFrames(timeline({ reps: 40, lead: 1.5 }), d => fit(pullUpBody(d)));
+    h.w.__r2fPoseMock = { frames, aspect: 9 / 16, camera, batch: 1 };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => q(h, 'form-cam-count'))).toBe(true);
+    expect(q(h, 'cam-zoom')).toBeTruthy();
+    await clickEl(h, q(h, 'cam-zoom-out'));
+    expect(await waitFor(h, () => !q(h, 'form-cam-count') && q(h, 'form-cam-status'))).toBe(true);
+    expect(camera.applied).toBeLessThan(1);
+    await clickEl(h, q(h, 'form-cam-close'));
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('4.31 : quelqu’un d’autre fait des tractions au fond de la salle : seules les miennes comptent', async () => {
     const h = await launch();
     open.push(h);

@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.47.7',
+    date: '2026-11-15',
+    title: 'Vidéo : comptage corrigé',
+    items: [
+      'Comptage des reps refait d’après tes 14 signalements : sauts (pogo, box jump, saut vertical) et tractions comptés justes, développé couché bien meilleur.',
+      'Quand ton corps est trop mal reconnu, l’appli le dit au lieu de donner un faux nombre.',
+      'Revoir la série : nouveau bouton « ×2 » à côté de « Ralenti ».',
+      'Zoom et grand angle : restent affichés pendant la série (y toucher recommence la mise en place), seulement si ton téléphone les donne à l’appli.',
+    ],
+  },
+  {
     version: '4.47.6',
     date: '2026-11-14',
     title: 'Dictée sans clavier imposé',

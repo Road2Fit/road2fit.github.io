@@ -64,6 +64,18 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
     // calibration du menton (4.25) : la personne tient le menton au niveau de la barre ; mesuré quand c'est immobile
     r.startCalib = () => { if (r.phase === 'wait') { r.calib = []; r.calibAt = 0; setCalibMsg(''); go('calib'); } };
     r.cancelCalib = () => { if (r.phase === 'calib') { r.visibleSince = null; go('wait'); } };
+    // 4.47.7 (retour de Gabin : bouton du grand angle introuvable) : l'analyse démarrait 1 s après l'ouverture quand on
+    // était déjà dans l'image, et les réglages disparaissaient avec. Ils restent maintenant affichés pendant la série :
+    // y toucher annule la série commencée (vidéo et images jetées) et revient à la mise en place.
+    r.restart = () => {
+      if (r.phase !== 'rec') return;
+      const rec = r.recorder;
+      r.recorder = null; r.chunks = [];
+      if (rec) { rec.onstop = null; try { rec.stop(); } catch (e) { /* rien */ } }
+      r.frames = []; r.count = 0; r.countedAt = 0; r.sec = 0; r.holdSignaled = false; r.visibleSince = null;
+      setCount(0); setSec(0);
+      go('wait');
+    };
     const stopCam = () => {
       cancelAnimationFrame(raf);
       clearInterval(timer);
@@ -293,7 +305,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
   const setZoomTo = z => {
     const t = trackRef.current;
     if (!t || !zoomCaps) return;
-    if (run.current) run.current.holdUntil = Date.now() + 2500;
+    if (run.current) { if (run.current.restart) run.current.restart(); run.current.holdUntil = Date.now() + 2500; }
     setZoom(z);
     saveZoom(facing, z);
     try { const p = t.applyConstraints({ advanced: [{ zoom: z }] }); if (p && p.catch) p.catch(() => {}); } catch (e) { /* rien */ }
@@ -308,7 +320,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
     setLens(id);
   };
   const lensIdx = Math.max(0, lenses.findIndex(l => l.id === lens));
-  const canTune = phase === 'wait' || phase === 'calib';
+  const canTune = phase === 'wait' || phase === 'calib' || phase === 'rec';
   const mirror = facing === 'user' ? { transform: 'scaleX(-1)' } : undefined;
 
   return (
@@ -344,7 +356,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
               </div>
             )}
             {lenses.length > 1 && (
-              <button type="button" onClick={nextLens} data-testid="cam-lens" className="px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-700 text-xs font-black text-white">Objectif {lensIdx + 1}/{lenses.length}</button>
+              <button type="button" onClick={() => { if (run.current && run.current.restart) run.current.restart(); nextLens(); }} data-testid="cam-lens" className="px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-700 text-xs font-black text-white">Objectif {lensIdx + 1}/{lenses.length} (grand angle…)</button>
             )}
           </div>
         )}
@@ -366,6 +378,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
               {!P.iso && <p className="text-xs text-slate-400" data-testid="form-beep-note">{beep ? 'Un bip à chaque rep validée (dans tes écouteurs s’ils sont branchés). Pas de bip = rep pas comptée.' : 'Bip à chaque rep coupé : touche le haut-parleur en haut pour le remettre.'}</p>}
               {calibMsg && <p className="text-xs font-bold text-emerald-300" data-testid="chin-calib-done">{calibMsg}</p>}
               {camReady && (zoomCaps || lenses.length > 1) && <p className="text-xs text-slate-400">{zoomCaps && zoomCaps.min < 0.95 ? 'Tu peux dézoomer (grand angle) ou zoomer en haut à gauche, avant que l’analyse démarre.' : lenses.length > 1 ? 'Change d’objectif (grand angle…) ou de zoom en haut à gauche, avant que l’analyse démarre.' : 'Tu peux zoomer en haut à gauche, avant que l’analyse démarre.'}</p>}
+              {camReady && (zoomCaps || lenses.length > 1) && <p className="text-[11px] text-slate-500" data-testid="cam-tune-note">Toucher le zoom pendant la série la recommence.</p>}
               {camReady && !zoomCaps && lenses.length < 2 && <p className="text-[11px] text-slate-500" data-testid="cam-zoom-none">Zoom et grand angle : ce téléphone ne les donne pas au navigateur. Recule le téléphone si tu n’es pas en entier dans l’image.</p>}
               {usesChin && <button type="button" onClick={() => run.current && run.current.startCalib && run.current.startCalib()} className="mt-1 px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-black text-white" data-testid="chin-calib">{getChinCal() ? 'Recalibrer le menton' : 'Calibrer le menton'}</button>}
             </>)}
