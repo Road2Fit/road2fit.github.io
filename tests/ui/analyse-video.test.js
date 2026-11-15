@@ -114,7 +114,7 @@ describe('analyse vidéo de la série', () => {
     srv.ai = async (task, body) => {
       expect(task).toBe('form');
       sent = body;
-      return { verdict: 'À travailler', summary: 'Tu ralentis nettement sur les 2 dernières reps.', points: [{ level: 'warn', title: 'Fin de série lente', detail: 'Montée 2 fois plus lente à la fin.', fix: 'Garde 1 à 2 reps en réserve.' }], nextSet: 'Même charge, une rep de moins.', usage: { input: 900, output: 250 } };
+      return { verdict: 'À travailler', summary: 'Tu ralentis nettement sur les 2 dernières reps.', points: [{ level: 'warn', title: 'Fin de série lente', detail: 'Montée 2 fois plus lente à la fin.', fix: 'Garde 1 à 2 reps en réserve.', reps: [2] }], nextSet: 'Même charge, une rep de moins.', usage: { input: 900, output: 250 } };
     };
     const h = await launch({ fetchImpl: srv.fetch, storage: {
       __classic: '1',
@@ -132,7 +132,7 @@ describe('analyse vidéo de la série', () => {
     while (q(h, 'warm-done')) await clickEl(h, [...q(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
     const name = q(h, 'guided-set').querySelector('h2').textContent.trim();
     const { frames, aspect } = framesFor(name, Number(q(h, 'set-reps').textContent));
-    h.w.__r2fPoseMock = { frames, aspect, batch: 60 };
+    h.w.__r2fPoseMock = { frames, aspect, batch: 60, clip: true };
     await clickEl(h, q(h, 'form-cam-open'));
     expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
     // rien n'est envoyé tant qu'on ne le demande pas
@@ -152,6 +152,12 @@ describe('analyse vidéo de la série', () => {
     expect(q(h, 'form-ai-next').textContent).toMatch(/une rep de moins/);
     expect(q(h, 'form-verdict').textContent).toBe('À travailler');
     expect(q(h, 'form-ai-usage').textContent).toMatch(/1150 tokens/);
+    // 4.48.1 : le point du coach IA se touche pour revoir la rep citée, comme ceux de l'algorithme
+    const play = q(h, 'form-ai').querySelector('[data-testid="form-play"]');
+    expect(play.textContent).toMatch(/rep 2/);
+    await clickEl(h, play.closest('[role="button"]'));
+    expect(h.doc.querySelector('[data-testid="clip-player"]')).toBeTruthy();
+    await clickEl(h, h.doc.querySelector('[data-testid="clip-close"]'));
     // retour à l'onglet algorithme : son propre verdict
     await clickEl(h, q(h, 'form-tab-algo'));
     expect(q(h, 'form-ai')).toBeNull();

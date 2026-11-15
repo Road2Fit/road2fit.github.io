@@ -124,7 +124,7 @@ Règles :
 - Appuie-toi sur les chiffres et compare les reps entre elles (début / fin de série) et avec les séries précédentes : c'est ta valeur ajoutée par rapport à l'algorithme.
 - Ne contredis pas une mesure ; si la vue de la caméra n'est pas la bonne ou la visibilité est faible, dis-le et reste prudent.
 - Les seuils de l'algorithme sont des repères de coaching, pas des normes : tu peux nuancer selon l'exercice, le niveau et l'historique.
-- points : 3 au plus, les plus utiles d'abord ; level = warn (à corriger), tip (à améliorer) ou good (bien fait). title : 5 mots au plus. detail : ce que montrent les chiffres, 1 phrase. fix : quoi faire concrètement à la prochaine série, 1 phrase.
+- points : 3 au plus, les plus utiles d'abord ; level = warn (à corriger), tip (à améliorer) ou good (bien fait). title : 5 mots au plus. detail : ce que montrent les chiffres, 1 phrase. fix : quoi faire concrètement à la prochaine série, 1 phrase. reps : les numéros des reps concernées (numérotées comme dans les mesures, 1 = la première), par exemple [3] ou [5, 6] ; liste vide si le point concerne toute la série de façon égale. La personne touche le point pour revoir ces reps dans la vidéo.
 - nextSet : un conseil pour la série suivante (technique, tempo, ou charge si les chiffres le justifient nettement), 1 à 2 phrases.
 - summary : 1 à 2 phrases, le bilan de la série.
 - verdict : Propre, Correct ou À travailler.
@@ -139,7 +139,7 @@ const SCHEMAS: Record<string, unknown> = {
   form: obj({
     verdict: { type: "string", enum: ["Propre", "Correct", "À travailler"] },
     summary: str,
-    points: { type: "array", items: obj({ level: { type: "string", enum: ["warn", "tip", "good"] }, title: str, detail: str, fix: str }) },
+    points: { type: "array", items: obj({ level: { type: "string", enum: ["warn", "tip", "good"] }, title: str, detail: str, fix: str, reps: { type: "array", items: int } }) },
     nextSet: str,
   }),
   dictation: obj({

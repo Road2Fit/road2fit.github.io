@@ -5,6 +5,7 @@ import { ClipPlayer } from './ClipPlayer';
 import { getClip, saveClip } from '../form/clip';
 import { FormFlag } from './FormFlag';
 import { SecondPass } from './SecondPass';
+import { aiPointReps } from '../ai/form';
 
 // Retour du coach sur la série filmée (4.19), affiché pendant le repos.
 // Onglet « Algorithme » : verdict, reps, tempo, points à corriger calculés sur le téléphone (gratuit, immédiat).
@@ -141,7 +142,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null,
           {ai.error && <button type="button" onClick={onAskAi} className="w-full py-2 rounded-xl bg-slate-800 text-slate-100 text-sm font-bold" data-testid="form-ai-retry">Réessayer</button>}
           {aiReady && (<>
             {ai.summary && <p className="text-sm text-slate-200" data-testid="form-ai-summary">{ai.summary}</p>}
-            <Points list={ai.points} />
+            <Points list={ai.points.map(p => ({ ...p, reps: aiPointReps(p.reps, (r.reps || []).length) }))} onPlay={clip ? f => setPlay(f) : null} />
             {ai.nextSet && <p className="text-xs bg-pink-950/40 border border-pink-500/40 rounded-xl px-2.5 py-2 text-pink-100" data-testid="form-ai-next"><b>Série suivante :</b> {ai.nextSet}</p>}
             {ai.usage && <p className="text-[11px] text-slate-500" data-testid="form-ai-usage">Coût de cette analyse : {ai.usage.input + ai.usage.output} tokens ({ai.usage.input} envoyés, {ai.usage.output} reçus).</p>}
           </>)}

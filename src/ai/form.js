@@ -49,13 +49,47 @@ const LEVELS = new Set(['warn', 'tip', 'good']);
 const VERDICTS = new Set(['Propre', 'Correct', 'À travailler']);
 const str = (v, n) => String(v || '').trim().slice(0, n);
 
+// 4.48.1 (demande de Gabin) : les points du coach IA se touchent pour revoir la rep concernée, comme ceux de l'algorithme.
+// Le serveur renvoie `reps` (numéros à partir de 1) ; à défaut, on lit les numéros cités dans le texte (« rep 3 »,
+// « reps 2 et 4 », « reps 3 à 5 », « 3e rep », « première / dernière rep »). 'last' = dernière rep (résolu à l'affichage).
+const ORD = { première: 1, premiere: 1, deuxième: 2, deuxieme: 2, seconde: 2, troisième: 3, troisieme: 3, quatrième: 4, quatrieme: 4, cinquième: 5, cinquieme: 5 };
+const W = '(?<![a-zà-ÿ])'; // début de mot (\b ne marche pas avec les lettres accentuées)
+const REP = 'r[eé]p(?:[eé]titions?|s)?(?![a-zà-ÿ])';
+export function repsInText(text) {
+  const s = String(text || '').toLowerCase();
+  const out = new Set();
+  // « rep 3 », « reps 2, 4 et 6 », « reps 3 à 5 », « rep n° 2 », « répétition 4 »
+  for (const m of s.matchAll(new RegExp(`${W}${REP}\\s*(?:n°|no|numéros?)?\\s*(\\d+(?:\\s*(?:,|et|à|-|–)\\s*\\d+)*)`, 'g'))) {
+    const parts = m[1].split(/\s*(,|et|à|-|–)\s*/);
+    for (let k = 0; k < parts.length; k += 2) {
+      const n = Number(parts[k]);
+      const sep = parts[k - 1];
+      if ((sep === 'à' || sep === '-' || sep === '–') && k >= 2) { for (let x = Number(parts[k - 2]) + 1; x <= n && x - Number(parts[k - 2]) <= 20; x++) out.add(x); }
+      else out.add(n);
+    }
+  }
+  for (const m of s.matchAll(new RegExp(`(?<![\\d])(\\d+)\\s*(?:e|ème|eme|er|re)\\s+${REP}`, 'g'))) out.add(Number(m[1]));
+  for (const m of s.matchAll(new RegExp(`${W}(${Object.keys(ORD).join('|')})\\s+${REP}`, 'g'))) out.add(ORD[m[1]]);
+  const nums = [...out].filter(n => Number.isInteger(n) && n >= 1 && n <= 100).sort((a, b) => a - b).map(n => n - 1);
+  return new RegExp(`${W}derni[eè]re\\s+${REP}`).test(s) ? [...nums, 'last'] : nums;
+}
+const repsOf = p => {
+  const given = (Array.isArray(p.reps) ? p.reps : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 100).map(n => n - 1);
+  return given.length ? [...new Set(given)].sort((a, b) => a - b) : repsInText(`${p.title} ${p.detail} ${p.fix}`);
+};
+/** Index des reps (à partir de 0) d'un point du coach IA, limités aux n reps de la série. */
+export function aiPointReps(reps, n) {
+  const out = (reps || []).map(x => (x === 'last' ? n - 1 : x)).filter(x => Number.isInteger(x) && x >= 0 && x < n);
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
 /** Vérifie la réponse du coach IA (format attendu, longueurs bornées). */
 export function normalizeFormAi(data) {
   if (!data || typeof data !== 'object') return null;
   const points = (Array.isArray(data.points) ? data.points : [])
     .filter(p => p && LEVELS.has(p.level) && str(p.title, 60))
     .slice(0, 4)
-    .map((p, i) => ({ id: `ai${i}`, level: p.level, title: str(p.title, 60), detail: str(p.detail, 240), fix: str(p.fix, 240) }));
+    .map((p, i) => ({ id: `ai${i}`, level: p.level, title: str(p.title, 60), detail: str(p.detail, 240), fix: str(p.fix, 240), reps: repsOf(p) }));
   return {
     verdict: VERDICTS.has(data.verdict) ? data.verdict : 'Correct',
     summary: str(data.summary, 300),

@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48.1',
+    date: '2026-11-15',
+    title: 'Vidéo : les conseils du coach IA renvoient à la rep',
+    items: [
+      'Dans l’onglet « Coach IA », un point qui parle d’une rep précise (« rep 3 pas assez ample ») a maintenant le bouton « ▶ Voir » : il ouvre la vidéo directement sur cette rep, comme pour l’algorithme.',
+    ],
+  },
+  {
     version: '4.48',
     date: '2026-11-15',
     title: 'Vidéo : deuxième analyse',
