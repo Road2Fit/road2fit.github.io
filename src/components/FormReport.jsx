@@ -4,6 +4,7 @@ import { Art } from './Art';
 import { ClipPlayer } from './ClipPlayer';
 import { getClip, saveClip } from '../form/clip';
 import { FormFlag } from './FormFlag';
+import { SecondPass } from './SecondPass';
 
 // Retour du coach sur la série filmée (4.19), affiché pendant le repos.
 // Onglet « Algorithme » : verdict, reps, tempo, points à corriger calculés sur le téléphone (gratuit, immédiat).
@@ -48,20 +49,31 @@ const Points = ({ list, onPlay }) => (
   </ul>
 );
 
-export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null }) {
+export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null, onPass2 = null }) {
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
   const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
   const [saved, setSaved] = useState(false);
   const r = form && form.result;
   if (!r) return null;
+  const pass2Clip = getClip(r.clipId);
+  // 4.48 : deuxième analyse (bouton), puis retour possible à la première
+  const pass2 = onPass2 && pass2Clip && r.pass !== 2 ? <SecondPass key={form.at + ':' + r.clipId} clip={pass2Clip} result={r} onDone={onPass2} /> : null;
+  const pass2Note = r.pass === 2 && r.first ? (
+    <div className="flex items-center gap-2 bg-slate-950 rounded-xl px-2.5 py-1.5" data-testid="form-pass2-done">
+      <p className="flex-1 text-[11px] text-slate-300">Deuxième analyse (image par image). Première : {r.first.ok ? `${r.first.repCount} rep${r.first.repCount > 1 ? 's' : ''}` : 'analyse impossible'}.</p>
+      {onPass2 && <button type="button" onClick={() => onPass2(r.first.result)} className="text-[11px] font-bold text-slate-400 underline underline-offset-2" data-testid="form-pass2-undo">Revenir à la 1re</button>}
+    </div>
+  ) : null;
   if (!r.ok) {
     return (
       <div className="w-full bg-slate-900 border border-slate-700 rounded-2xl p-3 space-y-1.5" data-testid="form-report">
         <p className="text-sm font-black text-white"><Art name="camera" />Analyse impossible</p>
         <p className="text-sm text-slate-300" data-testid="form-report-fail">{r.message}</p>
         <ul className="text-xs text-slate-400 list-disc pl-4 space-y-0.5">{(r.tips || []).map(t => <li key={t}>{t}</li>)}</ul>
-        <FormFlag key={form.at} onFlag={onFlag} noted={form.noted} counted={0} />
+        {pass2Note}
+        {pass2}
+        <FormFlag key={form.at + ':' + (r.pass || 1)} onFlag={onFlag} noted={form.noted} counted={0} />
       </div>
     );
   }
@@ -102,6 +114,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null 
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
         </button>
       </div>
+      {pass2Note}
       <p className="text-sm font-bold text-slate-200" data-testid="form-summary">{r.iso ? `Tenue mesurée : ${r.holdSec} s` : r.summary}</p>
       {counted && (
         <div className="flex items-center gap-2 bg-slate-950 rounded-xl px-2.5 py-2" data-testid="form-count">
@@ -156,7 +169,8 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null 
           <p className="text-[11px] text-slate-500">{saved ? 'Enregistrée dans les téléchargements de ton téléphone.' : 'Sinon, elle est effacée à la série suivante.'}</p>
         </div>
       )}
-      <FormFlag key={form.at} onFlag={onFlag} noted={form.noted} counted={r.iso ? null : r.repCount} chin={!!r.chin} timed={!!r.iso} />
+      {pass2}
+      <FormFlag key={form.at + ':' + (r.pass || 1)} onFlag={onFlag} noted={form.noted} counted={r.iso ? null : r.repCount} chin={!!r.chin} timed={!!r.iso} />
       {play && clip && createPortal(<ClipPlayer clip={clip} reps={r.reps || []} finding={play.title ? play : null} onClose={() => setPlay(null)} />, document.body)}
     </div>
   );

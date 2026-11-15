@@ -4,9 +4,10 @@
 // JAMAIS l'image ni la vidéo. Chaque compte ne lit que ses signalements (docs/supabase-signalements-video.sql).
 
 // Dernière série filmée : ses images (repères) gardées en mémoire jusqu'à la suivante, avec ou sans vidéo enregistrée.
-let last = null;
-export function keepSeries(s) { last = s || null; }
-export const getSeries = id => (last && id && last.id === id ? last : null);
+// 4.48 : les deux dernières (1re analyse en direct et 2e analyse de la même vidéo)
+let kept = [];
+export function keepSeries(s) { kept = s ? [s, ...kept.filter(x => x.id !== s.id)].slice(0, 2) : []; }
+export const getSeries = id => (id && kept.find(x => x.id === id)) || null;
 
 export const FLAG_PROBLEMS = [
   { id: 'count', label: 'Mauvais nombre de reps' },
@@ -59,6 +60,7 @@ export function buildFlag({ series, result, item, problems = [], trueReps = null
     appVersion,
     exercise: { catalogId: (item && item.catalogId) || '', name: String((item && item.name) || '').slice(0, 80), timed: !!(item && item.timed) },
     pattern: (series && series.pattern) || r.pattern || '',
+    pass: (series && series.pass) || 1,
     problems: problems.filter(p => FLAG_PROBLEMS.some(x => x.id === p)),
     trueReps: Number.isFinite(trueReps) ? trueReps : null,
     noted: Number.isFinite(noted) ? noted : null,

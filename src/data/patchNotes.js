@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48',
+    date: '2026-11-15',
+    title: 'Vidéo : deuxième analyse',
+    items: [
+      'Après une série filmée, nouveau bouton « Deuxième analyse, plus précise » : l’appli relit ta vidéo image par image (environ 30 images par seconde, contre une dizaine en direct) et recompte.',
+      'Elle se lance seulement si tu appuies dessus ; elle prend un peu de temps, laisse l’appli ouverte.',
+      'Marche aussi quand la première analyse a échoué. Tu peux revenir à la première analyse.',
+    ],
+  },
+  {
     version: '4.47.9',
     date: '2026-11-15',
     title: 'Vidéo : petits réglages',

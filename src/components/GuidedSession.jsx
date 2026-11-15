@@ -260,6 +260,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     setChinCal(cal);
     return { ...prev, formLast: { ...fl, result: applyChinCal(fl.result, cal), ai: fl.ai && !fl.ai.pending ? { idle: true } : fl.ai } };
   });
+  // 4.48 : deuxième analyse de la vidéo (bouton du rapport) ou retour à la première : le résultat affiché est remplacé
+  const onFormPass2 = res => setG(prev => {
+    const fl = prev.formLast;
+    if (!fl || !res) return prev;
+    return { ...prev, formLast: { ...fl, result: res, ai: aiForm && res.ok ? (fl.ai && fl.ai.pending ? fl.ai : { idle: true }) : null } };
+  });
   const stopFormAuto = () => { setCamOpen(false); setG(prev => ({ ...prev, formAuto: null })); };
   const addSet = () => patch(it.questId, { reps: [...d.reps, d.reps[d.reps.length - 1] || it.goalReps], done: [...d.done, false], loads: [...loadsOf(d), d.load], assists: [...assistsOf(d), d.assist], ...(Array.isArray(d.kinds) ? { kinds: [...d.kinds, 'work'] } : {}) });
   const removeSet = () => { if (d.reps.length > 1 && !d.done[d.done.length - 1]) patch(it.questId, { reps: d.reps.slice(0, -1), done: d.done.slice(0, -1), loads: loadsOf(d).slice(0, -1), assists: assistsOf(d).slice(0, -1), ...(Array.isArray(d.kinds) ? { kinds: d.kinds.slice(0, -1) } : {}) }); };
@@ -542,7 +548,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                     <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
                   </div>
-                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} />
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -708,7 +714,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} />}
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);

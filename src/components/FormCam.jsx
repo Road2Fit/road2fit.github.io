@@ -130,7 +130,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         res.seriesId = sid;
         if (clip) {
           const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-          setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name });
+          setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name, P, targetReps });
           res.clipId = id;
         } else setClip(null);
         const reached = holdTarget > 0 && r.lastTs - r.recStart >= holdTarget * 1000;
