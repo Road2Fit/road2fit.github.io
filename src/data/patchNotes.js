@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.47.8',
+    date: '2026-11-15',
+    title: 'Vidéo : vertical aussi bien qu’horizontal',
+    items: [
+      'L’appli zoome toute seule sur toi avant de chercher ton corps : tu es aussi bien reconnu en filmant à la verticale qu’à l’horizontale, surtout pour les exercices allongés (développé couché…).',
+      'Plus besoin de tourner le téléphone : tiens-le comme tu préfères.',
+    ],
+  },
+  {
     version: '4.47.7',
     date: '2026-11-15',
     title: 'Vidéo : comptage corrigé',

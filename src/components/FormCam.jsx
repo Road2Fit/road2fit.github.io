@@ -4,6 +4,7 @@ import { loadPose, poseMock } from '../form/pose';
 import { analyzeSet, bodyVisible, chinCalibration, liveCount } from '../form/analyze';
 import { getChinCal, setChinCal } from '../form/calibration';
 import { patternFor, placementText } from '../form/patterns';
+import { cropTracker } from '../form/cropRoi';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
@@ -149,6 +150,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         res = pk.pose;
       }
       const lm = res && res.lm;
+      r.found = !!lm;
       draw(lm);
       const visible = !!lm && bodyVisible(lm, P);
       if (r.phase === 'calib') {
@@ -276,6 +278,8 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         return;
       }
       let lastVT = -1;
+      const crops = cropTracker(); // 4.47.8 : zoom sur la personne avant la détection (même qualité en vertical et en horizontal)
+      let crop = null;
       const tick = () => {
         if (stopped) return;
         const v = videoRef.current;
@@ -283,8 +287,9 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           lastVT = v.currentTime;
           const ts = performance.now();
           let res = null;
-          try { res = pose.detect(v, ts); } catch (e) {}
+          try { res = pose.detect(v, ts, crop); } catch (e) { crop = null; crops.reset(); }
           onFrame(res, ts, v.videoWidth / v.videoHeight);
+          crop = crops.next(r.found ? r.track : null, !!r.found, v.videoWidth, v.videoHeight);
         }
         raf = requestAnimationFrame(tick);
       };

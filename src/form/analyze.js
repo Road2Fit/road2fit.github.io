@@ -660,7 +660,7 @@ const VIEW_TXT = { side: 'de profil', front: 'de face', oblique: 'de trois quart
 function fail(reason, message, P) {
   const tips = [];
   if (reason !== 'nomove') tips.push(P && P.view === 'front' ? 'Place le téléphone face à toi, à 2-3 m, à hauteur de hanches.' : 'Place le téléphone sur le côté (de profil), à 2-3 m, à hauteur de hanches.');
-  if (reason === 'unstable') tips.push('Tiens le téléphone à l’horizontale pour un mouvement allongé (développé couché…), à hauteur du banc, de profil.', 'Plus de lumière, et rien entre toi et le téléphone.');
+  if (reason === 'unstable') tips.push('Pose le téléphone bien stable (contre un sac, une bouteille…), à hauteur du banc pour un mouvement allongé, de profil.', 'Plus de lumière, et rien entre toi et le téléphone.');
   if (reason === 'framing') tips.push('Recule le téléphone pour que tout ton corps reste dans l’image, de la tête aux pieds.', 'Évite le contre-jour (fenêtre derrière toi).');
   if (reason === 'nomove') tips.push('Vérifie que c’est bien le bon exercice.', P && P.view === 'front' ? 'Filme-toi de face.' : 'Filme-toi de profil.');
   return { ok: false, reason, message, tips, pattern: P && P.id };

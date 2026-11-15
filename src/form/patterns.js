@@ -186,13 +186,13 @@ export function patternFor(item = {}) {
   return { id, family: fam, ...PATTERNS[id], ...(fam && FAMILY_TWEAKS[fam]) };
 }
 
-// mouvements faits allongés ou presque : le corps tient mieux dans une vidéo en paysage
+// mouvements faits allongés ou presque (le conseil « téléphone à l’horizontale » a été retiré en 4.47.8)
 const LANDSCAPE = new Set(['pushUp', 'plank', 'holdOnly', 'invRow', 'benchPress', 'hipThrust', 'rollout', 'mountain', 'crunch', 'machineLeg', 'legCurl', 'backExt', 'pullover', 'flyIn']);
 export const wantsLandscape = p => !!p && LANDSCAPE.has(p.id);
 
 /** Où poser le téléphone pour ce mouvement (texte court). */
 export function placementText(p) {
   const where = p && p.view === 'front' ? 'face à toi' : 'sur le côté (de profil)';
-  const how = wantsLandscape(p) ? 'tenu à l’horizontale' : 'bien droit';
-  return `Pose le téléphone ${where}, ${how}, à 2-3 m et à hauteur de hanches : tout ton corps doit être dans l’image.`;
+  // 4.47.8 : l'appli zoome sur la personne avant la détection (form/cropRoi.js) : vertical et horizontal marchent pareil
+  return `Pose le téléphone ${where}, à la verticale ou à l’horizontale, à 2-3 m et à hauteur de hanches : tout ton corps doit être dans l’image.`;
 }

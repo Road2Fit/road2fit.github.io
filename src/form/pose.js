@@ -7,6 +7,7 @@ export const POSE_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@$
 export const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task';
 
 import { MAX_POSES } from './pickPerson';
+import { uncrop } from './cropRoi';
 
 let pending = null;
 const copy = arr => (arr ? arr.map(p => ({ x: p.x, y: p.y, z: p.z, visibility: p.visibility })) : null);
@@ -28,12 +29,21 @@ export function loadPose() {
         runningMode: 'VIDEO', numPoses: MAX_POSES, // 4.31 : plusieurs personnes, la bonne est choisie par pickPerson
         minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
       });
-      let landmarker;
+      let landmarker, canvas = null;
       try { landmarker = await make('GPU'); } catch (e) { landmarker = await make('CPU'); } // carte graphique indisponible : processeur
       return {
-        detect(video, ts) {
-          const r = landmarker.detectForVideo(video, ts);
-          const all = (r.landmarks || []).map((l, i) => ({ lm: copy(l), wl: copy(r.worldLandmarks && r.worldLandmarks[i]) }));
+        // crop = morceau de l'image autour de la personne (cropRoi.js, 4.47.8) ou null = image entière
+        detect(video, ts, crop = null) {
+          let src = video;
+          if (crop) {
+            if (!canvas) canvas = document.createElement('canvas');
+            if (canvas.width !== crop.w || canvas.height !== crop.h) { canvas.width = crop.w; canvas.height = crop.h; }
+            canvas.getContext('2d').drawImage(video, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+            src = canvas;
+          }
+          const r = landmarker.detectForVideo(src, ts);
+          const vw = video.videoWidth, vh = video.videoHeight;
+          const all = (r.landmarks || []).map((l, i) => ({ lm: crop ? uncrop(copy(l), crop, vw, vh) : copy(l), wl: copy(r.worldLandmarks && r.worldLandmarks[i]) }));
           return { lm: all[0] ? all[0].lm : null, wl: all[0] ? all[0].wl : null, all };
         },
       };
