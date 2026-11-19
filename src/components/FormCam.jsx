@@ -5,6 +5,7 @@ import { analyzeSet, bodyVisible, chinCalibration, liveCount } from '../form/ana
 import { getChinCal, setChinCal } from '../form/calibration';
 import { patternFor, placementText } from '../form/patterns';
 import { cropTracker } from '../form/cropRoi';
+import { gravityWatch } from '../form/roll';
 import { playGameSound } from '../lib/sound';
 import { drawSkeleton, neonColor } from '../form/draw';
 import { pickMime, setClip } from '../form/clip';
@@ -99,6 +100,9 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       }
       setCamReady(true);
     }
+    // 4.48.4 : sens du téléphone (capteur de gravité), fixé au début de la série
+    const grav = gravityWatch({ front: facing === 'user' });
+    const rollNow = () => grav.get().roll || 0;
     const neon = neonColor();
     const draw = lm => drawSkeleton(canvasRef.current, videoRef.current, lm, { aspect: r.aspect, color: neon });
 
@@ -123,14 +127,14 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       clipP.then(() => stopCam());
       Promise.all([clipP, new Promise(ok => setTimeout(ok, 30))]).then(([clip]) => {
         if (stopped) return;
-        const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps, chinCal: getChinCal() });
+        const res = analyzeSet(r.frames, P, { aspect: r.aspect, roll: r.roll || 0, targetReps, chinCal: getChinCal() });
         // 4.38 : squelette de la série gardé (en mémoire) pour pouvoir signaler une analyse fausse
         const sid = `series-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-        keepSeries({ id: sid, frames: r.frames, aspect: r.aspect, mirror: facing === 'user', pattern: P.id, targetReps, chinCal: getChinCal(), res: r.res || null });
+        keepSeries({ id: sid, frames: r.frames, aspect: r.aspect, mirror: facing === 'user', pattern: P.id, targetReps, chinCal: getChinCal(), res: r.res || null, roll: r.roll || 0, gravity: r.gravity || null });
         res.seriesId = sid;
         if (clip) {
           const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-          setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, name: item.name, P, targetReps });
+          setClip({ id, ...clip, frames: r.frames, t0: r.recStart, mirror: facing === 'user', aspect: r.aspect, roll: r.roll || 0, name: item.name, P, targetReps });
           res.clipId = id;
         } else setClip(null);
         const reached = holdTarget > 0 && r.lastTs - r.recStart >= holdTarget * 1000;
@@ -157,7 +161,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         r.calib.push({ t: ts, lm: lm || null, wl: (res && res.wl) || null });
         while (r.calib.length > 2 && ts - r.calib[0].t > 1500) r.calib.shift();
         if (++r.calibAt % 10 === 0) {
-          const cal = chinCalibration(r.calib, { aspect: r.aspect });
+          const cal = chinCalibration(r.calib, { aspect: r.aspect, roll: rollNow() });
           if (cal != null) {
             setChinCal(cal);
             setCalibMsg('Menton calibré. Redescends : l’analyse démarre quand tu es en place.');
@@ -176,6 +180,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           if (r.visibleSince == null) r.visibleSince = ts;
           if (ts - r.visibleSince >= 1000) {
             r.recStart = ts; r.lastRepT = ts; r.frames = [];
+            { const gv = grav.get(); r.roll = gv.roll || 0; r.gravity = gv.g ? { g: gv.g, screen: gv.screen } : null; }
             // enregistrement de la vidéo (en mémoire) en même temps que l'analyse
             if (stream && window.MediaRecorder) {
               try {
@@ -215,7 +220,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       // le bip arrivait jusqu'à 1 s après la rep
       if (r.frames.length - r.countedAt >= 3 && ts - (r.countedTs || 0) >= 300) {
         r.countedAt = r.frames.length; r.countedTs = ts;
-        const n = liveCount(r.frames, P, { aspect: r.aspect });
+        const n = liveCount(r.frames, P, { aspect: r.aspect, roll: r.roll || 0 });
         if (n > r.count) {
           r.count = n; r.lastRepT = ts; setCount(n);
           if (beepRef.current) { playRepBeep(); r.beeps = (r.beeps || 0) + 1; if (window.__r2fPoseMock) window.__r2fPoseMock.beeps = r.beeps; }
@@ -301,7 +306,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
       };
       raf = requestAnimationFrame(tick);
     })();
-    return () => { stopped = true; try { r.recorder && r.recorder.stop(); } catch (e) {} stopCam(); };
+    return () => { stopped = true; grav.stop(); try { r.recorder && r.recorder.stop(); } catch (e) {} stopCam(); };
   }, [facing, lens, P, targetReps, holdTarget, soundEnabled, item.name]);
 
   const switchCam = () => {

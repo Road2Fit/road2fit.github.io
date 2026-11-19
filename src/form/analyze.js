@@ -7,6 +7,7 @@
 // De profil, les angles sont mesurés dans le plan de l'image (le plus précis) ; de face, avec les repères 3D (wl).
 import { PATTERNS } from './patterns';
 import { personBox } from './pickPerson';
+import { rotateFrames, settleRoll } from './roll';
 
 const SIDES = {
   l: { ear: 7, sh: 11, el: 13, wr: 15, idx: 19, hip: 23, kn: 25, an: 27, heel: 29, foot: 31 },
@@ -209,8 +210,10 @@ function dropGhosts(F, torso2, tRef) {
   });
 }
 
-function makeCtx(frames, meta) {
-  const aspect = meta.aspect || 9 / 16;
+function makeCtx(frames0, meta) {
+  // 4.48.4 : téléphone tenu couché (meta.roll = quarts de tour donnés par le capteur, roll.js) : haut de l'image = haut du monde
+  const a0 = meta.aspect || 9 / 16;
+  const { frames, aspect } = rotateFrames(frames0, meta.roll ? settleRoll(frames0, meta.roll, a0) : 0, a0);
   let F = prepare(ownTrack(frames, aspect), aspect);
   // longueur du buste (2D) : échelle du corps. Les images où la personne est bien plus grande que d'habitude
   // (elle s'approche du téléphone pour arrêter l'enregistrement) sont écartées.

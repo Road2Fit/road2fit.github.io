@@ -71,8 +71,8 @@ export function buildFlag({ series, result, item, problems = [], trueReps = null
       reps: (r.reps || []).map(x => ({ t0: x.t0, t1: x.t1 })),
       holdSec: r.holdSec ?? null, view: r.view || '', chin: r.chin ? { raw: r.chin.raw, cal: r.chin.cal } : null,
     },
-    capture: { ...captureStats(series && series.frames), res: (series && series.res) || null }, // res = taille de la vidéo (4.48.3)
-    camera: series ? { aspect: series.aspect, mirror: !!series.mirror, targetReps: series.targetReps || 0, chinCal: series.chinCal ?? null } : null,
+    capture: { ...captureStats(series && series.frames), res: (series && series.res) || null, gravity: (series && series.gravity) || null }, // res = taille de la vidéo (4.48.3)
+    camera: series ? { aspect: series.aspect, mirror: !!series.mirror, targetReps: series.targetReps || 0, chinCal: series.chinCal ?? null, roll: series.roll || 0 } : null,
   };
   let fps = 30;
   let frames = compactFrames(series && series.frames, fps);

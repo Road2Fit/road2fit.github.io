@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48.4',
+    date: '2026-11-19',
+    title: 'Vidéo : téléphone tenu couché',
+    items: [
+      'Quand tu filmes avec le téléphone couché (l’écran de l’appli reste droit), ton corps apparaît tourné dans la vidéo : l’analyse le remettait mal et se trompait de comptage. Elle se sert maintenant du capteur du téléphone pour savoir où est le haut.',
+      'Tu peux donc filmer téléphone droit ou couché, comme tu préfères : choisis le sens où tu prends le plus de place dans l’image.',
+    ],
+  },
+  {
     version: '4.48.3',
     date: '2026-11-19',
     title: 'Vidéo : moins de « fantômes », meilleur comptage',
