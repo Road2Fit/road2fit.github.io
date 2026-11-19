@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48.2',
+    date: '2026-11-19',
+    title: 'Repos : plus de « Série suivante » par erreur',
+    items: [
+      'Pendant le repos, « Série suivante » demande « Tu es sûr ? » s’il reste du temps : un toucher par erreur ne coupe plus ton repos.',
+      'La fin du repos n’arrête plus la deuxième analyse de ta vidéo : l’écran de repos reste jusqu’au résultat, puis jusqu’à ce que tu passes à la suite.',
+    ],
+  },
+  {
     version: '4.48.1',
     date: '2026-11-15',
     title: 'Vidéo : les conseils du coach IA renvoient à la rep',

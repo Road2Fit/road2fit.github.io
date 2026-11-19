@@ -32,7 +32,7 @@ describe('séance guidée : un écran par série', () => {
     expect(by(h, 'guided-rest')).toBeTruthy();
     expect(by(h, 'rest-next').textContent).toBe(events[0].next);
     expect(by(h, 'guided-next').textContent).toBe('Série suivante');
-    await click(h, by(h, 'guided-next'));
+    await click(h, by(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await click(h, c); }
     expect(by(h, 'set-label').textContent).toContain('Série 2');
     // la flèche réduit la séance
     await click(h, by(h, 'guided-minimize'));
@@ -94,6 +94,44 @@ describe('bouton « Précédent » de la séance guidée', () => {
     // encore en arrière : l'écran d'avant (échauffement ou « comment te sens-tu ? »)
     await click(h, by(h, 'guided-back'));
     expect(by(h, 'warmup') || by(h, 'guided-feel')).toBeTruthy();
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+});
+
+describe('4.48.2 : « Série suivante » pendant le repos', () => {
+  it('demande confirmation ; « Continuer le repos » garde le chrono ; « Précédent » le retrouve', async () => {
+    const h = await launch();
+    open.push(h);
+    await lancer(h);
+    while (by(h, 'warm-done') || by(h, 'feel-ok')) await guidedStep(h);
+    await click(h, by(h, 'set-done'));
+    expect(by(h, 'guided-rest')).toBeTruthy();
+    // touché par erreur : rien ne change, une question apparaît
+    await click(h, by(h, 'guided-next'));
+    expect(by(h, 'guided-rest')).toBeTruthy();
+    expect(by(h, 'next-confirm').textContent).toMatch(/Tu es sûr \? Il reste \d+:\d\d de repos/);
+    await click(h, by(h, 'next-confirm-no'));
+    expect(by(h, 'next-confirm')).toBeNull();
+    expect(by(h, 'guided-rest')).toBeTruthy();
+    // vraiment passer, puis revenir : le chrono est toujours là
+    await click(h, by(h, 'guided-next'));
+    await click(h, by(h, 'next-confirm-yes'));
+    expect(by(h, 'set-label').textContent).toContain('Série 2');
+    await click(h, by(h, 'guided-back'));
+    expect(by(h, 'guided-rest')).toBeTruthy();
+    expect(by(h, 'rest-left').textContent).not.toBe('0:00');
+    expect(h.errors).toEqual([]);
+  }, TIMEOUT);
+
+  it('repos fini : plus de question', async () => {
+    const h = await launch();
+    open.push(h);
+    await lancer(h);
+    while (by(h, 'warm-done') || by(h, 'feel-ok')) await guidedStep(h);
+    await click(h, by(h, 'set-done'));
+    await advance(h, 20 * 60 * 1000);
+    expect(by(h, 'guided-rest')).toBeNull(); // le repos s'est fini tout seul
+    expect(by(h, 'set-label').textContent).toContain('Série 2');
     expect(h.errors).toEqual([]);
   }, TIMEOUT);
 });

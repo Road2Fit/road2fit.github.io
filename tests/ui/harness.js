@@ -446,7 +446,7 @@ export async function guidedStep(h, { warm = 'skip' } = {}) {
     else await gclick(h, [...gq(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
     return 'warm';
   }
-  if (gq(h, 'guided-next')) { await gclick(h, gq(h, 'guided-next')); return 'next'; }
+  if (gq(h, 'guided-next')) { await gclick(h, gq(h, 'guided-next')); if (gq(h, 'next-confirm-yes')) await gclick(h, gq(h, 'next-confirm-yes')); return 'next'; }
   return 'none';
 }
 /** Va jusqu'au résumé de la séance guidée ; `onScreen(h)` est appelé avant chaque action. */

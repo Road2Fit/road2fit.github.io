@@ -36,7 +36,7 @@ describe('échauffement avant les séries de travail', () => {
       await click(h, h.doc.querySelector('[data-testid="warm-done"]')); warms++;
       // 4.27 : pendant le repos, les disques de la série suivante sont déjà affichés
       expect(h.doc.querySelector('[data-testid="rest-plates"]').textContent).toMatch(/Disques : .*(de chaque côté|barre seule)/);
-      await click(h, h.doc.querySelector('[data-testid="guided-next"]'));
+      await click(h, h.doc.querySelector('[data-testid="guided-next"]')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await click(h, c); }
     }
     expect(warms).toBeGreaterThanOrEqual(1);
     expect(warms).toBeLessThanOrEqual(2);

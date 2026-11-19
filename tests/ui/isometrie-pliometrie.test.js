@@ -11,7 +11,7 @@ async function toSetScreen(h) {
   for (let k = 0; k < 10 && !q(h, 'set-done'); k++) {
     if (q(h, 'feel-ok')) await clickEl(h, q(h, 'feel-ok'));
     else if (q(h, 'warm-done')) await clickEl(h, [...q(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
-    else if (q(h, 'guided-next')) await clickEl(h, q(h, 'guided-next'));
+    else if (q(h, 'guided-next')) await clickEl(h, q(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     await advance(h, 300);
   }
 }

@@ -40,7 +40,7 @@ describe('adapter la suite après une série', () => {
     await clickEl(h, by(h, 'adapt-apply'));
     expect(by(h, 'guided-adapt')).toBeNull();
     expect(by(h, 'rest-next').textContent).not.toContain(String(before).replace('.', ',') + ' kg'); // le rappel suit la nouvelle charge
-    await clickEl(h, by(h, 'guided-next'));
+    await clickEl(h, by(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     await advance(h);
     expect(load()).toBeLessThan(before);
     expect(h.errors).toEqual([]);

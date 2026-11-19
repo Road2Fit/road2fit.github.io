@@ -92,6 +92,10 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const [gameOpen, setGameOpen] = useState(restGameWasOpen);
   // caméra ouverte pour filmer la série en cours (rouverte toute seule à la série suivante du même exercice : g.formAuto)
   const [camOpen, setCamOpen] = useState(false);
+  // 4.48.2 : deuxième analyse de la vidéo en cours (le repos ne se termine pas sous elle) et confirmation de « Série suivante »
+  const [pass2Busy, setPass2Busy] = useState(false);
+  const [holdRest, setHoldRest] = useState(false);
+  const [confirmNext, setConfirmNext] = useState(false);
   // 4.34 : caméra et mini-animation préchargées (une coupure de réseau à la salle ne les bloque plus) ;
   // une analyse IA restée « en cours » (appli rechargée pendant l'attente) redevient lançable
   useEffect(() => {
@@ -141,14 +145,20 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
   const warmIdx = warmRows.findIndex((_, k) => !(d.wdone && d.wdone[k]));
   const inWarm = !!(d && warmRows.length && warmIdx >= 0 && !d.wskip && !anyWorkDone);
   const j = d ? d.done.findIndex(x => !x) : -1; // série en cours
-  const rest = g.rest && g.rest.endAt > now ? g.rest : null;
+  // repos fini pendant la deuxième analyse : l'écran de repos reste (holdRest) jusqu'à « Série suivante »
+  const rest = g.rest && (g.rest.endAt > now || pass2Busy || holdRest) ? g.rest : null;
+  if (pass2Busy && g.rest && g.rest.endAt <= now && !holdRest) setHoldRest(true);
   const restLeft = rest ? Math.max(0, Math.ceil((rest.endAt - now) / 1000)) : 0;
 
   const startRest = (sec, next, extra = {}) => {
     restEvent(sec, next);
+    setHoldRest(false); setConfirmNext(false);
     setG(prev => ({ ...prev, rest: { endAt: Date.now() + sec * 1000, total: sec, next }, pr: null, ...extra }));
   };
-  const skipRest = () => { stopRestEvent(); setG(prev => ({ ...prev, rest: null, adapt: null, pr: null })); };
+  const skipRest = () => { stopRestEvent(); setConfirmNext(false); setHoldRest(false); setG(prev => ({ ...prev, rest: null, adapt: null, pr: null })); };
+  // 4.48.2 (retour de Gabin : touché par erreur) : « Série suivante » demande confirmation s'il reste du repos ou si la
+  // deuxième analyse tourne encore
+  const askNext = () => { if (restLeft > 3 || pass2Busy) setConfirmNext(true); else skipRest(); };
   const adapt = g.adapt && it && g.adapt.questId === it.questId ? g.adapt : null;
   const applyAdapt = () => {
     if (!adapt) return;
@@ -390,7 +400,9 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     hist.current.key = screenKey;
   }
   hist.current.snap = { g, restLeft };
+  useEffect(() => { if (!g.rest) setHoldRest(false); }, [g.rest]);
   useEffect(() => {
+    setConfirmNext(false);
     setCamOpen(screen === 'set' && !!it && j >= 0 && g.formAuto === it.questId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey]);
@@ -548,7 +560,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                     <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
                   </div>
-                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} />
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -588,8 +600,17 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
             <div className="space-y-3">
               <div className="flex gap-2">
                 <button type="button" onClick={addRest} className="px-5 py-4 rounded-2xl bg-slate-800 text-slate-100 font-black">+30 s</button>
-                <button type="button" onClick={skipRest} className={`${big} flex-1`} data-key data-testid="guided-next">{/^Ensuite/.test(rest.next || '') ? 'Exercice suivant' : 'Série suivante'}</button>
+                <button type="button" onClick={askNext} className={`${big} flex-1`} data-key data-testid="guided-next">{/^Ensuite/.test(rest.next || '') ? 'Exercice suivant' : 'Série suivante'}</button>
               </div>
+              {confirmNext && (
+                <div className="bg-slate-900 border border-amber-500/60 rounded-2xl p-3 space-y-2" role="alertdialog" aria-label="Passer le repos ?" data-testid="next-confirm">
+                  <p className="text-sm font-bold text-amber-100 text-center">Tu es sûr ?{restLeft > 0 ? ` Il reste ${fmtT(restLeft)} de repos.` : ''}{pass2Busy ? ' La deuxième analyse de ta vidéo sera arrêtée.' : ''}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setConfirmNext(false)} className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm" data-testid="next-confirm-no">Continuer le repos</button>
+                    <button type="button" onClick={skipRest} className="flex-1 py-2.5 rounded-xl bg-amber-600 text-white font-black text-sm" data-testid="next-confirm-yes">Oui, passer</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -714,7 +735,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} />}
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);

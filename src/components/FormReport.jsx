@@ -50,7 +50,7 @@ const Points = ({ list, onPlay }) => (
   </ul>
 );
 
-export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null, onPass2 = null }) {
+export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null, onPass2 = null, onPass2Busy = null }) {
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
   const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
@@ -59,7 +59,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null,
   if (!r) return null;
   const pass2Clip = getClip(r.clipId);
   // 4.48 : deuxième analyse (bouton), puis retour possible à la première
-  const pass2 = onPass2 && pass2Clip && r.pass !== 2 ? <SecondPass key={form.at + ':' + r.clipId} clip={pass2Clip} result={r} onDone={onPass2} /> : null;
+  const pass2 = onPass2 && pass2Clip && r.pass !== 2 ? <SecondPass key={form.at + ':' + r.clipId} clip={pass2Clip} result={r} onDone={onPass2} onBusy={onPass2Busy} /> : null;
   const pass2Note = r.pass === 2 && r.first ? (
     <div className="flex items-center gap-2 bg-slate-950 rounded-xl px-2.5 py-1.5" data-testid="form-pass2-done">
       <p className="flex-1 text-[11px] text-slate-300">Deuxième analyse (image par image). Première : {r.first.ok ? `${r.first.repCount} rep${r.first.repCount > 1 ? 's' : ''}` : 'analyse impossible'}.</p>

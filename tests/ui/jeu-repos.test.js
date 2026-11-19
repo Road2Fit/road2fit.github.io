@@ -31,7 +31,7 @@ describe('jeu pendant le repos', () => {
     ptr('pointerdown', 120); ptr('pointerup', 121);
     await advance(h, 200);
     // fin du repos (série suivante) : le jeu s'arrête
-    await clickEl(h, q(h, 'guided-next'));
+    await clickEl(h, q(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     expect(q(h, 'rest-game')).toBeNull();
     // repos suivant : le jeu revient tout seul
     await clickEl(h, q(h, 'set-done'));
@@ -39,7 +39,7 @@ describe('jeu pendant le repos', () => {
     // fermé volontairement : il ne revient plus au repos suivant
     await clickEl(h, q(h, 'game-close'));
     expect(q(h, 'rest-game')).toBeNull();
-    await clickEl(h, q(h, 'guided-next'));
+    await clickEl(h, q(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     if (q(h, 'set-done')) await clickEl(h, q(h, 'set-done'));
     if (q(h, 'guided-rest')) expect(q(h, 'rest-game')).toBeNull();
     await advance(h, 300);

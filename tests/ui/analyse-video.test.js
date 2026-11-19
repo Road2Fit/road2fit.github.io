@@ -73,7 +73,7 @@ describe('analyse vidéo de la série', () => {
 
     // série suivante : la caméra se rouvre toute seule ; « Ne plus filmer cet exercice » la ferme pour de bon
     h.w.__r2fPoseMock = { frames: [], aspect }; // personne devant la caméra
-    await clickEl(h, q(h, 'guided-next'));
+    await clickEl(h, q(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     await advance(h, 0);
     if (q(h, 'guided-set')) {
       expect(await waitFor(h, () => q(h, 'form-cam-stop-auto'))).toBe(true);
@@ -200,7 +200,7 @@ describe('analyse vidéo de la série', () => {
     expect(q(h, 'form-video-save').textContent).toMatch(/gardée/);
     // série suivante faite sans caméra : la vidéo est effacée
     h.w.__r2fPoseMock = { frames: [], aspect };
-    await clickEl(h, q(h, 'guided-next'));
+    await clickEl(h, q(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await clickEl(h, c); }
     await advance(h, 0);
     if (q(h, 'form-cam-stop-auto')) await clickEl(h, q(h, 'form-cam-stop-auto'));
     if (q(h, 'set-done')) { await clickEl(h, q(h, 'set-done')); expect(q(h, 'form-video')).toBeNull(); }

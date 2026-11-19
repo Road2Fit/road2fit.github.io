@@ -7,12 +7,14 @@ import { getChinCal } from '../form/calibration';
 
 // Bouton « Deuxième analyse » (4.48) sous le rapport de la série filmée : relit la vidéo image par image, puis remplace le
 // résultat (la première analyse reste consultable). Lancé seulement par la personne.
-export function SecondPass({ clip, result, onDone }) {
+export function SecondPass({ clip, result, onDone, onBusy = null }) {
   const [state, setState] = useState('idle'); // idle | run | error
   const [progress, setProgress] = useState(0);
   const videoRef = useRef(null);
   const stop = useRef(false);
   useEffect(() => () => { stop.current = true; }, []);
+  // 4.48.2 : la séance sait qu'une analyse tourne (le repos ne se termine pas pendant)
+  useEffect(() => { if (onBusy) onBusy(state === 'run'); return () => { if (onBusy && state === 'run') onBusy(false); }; }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
   // lancée une fois l'écran « en cours » affiché (la vidéo à relire doit être dans la page)
   useEffect(() => {
     if (state !== 'run') return;

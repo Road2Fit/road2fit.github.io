@@ -78,3 +78,35 @@ describe('deuxième analyse de la vidéo', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 });
+
+describe('4.48.2 : la fin du repos n’arrête pas la deuxième analyse', () => {
+  it('repos fini pendant l’analyse : l’écran de repos reste, le résultat arrive', async () => {
+    const h = await launch();
+    open.push(h);
+    expect(await toPullUps(h)).toBe(true);
+    const tl = o => timeline({ p1: 1.2, p2: 0.9, lead: 1.5, tail: 0.5, ...o });
+    const live = makeFrames(tl({ reps: 4 }), d => fit(pullUpBody(d)));
+    const pass2 = makeFrames(tl({ reps: 6 }), d => fit(pullUpBody(d)));
+    let release;
+    h.w.__r2fPoseMock = { frames: live, aspect: 9 / 16, batch: 60, clip: true, pass2, pass2Hold: new Promise(ok => { release = ok; }) };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
+    await advance(h, 0);
+    await clickEl(h, q(h, 'form-pass2-run'));
+    expect(q(h, 'form-pass2-running')).toBeTruthy();
+    await advance(h, 20 * 60 * 1000); // le repos est largement fini
+    expect(q(h, 'guided-rest')).toBeTruthy();
+    expect(q(h, 'form-pass2-running')).toBeTruthy(); // l'analyse continue
+    // passer maintenant demande confirmation (l'analyse serait arrêtée)
+    await clickEl(h, q(h, 'guided-next'));
+    expect(q(h, 'next-confirm').textContent).toMatch(/deuxième analyse/);
+    await clickEl(h, q(h, 'next-confirm-no'));
+    release();
+    expect(await waitFor(h, () => q(h, 'form-pass2-done'))).toBe(true);
+    expect(q(h, 'form-summary').textContent).toMatch(/^6 reps/);
+    expect(q(h, 'guided-rest')).toBeTruthy(); // on peut lire le résultat
+    await clickEl(h, q(h, 'guided-next')); // analyse finie, repos fini : on passe directement
+    expect(q(h, 'guided-rest')).toBeNull();
+    expect(h.errors).toEqual([]);
+  }, 120000);
+});

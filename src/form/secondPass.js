@@ -31,6 +31,7 @@ export async function runSecondPass({ clip, video, onProgress = () => {}, cancel
   const mock = poseMock();
   if (mock && mock.pass2) {
     // tests : images « relues » fournies à l'avance
+    if (mock.pass2Hold) await mock.pass2Hold; // tests : analyse qui dure
     onProgress(1);
     return mock.pass2;
   }

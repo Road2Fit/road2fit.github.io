@@ -31,9 +31,9 @@ describe('charge modifiable entre deux séries', () => {
     const startLoad = load();
     // séries 1 et 2 à la charge proposée (avec le repos entre les deux)
     await click(h, by(h, 'set-done'));
-    await click(h, by(h, 'guided-next'));
+    await click(h, by(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await click(h, c); }
     await click(h, by(h, 'set-done'));
-    await click(h, by(h, 'guided-next'));
+    await click(h, by(h, 'guided-next')); { const c = h.doc.querySelector('[data-testid="next-confirm-yes"]'); if (c) await click(h, c); }
     // on augmente (bouton + de la charge, un seul geste) avant les séries suivantes
     await click(h, h.doc.querySelector('button[aria-label="Charge plus"]'));
     await click(h, h.doc.querySelector('button[aria-label="Charge plus"]'));
