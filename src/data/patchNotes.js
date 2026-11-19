@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48.3',
+    date: '2026-11-19',
+    title: 'Vidéo : moins de « fantômes », meilleur comptage',
+    items: [
+      'Les objets du décor pris pour une personne sont écartés : pendant le film, l’appli ne lâche plus ta personne pour un « fantôme » apparu ailleurs.',
+      'Dips filmés de face : comptés d’après la hauteur des épaules (l’angle du coude est mal vu de face).',
+      'Développé couché : les fausses reps pendant l’installation sur le banc ne comptent plus.',
+      'Extensions lombaires : les reps comptent même quand tu fais une pause en haut entre chaque rep.',
+    ],
+  },
+  {
     version: '4.48.2',
     date: '2026-11-19',
     title: 'Repos : plus de « Série suivante » par erreur',

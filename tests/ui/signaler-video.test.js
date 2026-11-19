@@ -39,7 +39,7 @@ describe('signaler une analyse vidéo fausse', () => {
     const d = buildFlag({ series: { frames, aspect: 0.56 }, result: { ok: true, repCount: 8 }, item: { name: 'Squat' }, problems: ['count', 'nope'], trueReps: 10 });
     expect(d.problems).toEqual(['count']);
     expect(d.trueReps).toBe(10);
-    expect(d.capture).toEqual({ fps: 30, empty: 0, n: 90 });
+    expect(d.capture).toEqual({ fps: 30, empty: 0, n: 90, res: null });
     expect(JSON.stringify(d)).not.toMatch(/blob:|data:image|base64/);
   });
 

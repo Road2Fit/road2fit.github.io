@@ -185,6 +185,30 @@ function dropFlipped(F, torso2) {
   return F.map((f, i) => (sgn[i] === bad ? { ...f, p: null, w: null } : f));
 }
 
+// 4.48.3 (retour de Gabin, 19/11/2026 : « des éléments du décor sont reconnus comme des gens ») : images où le squelette
+// n'est visiblement pas la personne filmée, écartées (un filtre de taille a été essayé puis retiré : le buste paraît plus
+// court quand il tourne vers le téléphone, extensions lombaires 9 → 6 reps) :
+//  - LOIN de là où est la personne autour de cet instant (centre du buste à plus de 1,5 buste de la position médiane des
+//    images voisines, ±1,5 s : assez large pour qu'un fantôme qui dure quelques images reste minoritaire) : un « fantôme »
+//    apparu ailleurs dans l'image (dips du 19/11 : squelette posé sur le décor plusieurs images d'affilée).
+// Une vraie personne bouge en continu : même en sautant, son buste ne s'éloigne pas d'1,5 buste de sa position médiane sur
+// 3 s (vérifié sur les sauts, box jumps et tractions des tests).
+export const GHOST_FAR = 1.5, GHOST_WIN = 1.5;
+function dropGhosts(F, torso2, tRef) {
+  const T = median(torso2.filter((v, i) => F[i].p && v > 0)) || tRef;
+  if (!(T > 0)) return F;
+  const c = F.map(f => (f.p ? (() => { const s = midOf(f.p, f.p, 11, 12), h = midOf(f.p, f.p, 23, 24); return { x: (s.x + h.x) / 2, y: (s.y + h.y) / 2 }; })() : null));
+  return F.map((f, i) => {
+    if (!f.p) return f;
+    const xs = [], ys = [];
+    for (let k = i - 1; k >= 0 && f.t - F[k].t <= GHOST_WIN * 1000; k--) if (c[k]) { xs.push(c[k].x); ys.push(c[k].y); }
+    for (let k = i + 1; k < F.length && F[k].t - f.t <= GHOST_WIN * 1000; k++) if (c[k]) { xs.push(c[k].x); ys.push(c[k].y); }
+    if (xs.length < 6) return f;
+    const d = Math.hypot(c[i].x - median(xs), c[i].y - median(ys));
+    return d > GHOST_FAR * T ? { ...f, p: null, w: null } : f;
+  });
+}
+
 function makeCtx(frames, meta) {
   const aspect = meta.aspect || 9 / 16;
   let F = prepare(ownTrack(frames, aspect), aspect);
@@ -194,6 +218,7 @@ function makeCtx(frames, meta) {
   const tRef = quantile(torso2, 0.85);
   F = F.map((f, i) => (f.p && torso2[i] > tRef * 1.35 ? { ...f, p: null, w: null } : f));
   F = dropFlipped(F, torso2);
+  F = dropGhosts(F, torso2, tRef);
   const t = F.map(f => f.t);
   const valid = F.filter(f => f.p).length;
   const dts = t.slice(1).map((v, i) => v - t[i]).filter(d => d > 0);
@@ -284,6 +309,8 @@ function globalRaw(ctx, name) {
     if (!P) return NaN;
     switch (name) {
       case 'hipY': return P[23].v >= VIS || P[24].v >= VIS ? midOf(P, P, 23, 24).y / T : NaN;
+      case 'shY': return P[11].v >= VIS || P[12].v >= VIS ? midOf(P, P, 11, 12).y / T : NaN;
+      case 'wrY': return P[15].v >= VIS || P[16].v >= VIS ? midOf(P, P, 15, 16).y / T : NaN;
       case 'wristUp': {
         if (!(P[15].v >= VIS || P[16].v >= VIS)) return NaN;
         return (midOf(P, P, 23, 24).y - midOf(P, P, 15, 16).y) / T;
@@ -440,8 +467,16 @@ function motionSeries(ctx, P = PATTERNS.generic) {
  * rest : 'hi' | 'lo' (position de départ) ou null (déduite des premières images).
  */
 export function detectReps(t, s, { rest = null, min = 0, restMax = 0.25, startRest = false } = {}) {
-  const lo = quantile(s, 0.05), hi = quantile(s, 0.95), R = hi - lo;
+  // 'dwell' : amplitude prise entre 10 % et 95 % (descendre de la machine en fin de série ne doit pas « écraser » les reps)
+  const lo = quantile(s, rest === 'dwell' ? 0.1 : 0.05), hi = quantile(s, 0.95), R = hi - lo;
   if (!(R > 0) || R < min) return { reps: [], R: isNum(R) ? R : 0, lo, hi, rest };
+  // 4.48.3 (extensions lombaires du 19/11/2026 : 0 rep sur 11) : 'dwell' = position de repos là où le signal passe le plus
+  // de temps (en haut ou en bas), pour les mouvements où l'on peut s'arrêter d'un côté comme de l'autre
+  if (rest === 'dwell') {
+    const v = Array.from(s).filter(isNum);
+    const top = v.filter(x => x >= hi - 0.25 * R).length, bot = v.filter(x => x <= lo + 0.25 * R).length;
+    rest = top >= bot ? 'hi' : 'lo';
+  }
   if (!rest) {
     const first = [];
     for (let i = 0; i < s.length && first.length < 15; i++) if (isNum(s[i])) first.push(s[i]);
@@ -592,11 +627,30 @@ function dropIsolated(ctx, reps) {
 }
 // sauts (4.47.7) : on peut atterrir un peu plus loin ou monter sur une caisse, mais pas marcher jusqu'au téléphone
 const JUMP_RETURN_MAX = 1.15, JUMP_EDGE_OUT = 1.2;
+// 4.48.3 (développé couché du 19/11/2026 : 14 reps comptées sur 10, les 4 de trop pendant l'installation sur le banc) :
+// vu de biais, l'angle du coude saute dans tous les sens alors que la barre ne bouge pas. Pour `barMoves`, une rep dont
+// les poignets (la barre) bougent bien moins que dans les autres reps est écartée. Seulement si les poignets sont assez
+// bien vus : sinon on ne peut rien dire et on garde tout.
+export const BAR_STILL = 0.35;
+function stillBarReps(ctx, reps) {
+  const w = globalSeries(ctx, 'wrY');
+  const amp = reps.map(r => {
+    const seg = w.slice(r.start, r.end + 1).filter(isNum);
+    return seg.length >= 0.5 * (r.end - r.start + 1) && seg.length >= 3 ? Math.max(...seg) - Math.min(...seg) : NaN;
+  });
+  const seen = amp.filter(isNum);
+  if (seen.length < 3) return null;
+  const ref = median(seen);
+  return new Set(reps.filter((r, k) => isNum(amp[k]) && amp[k] < BAR_STILL * ref));
+}
+
 function realReps(ctx, P, reps, u = null) {
   const jump = P.id === 'jump';
+  const still = P.barMoves && reps.length >= 3 ? stillBarReps(ctx, reps) : null;
   const kept = reps.filter(r => {
     if (!(ctx.t[r.end] - ctx.t[r.start] >= (P.minRep || MIN_REP_S))) return false;
     if (HANDS_UP.has(P.id) && handsUpShare(ctx, r) < 0.7) return false;
+    if (still && still.has(r)) return false;
     if (!P.travels && (jump ? bodyShift(ctx, r, u) > JUMP_RETURN_MAX : !TRAVELS.has(P.id) && bodyShift(ctx, r, u) > (P.returnMax || RETURN_MAX))) return false;
     return true;
   });
@@ -648,7 +702,43 @@ function jumpyShare(ctx) {
   return n >= 20 ? j / n : 0;
 }
 
+// 4.48.3 (dips filmés de face, 19/11/2026 : 3 et 4 reps comptées sur 8) : hors de la vue conseillée, l'angle du coude
+// est mal mesuré (le bras plie vers le téléphone), alors que la hauteur des épaules montre nettement chaque rep. Pour les
+// mouvements où tout le corps monte et descend (`travel` dans patterns.js), on garde le signal qui donne le plus de reps
+// valides quand la personne n'est pas filmée sous l'angle conseillé (dès 3 reps : le coude mal vu peut aussi en inventer).
+function pickMain(ctx, P) {
+  let s = mainRaw(ctx, P);
+  let rest = restFor(P);
+  if (s && P.hiddenTurn) s = fillHidden(ctx, s, rest);
+  // développé couché (barMoves) : quand les poignets sont bien vus, la hauteur de la barre compte les reps bien mieux que
+  // l'angle du coude vu de biais (19/11/2026 : 10 reps justes au lieu de 14) ; sinon on garde le coude
+  if (P.barMoves) {
+    const w = globalSeries(ctx, 'wrY');
+    if (vcov(ctx, w) >= 0.8) {
+      const d = detectReps(ctx.t, w, { rest: 'lo', min: 0.3, restMax: P.restMax });
+      const nW = realReps(ctx, P, d.reps, d.u).length;
+      // et seulement s'ils voient la plupart des reps du coude (sinon les poignets sont mal suivis : 3 reps au lieu de 10)
+      let nE = 0;
+      const e = mainRaw(ctx, P);
+      if (e && vcov(ctx, e) >= 0.5) { const ee = fillHidden(ctx, e, restFor(P)); const de = detectReps(ctx.t, ee, { rest: restFor(P), min: P.min || 0, restMax: P.restMax }); nE = realReps(ctx, P, de.reps, de.u).length; }
+      if (nW >= 3 && nW >= 0.7 * nE) return { s: w, rest: 'lo', min: 0.3, travel: true, sig: 'wrY' };
+    }
+  }
+  const tv = P.travel;
+  if (tv && ctx.view !== P.view && !(P.view === 'side' && ctx.view === 'oblique')) {
+    const t = globalSeries(ctx, tv.signal);
+    if (vcov(ctx, t) >= 0.5) {
+      const n = (sig, r, min) => { const d = detectReps(ctx.t, sig, { rest: r, min, restMax: P.restMax, startRest: !!P.startRest }); return realReps(ctx, P, d.reps, d.u).length; };
+      const nMain = s && vcov(ctx, s) >= 0.5 ? n(s, rest, P.min || 0) : 0;
+      const nT = n(t, tv.rest, tv.min || 0.12);
+      if (nT >= 3 || nT > nMain) return { s: t, rest: tv.rest, min: tv.min || 0.12, travel: true };
+    }
+  }
+  return { s, rest, min: P.min || 0 };
+}
+
 function restFor(P) {
+  if (P.restDwell) return 'dwell';
   if (!P.conDir) return null;
   return (P.first === 'ecc') === (P.conDir > 0) ? 'hi' : 'lo';
 }
@@ -672,14 +762,12 @@ export function liveCount(frames, pattern, meta = {}) {
   if (P.iso || !frames || frames.length < 8) return 0;
   const ctx = makeCtx(frames, meta);
   if (!ctx.valid) return 0;
-  let s = mainRaw(ctx, P);
-  let rest = restFor(P);
-  if (s && P.hiddenTurn) s = fillHidden(ctx, s, rest);
+  let { s, rest, min } = pickMain(ctx, P);
   let fallback = false;
   if (!s || vcov(ctx, s) < 0.5) { s = motionSeries(ctx, P); rest = null; fallback = true; }
   if (!s) return 0;
   // mêmes réglages que l'analyse complète (avant 4.24, le compte en direct n'avait pas de seuil sur le signal de secours)
-  const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0, restMax: P.restMax, startRest: !!P.startRest });
+  const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : min, restMax: P.restMax, startRest: !!P.startRest });
   return realReps(ctx, P, det.reps, det.u).length;
 }
 
@@ -697,9 +785,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
   if (jumpyShare(ctx) > UNSTABLE) return fail('unstable', 'Ton corps était mal reconnu dans cette vidéo (le squelette sautait d’un endroit à l’autre) : je préfère ne pas compter.', P);
   if (P.iso) return analyzeHold(ctx, P);
 
-  let s = mainRaw(ctx, P);
-  let rest = restFor(P);
-  if (s && P.hiddenTurn) s = fillHidden(ctx, s, rest);
+  let { s, rest, min, travel } = pickMain(ctx, P);
   let fallback = false;
   if (!s || vcov(ctx, s) < 0.5) {
     s = motionSeries(ctx, P);
@@ -707,7 +793,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
     fallback = true;
     if (!s) return fail('framing', 'Ton corps n’était pas assez visible pour analyser la série.', P);
   }
-  const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : P.min || 0, restMax: P.restMax, startRest: !!P.startRest });
+  const det = detectReps(ctx.t, s, { rest, min: fallback ? 0.12 : min, restMax: P.restMax, startRest: !!P.startRest });
   det.reps = realReps(ctx, P, det.reps, det.u);
   if (!det.reps.length) return fail('nomove', 'Je n’ai pas vu de répétition nette.', P);
   ctx.main = s;
@@ -758,7 +844,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
     fallback,
     quality: Math.round(quality * 100) / 100,
     repCount: N,
-    signal: fallback ? 'motion' : P.signal,
+    signal: fallback ? 'motion' : travel ? (P.travel ? P.travel.signal : 'wrY') : P.signal,
     // par rep : durées, amplitude relative, valeurs extrêmes du signal (degrés pour un angle), inclinaison du buste au point d'inversion
     reps: reps.map((r, i) => {
       const c = cyc(s, r);

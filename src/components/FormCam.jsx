@@ -126,7 +126,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
         const res = analyzeSet(r.frames, P, { aspect: r.aspect, targetReps, chinCal: getChinCal() });
         // 4.38 : squelette de la série gardé (en mémoire) pour pouvoir signaler une analyse fausse
         const sid = `series-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-        keepSeries({ id: sid, frames: r.frames, aspect: r.aspect, mirror: facing === 'user', pattern: P.id, targetReps, chinCal: getChinCal() });
+        keepSeries({ id: sid, frames: r.frames, aspect: r.aspect, mirror: facing === 'user', pattern: P.id, targetReps, chinCal: getChinCal(), res: r.res || null });
         res.seriesId = sid;
         if (clip) {
           const id = `clip-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
@@ -290,6 +290,7 @@ export default function FormCam({ item, info = '', targetReps = 0, holdTarget = 
           const ts = performance.now();
           let res = null;
           try { res = pose.detect(v, ts, crop); } catch (e) { crop = null; crops.reset(); }
+          r.res = [v.videoWidth, v.videoHeight]; // taille réelle de la vidéo (diagnostic vertical / horizontal, 4.48.3)
           onFrame(res, ts, v.videoWidth / v.videoHeight);
           // zoom seulement pendant la série : à la mise en place l'image entière permet de trouver la personne au premier
           // plan même si quelqu'un d'autre a été vu avant (sinon le morceau resterait fixé sur cette autre personne)

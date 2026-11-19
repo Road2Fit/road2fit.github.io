@@ -6,6 +6,10 @@
 export const MAX_POSES = 3;
 const NEAR = 0.6; // déplacement max d'une image à l'autre, en tailles de corps
 const BIGGER = 1.6; // une autre personne bien plus grande reprend la main
+// 4.48.3 : la personne suivie n'est pas trouvée à cet endroit : on n'accepte quelqu'un d'AUTRE (ailleurs, autre taille)
+// qu'après ~1,5 s d'absence (15 images à ~10 img/s). Avant, un objet du décor détecté comme une personne prenait la place
+// dès la première image où la vraie personne était perdue.
+export const REACQUIRE = 15;
 
 /** Taille et centre d'une personne (repères assez visibles), en hauteurs d'image. */
 export function personBox(lm, aspect = 9 / 16) {
@@ -33,7 +37,9 @@ export function pickPerson(poses, aspect, prev = null, follow = false) {
       .sort((a, b) => a.d - b.d)[0];
     if (near && !(biggest !== near && biggest.b.size > near.b.size * BIGGER)) pick = near;
     // la personne suivie a disparu et il ne reste que quelqu'un de plus petit (au fond) : on ne le suit pas
-    else if (!near && biggest.b.size < prev.size * 0.6) return { pose: null, track: prev };
+    else if (!near && biggest.b.size < prev.size * 0.6) return { pose: null, track: { ...prev, miss: (prev.miss || 0) + 1 } };
+    // ailleurs dans l'image (souvent un objet pris pour une personne) : ignoré tant que la personne n'est pas partie ~1,5 s
+    else if (!near && biggest.b.size <= prev.size * BIGGER && (prev.miss || 0) < REACQUIRE) return { pose: null, track: { ...prev, miss: (prev.miss || 0) + 1 } };
   }
   return { pose: pick.p, track: pick.b };
 }
