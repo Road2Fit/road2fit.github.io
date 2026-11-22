@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.51.2',
+    date: '2026-11-22',
+    title: 'Notification de suivi de séance',
+    items: [
+      'Pendant une séance guidée, si tu quittes l’appli : une notification te montre l’exercice, la série, la charge et le temps de séance.',
+      'Pendant le repos, elle affiche le temps qui reste (mis à jour toutes les 5 s) et ce qui vient ensuite, puis vibre à la fin du repos.',
+      'Elle disparaît dès que tu reviens dans l’appli, et pour de bon à la fin de la séance ou si tu l’abandonnes.',
+    ],
+  },
+  {
     version: '4.51.1',
     date: '2026-11-22',
     title: 'Notification de repos plus fiable',

@@ -12,6 +12,7 @@ import { warmupSets } from '../coach/warmup';
 import { formatDayFr, getTodayISODate, toLocalISODate } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
 import { applyStrengthSession } from '../lib/sessionRecord';
+import { endSessionStatus, pushSessionStatus } from '../lib/sessionNotify';
 import { assistsOf, loadsOf, weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useEffect, useRef, useState } from 'react';
@@ -244,6 +245,22 @@ export function useGuidedSession({
     try { setRecap(coachSessionRecap(gameState.quests, updatedQuests, g, today, award.gained, gameState)); } catch (err) {}
     if (bossQuest) openLevelUpModal(bossQuest);
   };
+
+  // 4.51.2 : notification de suivi de séance (lib/sessionNotify.js) : état envoyé au service worker à chaque changement,
+  // toutes les 15 s et au retour sur l'appli (pour la retirer) ; séance finie ou abandonnée → retirée
+  const guidedRef = useRef(guided);
+  guidedRef.current = guided;
+  const live = !!(guided && guided.startedAt && guided.phase !== 'summary');
+  useEffect(() => {
+    if (live) pushSessionStatus(guided);
+  }, [guided, live]);
+  useEffect(() => {
+    if (!live) { endSessionStatus(); return undefined; }
+    const tick = () => { if (guidedRef.current) pushSessionStatus(guidedRef.current); };
+    const timer = setInterval(tick, 15000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+  }, [live]);
 
   const [recap, setRecap] = useState(null);
 

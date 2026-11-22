@@ -69,6 +69,7 @@ self.addEventListener('message', (event) => {
   if (d.type === 'rest-close') { event.waitUntil(closeRest()); return; } // retour sur l'appli : on retire seulement ce qui est affiché
   if (d.type !== 'rest') return;
   cancelRest();
+  if (session) return; // séance guidée : sa notification de suivi annonce déjà la fin du repos
   const wait = Math.max(0, Math.min(15 * 60 * 1000, Number(d.endAt) - Date.now()));
   event.waitUntil(closeRest().then(() => new Promise((resolve) => {
     restDone = resolve;
@@ -83,6 +84,64 @@ self.addEventListener('message', (event) => {
       }).catch(() => {}).then(resolve);
     }, wait);
   })));
+});
+
+// Notification de suivi de séance (4.51.2, demande de Gabin) : séance guidée en cours et appli quittée → une notification
+// « où j'en suis » (exercice, série, charge, temps de séance) ; pendant le repos, le temps restant, mis à jour toutes les
+// 5 s, puis « Repos terminé » qui vibre. Silencieuse sinon. Retirée dès qu'on revient dans l'appli ou à la fin de la séance.
+// La page renvoie l'état à chaque changement et toutes les 15 s (chaque message relance l'attente du service worker).
+const SESSION_TAG = 'rondoufit-session';
+let session = null;      // dernier état reçu
+let sessionWake = null;  // réveil de la boucle
+let sessionLoop = null;  // promesse de la boucle (gardée vivante par waitUntil)
+const mmss = (ms) => { const t = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+const anyVisible = () => self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((l) => l.some((c) => c.visibilityState === 'visible')).catch(() => false);
+const closeTag = (tag) => self.registration.getNotifications({ tag }).then((l) => l.forEach((n) => n.close())).catch(() => {});
+async function renderSession(alert) {
+  if (!session) return closeTag(SESSION_TAG);
+  if (await anyVisible()) return closeTag(SESSION_TAG);
+  const now = Date.now();
+  const elapsed = mmss(now - session.startedAt);
+  const resting = session.rest && session.rest.endAt > now;
+  const title = resting ? `Repos : ${mmss(session.rest.endAt - now)} · séance ${elapsed}` : alert ? `Repos terminé · séance ${elapsed}` : `Séance en cours · ${elapsed}`;
+  const body = resting ? `Ensuite : ${session.rest.next || `${session.name} · ${session.set}`}` : `${session.name} · ${session.set} · ${session.detail}\n${session.progress}`;
+  return self.registration.showNotification(title, {
+    body, tag: SESSION_TAG, renotify: !!alert, silent: !alert, vibrate: alert ? [200, 100, 200] : undefined,
+    requireInteraction: true, icon: './neutral/icon-192.png', badge: './neutral/favicon-48.png',
+  }).catch(() => {});
+}
+function runSessionLoop() {
+  if (sessionLoop) { if (sessionWake) sessionWake(); return sessionLoop; }
+  sessionLoop = (async () => {
+    let last = Date.now();
+    let wasResting = false;
+    while (session && Date.now() - session.at < 10 * 60 * 1000) { // plus de nouvelles depuis 10 min : on s'arrête
+      const now = Date.now();
+      const resting = !!(session.rest && session.rest.endAt > now);
+      const ended = wasResting && !resting && session.rest;
+      await renderSession(ended);
+      if (ended) session.rest = null;
+      wasResting = resting;
+      const wait = resting ? Math.min(5000, Math.max(250, session.rest.endAt - now)) : 30000;
+      await new Promise((r) => { sessionWake = r; setTimeout(r, wait); });
+      sessionWake = null;
+      last = now;
+    }
+    sessionLoop = null;
+    if (!session) await closeTag(SESSION_TAG);
+  })();
+  return sessionLoop;
+}
+self.addEventListener('message', (event) => {
+  const d = event.data || {};
+  if (d.type === 'session') {
+    session = { ...d, at: Date.now() };
+    event.waitUntil(Promise.race([runSessionLoop(), new Promise((r) => setTimeout(r, 4 * 60 * 1000))]));
+  } else if (d.type === 'session-end') {
+    session = null;
+    if (sessionWake) sessionWake();
+    event.waitUntil(closeTag(SESSION_TAG));
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {
