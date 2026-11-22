@@ -58,6 +58,14 @@ export function normalizeAction(a, state, today) {
       if (Object.keys(o).length) args = o;
       break;
     }
+    case 'sport_dates': {
+      // 4.52.2 (Gabin : « pas de volley la semaine prochaine » accepté mais rien ne changeait) : sport annulé ou ajouté
+      // un jour précis, sans toucher aux jours habituels (coach.volleySkips / coach.volleyExtra, comme « Ma semaine »)
+      const add = dateList(x.add, today);
+      const remove = dateList(x.remove, today);
+      if (add.length || remove.length) args = { add, remove };
+      break;
+    }
     case 'matches': {
       const add = dateList(x.add, today);
       const remove = Array.isArray(x.remove) ? x.remove.map(String).filter(d => ISO.test(d)) : [];
@@ -218,6 +226,7 @@ export function normalizeAction(a, state, today) {
 }
 
 function defaultLabel(type, args, state) {
+  if (type === 'sport_dates') return [args.remove.length ? `Pas de sport le ${args.remove.join(', ')}` : '', args.add.length ? `Sport en plus le ${args.add.join(', ')}` : ''].filter(Boolean).join(' ; ');
   if (type === 'duo') return `Inviter ${args.friend} à une séance à deux le ${args.date}`;
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
@@ -262,6 +271,13 @@ export function applyAction(state, a, today) {
       if (x.sport !== undefined) patch.sport = x.sport;
       if (x.days) patch.volleyDays = x.days;
       return withCoach(patch);
+    }
+    case 'sport_dates': {
+      const skips = new Set(coach.volleySkips || []);
+      const extra = new Set(coach.volleyExtra || []);
+      x.remove.forEach(d => { skips.add(d); extra.delete(d); });
+      x.add.forEach(d => { extra.add(d); skips.delete(d); });
+      return withCoach({ volleySkips: [...skips].sort(), volleyExtra: [...extra].sort() });
     }
     case 'matches': {
       const set = new Set(coach.matchDates || []);
@@ -370,7 +386,7 @@ export function applyAction(state, a, today) {
 
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
-  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], goal: ['workProfile'],
+  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], sport_dates: ['volleySkips', 'volleyExtra'], goal: ['workProfile'],
   body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], day_style: ['dayStyles', 'gymExtra', 'gymSkips'], plyo: ['plyo'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 

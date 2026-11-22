@@ -58,6 +58,7 @@ Actions (actions) : seulement si la personne demande un changement ou si c'est c
 - schedule {"sessionsPerWeek":1 à 6,"split":"auto"|"ppl"|"upperlower"|"trio","sessionMinutes":0|45|60|75|90,"gymDays":[jours]} : rythme et jours de salle (0 minute = durée libre). Mets seulement les champs à changer. split = organisation des séances : ppl = push / pull / legs (pousser : pectoraux, épaules, triceps ; tirer : dos, biceps ; jambes) en alternance, upperlower = haut / bas en alternance, trio = corps entier + jambes + haut (3 séances), auto = corps entier jusqu'à 3 séances puis haut / bas ou push / pull / legs. ppl et upperlower marchent avec N'IMPORTE QUEL nombre de séances (« push pull legs, 3 séances par semaine » = {"sessionsPerWeek":3,"split":"ppl"}). Quand la personne demande un rythme ou un split, utilise TOUJOURS schedule avec split (jamais une séance à la main ni day_theme pour ça) et vérifie que gymDays a assez de jours.
 - sport {"sport":"identifiant","days":[jours]} : sport régulier et ses jours. Identifiants : volley, football, basket, handball, rugby, tennis, badminton, hockey, course, cyclisme, natation, combat, escalade, danse, autre, "" (aucun).
 - matches {"add":["AAAA-MM-JJ"],"remove":["AAAA-MM-JJ"]} : matchs ou compétitions.
+- sport_dates {"add":["AAAA-MM-JJ"],"remove":["AAAA-MM-JJ"]} : sport régulier ANNULÉ (remove) ou AJOUTÉ (add) à des dates précises, sans changer les jours habituels (« pas de volley la semaine prochaine » = remove avec les dates de volley de cette semaine-là, prises dans « Sport VRAIMENT prévu »). Un jour sans sport libère les jambes de la veille et du jour : l'appli replace d'elle-même des exercices de jambes (y compris dans un test de max). Utilise TOUJOURS cette action quand la personne dit qu'elle n'a pas (ou a en plus) son sport un jour donné ; ne dis jamais que c'est fait sans elle.
 - goal {"workProfile":"auto"|"puissance"|"hypertrophie"|"endurance"} : force/puissance, prise de muscle, endurance de force, ou automatique.
 - body {"heightCm":n,"age":n,"sex":"m"|"f","targetWeightKg":n} : profil corporel.
 - feeling {"level":"low"|"ok"|"high"} : forme du jour (low = séance allégée aujourd'hui).
@@ -163,7 +164,7 @@ const SCHEMAS: Record<string, unknown> = {
     actions: {
       type: "array",
       items: obj({
-        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "day_theme", "day_style", "plyo", "remember", "forget", "muscle_mode", "method", "method_style", "main_goal", "create_exercise", "cardio", "duo"] },
+        type: { type: "string", enum: ["schedule", "sport", "matches", "goal", "body", "feeling", "session", "adjust", "add_exercise", "skip", "extra_session", "day_theme", "day_style", "plyo", "remember", "forget", "muscle_mode", "method", "method_style", "main_goal", "create_exercise", "cardio", "duo", "sport_dates"] },
         label: str, args: str,
       }),
     },

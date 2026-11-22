@@ -224,7 +224,8 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
   // répétitions effectives de chaque série (faites + en réserve si le ressenti est noté et pris en compte)
   const effective = s => {
     const rir = useRpe ? rirOf(s.entry) : null;
-    if (useRpe && rir === null) return null; // ressenti pas donné : la séance ne compte pas dans le max (règle de Gabin)
+    // 4.52.2 (Gabin : « 31 kg au hip thrust alors que j'ai fait 4 × 8 à 30 aujourd'hui ») : une séance sans ressenti compte
+    // aussi, comme faite à l'échec (prudent) ; avant, elle était écartée
     if (rir !== null && rir > MAX_RIR) return null; // trop loin de l'échec : pas utilisée
     const reff = s.reps + (rir || 0);
     return reff <= MAX_EFFECTIVE_REPS ? { reff, rir: rir || 0 } : null;
@@ -262,14 +263,17 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
   const wavg = (list, key) => { const ws = list.map(c => [c, weightOf(c)]); const W = ws.reduce((t, x) => t + x[1], 0) || 1; return ws.reduce((t, x) => t + x[1] * x[0].est[key], 0) / W; };
   const weighted = pool.map(c => ({ c, w: weightOf(c) }));
   const avg = key => wavg(pool, key);
-  const best = weighted.reduce((b, x) => (x.w > b.w ? x : b)).c; // séance qui pèse le plus : base affichée
+  // 4.52.2 (demande de Gabin) : la MEILLEURE séance récente fait le max (charge et répétitions de sa meilleure série),
+  // plus la moyenne pondérée, que les vieilles séances plus légères tiraient vers le bas
+  const best = pool.reduce((b, c) => (c.est.mean > b.est.mean ? c : b));
+  void weighted;
   const allTime = cands.reduce((b, c) => (c.est.mean > b.est.mean ? c : b));
   const conf = best.reff <= 5 ? 'bonne' : best.reff <= 10 ? 'moyenne' : 'faible';
   const result = {
     kind,
     manual,
-    estimate: avg('mean'),
-    range: [avg('min'), avg('max')],
+    estimate: best.est.mean,
+    range: [best.est.min, best.est.max],
     confidence: conf,
     basis: { reps: best.reps, rir: best.rir, load: best.load, date: best.entry.date, rpe: best.entry.rpe, assistanceKg: best.entry.assistanceKg },
     sessions: pool.length,
@@ -282,7 +286,7 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
   // avec un k personnel : ce que donnaient les équations seules (pour comparer avec le record réel)
   if (k) {
     const gen = sessionsWith(undefined).filter(c => c.entry.date >= (recent.length ? limit : ''));
-    if (gen.length) result.estimateGeneric = kind === 'load' ? round05(wavg(gen, 'mean')) : wavg(gen, 'mean');
+    if (gen.length) { const g = Math.max(...gen.map(c => c.est.mean)); result.estimateGeneric = kind === 'load' ? round05(g) : g; }
   }
   if (kind !== 'load') {
     result.assistFor1 = Math.max(0, best.bw - result.estimate); // aide qu'il faudrait pour 1 répétition

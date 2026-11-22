@@ -16,3 +16,19 @@ describe('contexte du coach IA : sport', () => {
     expect(annule).toContain('2026-11-26');
   });
 });
+
+describe('action sport_dates (4.52.2)', () => {
+  it('« pas de volley jeudi » : jour annulé, jambes de nouveau possibles ce jour-là et la veille', async () => {
+    const { normalizeActions, applyActions } = await import('./actions');
+    const { coachDayInfo } = await import('../coach/planning');
+    const st = { ...INITIAL_STATE, coach: { ...(INITIAL_STATE.coach || {}), sport: 'volley', volleyDays: [4] } };
+    expect(coachDayInfo('2026-11-25', st.coach).legsOk).toBe(false);
+    const acts = normalizeActions([{ type: 'sport_dates', label: '', args: JSON.stringify({ remove: ['2026-11-26'] }) }], st, '2026-11-22');
+    expect(acts).toHaveLength(1);
+    const next = applyActions(st, acts, '2026-11-22');
+    expect(next.coach.volleySkips).toEqual(['2026-11-26']);
+    expect(coachDayInfo('2026-11-26', next.coach).isVolley).toBe(false);
+    expect(coachDayInfo('2026-11-25', next.coach).legsOk).toBe(true);
+    expect(coachDayInfo('2026-12-03', next.coach).isVolley).toBe(true);
+  });
+});

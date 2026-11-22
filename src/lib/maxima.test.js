@@ -151,16 +151,19 @@ describe('répétitions effectives et k personnel (méthode inspirée de Forge)'
     expect(r.estimate).toBeCloseTo(90, 0);
     expect(r.estimateGeneric).toBeGreaterThan(91); // les équations (≈ k 30) prédisaient plus
   });
-  it('ressenti pas donné (7/10 mis par défaut) : la séance ne compte pas dans le max', () => {
+  it('4.52.2 : ressenti pas donné → la séance compte, comme faite à l’échec ; la MEILLEURE séance fait le max', () => {
     const q = bench([entry('a', '2026-10-15', [5, 5, 5], 80, { rpe: 7, rpeSet: false }), entry('b', '2026-10-17', [6, 6], 70, { rpe: 9, rpeSet: true })]);
     const r = estimateQuestMax(q, {}, { today: TODAY, useRpe: true });
-    expect(r.sessions).toBe(1);
-    expect(r.basis.load).toBe(70);
+    expect(r.sessions).toBe(2);
+    expect(r.basis.load).toBe(80); // 80 × 5 (≈ 93) bat 70 × 6 + 1 en réserve (≈ 86)
     const seule = bench([entry('a', '2026-10-15', [5, 5, 5], 80, { rpe: 7, rpeSet: false })]);
-    const vide = estimateQuestMax(seule, {}, { today: TODAY, useRpe: true });
-    expect(vide.empty).toBe(true);
-    expect(vide.noRpe).toBe(true);
-    // le coach (sans le ressenti) la compte toujours, prudemment, comme faite à l'échec
-    expect(estimateQuestMax(seule, {}, { today: TODAY }).empty).toBeFalsy();
+    expect(estimateQuestMax(seule, {}, { today: TODAY, useRpe: true }).empty).toBeFalsy();
+  });
+  it('4.52.2 (hip thrust de Gabin) : 4 × 8 à 30 kg aujourd’hui après des séances plus légères → max ≈ 38 kg, pas 31', () => {
+    const q = bench([entry('a', '2026-10-01', [10, 10, 10], 20), entry('b', '2026-10-10', [10, 10, 10], 22.5), entry('c', TODAY, [8, 8, 8, 8], 30)]);
+    const r = estimateQuestMax(q, {}, { today: TODAY, useRpe: true });
+    expect(r.estimate).toBeGreaterThanOrEqual(37);
+    expect(r.estimate).toBeLessThanOrEqual(40);
+    expect(r.basis.load).toBe(30);
   });
 });

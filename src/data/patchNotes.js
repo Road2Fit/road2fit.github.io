@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.52.2',
+    date: '2026-11-22',
+    title: 'Maxima d’après ta meilleure séance ; sport annulé par le coach',
+    items: [
+      'Max estimé : il vient maintenant de ta MEILLEURE séance des 90 derniers jours (charge et répétitions de sa meilleure série), plus d’une moyenne que tes anciennes séances plus légères tiraient vers le bas. Ex. 4 × 8 à 30 kg au hip thrust → ≈ 38 kg.',
+      'Une séance notée sans ressenti compte aussi (comme faite à l’échec, prudemment) : avant, elle était ignorée.',
+      'Coach : « pas de volley la semaine prochaine » s’applique vraiment (le sport est annulé ces jours-là, et les jambes reviennent dans tes séances, test de max compris). Même chose pour un sport en plus un jour précis.',
+    ],
+  },
+  {
     version: '4.52.1',
     date: '2026-11-22',
     title: 'Le coach voit tes séances de sport annulées',

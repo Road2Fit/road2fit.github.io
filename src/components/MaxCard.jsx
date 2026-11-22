@@ -112,7 +112,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
           )}
           <p className="text-xs text-slate-400" data-testid="max-basis">
             Fourchette : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
-            {result.sessions > 1 ? ` Moyenne de tes ${result.sessions} séances récentes (les séries courtes et récentes comptent le plus), surtout` : ' D’après'}{' '}
+            {result.sessions > 1 ? ` Ta meilleure séance parmi les ${result.sessions} des 90 derniers jours :` : ' D’après'}{' '}
             {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
             {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${fmt(result.basis.rir)} rép en réserve)` : ''}.
           </p>
