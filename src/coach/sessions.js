@@ -292,11 +292,15 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
 // aucun exercice ne s'y prête (la séance normale est alors construite, avec une note).
 function coachBuildMaxTest(state, di, chosen) {
   const allowed = chosen ? COACH_TYPES[chosen].arenas : null;
-  const lifts = pickMaxLifts(state, { legsOk: di.legsOk, allowedArenas: allowed, quests: coachableQuests(state, di.iso) });
+  // 4.53.3 (Gabin : « bas du corps » choisi pour son test de max, mais pas de jambes) : un thème choisi avec des jambes
+  // passe avant la règle « jambes au repos » (veille de sport ou de match), comme pour une séance normale
+  const forced = !!(chosen && COACH_TYPES[chosen].legs && !di.legsOk);
+  const legsOk = di.legsOk || forced;
+  const lifts = pickMaxLifts(state, { legsOk, allowedArenas: allowed, quests: coachableQuests(state, di.iso) });
   const targets = lifts.map(q => computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso }));
   const t = buildMaxTest(state, targets, di.iso);
   if (!t.exercises.length) return null;
-  const notes = [...(di.legsOk ? [] : [`Pas de test des jambes aujourd’hui (${di.legsWhy}).`]), ...t.notes];
+  const notes = [...(forced ? [`D’habitude le coach évite les jambes ce jour-là (${di.legsWhy}) : tu as choisi de les tester, garde de la marge.`] : di.legsOk ? [] : [`Pas de test des jambes aujourd’hui (${di.legsWhy}). Pour les tester quand même, choisis le thème « Bas du corps » ou « Corps entier ».`]), ...t.notes];
   const warmMin = t.exercises.reduce((m, e) => m + (maxTestWarmup(e) || []).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
   const w = Number(state.userWeightKg) || 82;
   const estKcal = t.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: false, weightKg: e.load, assistanceKg: 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);

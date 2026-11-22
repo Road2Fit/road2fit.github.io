@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.53.3',
+    date: '2026-11-22',
+    title: 'Test de max : les jambes quand tu le choisis',
+    items: [
+      'Un test de max la veille de ton sport (ou d’un match) laissait les jambes de côté même avec le thème « Bas du corps » choisi. Maintenant, ton thème passe avant : « Bas du corps » ou « Corps entier » met les jambes dans le test, avec un rappel de garder de la marge.',
+      'Sans thème choisi, la séance dit pourquoi les jambes sont évitées ce jour-là et comment les tester quand même. Le coach sait aussi le faire quand tu le lui demandes.',
+    ],
+  },
+  {
     version: '4.53.2',
     date: '2026-11-22',
     title: 'Tu changes la charge du test de max',

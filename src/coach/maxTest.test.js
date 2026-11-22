@@ -172,3 +172,18 @@ describe('4.53.2 : charge ou aide du test choisies à la main', () => {
     expect(r.quest.maxTestAssist).toBeUndefined();
   });
 });
+
+describe('4.53.3 : jambes au test de max', () => {
+  it('veille de volley : pas de jambes, sauf si la personne choisit « Bas du corps »', () => {
+    const thu = '2026-11-26';
+    const st0 = mk('advanced', 20, { sport: 'volley', volleyDays: [5], dayStyles: { [thu]: 'max' } });
+    const di = { iso: thu, legsOk: false, legsWhy: 'volley demain' };
+    const s0 = coachBuildPlanned(st0, { iso: thu, templateIdx: 0 }, di);
+    expect(s0.exercises.map(e => e.catalogId)).not.toContain('squat');
+    expect(s0.notes.join(' ')).toMatch(/Bas du corps/);
+    const st1 = { ...st0, coach: { ...st0.coach, dayTypes: { [thu]: 'LEGS' } } };
+    const s1 = coachBuildPlanned(st1, { iso: thu, templateIdx: 0 }, di);
+    expect(s1.exercises.map(e => e.catalogId)).toContain('squat');
+    expect(s1.notes.join(' ')).toMatch(/tu as choisi de les tester/);
+  });
+});
