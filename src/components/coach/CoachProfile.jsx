@@ -99,7 +99,7 @@ export function CoachProfile({ coach, state, today, updateCoach, w0 }) {
           <li><b>Repères classiques</b> (ACSM 2009, NSCA) : force = 1 à 6 répétitions à 85 % du max ou plus, repos de 2 à 5 minutes ; hypertrophie = 6 à 12 répétitions à 67-85 %, repos plus courts ; endurance de force = 12 répétitions ou plus à 67 % ou moins (ACSM : 40-60 %), repos de 90 secondes ou moins. Pour progresser, l’ACSM conseille d’augmenter la charge de 2 à 10 % quand on dépasse l’objectif de 1 à 2 répétitions.</li>
           <li><b>Nuance récente</b> (Schoenfeld et al., 2021, <i>Sports</i> 9(2):32 ; Lopez et al., 2021, <i>Med. Sci. Sports Exerc.</i>) : les charges lourdes sont meilleures pour la <b>force maximale</b>, mais le muscle peut grossir sur une large plage de charges si les séries sont proches de l’échec. Les fourchettes de l’appli sont donc des repères pratiques, pas des frontières.</li>
           <li><b>« Puissance »</b> : ici, c’est le travail lourd en peu de répétitions (force maximale). Le travail explosif (vitesse d’exécution, sauts, lancers) est un autre sujet.</li>
-          <li>Les charges sont calculées d’après ton <b>max estimé</b> (onglet 💯 Mes maxima) ou ton record réel si tu l’as noté. Au changement de profil, la charge est recalculée d’un coup, avec un plafond de +15 % par prudence.</li>
+          <li>Les charges sont calculées d’après ton <b>max estimé</b> (Exercices → 🏆 Mes maxima) ou ton record réel si tu l’as noté. Au changement de profil, la charge est recalculée d’un coup, avec un plafond de +15 % par prudence.</li>
         </ul>
       </details>
     </section>

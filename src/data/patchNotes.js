@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.51.4',
+    date: '2026-11-22',
+    title: '« Mes maxima » revient',
+    items: [
+      'En haut de l’onglet Exercices, « 🏆 Mes maxima » : ton max sur chaque exercice d’un coup d’œil (charge sur 1 rep, lest, temps, course) et tes records réels avec leur date.',
+      'Touche un exercice pour voir le détail du calcul ou noter un record réel ; en fermant la fiche, tu reviens au tableau.',
+      'C’est le même calcul que celui du coach pour tes charges et tes tests de max.',
+    ],
+  },
+  {
     version: '4.51.3',
     date: '2026-11-22',
     title: 'Test de max : charges justes, et la séance reste un test',

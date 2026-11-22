@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { QuestChart } from '../components/QuestChart';
 import { MaxCard } from '../components/MaxCard';
 import { MaximaSources } from '../components/MaximaSources';
+import { MaximaTable } from '../components/MaximaTable';
 import { estimateQuestMax } from '../lib/maxima';
 import { coachStep } from '../coach/settings';
 import { getTodayISODate } from '../lib/dates';
@@ -25,6 +26,7 @@ export function QuestsTab({
   const [showChart, setShowChart] = useState(false);
   const [showMax, setShowMax] = useState(false);
   const setOpenId = id => { setOpenIdRaw(id); setShowChart(false); setShowMax(false); };
+  const [showTable, setShowTable] = useState(false); // « Mes maxima » (4.51.4)
   // maximum de l'exercice (effort ressenti toujours pris en compte) et record réel noté à la main
   const saveRecord = (id, rec) => setGameState && setGameState(prev => ({ ...prev, maxRecords: { ...(prev.maxRecords || {}), [id]: { ...rec, date: getTodayISODate() } } }));
   const clearRecord = id => setGameState && setGameState(prev => { const { [id]: _r, ...rest } = prev.maxRecords || {}; return { ...prev, maxRecords: rest }; });
@@ -332,6 +334,18 @@ export function QuestsTab({
 
   return (
     <div className="space-y-4">
+      {gameState.quests.length > 0 && (
+        <button type="button" onClick={() => setShowTable(true)} data-testid="maxima-open"
+          className="tap-free w-full flex items-center gap-3 rounded-2xl border border-amber-400/50 bg-amber-500/10 px-4 py-2.5 text-left">
+          <span className="text-xl">🏆</span>
+          <span className="flex-1">
+            <span className="block text-sm font-black text-white">Mes maxima</span>
+            <span className="block text-[11px] text-slate-300">Ton max sur chaque exercice, et tes records réels</span>
+          </span>
+          <span className="text-slate-400">›</span>
+        </button>
+      )}
+      {showTable && !openQuest && <MaximaTable gameState={gameState} questFilter={questFilter} onClose={() => setShowTable(false)} onOpen={id => { setOpenIdRaw(id); setShowChart(false); setShowMax(true); }} />}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1 md:flex-wrap md:overflow-visible md:mx-0 md:px-0" role="group" aria-label="Filtrer par muscle" data-testid="muscle-filters">
         <button
           onClick={() => setQuestFilter('all')}
