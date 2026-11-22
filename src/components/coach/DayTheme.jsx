@@ -8,11 +8,11 @@ import { makeQuestFromCatalog } from '../../lib/questFactory';
  * 4.42-4.43 : et la ou les façons de travailler (pauses iso, tenues iso, excentrique, explosif, pliométrie) : plusieurs à la
  * fois = séance mixte (Normale + Pliométrie, Normale + Pauses iso…) ; « Auto » = le coach gère tout (rien de choisi). Pliométrie sans exercice de sauts suivi : ceux du sport sont ajoutés.
  */
-export function DayThemePicker({ coach, date, today, updateCoach, gameState = null, setGameState = null, prefix = 'day-theme' }) {
+export function DayThemePicker({ coach, date, today, updateCoach, gameState = null, setGameState = null, prefix = 'day-theme', customPlan = false }) {
   if (!date || !updateCoach) return null;
   const cur = dayTypeOf(coach, date);
   const sty = dayStylesOf(coach, date);
-  const pick = t => updateCoach({ dayTypes: setDayType(coach, date, t, today) });
+  const pick = t => updateCoach({ dayTypes: setDayType(coach, date, t, today), ...(customPlan && coach.plan ? { plan: null, planBackup: coach.plan } : {}) });
   const toggle = id => {
     const next = toggleDayStyle(coach, date, id, today);
     const adding = id === 'plyo' && !sty.includes('plyo');
@@ -37,6 +37,7 @@ export function DayThemePicker({ coach, date, today, updateCoach, gameState = nu
     <div className="space-y-2" data-testid={prefix}>
       <div className="space-y-1">
         <p className="text-xs font-bold text-slate-400">Thème de la séance</p>
+        {customPlan && <p className="text-[11px] text-slate-500" data-testid={`${prefix}-custom-note`}>Ta liste perso garde ses exercices ; choisir un thème la remplace par celle du coach pour ce thème.</p>}
         <div className="flex flex-wrap gap-1.5">
           {chip('auto', 'Auto', !cur, () => pick(null), `${prefix}-auto`)}
           {DAY_THEMES.map(t => chip(t.id, t.short, cur === t.id, () => pick(t.id), `${prefix}-${t.id}`))}

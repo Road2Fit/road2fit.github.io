@@ -19,6 +19,7 @@ import { getExperience } from './experience';
 import { repSchemeOf } from './repScheme';
 import { painFor } from './pains';
 import { estimateQuestMax } from '../lib/maxima';
+import { entryAssists, entryLoads } from '../lib/setLoads';
 import { arenaOf, isLegArena, pushPullSide } from '../data/muscles';
 import { isTimedQuest } from '../lib/quests';
 
@@ -113,15 +114,40 @@ export function bestRecent(q, today) {
   return best;
 }
 
-/** Max de départ : max estimé d'après les séances (séries comptées comme faites à l'échec : prudent). */
+export const RECENT_DAYS = 42;
+/**
+ * Meilleure série des 6 dernières semaines ramenée à 1 rep (Epley : charge × (1 + reps / 30), séries de 1 à 12 reps).
+ * 4.51.3 (retour de Gabin : « 5 reps à 32,5 kg au développé couché alors que je viens d'en faire 3 × 8 à 40 ») : la
+ * moyenne pondérée des maxima estimés (90 jours) gardait le poids des vieilles séances plus légères ; le test part
+ * maintenant de ce que tu as RÉELLEMENT fait récemment. `total` : lest compris (poids du corps `bw` + lest).
+ */
+export function recentBest1rm(q, today, bw = 0) {
+  let best = 0;
+  for (const e of coachRealEntries(q)) {
+    if (today && (e.date > today || coachDaysBetween(e.date, today) > RECENT_DAYS)) continue;
+    const reps = Array.isArray(e.setDetails) && e.setDetails.length ? e.setDetails : [e.reps || 0];
+    const loads = bw ? entryAssists(e).map(a => bw - (Number(a) || 0)) : entryLoads(e);
+    reps.forEach((r, i) => {
+      const n = Number(r) || 0;
+      const w = Number(loads[i]) || 0;
+      if (n >= 1 && n <= 12 && w > 0) best = Math.max(best, w * (1 + n / 30));
+    });
+  }
+  return best;
+}
+
+/** Max de départ (1 rep) : le plus haut entre le max estimé de l'appli et la meilleure série récente. */
 export function referenceMax(state, q, today) {
   const est = estimateQuestMax(q, state, { today });
-  return est && !est.empty && est.estimate > 0 ? est.estimate : 0;
+  const e = est && !est.empty && est.estimate > 0 ? est.estimate : 0;
+  return Math.max(e, recentBest1rm(q, today));
 }
-/** Lest possible pour 1 rep (kg ajoutés au poids du corps), d'après les séances ; 0 si inconnu. */
+/** Lest possible pour 1 rep (kg ajoutés au poids du corps) : max estimé ou meilleure série lestée récente ; 0 si inconnu. */
 export function referenceExtra(state, q, today) {
   const est = estimateQuestMax(q, state, { today });
-  return est && !est.empty && est.extraFor1 > 0 ? est.extraFor1 : 0;
+  const e = est && !est.empty && est.extraFor1 > 0 ? est.extraFor1 : 0;
+  const bw = est && est.bodyweight > 0 ? est.bodyweight : Number(state.userWeightKg) || 0;
+  return Math.max(e, bw ? recentBest1rm(q, today, bw) - bw : 0);
 }
 
 /**
@@ -138,9 +164,11 @@ export function maxTestPlan(e, mode) {
   if (mode === '5rm') {
     const a = rnd(W * 0.95);
     const b = Math.max(a + step, rnd(W));
+    const c = Math.max(b + step, rnd(W * (legs ? 1.04 : 1.025)));
     return [
       { reps: 5, load: a, assist: 0, rest: 180, kind: 'max', label: 'Essai 1 : 5 reps propres' },
-      { reps: 5, load: b, assist: 0, rest: 180, kind: 'max', label: 'Essai 2 : 5 reps, seulement si l’essai 1 était propre' },
+      { reps: 5, load: b, assist: 0, rest: 180, kind: 'max', label: 'Essai 2 : 5 reps (ton max de 5 estimé)' },
+      { reps: 5, load: c, assist: 0, rest: 180, kind: 'max', label: 'Essai 3 : 5 reps (record), seulement si l’essai 2 est passé avec de la marge' },
     ];
   }
   const a = rnd(W * 0.95);

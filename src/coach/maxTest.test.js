@@ -5,7 +5,7 @@ import { makeQuestFromCatalog } from '../lib/questFactory';
 import { INITIAL_STATE } from '../data/initialState';
 import { addDaysISO } from '../lib/dates';
 import { adaptAfterAttempt, maxTestPlan, maxTestReadiness, maxTestWarmup, pickMaxLifts } from './maxTest';
-import { coachBuildPlanned } from './sessions';
+import { coachBuildCustomSession, coachBuildPlanned } from './sessions';
 import { setDayStyle, toggleDayStyle } from './contraction';
 import { warmupSets } from './warmup';
 import { applyStrengthSession } from '../lib/sessionRecord';
@@ -125,5 +125,31 @@ describe('enregistrement et réglages', () => {
     expect(setDayStyle({}, today, ['iso', 'max'], today)).toEqual({ [today]: 'max' });
     expect(toggleDayStyle({ dayStyles: { [today]: 'iso' } }, today, 'max', today)).toEqual({ [today]: 'max' });
     expect(toggleDayStyle({ dayStyles: { [today]: 'max' } }, today, 'iso', today)).toEqual({ [today]: 'iso' });
+  });
+});
+
+describe('4.51.3 : charges du test et séance personnalisée', () => {
+  it('développé couché : 3 × 8 à 40 kg aujourd’hui après des séances plus légères → 5 reps vers 43 kg, pas 32,5', () => {
+    const q = quest('bench_press', 30, 10); // séances anciennes à 30 kg
+    const fresh = { id: 'hnow', date: today, value: 40, sets: 3, reps: 8, setDetails: [8, 8, 8], rpe: 8 };
+    const b = mk('beginner', 6);
+    const st = { ...b, coach: { ...b.coach, dayStyles: { [addDaysISO(today, 4)]: 'max' } }, quests: [{ ...q, currentValue: 40, history: [...q.history, fresh] }] };
+    const s = coachBuildPlanned(st, { iso: addDaysISO(today, 4), templateIdx: 0 }, { iso: addDaysISO(today, 4), legsOk: true });
+    const e = s.exercises[0];
+    expect(e.maxMode).toBe('5rm');
+    const loads = e.plan.map(p => p.load);
+    expect(loads[1]).toBeGreaterThanOrEqual(42.5); // 40 × (1 + 8/30) / (1 + 5/30) ≈ 43,4
+    expect(loads[1]).toBeLessThanOrEqual(45);
+    expect(loads).toHaveLength(3);
+  });
+  it('séance personnalisée un jour « Test de max » : les exercices choisis restent des tests', () => {
+    const st = mk('advanced');
+    const ids = st.quests.map(q => q.id);
+    const s = coachBuildCustomSession(st, ids, today, {});
+    expect(s.maxTest).toBeTruthy();
+    expect(s.exercises.every(e => e.method === 'max_test')).toBe(true);
+    const iso = { ...st, coach: { ...st.coach, dayStyles: { [today]: 'iso' } } };
+    const s2 = coachBuildCustomSession(iso, ids, today, {});
+    expect(s2.exercises.some(e => e.method === 'iso_pause')).toBe(true);
   });
 });

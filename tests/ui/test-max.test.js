@@ -1,6 +1,6 @@
 // 4.50 : séance « Test de max » choisie dans « Prochaine séance » (Façon de travailler → Test de max).
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickEl, launch } from './harness';
+import { clickEl, launch, setInput } from './harness';
 
 const open = [];
 afterEach(() => { while (open.length) open.pop().close(); });
@@ -25,6 +25,15 @@ describe('test de max', () => {
     expect(ex.length).toBeGreaterThan(0);
     ex.forEach(t => expect(t).toMatch(/test de (5 reps max|1RM)|max de répétitions|tenue au maximum|test lesté/));
     expect(ex.length).toBeGreaterThan(2); // plusieurs exercices, pas seulement les barres
+    // personnaliser la séance puis changer le jour : le test de max reste (4.51.3)
+    await clickEl(h, q(h, 'plan-start'));
+    const d0 = saved(h).coach.plan.date;
+    const d1 = new Date(`${d0}T12:00:00`); d1.setDate(d1.getDate() + 2);
+    const iso1 = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`;
+    await setInput(h, q(h, 'plan-date'), iso1);
+    expect(saved(h).coach.plan.date).toBe(iso1);
+    expect(saved(h).coach.dayStyles).toEqual({ [iso1]: 'max' });
+    qa(h, 'next-ex').forEach(el => expect(el.textContent).toMatch(/test de (5 reps max|1RM)|max de répétitions|tenue au maximum|test lesté/));
     await clickEl(h, q(h, 'day-theme-style-auto'));
     expect(saved(h).coach.dayStyles).toEqual({});
     expect(h.errors).toEqual([]);

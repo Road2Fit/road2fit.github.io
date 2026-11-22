@@ -38,7 +38,7 @@ export function CoachNextSession({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-black text-white" data-testid="next-session-title"><Art name="dumbbell" />{preview ? 'Aperçu de la séance suivante' : 'Prochaine séance'} {plan ? <span className="text-xs text-pink-300 font-bold">· personnalisée</span> : null}</h3>
         {!plan && ov.hasExercises && !preview && (
-          <button onClick={() => { startCustom(); setPlanEdit(true); }} className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
+          <button onClick={() => { startCustom(); setPlanEdit(true); }} data-testid="plan-start" className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-100"><Art name="pencil" />Choisir le jour / modifier</button>
         )}
         {backup && (
           <button onClick={() => { updateCoach({ plan: backup, planBackup: null }); setPlanEdit(false); }} data-testid="plan-restore" className="px-3 py-1.5 rounded-lg bg-violet-900/50 border border-violet-500/40 text-xs font-bold text-violet-200"><Art name="repeat" />Revenir à ma séance perso</button>
@@ -76,7 +76,7 @@ export function CoachNextSession({
         <div className="bg-slate-950 border border-pink-500/30 rounded-xl p-3 space-y-3" data-testid="plan-box">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-bold text-slate-300">Jour de la séance :</span>
-            <input type="date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
+            <input type="date" data-testid="plan-date" min={today} value={plan.date} onChange={e => planDate(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white" />
             <span className="text-slate-300 font-bold">{coachDayLabel(plan.date)}</span>
             {planDayInfo.isMatch && <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">match</span>}
             {planDayInfo.isVolley && <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">{planDayInfo.sport.icon} {planDayInfo.sport.label}</span>}
@@ -149,7 +149,7 @@ export function CoachNextSession({
             })()}
           </div>
           {!plan && !preview && !ov.program && <HomeOnceToggle coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
-          {!plan && !preview && !ov.program && <DayThemePicker coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} />}
+          {!preview && !ov.program && <DayThemePicker coach={coach} date={shownDate} today={today} updateCoach={updateCoach} gameState={gameState} setGameState={setGameState} customPlan={!!plan} />}
           <div className="space-y-2">
             {shownSession.exercises.map(e => {
               const b = COACH_CHANGE_BADGES[e.change] || COACH_CHANGE_BADGES.new;

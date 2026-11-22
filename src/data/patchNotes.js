@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.51.3',
+    date: '2026-11-22',
+    title: 'Test de max : charges justes, et la séance reste un test',
+    items: [
+      'Charges du test : le coach part de ta meilleure série des 6 dernières semaines (ex. 3 × 8 à 40 kg au développé couché → 5 reps vers 42,5-45 kg), plus d’une moyenne tirée vers le bas par tes vieilles séances plus légères.',
+      'Test de 5 reps : 3 essais (le dernier pour un record), comme le test à 1 rep.',
+      '« Choisir le jour / modifier » : ta séance reste un test de max (ou garde sa façon de travailler), même en changeant d’exercices ou de jour.',
+      'Le thème et la façon de travailler se règlent aussi dans une séance personnalisée ; choisir un thème remplace ta liste par celle du coach (« Revenir à ma liste » pour l’annuler).',
+    ],
+  },
+  {
     version: '4.51.2',
     date: '2026-11-22',
     title: 'Notification de suivi de séance',

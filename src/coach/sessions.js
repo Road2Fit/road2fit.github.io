@@ -313,6 +313,19 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
   (state.quests || []).forEach(q => { byId[q.id] = q; });
   const quests = (questIds || []).map(id => byId[id]).filter(q => q && q.type === 'strength' && q.goalMode !== 'free_mode');
   const deloadOn = !!opts.deload || !!opts.tired;
+  // 4.51.3 (retour de Gabin : « personnaliser remet tout à zéro ») : la façon de travailler du jour de la séance reste ;
+  // jour « Test de max » : les exercices choisis deviennent des tests (tous types)
+  const styles = opts.dayStyle !== undefined ? [].concat(opts.dayStyle || []) : dayStylesOf(state.coach, dateIso);
+  if (styles.includes('max') && quests.length) {
+    const targets = quests.map(q => computeExerciseTarget(q, { ...profileOpts(state, dateIso), today: dateIso }));
+    const t = buildMaxTest(state, targets, dateIso);
+    if (t.exercises.length) {
+      const warmMin = t.exercises.reduce((m, e) => m + (maxTestWarmup(e) || []).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
+      const w = Number(state.userWeightKg) || 82;
+      const estKcal = t.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);
+      return { templateIdx: -1, templateId: 'Test de max', date: dateIso, exercises: t.exercises, notes: ['Ta liste d’exercices, en test de max.', ...t.notes], estMin: Math.round(sessionMinutes(t.exercises) + warmMin), estKcal, warmup: '', custom: true, style: 'max', styles: ['max'], maxTest: t.mode };
+    }
+  }
   const exercises = quests.map(q => {
     const e = computeExerciseTarget(q, {
       ...profileOpts(state, dateIso),
@@ -343,7 +356,7 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
     }
     return e;
   });
-  const meth = applyMethods(state, exercises, { iso: dateIso, deload: deloadOn, minutes: 0 });
+  const meth = applyMethods(state, exercises, { iso: dateIso, deload: deloadOn, minutes: 0, dayStyle: styles });
   const exercisesM = meth.exercises;
   const w = Number(state.userWeightKg) || 82;
   const estMin = coachEstimateMin(exercisesM);

@@ -6,6 +6,7 @@ import { sessionFocus } from '../../coach/focus';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
+import { dayStylesOf } from '../../coach/contraction';
 import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoachSettings } from '../../coach/settings';
 import { profileOpts } from '../../coach/profiles';
 import { computeExerciseTarget } from '../../coach/targets';
@@ -293,7 +294,7 @@ export function CoachPanel({
   const tiredToday = !!(coach.readiness && coach.readiness.date === today && coach.readiness.level === 'low');
   const planWeek = useMemo(() => (plan ? coachPlanWeek(gameState, getWeekStart(plan.date), today) : null), [gameState.quests, gameState.coach]);
   const customSession = useMemo(
-    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday && plan.date === today }) : null),
+    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { dayStyle: dayStylesOf(coach, plan.date), deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday && plan.date === today }) : null),
     [gameState.quests, gameState.coach]
   );
   const shownSession = plan ? customSession : ov.session;
@@ -307,7 +308,7 @@ export function CoachPanel({
   const sessionToStart = coachOff ? null : (() => {
     if (plan) {
       if (!plan.questIds.length) return null;
-      return coachBuildCustomSession(gameState, plan.questIds, today, { deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday });
+      return coachBuildCustomSession(gameState, plan.questIds, today, { dayStyle: dayStylesOf(coach, plan.date), deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday });
     }
     if (!first || !ov.hasExercises) return null;
     if (first.iso === today) return ov.session;
@@ -388,7 +389,18 @@ export function CoachPanel({
         return { ...base, coachOverride: next };
       }),
     }));
-  const planDate = d => { if (d && d >= today) patchPlan(pl => ({ ...pl, date: d })); };
+  // changer le jour d'une séance perso : son thème et sa façon de travailler (test de max…) suivent (4.51.3)
+  const planDate = d => {
+    if (!d || d < today) return;
+    setGameState(prev => {
+      const cs = getCoachSettings(prev);
+      const pl = cs.plan || { date: today, questIds: [] };
+      const from = pl.date;
+      if (from === d) return prev;
+      const move = obj => { const o = { ...(obj || {}) }; if (o[from] !== undefined) { o[d] = o[from]; delete o[from]; } return o; };
+      return { ...prev, coach: { ...cs, plan: { ...pl, date: d }, dayStyles: move(cs.dayStyles), dayTypes: move(cs.dayTypes) } };
+    });
+  };
   const strengthQuests = (gameState.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
   const availQuests = plan ? strengthQuests.filter(q => !plan.questIds.includes(q.id)) : [];
   const planDayInfo = plan ? coachDayInfo(plan.date, coach) : null;
