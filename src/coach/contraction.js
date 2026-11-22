@@ -103,6 +103,8 @@ export const DAY_STYLES = [
   { id: 'ecc', label: 'Excentrique (descente lente)', short: 'Excentrique', method: 'eccentric', help: 'La descente dure 4 à 5 s, la montée reste normale (tractions et dips : négatives).' },
   { id: 'expl', label: 'Explosif (montée rapide)', short: 'Explosif', method: 'explosive', help: 'Montée la plus rapide possible, peu de reps, loin de l’échec : de préférence sur les gros exercices.' },
   { id: 'plyo', label: 'Pliométrie (sauts)', short: 'Pliométrie', method: null, help: 'Des sauts en début de séance, à la place d’un ou deux exercices (la séance garde sa durée).' },
+  // 4.50 : séance de test seule (jamais mélangée), construite par maxTest.js
+  { id: 'max', label: 'Test de max', short: 'Test de max', method: null, alone: true, help: 'Tester ta force maximale sur 1 à 3 gros exercices : échauffement en montée, puis quelques essais, rien d’autre. Si tu débutes, le coach fait un test de 5 reps maximum, plus sûr, d’où il tire ton max.' },
 ];
 export const STYLE_IDS = DAY_STYLES.map(s => s.id);
 export const AUTO_HELP = 'Auto : le coach choisit lui-même la forme de chaque exercice (séries classiques le plus souvent, autre forme seulement quand une étude montre un intérêt pour toi). Tu ne touches à rien.';
@@ -126,14 +128,16 @@ export function setDayStyle(coach, iso, style, today) {
     if (a.length) m[d] = a.length > 1 ? a : a[0];
   });
   const want = Array.isArray(style) ? style : style ? [style] : [];
-  const list = STYLE_IDS.filter(id => want.includes(id));
+  let list = STYLE_IDS.filter(id => want.includes(id));
+  if (list.includes('max')) list = ['max']; // le test de max se fait seul
   if (list.length) m[iso] = list.length > 1 ? list : list[0];
   return m;
 }
 /** Ajoute ou retire une façon de travailler pour ce jour (les autres restent : séance mixte). */
 export function toggleDayStyle(coach, iso, style, today) {
   const cur = dayStylesOf(coach, iso);
-  return setDayStyle(coach, iso, cur.includes(style) ? cur.filter(x => x !== style) : [...cur, style], today);
+  const next = cur.includes(style) ? cur.filter(x => x !== style) : style === 'max' ? ['max'] : [...cur.filter(x => x !== 'max'), style];
+  return setDayStyle(coach, iso, next, today);
 }
 
 /**

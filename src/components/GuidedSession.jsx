@@ -11,6 +11,7 @@ import { PlatesDiagram } from './PlatesDiagram';
 import { HoldTimer } from './HoldTimer';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
+import { adaptAfterAttempt } from '../coach/maxTest';
 import { restText } from '../coach/rest';
 import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
@@ -165,8 +166,8 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     if (adapt.load !== undefined) setLoad(adapt.load);
     if (adapt.assist !== undefined) setAssist(adapt.assist);
     // le rappel de la série suivante suit la nouvelle charge
-    const fix = t => (adapt.load !== undefined
-      ? String(t || '').replace(/à [\d,]+ kg/, `à ${fmtKg(adapt.load)} kg`)
+    const fix = t => (adapt.stop ? t : adapt.load !== undefined
+      ? String(t || '').replace(/à [\d,]+ kg/, `à ${fmtKg(adapt.next !== undefined ? adapt.next : adapt.load)} kg`)
       : String(t || '').replace(/ · (aide [\d,]+ kg|lest \+[\d,]+ kg|poids du corps)$/, ` · ${adapt.label}`));
     setG(prev => ({ ...prev, adapt: null, rest: prev.rest ? { ...prev.rest, next: fix(prev.rest.next) } : prev.rest }));
   };
@@ -227,7 +228,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     if (nj >= 0) {
       setG(prev => ({ ...prev, data }));
       // série trop dure ou trop facile : le coach propose d'ajuster la suite (un geste sur l'écran de repos)
-      const adapt = plan ? null : adaptAfterSet(it, d, Number(reps[j]) || 0, Number(it.targetReps && it.targetReps[j] !== undefined ? it.targetReps[j] : it.goalReps) || 0, step);
+      const adapt = it.method === 'max_test' ? adaptAfterAttempt(it, { ...d, loads: loadsOf(d) }, j, Number(reps[j]) || 0) : plan ? null : adaptAfterSet(it, d, Number(reps[j]) || 0, Number(it.targetReps && it.targetReps[j] !== undefined ? it.targetReps[j] : it.goalReps) || 0, step);
       startRest(restAfter(j), `${plan ? setLabel(nj) : `Série ${nj + 1}/${done.length}`} · ${setText(it, data[it.questId], nj)}`, { adapt: adapt ? { ...adapt, questId: it.questId } : null, ...prX, ...fx });
       return;
     }

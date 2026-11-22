@@ -162,6 +162,7 @@ export function useGuidedSession({
     let bossQuest = null;
     let doneEx = 0;
     const newUnlocked = new Set(gameState.unlockedAchievements || []);
+    const records = {}; // test de max (4.50) : essai à 1 rep réussi le plus lourd → « Mon max réel »
     const updatedQuests = gameState.quests.map(q => {
       const it = g.items.find(x => x.questId === q.id);
       if (!it) return q;
@@ -190,6 +191,11 @@ export function useGuidedSession({
         rpe: exerciseRpe,
         userWeightKg: gameState.userWeightKg
       });
+      if (it.method === 'max_test' && it.maxMode === '1rm' && isKg) {
+        const lds = loadsOf(dd);
+        const top = dd.reps.reduce((m, r, i) => (dd.done[i] && Number(r) >= 1 && (!dd.kinds || dd.kinds[i] === 'max') ? Math.max(m, Number(lds[i]) || 0) : m), 0);
+        if (top > 0) records[q.id] = top;
+      }
       const r = applyStrengthSession(q, {
         date: today,
         setDetails,
@@ -218,7 +224,8 @@ export function useGuidedSession({
       ...prev,
       ...computeXp(prev, xpEarned, today, 'session').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
-      quests: updatedQuests
+      quests: updatedQuests,
+      ...(Object.keys(records).length ? { maxRecords: Object.entries(records).reduce((m, [id, kg]) => (m[id] && Number(m[id].kg) >= kg ? m : { ...m, [id]: { kg, date: today } }), { ...(prev.maxRecords || {}) }) } : {}),
     }));
     setSelectedDate(today);
     setSelectedJournalDay(today);

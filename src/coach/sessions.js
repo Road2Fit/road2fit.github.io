@@ -10,7 +10,8 @@ import { composeTemplates, computeExerciseTarget } from './targets';
 import { profileOpts } from './profiles';
 import { applyMethods } from './methodChoice';
 import { restFor } from './rest';
-import { sessionMinutes } from './methods';
+import { sessionMinutes, setWorkSec } from './methods';
+import { buildMaxTest, maxTestWarmup, pickMaxLifts } from './maxTest';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
 import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, pushPullSide, typeArenas } from '../data/muscles';
@@ -247,10 +248,16 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
   // thème choisi par la personne (4.36) : respecté même un jour où le coach éviterait les jambes, avec un avertissement
   const chosen = dayTypeOf(state.coach, slot.iso || di.iso);
   // façon de travailler (4.42) : jour « Pliométrie » choisi, ou jour de sauts prévu par le coach (coach.plyo.perWeek)
-  const styles = dayStylesOf(state.coach, slot.iso || di.iso);
+  const styles = dayStylesOf(state.coach, slot.iso || di.iso).filter(x => !(opts.noMax && x === 'max'));
   const style = styles[0] || null;
   const plyoDay = styles.includes('plyo') || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
   opts = { ...opts, dayStyle: styles };
+  if (styles.includes('max') && !opts.noMax) {
+    const t = coachBuildMaxTest(state, di, chosen);
+    if (t) return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...t, home: true } : t;
+    const s0 = coachBuildPlanned(state, slot, di, { ...opts, noMax: true });
+    return { ...s0, notes: ['Test de max prévu, mais aucun gros exercice en kg déjà pratiqué (squat, développé, soulevé de terre, rowing…) : séance normale aujourd’hui.', ...(s0.notes || []).filter(n => !/Test de max/.test(n))] };
+  }
   if (plyoDay) opts = { ...opts, plyo: true };
   let s;
   if (chosen) {
@@ -262,6 +269,25 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
   else if (plyoDay) s = { ...s, style: 'plyo' };
   // séance exceptionnellement à la maison (coach.homeDays) : repérée pour l'affichage et le « Machine prise ou pas le matériel ? »
   return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...s, home: true } : s;
+}
+
+// Séance « Test de max » (4.50, maxTest.js) : 1 à 3 gros exercices, échauffement en montée puis essais ; null si
+// aucun exercice ne s'y prête (la séance normale est alors construite, avec une note).
+function coachBuildMaxTest(state, di, chosen) {
+  const allowed = chosen ? COACH_TYPES[chosen].arenas : null;
+  const lifts = pickMaxLifts(state, { legsOk: di.legsOk, allowedArenas: allowed, quests: coachableQuests(state, di.iso) });
+  const targets = lifts.map(q => computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso }));
+  const t = buildMaxTest(state, targets, di.iso);
+  if (!t.exercises.length) return null;
+  const notes = [...(di.legsOk ? [] : [`Pas de test des jambes aujourd’hui (${di.legsWhy}).`]), ...t.notes];
+  const warmMin = t.exercises.reduce((m, e) => m + maxTestWarmup(e).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
+  const w = Number(state.userWeightKg) || 82;
+  const estKcal = t.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: false, weightKg: e.load, assistanceKg: 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);
+  return {
+    templateIdx: -1, templateId: 'Test de max', date: di.iso, exercises: t.exercises, notes,
+    estMin: Math.round(sessionMinutes(t.exercises) + warmMin), estKcal, warmup: '', fillSuggestions: [], slot: coachSlotFor(getCoachSettings(state), di.iso), target: 0,
+    style: 'max', styles: ['max'], maxTest: t.mode, ...(chosen ? { chosenType: chosen } : {}),
+  };
 }
 
 // Séance construite à la main par l'utilisateur (liste d'exercices + date choisie)

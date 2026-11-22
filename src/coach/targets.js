@@ -21,7 +21,7 @@ export function computeExerciseTarget(q, opts = {}) {
   const R = Math.max(1, Number(q.goalReps) || 6);
   const goalAssist = Number(q.goalAssistanceKg) || 0;
   const entries = coachRealEntries(q);
-  const normal = entries.filter(e => !CONTRACTION_METHODS.includes(e.method));
+  const normal = entries.filter(e => !CONTRACTION_METHODS.includes(e.method) && e.method !== 'max_test'); // test de max (4.50) : ne règle pas non plus la charge
   const progEntries = normal.length ? normal : entries; // une séance d'isométrie ou d'excentrique ne règle pas la charge habituelle
   // dernière séance, quelle que soit sa forme (pyramide, dégressives, séance dictée…) : ramenée à ce qui juge la progression
   const last = normalizeForProgress(progEntries[progEntries.length - 1] || null, kind, R);

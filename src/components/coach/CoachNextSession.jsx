@@ -131,6 +131,7 @@ export function CoachNextSession({
             <span className="px-2.5 py-1 rounded-full bg-pink-600 text-white font-black">
               {(() => {
                 const fc = sessionFocus(shownSession.exercises);
+                if (shownSession.maxTest) return 'Test de max';
                 if (shownSession.program && !plan) return shownSession.templateId;
                 const side = shownSession.type === 'PUSH' || shownSession.type === 'PULL' ? ` · ${shownSession.typeLabel.toLowerCase()}` : '';
                 return fc ? `${fc.label}${side}` : plan ? 'Séance perso' : `Séance ${shownSession.typeLabel || shownSession.templateId}`;

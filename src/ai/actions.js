@@ -2,7 +2,7 @@
 // seulement quand la personne appuie sur « Appliquer ». Fonctions pures, testées dans actions.test.js.
 import { coachRealEntries, getCoachSettings } from '../coach/settings';
 import { THEME_IDS, setDayType } from '../coach/dayTheme';
-import { STYLE_IDS, missingPlyo, perfSport, setDayStyle } from '../coach/contraction';
+import { STYLE_IDS, missingPlyo, perfSport, setDayStyle, styleInfo } from '../coach/contraction';
 import { coachPlanWeek } from '../coach/planning';
 import { getWeekStart } from '../lib/dates';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -213,7 +213,7 @@ function defaultLabel(type, args, state) {
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
-  if (type === 'day_style') return args.style ? `Séance « ${[].concat(args.style).join(' + ')} » le ${args.dates.join(', ')}` : 'Laisser le coach décider (auto)';
+  if (type === 'day_style') return args.style ? `Séance « ${[].concat(args.style).map(x => (styleInfo(x) || {}).label || x).join(' + ')} » le ${args.dates.join(', ')}` : 'Laisser le coach décider (auto)';
   if (type === 'plyo') return `Pliométrie : ${args.perWeek !== null ? `${args.perWeek} séance${args.perWeek > 1 ? 's' : ''} avec des sauts par semaine` : 'exercices de sauts'}${args.add.length ? `, ${args.add.length} exercice${args.add.length > 1 ? 's' : ''} ajouté${args.add.length > 1 ? 's' : ''}` : ''}`;
   if (type === 'cardio') return args.on === false ? 'Arrêter le cardio du coach' : 'Régler le cardio du coach';
   return 'Changer un réglage du coach';

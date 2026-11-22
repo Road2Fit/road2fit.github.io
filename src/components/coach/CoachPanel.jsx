@@ -453,7 +453,7 @@ export function CoachPanel({
           cardio → résumé de la séance (Lancer / Déjà faite). */}
       {(() => {
         const fc = shownSession ? sessionFocus(shownSession.exercises) : null;
-        const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
+        const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.maxTest ? 'Test de max' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
         // l'encadré Cardio reste en haut tant que la séance n'est pas faite, même quand c'est elle qui est dans le grand rond
         const showCardio = !!cardioNext;
         const tile = 'tap-free min-w-0 rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 flex items-center gap-2 text-left';
@@ -512,7 +512,7 @@ export function CoachPanel({
       {!guidedActive && !coachOff && !(cardioToday && !muscuToday) && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
         const fc = sessionFocus(shownSession.exercises);
-        const title = shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : `Séance ${shownSession.templateId}`;
+        const title = shownSession.maxTest ? 'Test de max' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : `Séance ${shownSession.templateId}`;
         return (
           <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
             <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}<br />{shownSession.estMin} min</p>

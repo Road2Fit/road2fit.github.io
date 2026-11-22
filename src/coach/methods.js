@@ -81,6 +81,12 @@ export const METHODS = {
     how: 'Chaque répétition au maximum (hauteur, distance, vitesse) avec une réception propre. Arrête dès que la qualité baisse. Repos complet (1 min 30 à 2 min).',
     kinds: ['reps'], contraction: 'plyometric', plyoOnly: true,
   },
+  // séance « Test de max » (4.50, maxTest.js) : seulement pour ce jour-là, jamais choisie comme forme habituelle
+  max_test: {
+    label: 'Test de max', short: 'Échauffement en montée, puis quelques essais au maximum.',
+    how: 'Monte progressivement, puis fais les essais avec un repos complet (3 à 4 min). Un essai s’arrête dès que la technique se dégrade.',
+    kinds: ['load'], testOnly: true,
+  },
   // forme réglée série par série par la personne (quest.coachCustom) : le coach la reprend à chaque séance
   custom: {
     label: 'Personnalisée', short: 'Tes séries, réglées une par une.',
@@ -97,6 +103,7 @@ export function methodFits(id, e) {
   if (!m) return false;
   // la pliométrie ne vaut que pour les exercices de sauts / lancers ; ces exercices-là gardent leur forme
   const plyoEx = !!(e && /^ply_/.test(String(e.catalogId || '')));
+  if (m.testOnly) return false;
   if (m.plyoOnly) return plyoEx;
   if (plyoEx && id !== 'straight' && id !== 'custom') return false;
   const k = e.timed ? 'timed' : e.kind === 'load' ? 'load' : e.kind === 'assisted' ? 'assisted' : 'reps';
@@ -262,6 +269,7 @@ export function planShort(e) {
   if (e.method === 'eccentric') return `${n} × ${p.reps} · descente ${p.ecc} s`;
   if (e.method === 'explosive') return `${n} × ${p.reps} explosives`;
   if (e.method === 'plyo') return `${n} × ${p.reps} · au max`;
+  if (e.method === 'max_test') return e.maxMode === '5rm' ? `test de 5 reps max · ${n} essais` : `test de 1RM · ${n} essais`;
   return null;
 }
 

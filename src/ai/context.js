@@ -6,6 +6,7 @@ import { sportPerf } from '../data/sportPerf';
 import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
+import { maxTestLine } from '../coach/maxTest';
 import { equipmentLine } from '../coach/equipment';
 import { painsLine } from '../coach/pains';
 import { cardioLine } from '../coach/cardio';
@@ -100,6 +101,7 @@ export function coachContext(state, today, { overview } = {}) {
   lines.push(`Profil : ${p.sex === 'f' ? 'femme' : 'homme'}${p.age ? `, ${p.age} ans` : ''}${p.heightCm ? `, ${p.heightCm} cm` : ''}${lastWeight(state) ? `, ${lastWeight(state)} kg` : ''}${state.targetWeightKg ? `, poids visé ${state.targetWeightKg} kg` : ''}.`);
   const gym = Object.keys(c.gymSlots || {}).map(Number).sort((a, b) => toAiDay(a) - toAiDay(b));
   lines.push(experienceLine(state));
+  lines.push(maxTestLine(state, today));
   { const pq = (state.quests || []).filter(q => q.type === 'strength' && isPlyo(q)).map(q => q.name); lines.push(`Pliométrie : ${plyoPerWeek(c)} séance(s) avec des sauts par semaine${pq.length ? `, exercices de sauts suivis : ${pq.join(', ')}` : ', aucun exercice de sauts suivi'}.`); const pf = sportPerf(c.sport); lines.push(`Programme de performance du sport de la personne (action plyo) : vise ${pf.focus} ; ${pf.perWeek} séance(s) de sauts conseillée(s) par semaine${pf.style ? ` ; séances « ${pf.style} » de temps en temps` : ''} ; études : ${pf.sources.map(x => x.ref.split(' (')[0]).join(', ')}.`); }
   lines.push(equipmentLine(state));
   if (painsLine(state)) lines.push(painsLine(state));

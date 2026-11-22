@@ -26,7 +26,8 @@ export function applyStrengthSession(q, input) {
   const loadList = isKg && loads ? loads.map(x => Math.max(0, Number(x) || 0)) : null;
   const assistList = !isKg && assists ? assists.map(x => Number(x) || 0) : null; // négatif = lest (lib/assist.js)
   // valeur « de record » : charge la plus lourde, aide la plus faible
-  const effectiveValue = isKg ? Math.max(...(loadList || [0]), 0) : best;
+  // test de max : seuls les essais réussis (au moins 1 rep) comptent
+  const effectiveValue = isKg ? Math.max(...(loadList || [0]).filter((_, i) => method !== 'max_test' || Number(setDetails[i]) > 0), 0) : best;
   const assistanceUsed = assistList ? Math.min(...assistList) : 0;
 
   const prevDetails = getSetDetailsArray(q, goalSets, goalReps);
@@ -49,8 +50,10 @@ export function applyStrengthSession(q, input) {
     banner.badge = '🔥';
   }
 
-  const candidate = { ...q, currentValue: effectiveValue, currentAssistanceKg: !isKg ? assistanceUsed : 0, setDetails };
-  const ev = evaluateQuestProgress(candidate);
+  // test de max (4.50) : l'objectif de l'exercice (charge, séries de travail) ne change pas, seul le record compte
+  const isTest = method === 'max_test';
+  const candidate = isTest ? { ...q } : { ...q, currentValue: effectiveValue, currentAssistanceKg: !isKg ? assistanceUsed : 0, setDetails };
+  const ev = isTest ? { isBossDefeated: false } : evaluateQuestProgress(candidate);
   if (ev.isBossDefeated) {
     xp += 500;
     unlocked.push('boss_slayer');

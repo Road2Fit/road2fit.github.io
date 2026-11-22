@@ -1,6 +1,7 @@
 import { coachRound, coachStep } from './settings';
 import { coarseOf } from '../data/muscles';
 import { BAR_KG, isBarbell } from '../lib/plates';
+import { maxTestWarmup } from './maxTest';
 
 // Échauffement d'un exercice de la séance guidée : 1 ou 2 séries légères avant les séries de travail.
 //  - charge : montée progressive vers la charge de travail (pourcentages usuels : ~50 % × 8, puis 70-80 % × 3-5),
@@ -26,6 +27,8 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
   const warm = previousItems.some(p => coarseOf(p.arena) === coarseOf(item.arena)); // un seul échauffement par grande région, même en mode optimisé
 
   if (!hasWarmup(item)) return [];
+  // test de max (4.50) : montée complète vers les essais, même si la région est déjà chaude
+  if (item.method === 'max_test') return maxTestWarmup({ ...item, load: loadNow !== undefined ? loadNow : item.load });
 
   if (item.kind === 'load') {
     const W = Number(loadNow !== undefined ? loadNow : item.load) || 0;

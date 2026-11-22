@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.50',
+    date: '2026-11-22',
+    title: 'Séance « Test de max »',
+    items: [
+      'Demande au coach « prépare-moi une séance pour tester mes max », ou choisis « Test de max » dans la façon de travailler de ta prochaine séance.',
+      'Le coach prend 1 à 3 gros exercices que tu pratiques déjà (jambes, poussée, tirage) : échauffement en montée, puis 3 essais à 1 répétition, avec 3 à 4 min de repos. Un essai manqué : il te propose un essai suivant un peu plus léger ; deux manqués : on arrête.',
+      'Ton meilleur essai réussi devient ton « max réel », et ta charge d’entraînement habituelle ne change pas.',
+      'Si tu t’entraînes depuis moins de 12 semaines, si tu as fait l’exercice moins de 6 fois, ou à partir de 65 ans : test de 5 répétitions maximum à la place, plus sûr, d’où le coach tire ton max.',
+    ],
+  },
+  {
     version: '4.49',
     date: '2026-11-22',
     title: 'Vidéo : envoyer une série bien comptée',
