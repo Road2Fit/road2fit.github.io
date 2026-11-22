@@ -820,7 +820,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
             {screen === 'summary' && <button type="button" onClick={() => goto(g.idx)} className="w-full py-3 rounded-xl bg-slate-800 text-slate-100 font-bold text-sm">Retour à la séance</button>}
             {!confirmCancel
               ? <button type="button" onClick={() => setConfirmCancel(true)} className="w-full py-3 rounded-xl text-rose-300 font-bold text-sm">Abandonner</button>
-              : <button type="button" onClick={onCancel} className="w-full py-3 rounded-xl bg-rose-600 text-white font-black text-sm">Oui, abandonner (rien n’est enregistré)</button>}
+              : <button type="button" onClick={() => { stopRestEvent(); onCancel(); }} className="w-full py-3 rounded-xl bg-rose-600 text-white font-black text-sm">Oui, abandonner (rien n’est enregistré)</button>}
           </div>
         </div>
       )}

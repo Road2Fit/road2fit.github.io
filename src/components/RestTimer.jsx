@@ -1,7 +1,7 @@
 import { Art } from './Art';
 import { useEffect, useState } from 'react';
 import { playGameSound } from '../lib/sound';
-import { askRestNotifyOnce, notifyRestEnd } from '../lib/restNotify';
+import { askRestNotifyOnce, cancelRestNotify, cancelRestNotifyShown, notifyRestEnd, restScheduledBySw, scheduleRestEnd } from '../lib/restNotify';
 
 export function RestTimer({ guidedOpen = false, soundEnabled }) {
   const [open, setOpen] = useState(false);
@@ -18,21 +18,28 @@ export function RestTimer({ guidedOpen = false, soundEnabled }) {
         clearInterval(id);
         setEndAt(null);
         playGameSound('boss', soundEnabled);
-        notifyRestEnd(next); // appli pas à l'écran : notification du téléphone
+        if (!restScheduledBySw()) notifyRestEnd(next); // appli pas à l'écran : notification du téléphone (sauf si le service worker s'en charge)
         try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
       }
     }, 250);
     return () => clearInterval(id);
   }, [endAt]);
-  const start = sec => { setTotal(sec); setLeft(sec); setEndAt(Date.now() + sec * 1000); };
-  const addTime = () => { setTotal(t => t + 30); setLeft(l => l + 30); setEndAt(e => (e || Date.now()) + 30000); };
-  const stop = () => { setEndAt(null); setLeft(0); setNext(''); };
+  // retour sur l'appli : la notification de repos (déjà vue, ou plus d'actualité) est retirée de l'écran du téléphone
+  useEffect(() => {
+    const v = () => { if (document.visibilityState === 'visible') cancelRestNotifyShown(); };
+    document.addEventListener('visibilitychange', v);
+    return () => document.removeEventListener('visibilitychange', v);
+  }, []);
+  const start = (sec, nx = next) => { const e = Date.now() + sec * 1000; setTotal(sec); setLeft(sec); setEndAt(e); scheduleRestEnd(e, nx); };
+  const addTime = () => { const e = (endAt || Date.now()) + 30000; setTotal(t => t + 30); setLeft(l => l + 30); setEndAt(e); scheduleRestEnd(e, next); };
+  const stop = () => { setEndAt(null); setLeft(0); setNext(''); cancelRestNotify(); };
   useEffect(() => {
     const h = e => {
       const d = e.detail;
-      start(Number(d && typeof d === 'object' ? d.sec : d) || 90);
+      const nx = d && typeof d === 'object' && d.next ? d.next : '';
+      start(Number(d && typeof d === 'object' ? d.sec : d) || 90, nx);
       askRestNotifyOnce();
-      setNext(d && typeof d === 'object' && d.next ? d.next : '');
+      setNext(nx);
     };
     const o = () => setOpen(true);
     const s = () => stop(); // fin de séance : on coupe le repos en cours

@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.51.1',
+    date: '2026-11-22',
+    title: 'Notification de repos plus fiable',
+    items: [
+      'Écran éteint ou autre appli ouverte : la notification « Repos terminé » arrive à l’heure (avant, le téléphone pouvait la retarder).',
+      'Elle disparaît toute seule quand tu reviens dans l’appli, à la série suivante, à la fin de la séance ou si tu l’abandonnes.',
+    ],
+  },
+  {
     version: '4.51',
     date: '2026-11-22',
     title: 'Séance à deux avec un ami',

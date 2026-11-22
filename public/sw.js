@@ -55,6 +55,36 @@ self.addEventListener('fetch', (event) => {
 });
 
 // notification « Repos terminé » touchée : on revient sur l'appli déjà ouverte (ou on l'ouvre)
+// Fin de repos (4.51.1, retour de Gabin : notification en retard, et restée après la séance) : la page confie la fin du
+// repos au service worker, qui n'est pas ralenti quand l'écran est éteint ; 'rest-cancel' (série suivante, fin de séance,
+// retour sur l'appli) annule l'attente ET retire la notification déjà affichée.
+let restTimer = null;
+let restDone = null;
+const REST_TAG = 'rondoufit-rest';
+const closeRest = () => self.registration.getNotifications({ tag: REST_TAG }).then((list) => list.forEach((n) => n.close())).catch(() => {});
+const cancelRest = () => { if (restTimer) clearTimeout(restTimer); restTimer = null; if (restDone) restDone(); restDone = null; };
+self.addEventListener('message', (event) => {
+  const d = event.data || {};
+  if (d.type === 'rest-cancel') { cancelRest(); event.waitUntil(closeRest()); return; }
+  if (d.type === 'rest-close') { event.waitUntil(closeRest()); return; } // retour sur l'appli : on retire seulement ce qui est affiché
+  if (d.type !== 'rest') return;
+  cancelRest();
+  const wait = Math.max(0, Math.min(15 * 60 * 1000, Number(d.endAt) - Date.now()));
+  event.waitUntil(closeRest().then(() => new Promise((resolve) => {
+    restDone = resolve;
+    restTimer = setTimeout(() => {
+      restTimer = null; restDone = null;
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+        if (list.some((c) => c.visibilityState === 'visible')) return null; // appli à l'écran : son et vibration suffisent
+        return self.registration.showNotification('Repos terminé', {
+          body: String(d.next || 'À toi pour la série suivante').slice(0, 120), tag: REST_TAG, renotify: true,
+          vibrate: [200, 100, 200], icon: './neutral/icon-192.png', badge: './neutral/favicon-48.png', timestamp: Number(d.endAt) || Date.now(),
+        });
+      }).catch(() => {}).then(resolve);
+    }, wait);
+  })));
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {

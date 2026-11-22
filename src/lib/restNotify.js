@@ -23,3 +23,35 @@ export function notifyRestEnd(next) {
     return true;
   } catch (e) { return false; }
 }
+
+// 4.51.1 : la fin du repos est confiée au service worker (pas ralenti écran éteint) ; la page ne notifie plus elle-même
+// quand c'est le cas (sinon deux notifications). Annulée à la série suivante, à la fin de la séance et au retour sur l'appli.
+let swScheduled = false;
+const sw = () => (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller) || null;
+
+export function scheduleRestEnd(endAt, next) {
+  swScheduled = false;
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted' || !sw()) return false;
+    sw().postMessage({ type: 'rest', endAt, next: next || '' });
+    swScheduled = true;
+    return true;
+  } catch (e) { return false; }
+}
+export const restScheduledBySw = () => swScheduled;
+
+/** Retour sur l'appli : retire la notification affichée, sans annuler un repos qui court encore. */
+export function cancelRestNotifyShown() {
+  try { if (sw()) sw().postMessage({ type: 'rest-close' }); } catch (e) { /* rien */ }
+}
+
+/** Plus de notification de repos : attente annulée et notification déjà affichée retirée. */
+export function cancelRestNotify() {
+  swScheduled = false;
+  try {
+    if (sw()) sw().postMessage({ type: 'rest-cancel' });
+    else if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      navigator.serviceWorker.getRegistration().then(r => r && r.getNotifications({ tag: 'rondoufit-rest' })).then(l => (l || []).forEach(n => n.close())).catch(() => {});
+    }
+  } catch (e) { /* rien */ }
+}
