@@ -2,6 +2,14 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.52.1',
+    date: '2026-11-22',
+    title: 'Le coach voit tes séances de sport annulées',
+    items: [
+      'Le coach intelligent ne connaissait que tes jours de sport habituels : un volley annulé (ou ajouté) un jour précis restait annoncé. Il reçoit maintenant ton vrai planning de sport des 14 prochains jours.',
+    ],
+  },
+  {
     version: '4.52',
     date: '2026-11-22',
     title: 'Sauts mesurés en hauteur ou en distance',

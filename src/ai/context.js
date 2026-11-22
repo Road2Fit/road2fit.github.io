@@ -7,6 +7,7 @@ import { slangText } from '../data/slang';
 import { assistText } from '../lib/assist';
 import { experienceLine } from '../coach/experience';
 import { maxTestLine } from '../coach/maxTest';
+import { coachDayInfo } from '../coach/planning';
 import { equipmentLine } from '../coach/equipment';
 import { painsLine } from '../coach/pains';
 import { cardioLine } from '../coach/cardio';
@@ -109,6 +110,15 @@ export function coachContext(state, today, { overview } = {}) {
   const rythme = { trio: 'rythme corps entier + jambes + haut du corps (split "trio")', ppl: 'rythme push / pull / legs (split "ppl")', upperlower: 'rythme haut / bas (split "upperlower")' }[c.splitMode] || 'rythme automatique (split "auto" : corps entier jusqu’à 3 séances, au-delà haut / bas ou push / pull / legs)';
   lines.push(`Réglages : ${c.splitMode === 'trio' ? 3 : c.sessionsPerWeek} séances de muscu par semaine, ${rythme}, durée ${Number(c.sessionMinutes) ? `${c.sessionMinutes} min` : 'libre'}, jours de salle : ${gym.length ? gym.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ') : 'non précisés'}.`);
   lines.push(`Sport régulier : ${c.sport || 'aucun'}${(c.volleyDays || []).length ? `, jours : ${c.volleyDays.map(d => `${dayName(d)} (${toAiDay(d)})`).join(', ')}` : ''}. Matchs à venir : ${(c.matchDates || []).filter(d => d >= today).slice(0, 6).join(', ') || 'aucun'}.`);
+  // 4.52.1 (retour de Gabin : volley annulé le 26/11 mais toujours annoncé par le coach) : le VRAI planning de sport des
+  // 14 prochains jours, annulations (volleySkips) et ajouts (volleyExtra) compris, pas seulement les jours habituels
+  if (c.sport || (c.volleyDays || []).length || (c.volleyExtra || []).length || (c.matchDates || []).length) {
+    const days = Array.from({ length: 14 }, (_, i) => addDaysISO(today, i));
+    const label = d => `${dayName(new Date(`${d}T00:00:00`).getDay())} ${d}`;
+    const sportOn = days.filter(d => { const i = coachDayInfo(d, c); return i.isVolley || i.isMatch; }).map(d => `${label(d)}${coachDayInfo(d, c).isMatch ? ' (match)' : ''}${(c.volleyExtra || []).includes(d) ? ' (ajouté par la personne)' : ''}`);
+    const cancelled = days.filter(d => (c.volleySkips || []).includes(d)).map(label);
+    lines.push(`Sport VRAIMENT prévu les 14 prochains jours (annulations et ajouts de la personne compris ; c'est cette liste qui fait foi, pas les jours habituels) : ${sportOn.length ? sportOn.join(', ') : 'aucun'}.${cancelled.length ? ` Sport ANNULÉ par la personne : ${cancelled.join(', ')} (pas de sport ces jours-là).` : ''}`);
+  }
   const act = activeProfile(state, today);
   const prof = act.id;
   lines.push(`Objectif de travail : ${c.workProfile || 'auto'}${prof && prof !== c.workProfile ? ` (en ce moment : ${prof}${act.fromWeight ? `, choisi automatiquement car la personne veut ${act.fromWeight === 'lose' ? 'perdre' : 'prendre'} du poids` : ''})` : ''}. Suivi des muscles : ${state.muscleMode === 'optimized' ? '14 muscles' : '5 grands groupes'}.`);
