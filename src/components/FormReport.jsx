@@ -50,7 +50,8 @@ const Points = ({ list, onPlay }) => (
   </ul>
 );
 
-export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null, onPass2 = null, onPass2Busy = null }) {
+export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null, onPass2 = null, onPass2Busy = null, onUsePerf = null }) {
+  const [perfUsed, setPerfUsed] = useState(false);
   const [all, setAll] = useState(false);
   const [tab, setTab] = useState('algo');
   const [play, setPlay] = useState(null); // point dont on regarde l'extrait ({} = toute la série)
@@ -117,6 +118,17 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null,
       </div>
       {pass2Note}
       <p className="text-sm font-bold text-slate-200" data-testid="form-summary">{r.iso ? `Tenue mesurée : ${r.holdSec} s` : r.summary}</p>
+      {r.jump && (r.jump.boxCm || r.jump.avgCm) ? (() => {
+        // 4.53 : hauteur estimée d'après le squelette (± quelques cm) : proposée, jamais enregistrée sans l'accord de la personne
+        const cm = r.jump.boxCm || r.jump.avgCm;
+        return (
+          <div className="flex flex-wrap items-center gap-2 bg-sky-950/60 border border-sky-500/40 rounded-xl px-2.5 py-1.5" data-testid="form-jump">
+            <p className="flex-1 min-w-0 text-xs text-sky-100">📏 {r.jump.boxCm ? `Caisse ≈ ${r.jump.boxCm} cm` : `Hauteur moyenne ≈ ${r.jump.avgCm} cm${r.jump.maxCm && r.jump.maxCm !== r.jump.avgCm ? ` (meilleur saut ≈ ${r.jump.maxCm} cm)` : ''}`} <span className="text-sky-300/70">estimation vidéo, à vérifier</span></p>
+            {onUsePerf && !perfUsed && <button type="button" onClick={() => { onUsePerf(cm); setPerfUsed(true); }} className="px-2 py-1 rounded-lg bg-sky-600 text-white text-[11px] font-black" data-testid="form-jump-use">Utiliser {cm} cm</button>}
+            {perfUsed && <span className="text-[11px] font-bold text-emerald-300">Noté pour cette série</span>}
+          </div>
+        );
+      })() : null}
       {counted && (
         <div className="flex items-center gap-2 bg-slate-950 rounded-xl px-2.5 py-2" data-testid="form-count">
           <p className="flex-1 text-xs text-slate-300">La caméra a compté <b className="text-white">{r.repCount}</b> rep{r.repCount > 1 ? 's' : ''} (noté : {form.noted}).</p>

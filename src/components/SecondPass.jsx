@@ -22,7 +22,7 @@ export function SecondPass({ clip, result, onDone, onBusy = null }) {
     try {
       const frames = await runSecondPass({ clip, video: videoRef.current, onProgress: setProgress, cancelled: () => stop.current });
       if (!frames || stop.current) { if (!stop.current) setState('idle'); return; }
-      const res = analyzeSet(frames, clip.P, { aspect: clip.aspect, roll: clip.roll || 0, targetReps: clip.targetReps, chinCal: getChinCal() });
+      const res = analyzeSet(frames, clip.P, { aspect: clip.aspect, roll: clip.roll || 0, targetReps: clip.targetReps, chinCal: getChinCal(), heightCm: clip.heightCm || 0 });
       const sid = `series-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
       keepSeries({ id: sid, frames, aspect: clip.aspect, mirror: clip.mirror, pattern: clip.P.id, targetReps: clip.targetReps, chinCal: getChinCal(), roll: clip.roll || 0, pass: 2 });
       setClip({ ...clip, frames }); // squelette du revisionnage : celui de la 2e analyse

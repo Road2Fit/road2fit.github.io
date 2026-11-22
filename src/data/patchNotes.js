@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.53',
+    date: '2026-11-22',
+    title: 'Vidéo : hauteur des sauts et box jump bien compté',
+    items: [
+      'Box jump filmé : l’appli compte les montées sur la caisse (pieds qui quittent le sol puis y reviennent), plus les flexions avant le saut : 5 sauts au lieu de 8 sur tes vidéos d’aujourd’hui.',
+      'Sauts filmés : hauteur estimée d’après ton squelette (caisse du box jump, hauteur moyenne et meilleur saut au saut vertical), avec un bouton « Utiliser » pour la noter dans ta série. C’est une estimation (quelques cm près) : vérifie-la.',
+      'Ta taille (Coach → profil) sert d’échelle : renseigne-la pour une mesure plus juste.',
+    ],
+  },
+  {
     version: '4.52.2',
     date: '2026-11-22',
     title: 'Maxima d’après ta meilleure séance ; sport annulé par le coach',

@@ -84,7 +84,7 @@ const chevron = deg => (
   </svg>
 );
 
-export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, onFormFlag = null, pains = [], onTogglePain = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
+export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEnabled = true, aiForm = null, onFormFlag = null, heightCm = 0, pains = [], onTogglePain = null, swapChoices = () => [], onSwap = () => {}, onUndoSwap = () => {} }) {
   const [now, setNow] = useState(Date.now());
   const [menu, setMenu] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -409,6 +409,12 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey]);
   const formNow = g.formLast && (screen === 'rest' || screen === 'summary') ? g.formLast : null;
+  // 4.53 : hauteur estimée par la vidéo (sauts) → réglage « caisse » / « hauteur » de la série filmée, si la personne le veut
+  const usePerf = formNow && perfOf(items.find(x => x.questId === formNow.questId) || {}) ? cm => setG(prev => {
+    const dd = prev.data[formNow.questId];
+    if (!dd || !Array.isArray(dd.perfs)) return prev;
+    return { ...prev, data: { ...prev.data, [formNow.questId]: { ...dd, perfs: dd.perfs.map((v, k) => (k === formNow.j ? cm : v)) } } };
+  }) : null;
   // 4.27 : pendant le repos, schéma des disques de la PROCHAINE série (échauffement ou travail) pour préparer la barre
   const restLoad = screen === 'rest' && it && d && it.kind === 'load' && isBarbell(it.name) ? (inWarm ? warmRows[warmIdx].load : j >= 0 ? loadsOf(d)[j] : null) : null;
   const restPlates = restLoad && platesText(restLoad) ? restLoad : null;
@@ -562,7 +568,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
                     <p className="text-sm font-black text-emerald-300 uppercase tracking-wider" data-testid="rest-left-small">Repos · <span className="text-white text-2xl align-middle" data-testid="rest-left">{fmtT(restLeft)}</span></p>
                     <button type="button" onClick={() => setGameOpen(true)} aria-label="Jouer pendant le repos" title="Jouer pendant le repos" data-testid="rest-game-open" className="nav-btn"><Art name="gamepad" size={22} bare /></button>
                   </div>
-                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} />
+                  <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} onUsePerf={usePerf} />
                 </>
               ) : (<>
               <div className="w-full flex items-center justify-between">
@@ -746,7 +752,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
           <div className="flex-1 min-h-0 flex flex-col gap-3" data-testid="guided-summary">
             <h2 className="shrink-0 text-xl font-black text-white text-center">Résumé de la séance</h2>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} />}
+              {formNow && <FormReport form={formNow} onFixReps={fixFormReps} onAskAi={runFormAi} onChinCal={onChinCal} onFlag={sendFormFlag} onPass2={onFormPass2} onPass2Busy={setPass2Busy} onUsePerf={usePerf} />}
               {items.map(x => {
                 const dd = g.data[x.questId];
                 const reps = dd.reps.filter((r, i) => dd.done[i]);
@@ -781,7 +787,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
 
       {camOpen && it && d && j >= 0 && (
         <Suspense fallback={null}>
-          <FormCam item={it} soundEnabled={soundEnabled}
+          <FormCam item={it} soundEnabled={soundEnabled} heightCm={heightCm}
             info={`${setLabel(j)} · ${setText(it, d, j)}`}
             targetReps={it.timed ? 0 : Number(d.reps[j]) || 0} holdTarget={it.timed ? Number(d.reps[j]) || 0 : 0}
             onDone={onFormDone} onClose={() => setCamOpen(false)} onStopAuto={g.formAuto === it.questId ? stopFormAuto : null} />

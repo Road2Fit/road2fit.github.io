@@ -8,6 +8,7 @@
 import { PATTERNS } from './patterns';
 import { personBox } from './pickPerson';
 import { rotateFrames, settleRoll } from './roll';
+import { jumpMetrics } from './jumpHeight';
 
 const SIDES = {
   l: { ear: 7, sh: 11, el: 13, wr: 15, idx: 19, hip: 23, kn: 25, an: 27, heel: 29, foot: 31 },
@@ -801,7 +802,30 @@ export function analyzeSet(frames, pattern, meta = {}) {
   if (!det.reps.length) return fail('nomove', 'Je n’ai pas vu de répétition nette.', P);
   ctx.main = s;
   ctx.det = det;
-  const reps = det.reps;
+  let reps = det.reps;
+  // 4.53 : sauts : hauteur estimée d'après le squelette (jumpHeight.js) ; box jump : on compte les montées sur la caisse
+  // (pieds qui quittent le sol puis y reviennent), plus les flexions avant le saut (vidéos du 22/11/2026 : 8 au lieu de 5)
+  let jump = null;
+  if (P.id === 'jump') {
+    const a0 = meta.aspect || 9 / 16;
+    const rot = rotateFrames(frames, meta.roll ? settleRoll(frames, meta.roll, a0) : 0, a0).frames;
+    const jm = jumpMetrics(rot, { heightCm: meta.heightCm, box: !!P.travels });
+    if (jm) {
+      jump = { count: jm.count, heights: jm.jumps.map(j => j.cm), avgCm: jm.avgCm, maxCm: jm.maxCm, boxCm: jm.boxCm };
+      if (P.travels && jm.count >= 1 && jm.count !== reps.length) {
+        // une rep par montée sur la caisse : la rep détectée la plus proche de chaque saut (sans doublon)
+        const scale = ctx.t[ctx.t.length - 1] - ctx.t[0] > 300 ? 1000 : 1; // temps en ms ou en s
+        const at = r => (ctx.t[r.turn] - ctx.t[0]) / scale;
+        const picked = [];
+        for (const j of jm.jumps) {
+          const free = det.reps.filter(r => !picked.includes(r));
+          if (!free.length) break;
+          picked.push(free.reduce((b, r) => (Math.abs(at(r) - j.t0) < Math.abs(at(b) - j.t0) ? r : b)));
+        }
+        if (picked.length === jm.count) reps = picked.sort((x, y) => x.turn - y.turn);
+      }
+    }
+  }
   const N = reps.length;
   const conFirst = P.first === 'con';
   const con = reps.map(r => (conFirst ? r.p1 : r.p2));
@@ -862,6 +886,7 @@ export function analyzeSet(frames, pattern, meta = {}) {
     verdict,
     summary,
     ...(ctx.chin ? { chin: { ...ctx.chin, cal: ctx.chinCal } } : {}),
+    ...(jump ? { jump } : {}),
   };
 }
 const round2 = v => (isNum(v) ? Math.round(v * 100) / 100 : null);
