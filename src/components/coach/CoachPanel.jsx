@@ -38,6 +38,7 @@ import { CoachSources } from './CoachSources';
 import { CoachVolley } from './CoachVolley';
 import { CoachWeek } from './CoachWeek';
 import { CoachWeightHealth } from './CoachWeightHealth';
+import { CoachBody } from './CoachBody';
 import { sportInfo } from '../../data/sports';
 import { arenaOf, fineGroupOf, secondGroupOf } from '../../data/muscles';
 import { MuscleBodyMap } from './MuscleBodyMap';
@@ -662,6 +663,7 @@ export function CoachPanel({
 
       {page === 'reglages' && (
       <div className="space-y-4 page-in" data-testid="coach-settings-page" key="reglages">
+        <CoachBody gameState={gameState} setGameState={setGameState} />
         <CoachGoal gameState={gameState} setGameState={setGameState} />
         <CoachProgram gameState={gameState} setGameState={setGameState} inSettings={!!coach.noCoach && !coach.program} />
         <CoachPlace gameState={gameState} setGameState={setGameState} />

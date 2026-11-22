@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.53.1',
+    date: '2026-11-22',
+    title: 'Ta taille, facile à régler',
+    items: [
+      'Coach → Réglages → « Mon corps » : taille, âge et sexe. La taille sert d’échelle pour mesurer la hauteur de tes sauts en vidéo, et pour tes calories.',
+      'Elle est toujours demandée à l’accueil (étape « Toi »).',
+    ],
+  },
+  {
     version: '4.53',
     date: '2026-11-22',
     title: 'Vidéo : hauteur des sauts et box jump bien compté',
