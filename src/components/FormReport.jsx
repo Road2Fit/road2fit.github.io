@@ -74,7 +74,7 @@ export function FormReport({ form, onFixReps, onAskAi, onChinCal, onFlag = null,
         <ul className="text-xs text-slate-400 list-disc pl-4 space-y-0.5">{(r.tips || []).map(t => <li key={t}>{t}</li>)}</ul>
         {pass2Note}
         {pass2}
-        <FormFlag key={form.at + ':' + (r.pass || 1)} onFlag={onFlag} noted={form.noted} counted={0} />
+        <FormFlag key={form.at + ':' + (r.pass || 1)} onFlag={onFlag} noted={form.noted} counted={0} allowGood={false} />
       </div>
     );
   }

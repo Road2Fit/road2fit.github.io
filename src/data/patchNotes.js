@@ -2,6 +2,15 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.49',
+    date: '2026-11-22',
+    title: 'Vidéo : envoyer une série bien comptée',
+    items: [
+      'Sous l’analyse vidéo, nouveau lien « Analyse juste ? L’envoyer comme modèle » : la série bien filmée et bien comptée sert de comparaison avec celles où l’analyse se trompe.',
+      'Comme pour un signalement, seul le squelette de ta série part (des points, en chiffres), jamais l’image ni la vidéo.',
+    ],
+  },
+  {
     version: '4.48.5',
     date: '2026-11-22',
     title: 'Durée des séances plus juste',

@@ -15,6 +15,8 @@ export const FLAG_PROBLEMS = [
   { id: 'person', label: 'Mauvaise personne suivie' },
   { id: 'advice', label: 'Conseils faux' },
   { id: 'other', label: 'Autre' },
+  // 4.49 : série bien analysée envoyée comme modèle (comparer le bien fait et le mal compté) ; pas dans la liste des erreurs
+  { id: 'good', label: 'Analyse juste', hidden: true },
 ];
 
 const r3 = x => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null);
@@ -62,6 +64,7 @@ export function buildFlag({ series, result, item, problems = [], trueReps = null
     pattern: (series && series.pattern) || r.pattern || '',
     pass: (series && series.pass) || 1,
     problems: problems.filter(p => FLAG_PROBLEMS.some(x => x.id === p)),
+    kind: problems.includes('good') ? 'good' : 'error',
     trueReps: Number.isFinite(trueReps) ? trueReps : null,
     noted: Number.isFinite(noted) ? noted : null,
     note: String(note || '').replace(/\s+/g, ' ').trim().slice(0, 500),

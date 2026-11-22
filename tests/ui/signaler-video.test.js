@@ -88,6 +88,50 @@ describe('signaler une analyse vidéo fausse', () => {
     expect(h.errors).toEqual([]);
   }, 120000);
 
+  it('4.49 : « Analyse juste ? L’envoyer comme modèle » envoie la série marquée bonne', async () => {
+    const srv = fakeSupabase();
+    const user = srv.addUser('a@x.fr');
+    const h = await launch({ fetchImpl: srv.fetch, storage: {
+      __classic: '1',
+      'rondoufit:supabase': JSON.stringify({ url: SUPABASE_URL, anonKey: 'anon-public-key' }),
+      'rondoufit:account': JSON.stringify({ session: user.session }),
+      'rondoufit:lastUser': user.id,
+      rondoudou_save_v1: JSON.stringify({ ...DEMO_STATE, onboarded: true }),
+    } });
+    open.push(h);
+    await advance(h, 600);
+    await clickEl(h, h.doc.querySelector('[data-tab="coach"]'));
+    const [lancer] = [...findByText(h, 'Lancer la séance guidée'), ...findByText(h, 'Lancer cette séance guidée maintenant')];
+    await clickText(h, lancer.textContent.trim().slice(0, 30));
+    if (q(h, 'feel-ok')) await clickEl(h, q(h, 'feel-ok'));
+    while (q(h, 'warm-done')) await clickEl(h, [...q(h, 'warmup').querySelectorAll('button')].find(b => /Passer/.test(b.textContent)));
+    const name = q(h, 'guided-set').querySelector('h2').textContent.trim();
+    const { frames, aspect } = framesFor(name, Number(q(h, 'set-reps').textContent));
+    h.w.__r2fPoseMock = { frames, aspect, batch: 60 };
+    await clickEl(h, q(h, 'form-cam-open'));
+    expect(await waitFor(h, () => !q(h, 'form-cam'))).toBe(true);
+    await advance(h, 0);
+    await clickEl(h, q(h, 'form-good-open'));
+    const counted = Number(q(h, 'good-reps').textContent);
+    expect(q(h, 'good-differs')).toBeNull();
+    // un nombre différent de celui de la caméra devient un signalement de reps ; on revient au bon nombre
+    await clickEl(h, q(h, 'good-reps-plus'));
+    expect(q(h, 'good-differs')).toBeTruthy();
+    await clickEl(h, q(h, 'good-reps-minus'));
+    expect(q(h, 'good-differs')).toBeNull();
+    await clickEl(h, q(h, 'flag-send'));
+    expect(await waitFor(h, () => q(h, 'flag-sent'))).toBe(true);
+    expect(q(h, 'flag-sent').textContent).toMatch(/modèle/);
+    expect(srv.formFlags).toHaveLength(1);
+    const d = srv.formFlags[0].data;
+    expect(d.problems).toEqual(['good']);
+    expect(d.kind).toBe('good');
+    expect(d.trueReps).toBe(counted);
+    expect(d.result.repCount).toBe(counted);
+    expect(d.frames.length).toBeGreaterThan(20);
+    expect(h.errors).toEqual([]);
+  }, 120000);
+
   it('sans compte connecté : pas de bouton', async () => {
     const h = await launch();
     open.push(h);
