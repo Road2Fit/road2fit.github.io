@@ -1,7 +1,7 @@
 // Confidentialité et mentions légales (4.47, phase « 10 testeurs »). Texte en français simple, fidèle à ce que fait
 // réellement l'appli (à mettre à jour à chaque nouvelle donnée envoyée quelque part). Ouvert par l'événement
 // `rondoufit-privacy` (Réglages, création de compte, assistant d'accueil). À faire relire par un juriste avant l'ouverture au public.
-export const PRIVACY_VERSION = '2026-11-13';
+export const PRIVACY_VERSION = '2026-11-22';
 
 const S = ({ title, children }) => (
   <section className="space-y-1.5">
@@ -41,6 +41,7 @@ export function PrivacyPolicy({ onClose }) {
 
           <S title="Ce qui est partagé, et seulement si tu le choisis">
             <p><b>Amis</b> : si tu actives les amis, ton prénom ou pseudo, ton niveau, tes exercices, maxima et dernière séance sont visibles par les personnes qui ont ton code. Jamais ton poids, tes notes ni ta sauvegarde. Tes photos, seulement si tu actives leur partage.</p>
+            <p><b>Séance à deux</b> : quand tu invites un ami (qui t’a aussi ajouté), il reçoit la liste de tes exercices possibles, ceux à éviter à cause d’une douleur signalée (sans la zone, qu’on peut toutefois deviner), ton type d’objectif, ton niveau, salle ou maison et ton matériel. S’il accepte, vous recevez tous les deux le plan commun (exercices, séries, répétitions). Jamais tes charges, ton historique ni ton poids. Ces données sont effacées du serveur dès sa réponse ou l’annulation, l’invitation elle-même 30 jours après la date.</p>
             <p><b>Coach intelligent</b> (si tu l’actives) : pour te répondre, un résumé de ton entraînement et de ton profil est envoyé au prestataire qui fait fonctionner le coach IA (situé aux États-Unis) : exercices, séances, réglages du coach, sport, âge, taille, poids et poids visé, douleurs que tu as déclarées. Jamais ton e-mail, ton prénom ni tes photos. Ce que tu dictes ou écris au coach lui est aussi envoyé.</p>
             <p><b>Analyse vidéo</b> : la vidéo est analysée sur ton téléphone et n’est ni enregistrée en ligne ni envoyée. Si tu signales une analyse fausse, seuls les points du squelette (des chiffres, pas d’image) sont envoyés.</p>
           </S>

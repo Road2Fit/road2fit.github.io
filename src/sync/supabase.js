@@ -276,6 +276,44 @@ export const friends = {
   },
 };
 
+// Séance à deux (4.51, docs/supabase-seance-a-deux.sql) : invitations entre amis mutuels
+const DUO_ERRORS = {
+  DUO_NOT_MUTUAL: 'Vous devez vous être ajoutés l’un l’autre comme amis pour vous inviter.',
+  DUO_DATE: 'Choisis un jour entre aujourd’hui et dans 30 jours.',
+  DUO_TOO_MANY: 'Trop d’invitations envoyées : attends des réponses (ou réessaie demain).',
+  DUO_NOT_FOUND: 'Cette invitation n’est plus valable (annulée ou déjà répondue).',
+  DUO_PLAN: 'Plan de séance invalide.',
+  DUO_PART: 'Invitation invalide (thème ou données).',
+};
+function duoError(e) {
+  if (!(e instanceof AccountError)) return e;
+  const key = Object.keys(DUO_ERRORS).find(k => (e.raw || '').includes(k));
+  if (key) return new AccountError(DUO_ERRORS[key], e.status, key);
+  if (/function .*duo_|duo_sessions|schema cache|404/i.test(e.raw || '') || e.status === 404) {
+    return new AccountError('La séance à deux n’est pas encore installée sur le serveur.', e.status, 'not_installed');
+  }
+  return e;
+}
+export const duo = {
+  async invite(cfg, to, date, theme, part) {
+    const s = await freshSession(cfg);
+    try { return await call(cfg, 'POST', '/rest/v1/rpc/duo_invite', { token: s.access_token, body: { p_to: to, p_date: date, p_theme: theme, p_part: part } }); } catch (e) { throw duoError(e); }
+  },
+  /** [{ id, mine, other, other_name, date, theme, status, part, plan, updated_at }] */
+  async list(cfg) {
+    const s = await freshSession(cfg);
+    try { const rows = await call(cfg, 'POST', '/rest/v1/rpc/duo_list', { token: s.access_token, body: {} }); return Array.isArray(rows) ? rows : []; } catch (e) { throw duoError(e); }
+  },
+  async answer(cfg, id, accept, plan) {
+    const s = await freshSession(cfg);
+    try { await call(cfg, 'POST', '/rest/v1/rpc/duo_answer', { token: s.access_token, body: { p_id: id, p_accept: !!accept, p_plan: accept ? plan : null } }); } catch (e) { throw duoError(e); }
+  },
+  async cancel(cfg, id) {
+    const s = await freshSession(cfg);
+    try { await call(cfg, 'POST', '/rest/v1/rpc/duo_cancel', { token: s.access_token, body: { p_id: id } }); } catch (e) { throw duoError(e); }
+  },
+};
+
 /** Photos partagées entre amis (docs/supabase-photos-amis.sql) : ma dernière photo de séance (si je l'active) et mes photos
  *  où je tague des amis mutuels. Les photos des autres ne se lisent que par les fonctions (friend_last_photo, photos_tagged_me). */
 /** Signalements d'une analyse vidéo fausse (4.38, table form_flags : chacun n'écrit et ne lit que les siens). */

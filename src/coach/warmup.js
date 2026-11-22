@@ -28,7 +28,7 @@ export function warmupSets(item, previousItems = [], loadNow, assistNow) {
 
   if (!hasWarmup(item)) return [];
   // test de max (4.50) : montée complète vers les essais, même si la région est déjà chaude
-  if (item.method === 'max_test') return maxTestWarmup({ ...item, load: loadNow !== undefined ? loadNow : item.load });
+  if (item.method === 'max_test') { const w = maxTestWarmup({ ...item, load: loadNow !== undefined ? loadNow : item.load }); if (w) return w; }
 
   if (item.kind === 'load') {
     const W = Number(loadNow !== undefined ? loadNow : item.load) || 0;

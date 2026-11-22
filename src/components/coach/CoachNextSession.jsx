@@ -132,6 +132,7 @@ export function CoachNextSession({
               {(() => {
                 const fc = sessionFocus(shownSession.exercises);
                 if (shownSession.maxTest) return 'Test de max';
+                if (shownSession.duo) return `Séance à deux${shownSession.duo.with ? ` avec ${shownSession.duo.with}` : ''}`;
                 if (shownSession.program && !plan) return shownSession.templateId;
                 const side = shownSession.type === 'PUSH' || shownSession.type === 'PULL' ? ` · ${shownSession.typeLabel.toLowerCase()}` : '';
                 return fc ? `${fc.label}${side}` : plan ? 'Séance perso' : `Séance ${shownSession.typeLabel || shownSession.templateId}`;

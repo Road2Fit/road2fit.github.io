@@ -12,6 +12,7 @@ import { applyMethods } from './methodChoice';
 import { restFor } from './rest';
 import { sessionMinutes, setWorkSec } from './methods';
 import { buildMaxTest, maxTestWarmup, pickMaxLifts } from './maxTest';
+import { duoSession, duoThemeLabel } from './duo';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
 import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, pushPullSide, typeArenas } from '../data/muscles';
@@ -252,6 +253,22 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
   const style = styles[0] || null;
   const plyoDay = styles.includes('plyo') || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
   opts = { ...opts, dayStyle: styles };
+  // séance à deux acceptée ce jour-là (4.51) : le plan commun passe avant tout le reste
+  const duo = state.coach && state.coach.duos && state.coach.duos[slot.iso || di.iso];
+  if (duo && duo.plan && !opts.noDuo) {
+    const d = duoSession(state, duo, di.iso);
+    if (d.exercises.length) {
+      const w = Number(state.userWeightKg) || 82;
+      const estKcal = d.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }), 0);
+      const first = d.exercises.find(e => e.kind === 'load' && e.load >= 20);
+      return {
+        templateIdx: -1, templateId: 'Séance à deux', date: di.iso, exercises: d.exercises, estMin: d.estMin, estKcal, fillSuggestions: [], slot: coachSlotFor(getCoachSettings(state), di.iso), target: 0,
+        duo: { with: duo.with || '', theme: (duo.plan && duo.plan.theme) || 'auto' },
+        warmup: first ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg.` : '',
+        notes: [`Séance à deux${duo.with ? ` avec ${duo.with}` : ''} (${duoThemeLabel((duo.plan && duo.plan.theme) || 'auto').toLowerCase()}) : vous faites les mêmes exercices, dans le même ordre, avec les mêmes séries et répétitions (un entre-deux de vos deux objectifs). Chacun a sa charge, tirée de ses propres séances : alternez sur le même poste pendant les repos.`],
+      };
+    }
+  }
   if (styles.includes('max') && !opts.noMax) {
     const t = coachBuildMaxTest(state, di, chosen);
     if (t) return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...t, home: true } : t;
@@ -280,7 +297,7 @@ function coachBuildMaxTest(state, di, chosen) {
   const t = buildMaxTest(state, targets, di.iso);
   if (!t.exercises.length) return null;
   const notes = [...(di.legsOk ? [] : [`Pas de test des jambes aujourd’hui (${di.legsWhy}).`]), ...t.notes];
-  const warmMin = t.exercises.reduce((m, e) => m + maxTestWarmup(e).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
+  const warmMin = t.exercises.reduce((m, e) => m + (maxTestWarmup(e) || []).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
   const w = Number(state.userWeightKg) || 82;
   const estKcal = t.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: false, weightKg: e.load, assistanceKg: 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);
   return {

@@ -25,7 +25,7 @@ import { isTimedQuest } from '../lib/quests';
 export const MAX_TEST_SESSIONS = 6;  // séances sur l'exercice avant un vrai 1RM (geste rodé)
 export const MAX_TEST_WEEKS = 12;    // semaines de suivi avant un vrai 1RM
 export const MAX_TEST_AGE = 65;      // à partir de cet âge : test de 5 reps (Pollock 1991)
-export const MAX_TEST_LIFTS = 3;
+export const MAX_TEST_LIFTS = 6;
 
 const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const isHinge = q => /souleve|deadlift|terre/.test(norm(q.name));
@@ -61,37 +61,67 @@ export const READINESS_TEXT = {
   sessions: `le geste n’est pas encore rodé (moins de ${MAX_TEST_SESSIONS} séances sur cet exercice)`,
 };
 
-/** Exercices testables : en kg, gros exercice, déjà fait, sans douleur signalée, ni sauts ni haltérophilie. */
+/**
+ * Exercices testables (4.50.1, retour de Gabin : « tout doit être possible ») : tout exercice de musculation déjà fait
+ * (en kg, au poids du corps, lesté, avec élastique, tenu en secondes), sans douleur signalée, ni sauts ni haltérophilie.
+ */
 function testable(state, q, legsOk) {
   if (!q || q.type !== 'strength' || q.paused || q.goalMode === 'free_mode') return false;
-  if (coachKind(q) !== 'load' || isTimedQuest(q) || /^ply_/.test(String(q.catalogId || '')) || repSchemeOf(q)) return false;
-  if (!coachIsCompound(q.name) || !coachRealEntries(q).length) return false;
+  if (/^ply_/.test(String(q.catalogId || '')) || repSchemeOf(q)) return false;
+  if (!coachRealEntries(q).length) return false;
   if (!legsOk && isLegArena(arenaOf(q))) return false;
   return !painFor({ catalogId: q.catalogId, name: q.name }, state.coach);
 }
 
+/** Type de test d'un exercice : charge (1 rep), lest (1 rep lestée), répétitions au maximum, ou temps au maximum. */
+export function testKindOf(q) {
+  if (isTimedQuest(q)) return 'time';
+  const k = coachKind(q);
+  if (k === 'load') return 'load';
+  if (k === 'assisted' && (Number(q.currentAssistanceKg) || 0) < 0) return 'lest';
+  return 'reps';
+}
+
 /**
- * Exercices du test (au plus 3) : l'exercice de l'objectif de force d'abord, puis un par région (jambes, poussée,
- * tirage), les plus pratiqués ; ordre de passage : jambes, poussée, puis tirage et soulevé de terre (comme en compétition).
+ * Exercices du test (au plus 6, retour de Gabin : « faire rapidement plein d'exercices différents ») : l'exercice de
+ * l'objectif de force d'abord, puis un par groupe musculaire (gros exercices et les plus pratiqués d'abord), puis un
+ * deuxième dans les groupes déjà pris. Ordre : tests lourds (jambes, poussée, tirage, soulevé de terre), puis tests de
+ * répétitions, puis gainage. La personne peut ensuite en retirer ou en ajouter.
  */
 export function pickMaxLifts(state, { legsOk = true, allowedArenas = null, quests = null } = {}) {
   const goal = getCoachSettings(state).mainGoal;
   const pool = (quests || state.quests || []).filter(q => testable(state, q, legsOk) && (!allowedArenas || allowedArenas.includes(arenaOf(q))));
   const region = q => (isHinge(q) ? 'hinge' : isLegArena(arenaOf(q)) ? 'legs' : pushPullSide(arenaOf(q), q.name) || 'other');
-  const sorted = pool.slice().sort((a, b) => coachRealEntries(b).length - coachRealEntries(a).length);
+  const sorted = pool.slice().sort((a, b) => (coachIsCompound(b.name) ? 1 : 0) - (coachIsCompound(a.name) ? 1 : 0) || coachRealEntries(b).length - coachRealEntries(a).length);
   const out = [];
-  const goalQ = goal && goal.kind === 'strength' ? sorted.find(q => q.id === goal.questId) : null;
+  const goalQ = goal && (goal.kind === 'strength' || goal.kind === 'reps') ? sorted.find(q => q.id === goal.questId) : null;
   if (goalQ) out.push(goalQ);
-  for (const q of sorted) if (out.length < MAX_TEST_LIFTS && !out.includes(q) && !out.some(o => region(o) === region(q) || (region(o) === 'hinge' && region(q) === 'legs') || (region(o) === 'legs' && region(q) === 'hinge'))) out.push(q);
+  for (const q of sorted) if (out.length < MAX_TEST_LIFTS && !out.includes(q) && !out.some(o => arenaOf(o) === arenaOf(q))) out.push(q);
   for (const q of sorted) if (out.length < MAX_TEST_LIFTS && !out.includes(q)) out.push(q);
+  const heavy = q => (['load', 'lest'].includes(testKindOf(q)) ? 0 : testKindOf(q) === 'reps' ? 10 : 20);
   const rank = { legs: 0, push: 1, other: 2, pull: 3, hinge: 4 };
-  return out.sort((a, b) => rank[region(a)] - rank[region(b)]);
+  return out.sort((a, b) => heavy(a) + rank[region(a)] - (heavy(b) + rank[region(b)]));
+}
+
+/** Meilleure série des 90 derniers jours (répétitions, ou secondes pour un exercice tenu). */
+export function bestRecent(q, today) {
+  let best = 0;
+  for (const e of coachRealEntries(q)) {
+    if (today && coachDaysBetween(e.date, today) > 90) continue;
+    for (const r of Array.isArray(e.setDetails) && e.setDetails.length ? e.setDetails : [e.reps || 0]) best = Math.max(best, Number(r) || 0);
+  }
+  return best;
 }
 
 /** Max de départ : max estimé d'après les séances (séries comptées comme faites à l'échec : prudent). */
 export function referenceMax(state, q, today) {
   const est = estimateQuestMax(q, state, { today });
   return est && !est.empty && est.estimate > 0 ? est.estimate : 0;
+}
+/** Lest possible pour 1 rep (kg ajoutés au poids du corps), d'après les séances ; 0 si inconnu. */
+export function referenceExtra(state, q, today) {
+  const est = estimateQuestMax(q, state, { today });
+  return est && !est.empty && est.extraFor1 > 0 ? est.extraFor1 : 0;
 }
 
 /**
@@ -126,6 +156,18 @@ const fmt = x => String(Math.round(x * 100) / 100).replace('.', ',');
 
 /** Échauffement propre au test (NSCA) : 5-10 reps légères, 3-5 reps, 2-3 reps, puis 1 rep vers 90 %. Base = item.load. */
 export function maxTestWarmup(item) {
+  if (item.maxMode === 'lest' || item.maxMode === 'lest5') {
+    // lesté : quelques reps au poids du corps, puis le lest monte vers le 1er essai
+    const first = item.plan && item.plan[0] ? -Number(item.plan[0].assist) || 0 : 0;
+    const five = item.maxMode === 'lest5';
+    const out = [{ assist: 0, reps: 5, restSec: 90, label: '5 reps au poids du corps' }];
+    const half = Math.round((first * 0.5) / 1.25) * 1.25;
+    if (half >= 2.5) out.push({ assist: -half, reps: five ? 4 : 3, restSec: 120, label: `${five ? 4 : 3} reps lesté de ${fmt(half)} kg` });
+    const near = Math.round((first * 0.8) / 1.25) * 1.25;
+    if (!five && near > half && near >= 5) out.push({ assist: -near, reps: 1, restSec: 180, label: `1 rep lesté de ${fmt(near)} kg` });
+    return out;
+  }
+  if (item.maxMode !== '1rm' && item.maxMode !== '5rm') return null; // répétitions ou temps : échauffement habituel
   const W = Number(item.load) || 0;
   if (!(W > 0)) return [];
   const step = coachStep({ catalogId: '', name: item.name }, W);
@@ -149,11 +191,16 @@ export function maxTestWarmup(item) {
  */
 export function adaptAfterAttempt(it, d, j, done) {
   const plan = it && it.plan;
-  if (!plan || !plan[j] || plan[j].kind !== 'max' || !plan[j + 1]) return null;
+  if (!plan || !plan[j] || plan[j].kind !== 'max' || !plan[j + 1] || plan[j + 1].kind !== 'max') return null;
   if (done >= plan[j].reps) return null;
   const loads = (d.loads || plan.map(p => p.load)).map(Number);
   const failed = (d.reps || []).slice(0, j).filter((r, k) => plan[k].kind === 'max' && Number(r) < plan[k].reps).length + 1;
   if (failed >= 2) return { stop: true, text: 'Deux essais manqués : ton max du jour est ton dernier essai réussi. Arrête là pour cet exercice.', button: 'Compris' };
+  if (it.kind !== 'load') {
+    const extra = -Number((d.assists || plan.map(p => p.assist))[j]) || 0;
+    const next = Math.max(0, Math.round((extra * 0.9) / 1.25) * 1.25);
+    return { stop: true, text: `Essai manqué : refais un essai lesté d’environ ${fmt(next)} kg (règle le lest avec − / +), ou arrête là.`, button: 'Compris' };
+  }
   const step = coachStep({ catalogId: it.catalogId, name: it.name }, loads[j]);
   const legs = isLegArena(it.arena) || isHinge(it);
   let next = coachRound(loads[j] * (legs ? 0.95 : 0.975), step);
@@ -163,9 +210,19 @@ export function adaptAfterAttempt(it, d, j, done) {
   return { load: Math.round((base * next / loads[j + 1]) * 100) / 100, next, text: `Essai manqué : le suivant à ${fmt(next)} kg ?`, button: `Baisser à ${fmt(next)} kg` };
 }
 
+const lestPlan = (extra, five, bestBw) => {
+  const r = x => Math.max(1.25, Math.round(x / 1.25) * 1.25);
+  const at = (x, n, label) => ({ reps: n, load: 0, assist: -r(x), rest: 240, kind: 'max', label });
+  const tail = { reps: Math.max(1, bestBw), load: 0, assist: 0, rest: 180, kind: 'amrap', label: 'Pour finir : le plus de répétitions possible au poids du corps' };
+  if (five) return [at(extra * 0.95, 5, 'Essai 1 : 5 reps lestées propres'), at(extra, 5, 'Essai 2 : 5 reps lestées, seulement si l’essai 1 était propre'), tail];
+  return [at(extra * 0.95, 1, 'Essai 1 lesté (doit passer)'), at(extra, 1, 'Essai 2 lesté (ton max estimé)'), at(Math.max(extra * 1.05, extra + 2.5), 1, 'Essai 3 lesté (record) : seulement si l’essai 2 est passé avec de la marge'), tail];
+};
+
 /**
  * Exercices de la séance de test (objectifs de computeExerciseTarget déjà calculés pour ces exercices) et notes.
- * @returns { exercises, notes, mode } mode : '1rm' si au moins un vrai 1RM, sinon '5rm'
+ * Par type d'exercice (4.51, retour de Gabin) : en kg → 1RM (ou 5 reps max) ; lesté → essais lestés puis max de reps au
+ * poids du corps ; poids du corps ou élastique → le plus de répétitions possible ; tenu (gainage…) → le plus longtemps possible.
+ * @returns { exercises, notes, mode } mode : '1rm' si au moins un vrai test à 1 rep, sinon '5rm' (ou 'reps')
  */
 export function buildMaxTest(state, targets, today) {
   const who = maxTestReadiness(state, today);
@@ -175,31 +232,59 @@ export function buildMaxTest(state, targets, today) {
   const fives = [];
   for (const t of targets) {
     const q = byId[t.questId];
-    const E = referenceMax(state, q, today);
-    if (!(E > 0)) continue;
+    if (!q) continue;
+    const tk = testKindOf(q);
     const r = who.ok ? maxTestReadiness(state, today, q) : who;
-    const mode = r.ok ? '1rm' : '5rm';
-    if (!r.ok) fives.push([t.name, r.why]);
-    const step = coachStep(q, E);
-    const load = coachRound(mode === '5rm' ? E / (1 + 5 / 30) : E, step);
-    const base = { ...t, load, restSec: 240, maxMode: mode, maxRef: Math.round(E * 2) / 2 };
-    const plan = maxTestPlan(base, mode);
+    const best = bestRecent(q, today);
+    const common = { method: 'max_test', manualSets: true, change: 'test' };
+    if (tk === 'load') {
+      const E = referenceMax(state, q, today);
+      if (!(E > 0)) continue;
+      const mode = r.ok ? '1rm' : '5rm';
+      if (!r.ok) fives.push(t.name);
+      const load = coachRound(mode === '5rm' ? E / (1 + 5 / 30) : E, coachStep(q, E));
+      const base = { ...t, load, restSec: 240, maxMode: mode, maxRef: Math.round(E * 2) / 2 };
+      const plan = maxTestPlan(base, mode);
+      exercises.push({
+        ...base, ...common, plan, sets: plan.length, targetReps: plan.map(p => p.reps),
+        reason: mode === '1rm' ? `Test de 1RM : ton max estimé est ${fmt(base.maxRef)} kg. Échauffement en montée, puis jusqu’à 3 essais à 1 rep.` : 'Test de 5 reps maximum : l’appli en tire ton max estimé (une série de 5 au maximum le prédit très bien, Reynolds 2006).',
+        methodWhy: mode === '1rm' ? 'Protocole NSCA : échauffement progressif, essais à 1 rep, 3 à 4 min de repos.' : `Pas de vrai 1RM pour l’instant : ${READINESS_TEXT[r.why]}.`,
+      });
+      continue;
+    }
+    if (tk === 'lest') {
+      const X = referenceExtra(state, q, today);
+      const five = !r.ok;
+      const extra = five ? X * 0.85 : X;
+      if (extra >= 2.5) {
+        if (five) fives.push(t.name);
+        const plan = lestPlan(extra, five, best);
+        exercises.push({
+          ...t, ...common, assist: plan[0].assist, restSec: 240, maxMode: five ? 'lest5' : 'lest', maxRef: Math.round(X * 4) / 4, plan, sets: plan.length, targetReps: plan.map(p => p.reps),
+          reason: `Test lesté : lest estimé pour 1 rep ${fmt(Math.round(X * 4) / 4)} kg. Essais lestés, puis une série au maximum au poids du corps. Change le lest avec − / + si besoin.`,
+          methodWhy: five ? `Essais de 5 reps lestées : ${READINESS_TEXT[r.why]}.` : 'Échauffement au poids du corps puis lest qui monte, essais à 1 rep, 4 min de repos.',
+        });
+        continue;
+      }
+    }
+    // répétitions (poids du corps, élastique, ou lest trop faible pour un test lesté) ou temps
+    const timed = tk === 'time';
+    const assist = tk === 'reps' ? Math.max(0, Number(t.assist) || 0) : 0;
+    const plan = [{ reps: Math.max(1, best + (timed ? 5 : 1)), load: 0, assist, rest: 180, kind: 'amrap', label: timed ? `Tiens le plus longtemps possible (record récent : ${best} s)` : `Le plus de répétitions propres possible${assist ? ` avec ${fmt(assist)} kg d’aide` : ''} (record récent : ${best})` }];
     exercises.push({
-      ...base, method: 'max_test', plan, sets: plan.length, targetReps: plan.map(p => p.reps), manualSets: true,
-      change: 'test', reason: mode === '1rm'
-        ? `Test de 1RM : ton max estimé est ${fmt(base.maxRef)} kg. Échauffement en montée, puis jusqu’à 3 essais à 1 rep.`
-        : `Test de 5 reps maximum : l’appli en tire ton max estimé (une série de 5 au maximum le prédit très bien, Reynolds 2006).`,
-      methodWhy: mode === '1rm' ? 'Protocole NSCA : échauffement progressif, essais à 1 rep, 3 à 4 min de repos.' : `Pas de vrai 1RM pour l’instant : ${READINESS_TEXT[r.why]}.`,
+      ...t, ...common, assist, maxMode: timed ? 'time' : 'reps', maxRef: best, plan, sets: 1, targetReps: [plan[0].reps], restSec: 180,
+      reason: timed ? 'Test de temps : une seule tenue, le plus longtemps possible en gardant la bonne position.' : 'Test de répétitions : une seule série, le plus de répétitions propres possible. Arrête-toi quand une rep n’est plus complète.',
+      methodWhy: 'Une série au maximum après l’échauffement.',
     });
   }
   if (!exercises.length) {
-    notes.push('Test de max prévu, mais aucun gros exercice en kg déjà pratiqué (squat, développé, soulevé de terre, rowing…) : fais d’abord quelques séances normales.');
+    notes.push('Test de max prévu, mais aucun exercice déjà pratiqué ne s’y prête : fais d’abord quelques séances normales.');
     return { exercises, notes, mode: null };
   }
-  const mode = exercises.some(e => e.maxMode === '1rm') ? '1rm' : '5rm';
-  notes.push(`Test de max : ${exercises.length} exercice${exercises.length > 1 ? 's' : ''}, rien d’autre aujourd’hui. Échauffement général 5 à 10 min, puis l’échauffement en montée de chaque exercice.`);
-  if (!who.ok) notes.push(`Pas de vrai test à 1 répétition pour l’instant : ${READINESS_TEXT[who.why]}. Le coach fait un test de 5 reps maximum, plus sûr, d’où il tire ton max. Tester tôt n’apporte rien : tu progresses déjà à chaque séance (Mattocks 2017).`);
-  else if (fives.length) notes.push(`Test de 5 reps sur ${fives.map(f => f[0]).join(', ')} : le geste n’est pas encore assez rodé pour un 1RM.`);
+  const mode = exercises.some(e => e.maxMode === '1rm' || e.maxMode === 'lest') ? '1rm' : exercises.some(e => e.maxMode === '5rm' || e.maxMode === 'lest5') ? '5rm' : 'reps';
+  notes.push(`Test de max : ${exercises.length} exercice${exercises.length > 1 ? 's' : ''} sur des muscles différents, rien d’autre aujourd’hui. Échauffement général 5 à 10 min, puis l’échauffement de chaque exercice. Retire ou ajoute des exercices si tu veux : c’est toi qui règles.`);
+  if (!who.ok && exercises.some(e => ['5rm', 'lest5'].includes(e.maxMode))) notes.push(`Pas de vrai test à 1 répétition pour l’instant : ${READINESS_TEXT[who.why]}. Le coach fait des tests de 5 reps maximum, plus sûrs, d’où il tire ton max. Tester tôt n’apporte rien : tu progresses déjà à chaque séance (Mattocks 2017).`);
+  else if (fives.length) notes.push(`Test de 5 reps sur ${fives.join(', ')} : le geste n’est pas encore assez rodé pour un 1RM.`);
   notes.push('Sécurité : barres de sécurité ou pareur au squat et au développé couché ; un essai s’arrête dès que la technique se dégrade ; pas de test si tu as mal, si tu es malade ou très fatigué. Repos complet entre les essais (3 à 4 min).');
   return { exercises, notes, mode };
 }
@@ -208,10 +293,14 @@ export function buildMaxTest(state, targets, today) {
 export function maxTestLine(state, today) {
   const r = maxTestReadiness(state, today);
   const lifts = pickMaxLifts(state).map(q => {
-    const e = referenceMax(state, q, today);
+    const tk = testKindOf(q);
     const rq = r.ok ? maxTestReadiness(state, today, q) : r;
+    if (tk === 'time') return `${q.name} (temps au maximum)`;
+    if (tk === 'reps') return `${q.name} (répétitions au maximum)`;
+    if (tk === 'lest') return `${q.name} (${rq.ok ? '1 rep lestée' : '5 reps lestées'} puis reps au poids du corps)`;
+    const e = referenceMax(state, q, today);
     return `${q.name} (${rq.ok ? '1RM' : '5 reps max'}${e ? `, max estimé ${fmt(Math.round(e * 2) / 2)} kg` : ''})`;
   });
   const who = r.ok ? 'vrai test à 1 répétition possible' : `PAS de vrai 1RM conseillé (${READINESS_TEXT[r.why]}) : l'appli fera un test de 5 reps maximum`;
-  return `Test de max (day_style max) : ${who} ; ${Math.round(r.weeks || 0)} semaine(s) de suivi ; exercices qui seraient testés : ${lifts.length ? lifts.join(', ') : 'aucun (pas encore de gros exercice en kg pratiqué)'}.`;
+  return `Test de max (day_style max) : ${who} ; ${Math.round(r.weeks || 0)} semaine(s) de suivi ; exercices qui seraient testés : ${lifts.length ? lifts.join(', ') : 'aucun (pas encore d’exercice pratiqué)'}.`;
 }

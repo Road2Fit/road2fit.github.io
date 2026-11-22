@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { cleanText } from '../edition';
 import { RPG_RANKS } from '../data/gamification';
 import { FRIEND_CODE_LENGTH, normalizeFriendCode } from '../sync/supabase';
+import { DuoCards, DuoInvite } from '../components/DuoCards';
 
 const card = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3';
 const chip = 'px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200';
@@ -18,7 +19,7 @@ const rankOf = f => {
 };
 
 // Onglet « Amis » : mon code à 7 caractères, ajouter un ami avec le sien, consulter son profil (dernière séance, maxima, exercices).
-export function FriendsTab({ friends, onOpenAccount, fphotos = null, photoShare = false, setPhotoShare = null }) {
+export function FriendsTab({ friends, duo = null, onOpenAccount, fphotos = null, photoShare = false, setPhotoShare = null }) {
   const [input, setInput] = useState('');
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -60,10 +61,11 @@ export function FriendsTab({ friends, onOpenAccount, fphotos = null, photoShare 
     if (r.ok) { setInput(''); setMsg({ ok: true, text: 'Ami ajouté !' }); } else setMsg({ ok: false, text: r.message });
   };
 
-  if (current) return <FriendProfile friend={current} fphotos={fphotos} onBack={() => setOpenId(null)} onRemove={async () => { if (window.confirm('Retirer cet ami de ta liste ? (Tu pourras le rajouter avec son code.)')) { await friends.removeFriend(current.user_id); setOpenId(null); } }} />;
+  if (current) return <FriendProfile friend={current} duo={duo} fphotos={fphotos} onBack={() => setOpenId(null)} onRemove={async () => { if (window.confirm('Retirer cet ami de ta liste ? (Tu pourras le rajouter avec son code.)')) { await friends.removeFriend(current.user_id); setOpenId(null); } }} />;
 
   return (
     <div className="space-y-4" data-testid="friends-tab">
+      <DuoCards duo={duo} />
       <section className={card}>
         <h3 className="font-black text-white"><Art name="friends" />Mon code d’ami</h3>
         <div className="flex items-center gap-3 flex-wrap">
@@ -148,7 +150,7 @@ function FriendLastPhoto({ friend, fphotos }) {
   );
 }
 
-function FriendProfile({ friend, onBack, onRemove, fphotos }) {
+function FriendProfile({ friend, onBack, onRemove, fphotos, duo = null }) {
   const s = friend.summary || {};
   const byMuscle = {};
   (s.exercises || []).forEach(x => { (byMuscle[x.muscle || 'Autre'] = byMuscle[x.muscle || 'Autre'] || []).push(x); });
@@ -168,6 +170,7 @@ function FriendProfile({ friend, onBack, onRemove, fphotos }) {
           <span className={chip}>{(s.exercises || []).length} exercice(s)</span>
         </div>
         <p className="text-xs text-slate-500">Profil mis à jour le {new Date(friend.updated_at).toLocaleDateString('fr-FR')}.</p>
+        <DuoInvite duo={duo} friend={friend} />
       </section>
 
       <section className={card}>

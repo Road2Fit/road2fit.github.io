@@ -149,6 +149,14 @@ export function normalizeAction(a, state, today) {
       if (add.length || remove.length) args = { add, remove };
       break;
     }
+    case 'duo': {
+      // séance à deux (4.51) : l'invitation part après « Appliquer » (CoachChat → useDuo.inviteByName) ; rien à changer ici
+      const friend = String(x.friend || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      const date = dateList([x.date], today)[0];
+      const theme = ['auto', 'full', 'upper', 'lower', 'push', 'pull'].includes(x.theme) ? x.theme : 'auto';
+      if (friend && date) args = { friend, date, theme };
+      break;
+    }
     case 'remember': {
       const text = String(x.text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
       if (text.length >= 2) args = { text };
@@ -210,6 +218,7 @@ export function normalizeAction(a, state, today) {
 }
 
 function defaultLabel(type, args, state) {
+  if (type === 'duo') return `Inviter ${args.friend} à une séance à deux le ${args.date}`;
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
@@ -333,6 +342,8 @@ export function applyAction(state, a, today) {
       x.remove.forEach(d => extra.delete(d));
       return withCoach({ gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !x.add.includes(d)) });
     }
+    case 'duo':
+      return state;
     case 'remember':
       return withCoach({ memory: [...(coach.memory || []), { id: memId(), text: x.text, at: today }].slice(-30) });
     case 'forget':

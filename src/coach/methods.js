@@ -269,7 +269,7 @@ export function planShort(e) {
   if (e.method === 'eccentric') return `${n} × ${p.reps} · descente ${p.ecc} s`;
   if (e.method === 'explosive') return `${n} × ${p.reps} explosives`;
   if (e.method === 'plyo') return `${n} × ${p.reps} · au max`;
-  if (e.method === 'max_test') return e.maxMode === '5rm' ? `test de 5 reps max · ${n} essais` : `test de 1RM · ${n} essais`;
+  if (e.method === 'max_test') return { '5rm': `test de 5 reps max · ${n} essais`, '1rm': `test de 1RM · ${n} essais`, lest: 'test lesté + reps au poids du corps', lest5: 'test lesté (5 reps) + reps au poids du corps', reps: 'max de répétitions', time: 'tenue au maximum' }[e.maxMode] || `test · ${n} essais`;
   return null;
 }
 

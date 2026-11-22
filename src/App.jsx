@@ -3,6 +3,7 @@ import { coinsLeft } from './anim/shop';
 import { formFlags } from './sync/supabase';
 import { SUPABASE, supabaseReady } from './config';
 import { CoachPanel } from './components/coach/CoachPanel';
+import { useDuo } from './hooks/useDuo';
 import { aiStatus, callAi } from './ai/client';
 import { togglePain } from './coach/pains';
 import { getCoachSettings } from './coach/settings';
@@ -107,6 +108,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState('coach'); // l'appli s'ouvre sur le Coach : c'est lui qui dit quoi faire aujourd'hui
   useSharedExercises(sync.user);
   const friends = useFriends({ gameState, setGameState, isLoaded: sync.isLoaded, user: sync.user, active: activeTab === 'friends' });
+  const duo = useDuo({ gameState, setGameState, isLoaded: sync.isLoaded, user: sync.user, enabled: friends.enabled, active: activeTab === 'friends', coachOpen: activeTab === 'coach', friendsList: friends.list });
   // photos entre amis : ma dernière photo (si activé), photos où l'on m'a tagué (pastille sur Souvenirs)
   const fphotos = useFriendPhotos({ gameState, setGameState, user: sync.user, enabled: friends.enabled, activeTab });
   const tabBadges = { photos: fphotos.unseen };
@@ -362,6 +364,7 @@ onUndoSwap={undoSwap}/>
             guidedActive={!!guided}
             onResumeGuided={() => setGuidedOpen(true)}
             onClaimWeekly={handleClaimWeekly}
+            duo={duo}
           />
         )}
 
@@ -405,7 +408,7 @@ setGameState={setGameState}
           <BilanTab gameState={gameState} levelInfo={levelInfo} records={records} weekData={weekData} />
         )}
 
-        {activeTab === 'friends' && <FriendsTab friends={friends} onOpenAccount={openSync} fphotos={fphotos} photoShare={!!gameState.friendsPhotoShare} setPhotoShare={v => setGameState(prev => ({ ...prev, friendsPhotoShare: !!v }))} />}
+        {activeTab === 'friends' && <FriendsTab friends={friends} duo={duo} onOpenAccount={openSync} fphotos={fphotos} photoShare={!!gameState.friendsPhotoShare} setPhotoShare={v => setGameState(prev => ({ ...prev, friendsPhotoShare: !!v }))} />}
 
         {/* ONGLET 5 : TROPHÉES */}
         {activeTab === 'trophies' && (

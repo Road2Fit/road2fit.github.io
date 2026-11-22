@@ -28,7 +28,9 @@ export function applyStrengthSession(q, input) {
   // valeur « de record » : charge la plus lourde, aide la plus faible
   // test de max : seuls les essais réussis (au moins 1 rep) comptent
   const effectiveValue = isKg ? Math.max(...(loadList || [0]).filter((_, i) => method !== 'max_test' || Number(setDetails[i]) > 0), 0) : best;
-  const assistanceUsed = assistList ? Math.min(...assistList) : 0;
+  // test de max : seuls les essais réussis comptent (un essai lesté manqué n'est pas un record)
+  const assistOk = assistList && method === 'max_test' ? assistList.filter((_, i) => Number(setDetails[i]) > 0) : assistList;
+  const assistanceUsed = assistOk && assistOk.length ? Math.min(...assistOk) : 0;
 
   const prevDetails = getSetDetailsArray(q, goalSets, goalReps);
   // moins d'aide élastique qu'avant (le lest ajouté ne compte pas pour ce trophée)

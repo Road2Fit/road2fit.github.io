@@ -43,20 +43,26 @@ describe('qui peut faire un vrai 1RM', () => {
 
 describe('séance de test', () => {
   const di = { iso: today, legsOk: true };
-  it('jour « Test de max » : 1 à 3 gros exercices en kg, rien d’autre, avec les consignes de sécurité', () => {
+  it('jour « Test de max » : plusieurs exercices de muscles différents, tous types, avec les consignes de sécurité', () => {
     const s = coachBuildPlanned(mk('advanced'), { iso: today, templateIdx: 0 }, di);
     expect(s.style).toBe('max');
     expect(s.exercises.length).toBeGreaterThan(0);
-    expect(s.exercises.length).toBeLessThanOrEqual(3);
-    expect(s.exercises.every(e => e.method === 'max_test' && e.kind === 'load')).toBe(true);
-    expect(s.exercises.every(e => e.maxMode === '1rm')).toBe(true);
+    expect(s.exercises.length).toBeGreaterThanOrEqual(4);
+    expect(s.exercises.length).toBeLessThanOrEqual(6);
+    expect(s.exercises.every(e => e.method === 'max_test')).toBe(true);
+    expect(s.exercises.filter(e => e.kind === 'load').every(e => e.maxMode === '1rm')).toBe(true);
+    // tractions au poids du corps : le plus de répétitions possible
+    const pu = s.exercises.find(e => e.catalogId === 'pullups');
+    expect(pu.maxMode).toBe('reps');
+    expect(pu.plan).toHaveLength(1);
+    expect(pu.plan[0].kind).toBe('amrap');
     expect(s.notes.join(' ')).toMatch(/Sécurité/);
     expect(s.estMin).toBeGreaterThan(20);
     expect(s.estMin).toBeLessThan(90);
   });
   it('débutant : test de 5 reps, et la note dit pourquoi', () => {
     const s = coachBuildPlanned(mk('beginner', 6), { iso: today, templateIdx: 0 }, di);
-    expect(s.exercises.every(e => e.maxMode === '5rm' && e.plan.every(p => p.reps === 5))).toBe(true);
+    expect(s.exercises.filter(e => e.kind === 'load').every(e => e.maxMode === '5rm' && e.plan.every(p => p.reps === 5))).toBe(true);
     expect(s.notes.join(' ')).toMatch(/Pas de vrai test à 1 répétition/);
   });
   it('jambes interdites (veille de match) : pas de squat ni de soulevé de terre', () => {
@@ -85,6 +91,25 @@ describe('séance de test', () => {
     expect(adaptAfterAttempt(it1, d, 1, 1)).toBeNull();
     const b = adaptAfterAttempt(it1, { ...d, reps: [0, 1, 1] }, 1, 0);
     expect(b.stop).toBe(true);
+  });
+});
+
+describe('test lesté', () => {
+  it('dips lestés : essais lestés puis max de reps au poids du corps', () => {
+    const d = quest('dips', 0, 20);
+    const dips = { ...d, currentAssistanceKg: -20, history: d.history.map(h => ({ ...h, assistanceKg: -20 })) };
+    const s0 = mk('advanced');
+    const st = { ...s0, quests: [...s0.quests.filter(q => q.catalogId !== 'dips'), dips] };
+    const s = coachBuildPlanned(st, { iso: today, templateIdx: 0 }, { iso: today, legsOk: true });
+    const e = s.exercises.find(x => x.catalogId === 'dips');
+    expect(e.maxMode).toBe('lest');
+    const lests = e.plan.filter(p => p.kind === 'max').map(p => -p.assist);
+    expect(lests[0]).toBeGreaterThan(20);
+    expect(lests[1]).toBeGreaterThan(lests[0]);
+    expect(e.plan[e.plan.length - 1]).toMatchObject({ kind: 'amrap', assist: 0 });
+    const w = warmupSets(e, []);
+    expect(w[0]).toMatchObject({ assist: 0 });
+    expect(w.every(x => -x.assist < lests[0])).toBe(true);
   });
 });
 

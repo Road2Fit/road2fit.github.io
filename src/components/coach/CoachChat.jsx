@@ -29,7 +29,7 @@ const historyForAi = msgs => msgs.filter(m => !m.error).map(m => ({
 }));
 
 /** « Parle à ton coach » : discussion en langage courant avec le coach intelligent, qui peut régler l'appli après accord. */
-function CoachChatBody({ gameState, setGameState, overview }) {
+function CoachChatBody({ gameState, setGameState, overview, duo = null }) {
   const status = aiStatus(gameState);
   const [msgs, setMsgs] = useState(readChat);
   const [text, setText] = useState('');
@@ -110,6 +110,14 @@ function CoachChatBody({ gameState, setGameState, overview }) {
         } catch (e) { notes.push(`« ${a.args.name} » : ${e.message || 'pas pu être créé.'}`); }
       }
       actions = out;
+    }
+    // séance à deux (4.51) : l'invitation part maintenant ; le reste s'applique normalement
+    if (ok && actions.some(a => a.type === 'duo')) {
+      for (const a of actions.filter(x => x.type === 'duo')) {
+        const r = duo && duo.available ? await duo.inviteByName(a.args.friend, a.args.date, a.args.theme) : { ok: false, message: 'Active les amis (onglet Amis) et connecte-toi pour inviter un ami.' };
+        notes.push(r.ok ? `Invitation envoyée à ${a.args.friend} : la séance s’ajoutera chez vous deux dès qu’il aura accepté.` : r.message);
+      }
+      actions = actions.filter(a => a.type !== 'duo');
     }
     // anciennes valeurs gardées avec le message : « Annuler » les remet
     const undo = ok ? undoSnapshot(gameState, actions) : null;

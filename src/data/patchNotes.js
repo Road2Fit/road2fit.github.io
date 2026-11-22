@@ -2,6 +2,19 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.51',
+    date: '2026-11-22',
+    title: 'Séance à deux avec un ami',
+    items: [
+      'Onglet Amis → profil d’un ami → « Séance à deux » : choisis le jour et le thème. Tu peux aussi le demander au coach (« prépare une séance avec Paul jeudi »).',
+      'Ton ami reçoit l’invitation dans son Coach et dans l’onglet Amis. S’il accepte, la séance s’ajoute ce jour-là chez vous deux.',
+      'Vos deux coachs choisissent des exercices que vous pouvez faire tous les deux (d’abord ceux que vous faites déjà), avec les mêmes séries et répétitions, un entre-deux de vos objectifs. Chacun garde ses propres charges.',
+      'Partagé avec l’ami invité : tes exercices possibles, ceux à éviter à cause d’une douleur, ton type d’objectif, ton niveau, salle ou maison et ton matériel. Jamais tes charges, ton historique ni ton poids. Il faut vous être ajoutés l’un l’autre comme amis (politique de confidentialité mise à jour).',
+      'Test de max : jusqu’à 6 exercices sur des muscles différents, de tous les types. En kg : essais à 1 rep. Lestés (tractions, dips…) : essais lestés, puis une série au maximum au poids du corps. Poids du corps : le plus de répétitions possible. Gainage : le plus longtemps possible. Tu retires ou ajoutes ce que tu veux.',
+      'Séance guidée : le lest (dips, tractions lestées) n’est plus enregistré comme 0 kg.',
+    ],
+  },
+  {
     version: '4.50',
     date: '2026-11-22',
     title: 'Séance « Test de max »',

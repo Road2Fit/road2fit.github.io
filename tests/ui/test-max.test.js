@@ -20,10 +20,11 @@ describe('test de max', () => {
     expect(q(h, 'day-theme-style-iso').getAttribute('aria-pressed')).toBe('false');
     const text = h.doc.body.textContent;
     expect(text).toMatch(/Test de max/);
-    // séance de démonstration (peu de séances) : test de 5 reps sur les gros exercices en kg
+    // séance de démonstration : tous les types de test (kg, répétitions, gainage)
     const ex = qa(h, 'next-ex').map(el => el.textContent);
     expect(ex.length).toBeGreaterThan(0);
-    ex.forEach(t => expect(t).toMatch(/test de (5 reps max|1RM)/));
+    ex.forEach(t => expect(t).toMatch(/test de (5 reps max|1RM)|max de répétitions|tenue au maximum|test lesté/));
+    expect(ex.length).toBeGreaterThan(2); // plusieurs exercices, pas seulement les barres
     await clickEl(h, q(h, 'day-theme-style-auto'));
     expect(saved(h).coach.dayStyles).toEqual({});
     expect(h.errors).toEqual([]);

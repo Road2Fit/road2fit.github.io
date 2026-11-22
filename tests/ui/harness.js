@@ -350,6 +350,41 @@ export function fakeSupabase({ invite = 'MOTSECRET', confirmEmail = false } = {}
       if (!srv.ai) return res(503, { error: 'not_configured' });
       try { return res(200, { ok: true, data: await srv.ai(body.task, body) }); } catch (e) { return res(e.status || 500, { error: e.error || 'server' }); }
     }
+    // ---- Séance à deux (reproduit docs/supabase-seance-a-deux.sql) ----
+    if (u.pathname.startsWith('/rest/v1/rpc/duo_')) {
+      const uid = tokens.get(bearer);
+      if (!uid) return res(401, { message: 'JWT expired' });
+      const bad = message => res(400, { code: 'P0001', message });
+      const added = (a, b) => (srv.friendships.get(a) || new Set()).has(b);
+      srv.duos = srv.duos || [];
+      const fn = u.pathname.replace('/rest/v1/rpc/', '');
+      if (fn === 'duo_invite') {
+        if (!body.p_to || body.p_to === uid || !added(uid, body.p_to) || !added(body.p_to, uid)) return bad('DUO_NOT_MUTUAL');
+        srv.duos.forEach(d => { if (d.date === body.p_date && ['pending', 'accepted'].includes(d.status) && ((d.from === uid && d.to === body.p_to) || (d.from === body.p_to && d.to === uid))) d.status = 'cancelled'; });
+        const id = `duo${++srv.n}`;
+        srv.duos.push({ id, from: uid, to: body.p_to, date: body.p_date, theme: body.p_theme || 'auto', status: 'pending', part: body.p_part || {}, plan: null });
+        return res(200, id);
+      }
+      if (fn === 'duo_list') {
+        return res(200, srv.duos.filter(d => d.from === uid || d.to === uid).map(d => {
+          const other = d.from === uid ? d.to : d.from;
+          const p = srv.profiles.get(other);
+          return { id: d.id, mine: d.from === uid, other, other_name: (p && p.share && p.summary && p.summary.name) || '', date: d.date, theme: d.theme, status: d.status, part: d.to === uid ? d.part : {}, plan: d.plan, updated_at: '' };
+        }));
+      }
+      if (fn === 'duo_answer') {
+        const d = srv.duos.find(x => x.id === body.p_id && x.to === uid && x.status === 'pending');
+        if (!d) return bad('DUO_NOT_FOUND');
+        d.status = body.p_accept ? 'accepted' : 'declined';
+        d.plan = body.p_accept ? body.p_plan : null;
+        d.part = {};
+        return res(204, null);
+      }
+      if (fn === 'duo_cancel') {
+        srv.duos.forEach(d => { if (d.id === body.p_id && (d.from === uid || d.to === uid) && ['pending', 'accepted'].includes(d.status)) d.status = 'cancelled'; });
+        return res(204, null);
+      }
+    }
     // ---- Photos entre amis (reproduit docs/supabase-photos-amis.sql) ----
     if (u.pathname === '/rest/v1/shared_photos' || ['/rest/v1/rpc/friend_last_photo', '/rest/v1/rpc/photos_tagged_me', '/rest/v1/rpc/my_mutual_friends'].includes(u.pathname)) {
       const uid = tokens.get(bearer);

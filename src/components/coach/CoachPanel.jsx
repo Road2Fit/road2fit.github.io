@@ -17,6 +17,7 @@ import { CoachBalance } from './CoachBalance';
 import { CoachCycle } from './CoachCycle';
 import { CoachProfile } from './CoachProfile';
 import { CoachHeader } from './CoachHeader';
+import { DuoCards } from '../DuoCards';
 import { CoachNextSession } from './CoachNextSession';
 import { CoachProgram } from './CoachProgram';
 import { CoachChat } from './CoachChat';
@@ -54,7 +55,7 @@ const COACH_PAGES = [['seance', 'Séance', 'dumbbell'], ['semaine', 'Semaine', '
 
 export function CoachPanel({
   gameState, setGameState, onStartGuided, onOpenLevelUp, onAddExercise, onQuickCardio, onGoTab,
-  guidedActive, onResumeGuided, onClaimWeekly,
+  guidedActive, onResumeGuided, onClaimWeekly, duo = null,
 }) {
   // page du Coach ; une autre partie de l'appli peut en demander une (événement rondoufit-coach-page, ex. « Équilibre » depuis le profil)
   const [page, setPage] = useState(() => { const p = typeof window !== 'undefined' && window.__r2fCoachPage; if (p) window.__r2fCoachPage = null; return p || 'seance'; });
@@ -411,6 +412,8 @@ export function CoachPanel({
       {isPhone && typeof document !== 'undefined' ? createPortal(coachTabs, document.body) : coachTabs}
       {page === 'seance' && (
       <div className="seance-page page-fade" key="seance">
+      {/* séance à deux (4.51) : invitations reçues à accepter ou refuser */}
+      <DuoCards duo={duo} compact />
       {/* séance prévue ces derniers jours et pas faite : une ligne, la faire maintenant en un geste */}
       {missedSession && sessionToStart && !guidedActive && (
         <section data-testid="missed-session" className="rounded-2xl border border-amber-400/60 bg-amber-500/10 px-3 py-1.5 flex items-center gap-2">
@@ -453,7 +456,7 @@ export function CoachPanel({
           cardio → résumé de la séance (Lancer / Déjà faite). */}
       {(() => {
         const fc = shownSession ? sessionFocus(shownSession.exercises) : null;
-        const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.maxTest ? 'Test de max' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
+        const ttl = !shownSession || !shownSession.exercises.length ? 'À préparer' : shownSession.maxTest ? 'Test de max' : shownSession.duo ? `Séance à deux${shownSession.duo.with ? ` avec ${shownSession.duo.with}` : ''}` : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.typeLabel || `Séance ${shownSession.templateId}`;
         // l'encadré Cardio reste en haut tant que la séance n'est pas faite, même quand c'est elle qui est dans le grand rond
         const showCardio = !!cardioNext;
         const tile = 'tap-free min-w-0 rounded-2xl border border-slate-800 bg-slate-900/70 p-2.5 flex items-center gap-2 text-left';
@@ -512,7 +515,7 @@ export function CoachPanel({
       {!guidedActive && !coachOff && !(cardioToday && !muscuToday) && shownSession && shownSession.exercises.length > 0 && sessionToStart && sessionToStart.exercises.length > 0 && (() => {
         const isToday = shownDate === today;
         const fc = sessionFocus(shownSession.exercises);
-        const title = shownSession.maxTest ? 'Test de max' : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : `Séance ${shownSession.templateId}`;
+        const title = shownSession.maxTest ? 'Test de max' : shownSession.duo ? `Séance à deux${shownSession.duo.with ? ` avec ${shownSession.duo.with}` : ''}` : shownSession.program && !plan ? shownSession.templateId : fc ? fc.label : plan ? 'Séance perso' : shownSession.type ? shownSession.typeLabel : `Séance ${shownSession.templateId}`;
         return (
           <div className="hero-zone"><section data-hero data-testid="session-hero" className={`hero-round bg-pink-600 text-white shadow-xl ${heroPress ? 'hero-press' : ''}`}>
             <p className="text-xs font-black uppercase tracking-widest opacity-80">{isToday ? 'Séance du jour' : <>Prochaine séance<br />{formatDayFr(shownDate)}</>}<br />{shownSession.estMin} min</p>
@@ -530,7 +533,7 @@ export function CoachPanel({
         );
       })()}
       {/* sous le rond : « Parle à ton coach » */}
-      <div className="pr-16 md:pr-0"><CoachChat slim gameState={gameState} setGameState={setGameState} overview={ov} /></div>
+      <div className="pr-16 md:pr-0"><CoachChat slim gameState={gameState} setGameState={setGameState} overview={ov} duo={duo} /></div>
       <span data-testid="seance-end" className="block h-px -mt-3" aria-hidden="true" />
       <div className={sheet === 'goal' ? 'fixed inset-0 !mt-0 z-[65] bg-slate-950/85 backdrop-blur-sm overflow-y-auto' : 'hidden'} onClick={() => setSheet(null)} data-testid="sheet-goal">
         <div className="min-h-full flex items-end justify-center px-2 pt-14 pb-2">

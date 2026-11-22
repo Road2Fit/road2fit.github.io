@@ -172,7 +172,7 @@ export function useGuidedSession({
       const isKg = q.unit === 'kg';
       // charge / aide de chaque série réalisée
       const doneLoads = loadsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
-      const doneAssists = assistsOf(dd).filter((_, i) => dd.done[i]).map(x => Math.max(0, Number(x) || 0));
+      const doneAssists = assistsOf(dd).filter((_, i) => dd.done[i]).map(x => Number(x) || 0); // négatif = lest (4.51 : était ramené à 0)
       doneEx++;
       // ressenti de cet exercice (1 à 10) ; sinon le ressenti global de la séance
       const exerciseRpe = Math.min(10, Math.max(1, Number(dd.rpe) || g.rpe || 7));
@@ -191,10 +191,11 @@ export function useGuidedSession({
         rpe: exerciseRpe,
         userWeightKg: gameState.userWeightKg
       });
-      if (it.method === 'max_test' && it.maxMode === '1rm' && isKg) {
-        const lds = loadsOf(dd);
+      if (it.method === 'max_test' && (it.maxMode === '1rm' || it.maxMode === 'lest')) {
+        // essai à 1 rep réussi le plus lourd (charge, ou lest pour un exercice au poids du corps)
+        const lds = isKg ? loadsOf(dd) : assistsOf(dd).map(a => -(Number(a) || 0));
         const top = dd.reps.reduce((m, r, i) => (dd.done[i] && Number(r) >= 1 && (!dd.kinds || dd.kinds[i] === 'max') ? Math.max(m, Number(lds[i]) || 0) : m), 0);
-        if (top > 0) records[q.id] = top;
+        if (top > 0) records[q.id] = isKg ? { kg: top } : { extraKg: top };
       }
       const r = applyStrengthSession(q, {
         date: today,
@@ -225,7 +226,7 @@ export function useGuidedSession({
       ...computeXp(prev, xpEarned, today, 'session').patch,
       unlockedAchievements: Array.from(new Set([...(prev.unlockedAchievements || []), ...newUnlocked])),
       quests: updatedQuests,
-      ...(Object.keys(records).length ? { maxRecords: Object.entries(records).reduce((m, [id, kg]) => (m[id] && Number(m[id].kg) >= kg ? m : { ...m, [id]: { kg, date: today } }), { ...(prev.maxRecords || {}) }) } : {}),
+      ...(Object.keys(records).length ? { maxRecords: Object.entries(records).reduce((m, [id, rec]) => { const k = rec.kg !== undefined ? 'kg' : 'extraKg'; return m[id] && Number(m[id][k]) >= rec[k] ? m : { ...m, [id]: { ...rec, date: today } }; }, { ...(prev.maxRecords || {}) }) } : {}),
     }));
     setSelectedDate(today);
     setSelectedJournalDay(today);
