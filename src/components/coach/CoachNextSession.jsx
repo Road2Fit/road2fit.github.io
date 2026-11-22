@@ -20,7 +20,7 @@ import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
 export function CoachNextSession({
-  setMethod, setCustom, addSel, adjustTarget, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  setMethod, setCustom, addSel, adjustTarget, adjustMaxTest = null, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach, preview = false, onTakeOver, setGameState,
@@ -207,8 +207,15 @@ export function CoachNextSession({
                     return (
                       <div className="mt-2 space-y-2" data-testid="ex-panel">
                         {/* Tu décides : charge (ou aide), répétitions, séries */}
-                        {e.kind === 'load' && !e.plan && stepper('Charge', `${coachFmt(e.load)} kg`, () => adjustTarget(e, 'easier'), () => adjustTarget(e, 'harder'), 'adj-load')}
-                        {e.kind === 'assisted' && !e.plan && (e.assist < 0
+                        {/* 4.53.2 (Gabin : « on devrait toujours pouvoir modifier ») : test de max : charge, aide ou lest du test */}
+                        {e.method === 'max_test' && adjustMaxTest && e.kind === 'load' && stepper(e.maxMode === '5rm' ? 'Charge (5 reps)' : 'Charge (1 rep)', `${coachFmt(e.load)} kg`, () => adjustMaxTest(e, -1), () => adjustMaxTest(e, 1), 'adj-max-load')}
+                        {e.method === 'max_test' && adjustMaxTest && e.kind !== 'load' && ['reps', 'lest', 'lest5'].includes(e.maxMode) && (() => {
+                          const a = e.maxMode === 'reps' ? Number(e.assist) || 0 : Number(e.plan && e.plan[1] ? e.plan[1].assist : e.assist) || 0;
+                          return stepper(a > 0 ? 'Aide' : a < 0 ? 'Lest' : 'Sans aide', a > 0 ? `${coachFmt(a)} kg` : a < 0 ? `+${coachFmt(-a)} kg` : '0 kg', () => adjustMaxTest(e, { assist: a > 0 ? a - 2.5 : a + 2.5 }), () => adjustMaxTest(e, { assist: a > 0 ? a + 2.5 : a - 2.5 }), 'adj-max-assist');
+                        })()}
+                        {e.method === 'max_test' && adjustMaxTest && <button type="button" onClick={() => adjustMaxTest(e, 'reset')} className="w-full py-1.5 rounded-xl bg-slate-800 text-[11px] font-bold text-slate-300" data-testid="adj-max-reset">Revenir à la proposition du coach</button>}
+                        {e.kind === 'load' && e.method !== 'max_test' && stepper('Charge', `${coachFmt(e.load)} kg`, () => adjustTarget(e, 'easier'), () => adjustTarget(e, 'harder'), 'adj-load')}
+                        {e.kind === 'assisted' && e.method !== 'max_test' && (e.assist < 0
                           ? stepper('Lest', `+${coachFmt(-e.assist)} kg`, () => adjustTarget(e, 'easier'), () => adjustTarget(e, 'harder'), 'adj-assist')
                           : stepper('Aide', `${coachFmt(e.assist)} kg`, () => adjustTarget(e, 'harder'), () => adjustTarget(e, 'easier'), 'adj-assist'))}
                         {!e.plan && stepper(e.timed ? 'Secondes' : 'Répétitions', uniform ? e.targetReps[0] : e.targetReps.join(' - '), () => adjustTarget(e, 'lessReps'), () => adjustTarget(e, 'moreReps'), 'adj-reps')}

@@ -55,7 +55,7 @@ export function applyStrengthSession(q, input) {
 
   // test de max (4.50) : l'objectif de l'exercice (charge, séries de travail) ne change pas, seul le record compte
   const isTest = method === 'max_test';
-  const candidate = isTest ? { ...q } : { ...q, currentValue: effectiveValue, currentAssistanceKg: !isKg ? assistanceUsed : 0, setDetails };
+  const candidate = isTest ? (({ maxTestLoad, maxTestAssist, ...rest }) => rest)(q) : { ...q, currentValue: effectiveValue, currentAssistanceKg: !isKg ? assistanceUsed : 0, setDetails };
   const ev = isTest ? { isBossDefeated: false } : evaluateQuestProgress(candidate);
   if (ev.isBossDefeated) {
     xp += 500;

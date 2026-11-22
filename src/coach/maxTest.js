@@ -286,13 +286,16 @@ export function buildMaxTest(state, targets, today) {
       });
       continue;
     }
+    // 4.53.2 (Gabin : « je veux pouvoir changer le poids proposé ») : aide ou lest choisis à la main pour un exercice au
+    // poids du corps (q.maxTestAssist : aide > 0, sans aide = 0, lest < 0)
+    const userAssist = Number.isFinite(Number(q.maxTestAssist)) && q.maxTestAssist !== null && q.maxTestAssist !== undefined && tk !== 'load' && tk !== 'perf' && tk !== 'time' ? Number(q.maxTestAssist) : null;
     if (tk === 'load') {
-      const E = referenceMax(state, q, today);
+      const E = Number(q.maxTestLoad) > 0 ? Number(q.maxTestLoad) * (r.ok ? 1 : 1 + 5 / 30) : referenceMax(state, q, today);
       if (!(E > 0)) continue;
       const mode = r.ok ? '1rm' : '5rm';
       if (!r.ok) fives.push(t.name);
       const load = coachRound(mode === '5rm' ? E / (1 + 5 / 30) : E, coachStep(q, E));
-      const base = { ...t, load, restSec: 240, maxMode: mode, maxRef: Math.round(E * 2) / 2 };
+      const base = { ...t, load: Number(q.maxTestLoad) > 0 ? Number(q.maxTestLoad) : load, restSec: 240, maxMode: mode, maxRef: Math.round(E * 2) / 2, userSet: Number(q.maxTestLoad) > 0 };
       const plan = maxTestPlan(base, mode);
       exercises.push({
         ...base, ...common, plan, sets: plan.length, targetReps: plan.map(p => p.reps),
@@ -301,10 +304,10 @@ export function buildMaxTest(state, targets, today) {
       });
       continue;
     }
-    if (tk === 'lest') {
-      const X = referenceExtra(state, q, today);
+    if (tk === 'lest' || (userAssist !== null && userAssist < 0)) {
+      const X = userAssist !== null && userAssist < 0 ? -userAssist : referenceExtra(state, q, today);
       const five = !r.ok;
-      const extra = five ? X * 0.85 : X;
+      const extra = userAssist !== null && userAssist < 0 ? X : five ? X * 0.85 : X;
       if (extra >= 2.5) {
         if (five) fives.push(t.name);
         const plan = lestPlan(extra, five, best);
@@ -318,7 +321,7 @@ export function buildMaxTest(state, targets, today) {
     }
     // répétitions (poids du corps, élastique, ou lest trop faible pour un test lesté) ou temps
     const timed = tk === 'time';
-    const assist = tk === 'reps' ? Math.max(0, Number(t.assist) || 0) : 0;
+    const assist = userAssist !== null ? Math.max(0, userAssist) : tk === 'reps' ? Math.max(0, Number(t.assist) || 0) : 0;
     const plan = [{ reps: Math.max(1, best + (timed ? 5 : 1)), load: 0, assist, rest: 180, kind: 'amrap', label: timed ? `Tiens le plus longtemps possible (record récent : ${best} s)` : `Le plus de répétitions propres possible${assist ? ` avec ${fmt(assist)} kg d’aide` : ''} (record récent : ${best})` }];
     exercises.push({
       ...t, ...common, assist, maxMode: timed ? 'time' : 'reps', maxRef: best, plan, sets: 1, targetReps: [plan[0].reps], restSec: 180,

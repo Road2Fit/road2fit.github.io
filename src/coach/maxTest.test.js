@@ -4,10 +4,11 @@ import { EXERCISE_CATALOG } from '../data/catalog';
 import { makeQuestFromCatalog } from '../lib/questFactory';
 import { INITIAL_STATE } from '../data/initialState';
 import { addDaysISO } from '../lib/dates';
-import { adaptAfterAttempt, maxTestPlan, maxTestReadiness, maxTestWarmup, pickMaxLifts } from './maxTest';
+import { buildMaxTest, adaptAfterAttempt, maxTestPlan, maxTestReadiness, maxTestWarmup, pickMaxLifts } from './maxTest';
 import { coachBuildCustomSession, coachBuildPlanned } from './sessions';
 import { setDayStyle, toggleDayStyle } from './contraction';
 import { warmupSets } from './warmup';
+import { computeExerciseTarget } from './targets';
 import { applyStrengthSession } from '../lib/sessionRecord';
 
 const today = '2026-11-22';
@@ -151,5 +152,23 @@ describe('4.51.3 : charges du test et séance personnalisée', () => {
     const iso = { ...st, coach: { ...st.coach, dayStyles: { [today]: 'iso' } } };
     const s2 = coachBuildCustomSession(iso, ids, today, {});
     expect(s2.exercises.some(e => e.method === 'iso_pause')).toBe(true);
+  });
+});
+
+describe('4.53.2 : charge ou aide du test choisies à la main', () => {
+  it('tractions à 20 kg d’aide → sans aide ; lest ; charge du développé couché ; oublié après le test', () => {
+    const pu = { ...quest('pullups', 0, 10), currentAssistanceKg: 20 };
+    const base = mk('advanced');
+    const run = q => buildMaxTest({ ...base, quests: [q] }, [computeExerciseTarget(q, { today })], today).exercises[0];
+    expect(run(pu).assist).toBeGreaterThan(0);
+    expect(run({ ...pu, maxTestAssist: 0 }).assist).toBe(0);
+    const lest = run({ ...pu, maxTestAssist: -10 });
+    expect(lest.maxMode).toBe('lest');
+    expect(-lest.plan[1].assist).toBe(10);
+    const b = run({ ...quest('bench_press', 80, 10), maxTestLoad: 100 });
+    expect(b.load).toBe(100);
+    expect(b.plan[1].load).toBe(100);
+    const r = applyStrengthSession({ ...pu, maxTestAssist: 0 }, { date: today, setDetails: [9], rpe: 9, calories: 10, method: 'max_test' });
+    expect(r.quest.maxTestAssist).toBeUndefined();
   });
 });

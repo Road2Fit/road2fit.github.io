@@ -354,6 +354,17 @@ export function CoachPanel({
     updateCoach({ plan: { ...(plan || {}), date: shownDate, questIds: ids.map(i => (i === oldId ? newId : i)), sets } });
     setSwapFor(null);
   };
+  // 4.53.2 : test de max : charge de base (kg) ou aide / lest (poids du corps) choisis à la main, gardés jusqu'au test
+  const adjustMaxTest = (e, dir) => setGameState(prev => ({
+    ...prev,
+    quests: prev.quests.map(q => {
+      if (q.id !== e.questId) return q;
+      if (dir === 'reset') { const { maxTestLoad, maxTestAssist, ...rest } = q; return rest; }
+      if (e.kind === 'load') { const step = coachStep(q, e.load || 20); return { ...q, maxTestLoad: Math.max(step, Math.round(((Number(e.load) || 0) + dir * step) * 100) / 100) }; }
+      if (dir && typeof dir === 'object' && Number.isFinite(dir.assist)) return { ...q, maxTestAssist: Math.round(dir.assist * 100) / 100 };
+      return q;
+    }),
+  }));
   // « Tu décides » : on va à l'encontre du coach pour un exercice (plus lourd / plus léger, moins / plus d'aide, ±1 rép)
   const adjustTarget = (e, action) =>
     setGameState(prev => ({
@@ -575,6 +586,7 @@ export function CoachPanel({
         onTakeOver={() => updateCoach({ program: { ...coach.program, takeOver: true, askTakeOver: false } })}
         addSel={addSel}
         adjustTarget={adjustTarget}
+        adjustMaxTest={adjustMaxTest}
         setCustom={(e, rows) => {
           const custom = customFromSets(rows, { kind: e.kind, load: e.load, assist: e.assist });
           setGameState(prev => ({ ...prev, quests: prev.quests.map(q => (q.id === e.questId ? { ...q, coachMethod: 'custom', coachCustom: custom } : q)) }));

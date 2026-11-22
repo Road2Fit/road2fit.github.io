@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.53.2',
+    date: '2026-11-22',
+    title: 'Tu changes la charge du test de max',
+    items: [
+      'Test de max : dans « Pourquoi ? / Ajuster » de chaque exercice, change la charge du test, ou l’aide (jusqu’à « sans aide ») et même un lest pour les tractions et les dips. Le coach garde ton choix jusqu’au test, puis l’oublie.',
+      '« Revenir à la proposition du coach » remet sa charge.',
+      'Les autres formes de séries (pyramide, série lourde…) gardent aussi leur réglage de charge ou d’aide : on peut toujours modifier.',
+    ],
+  },
+  {
     version: '4.53.1',
     date: '2026-11-22',
     title: 'Ta taille, facile à régler',
