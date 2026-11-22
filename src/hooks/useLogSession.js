@@ -1,4 +1,5 @@
 import { profileOpts } from '../coach/profiles';
+import { perfOf, perfTarget } from '../data/perfMeasure';
 import { computeExerciseTarget } from '../coach/targets';
 import { DEFAULT_CARDIO_INPUT, calculateCardioCalories, calculateStrengthCalories, cardioHasElevation, cardioInputNote } from '../lib/calories';
 import { getTodayISODate } from '../lib/dates';
@@ -55,6 +56,7 @@ export function useLogSession({
   const chooseLogRpe = v => { if (logRpeSet && logRpe === v) { setLogRpe(7); setLogRpeSet(false); return; } setLogRpe(v); setLogRpeSet(true); };
 
   const [logNote, setLogNote] = useState('');
+  const [logPerf, setLogPerf] = useState(''); // saut : hauteur ou distance en cm (4.52)
 
   // Charge (ou aide) différente selon la série : une valeur propre à certaines séries, la valeur de base vaut pour les autres
   const [logPerSetLoad, setLogPerSetLoad] = useState(false);
@@ -126,6 +128,7 @@ export function useLogSession({
     setLogRpe(7);
     setLogRpeSet(false);
     setLogNote('');
+    { const pt = quest.type === 'strength' ? perfTarget(quest) : null; setLogPerf(pt && pt.cm ? String(pt.cm) : ''); }
     setLogCardioInputRaw(DEFAULT_CARDIO_INPUT);
     setLogPerSetLoad(false);
     setLogSetOverrides([]);
@@ -297,11 +300,12 @@ export function useLogSession({
       const n = finalSetDetails.length;
       // charge / aide de chaque série (une même valeur partout, sauf si « différente selon la série » est coché)
       const loads = q.unit === 'kg' ? (perSetActive ? perSetValues(logValue) : Array(n).fill(Number(logValue) || 0)) : null;
-      const assists = q.unit === 'reps' && logUseAssistance
+      const assists = q.unit === 'reps' && logUseAssistance && !perfOf(q)
         ? (perSetActive ? perSetValues(logAssistanceKg) : Array(n).fill(Number(logAssistanceKg) || 0))
         : null;
       const r = applyStrengthSession(q, {
         date: logDate, setDetails: finalSetDetails, loads, assists, rpe: logRpe, rpeSet: logRpeSet, calories, note: logNote.trim(),
+        perf: perfOf(q) ? Number(String(logPerf).replace(',', '.')) || null : null,
       });
       xpEarned = r.xp;
       r.unlocked.forEach(u => newUnlocked.add(u));
@@ -351,5 +355,5 @@ export function useLogSession({
     }
   };
 
-  return { logRpe, logRpeSet, chooseLogRpe, logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, applyCoachTarget, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
+  return { logPerf, setLogPerf, logRpe, logRpeSet, chooseLogRpe, logModalQuest, setLogModalQuest, logDate, setLogDate, logValue, setLogValue, logUseAssistance, setLogUseAssistance, logAssistanceKg, setLogAssistanceKg, logEntryMode, setLogEntryMode, logUniformSets, logUniformReps, logSetDetails, logDurationMin, setLogDurationMin, logElevationM, setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, logNote, setLogNote, liveModalCalories, openLogModal, handleUpdateSingleSetRep, handleAddSetSlot, handleRemoveSetSlot, handleApplyUniformToSets, handleSaveSession, applyCoachTarget, logPerSetLoad, logSetOverrides, togglePerSetLoad, handleSetOverride };
 }

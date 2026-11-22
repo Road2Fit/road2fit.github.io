@@ -6,6 +6,7 @@ import { cardioHasElevation } from '../lib/calories';
 import { openMovement } from '../lib/movement';
 import { X } from '../icons';
 import { isStartEntry, isTimedQuest, repUnit } from '../lib/quests';
+import { fmtCm, perfOf, perfTarget } from '../data/perfMeasure';
 
 export function LogSessionModal({
   applyCoachTarget, handleAddSetSlot, handleApplyUniformToSets, handleRemoveSetSlot, handleSaveSession, handleSetOverride, logPerSetLoad, logSetOverrides, togglePerSetLoad,
@@ -13,8 +14,10 @@ export function LogSessionModal({
   logElevationM, logEntryMode, logModalQuest, logNote, logSetDetails, logUniformReps,
   logUniformSets, logUseAssistance, logValue, setLogAssistanceKg, setLogDate, setLogDurationMin,
   setLogElevationM, logCardioInput, setLogCardioInput, cardioFigures, setLogEntryMode, setLogModalQuest, setLogNote, setLogUseAssistance, setLogValue,
-  logRpe, logRpeSet, chooseLogRpe,
+  logRpe, logRpeSet, chooseLogRpe, logPerf = '', setLogPerf = () => {},
 }) {
+  const perf = logModalQuest && logModalQuest.type === 'strength' ? perfOf(logModalQuest) : null;
+  const perfT = perf ? perfTarget(logModalQuest) : null;
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex px-4 pt-14 sm:py-4 overflow-y-auto">
       <div className="m-auto bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5">
@@ -119,7 +122,23 @@ export function LogSessionModal({
                 </div>
               )}
 
-              {logModalQuest.unit === 'reps' && !isTimedQuest(logModalQuest) && (
+              {perf && (
+                <div className="bg-slate-950 border border-sky-500/40 rounded-xl p-3.5 space-y-2" data-testid="log-perf">
+                  <label className="block text-xs font-bold text-sky-200">
+                    📏 {perf.label} (cm){perf.kind === 'result' ? ' — facultatif' : ''}
+                    {perfT && perfT.best ? <span className="ml-2 text-amber-300">record : {fmtCm(perfT.best)}</span> : null}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => setLogPerf(v => String(Math.max(0, (Number(v) || perf.start || 0) - perf.step)))} className="shrink-0 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold">−{perf.step}</button>
+                    <input type="number" step={perf.step} min="0" value={logPerf} onChange={e => setLogPerf(e.target.value)} placeholder={perf.kind === 'result' ? 'ton meilleur saut' : ''} data-testid="log-perf-input"
+                      className="flex-1 min-w-0 w-full bg-slate-900 border border-slate-700 rounded-xl py-2 text-center text-lg font-black text-white" />
+                    <button type="button" onClick={() => setLogPerf(v => String((Number(v) || (perf.start || perfT?.best || 0) - perf.step) + perf.step))} className="shrink-0 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold">+{perf.step}</button>
+                  </div>
+                  {perf.how && <p className="text-[11px] text-slate-400">{perf.how}</p>}
+                </div>
+              )}
+
+              {logModalQuest.unit === 'reps' && !isTimedQuest(logModalQuest) && !perf && (
                 <div className="bg-slate-950 border border-violet-500/40 rounded-xl p-3.5 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-violet-200">

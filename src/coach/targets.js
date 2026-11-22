@@ -4,6 +4,7 @@ import { restFor } from './rest';
 import { assistChangeText, assistText, nextAssistDown } from '../lib/assist';
 import { CONTRACTION_METHODS, normalizeForProgress } from './methods';
 import { decideProfileTarget } from './profileTarget';
+import { perfTarget } from '../data/perfMeasure';
 import { COACH_ARENAS, coachDaysBetween, coachEquip, coachIsCompound, coachKind, coachRealEntries, coachRound, coachSetsOf, coachStep } from './settings';
 
 import { getTodayISODate } from '../lib/dates';
@@ -189,6 +190,7 @@ export function computeExerciseTarget(q, opts = {}) {
     restSec: restOf(q, arena, reps, T, compound, pr ? opts.profile : null), sets, targetReps: reps, goalReps: pr ? pr.hi : R,
     profile: pr ? opts.profile : null, scheme: scheme ? scheme.id : null, repRange: pr ? [pr.lo, pr.hi] : null,
     load, assist, change, reason, unit: q.unit, equip: coachEquip(q), timed: T, manual, manualSets: !!(manual && choice.sets), suggested,
+    perf: perfTarget(q), // sauts mesurés en hauteur ou en distance (4.52)
     // réglage annulé par « Revenir à la proposition du coach » : on peut le remettre tant qu'aucune séance n'a été faite
     canRestore: !manual && !!(q.coachOverridePrev && q.coachOverridePrev.entries === entries.length)
   };

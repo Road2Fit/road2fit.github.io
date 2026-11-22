@@ -2,6 +2,7 @@ import { estimateQuestMax, formatDuration } from '../lib/maxima';
 import { getTodayISODate } from '../lib/dates';
 import { ARENA_GROUPS } from '../data/arenas';
 import { hasArena } from '../data/muscles';
+import { fmtCm, perfBest, perfOf } from '../data/perfMeasure';
 
 // 4.51.4 (choix de Gabin, option A) : « Mes maxima » en haut de l'onglet Exercices : tous les maxima d'un coup d'œil
 // (max estimé, record réel noté et sa date) ; toucher une ligne ouvre la fiche de l'exercice sur son maximum
@@ -36,7 +37,12 @@ export function MaximaTable({ gameState, questFilter = 'all', onOpen, onClose })
   const quests = (gameState.quests || []).filter(q => q.goalMode !== 'free_mode' && (questFilter === 'all' || hasArena(q, questFilter)));
   const rank = q => { const i = ARENA_GROUPS.findIndex(g => hasArena(q, g.id)); return i < 0 ? 99 : i; };
   const rows = quests
-    .map(q => { const r = estimateQuestMax(q, gameState, { useRpe: true, today }); return { q, r, est: maxLine(r), rec: recordLine(r && r.manual, r && r.kind) }; })
+    .map(q => {
+      // sauts mesurés (4.52) : la hauteur (caisse) ou la distance record, pas un lest
+      const pf = perfOf(q);
+      if (pf) { const b = perfBest(q); return { q, r: {}, est: b ? `${pf.kind === 'setting' ? `${pf.short} ` : ''}${fmtCm(b.cm)}` : null, rec: null }; }
+      const r = estimateQuestMax(q, gameState, { useRpe: true, today }); return { q, r, est: maxLine(r), rec: recordLine(r && r.manual, r && r.kind) };
+    })
     .sort((a, b) => (a.est || a.rec ? 0 : 1) - (b.est || b.rec ? 0 : 1) || rank(a.q) - rank(b.q) || a.q.name.localeCompare(b.q.name));
   return (
     <div className="fixed inset-0 z-[55] bg-slate-950/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>

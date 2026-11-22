@@ -16,6 +16,7 @@ import { evaluateQuestProgress } from '../lib/progress';
 import { formatSetsBreakdown, getSetDetailsArray, isTimedQuest, repUnit } from '../lib/quests';
 import { cleanText, pick } from '../edition';
 import { arenaLabel, hasArena } from '../data/muscles';
+import { fmtCm, perfBest, perfOf, perfTarget } from '../data/perfMeasure';
 
 export function QuestsTab({
   arenaLevels = [], filteredQuests, gameState, setGameState, handleDeleteQuest, openCreateQuestModal, openEditQuestModal,
@@ -311,6 +312,7 @@ export function QuestsTab({
                   
                   <p className="mt-3 text-xs text-slate-400">
                     {lastEntry ? <>Dernière séance : {lastEntry.calories || 45} kcal{lastEntry.note ? ` · ${cleanText(lastEntry.note)}` : ''}</> : 'Aucune séance notée'}
+                    {perfOf(quest) && (() => { const b = perfBest(quest); const t = perfTarget(quest); return <span className="block text-sky-200 font-bold" data-testid="quest-perf">📏 {perfOf(quest).label} : {t && t.cm ? `prochaine ${fmtCm(t.cm)}` : ''}{t && t.cm && b ? ' · ' : ''}{b ? `record ${fmtCm(b.cm)}` : t && t.cm ? '' : 'à noter à ta prochaine séance'}</span>; })()}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {!evalState.isBossDefeated && (

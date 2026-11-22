@@ -12,6 +12,7 @@ import { HoldTimer } from './HoldTimer';
 import { coachFmt } from '../coach/labels';
 import { warmupSets } from '../coach/warmup';
 import { adaptAfterAttempt } from '../coach/maxTest';
+import { perfOf } from '../data/perfMeasure';
 import { restText } from '../coach/rest';
 import { openMovement } from '../lib/movement';
 import { assistsOf, fmtLoads, loadsOf } from '../lib/setLoads';
@@ -657,7 +658,16 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
               )}
               {it.kind === 'load' && !sw && tune({ label: 'Charge', testId: 'set-load', value: coachFmt(loadsOf(d)[j]), unit: 'kg',
                 onMinus: () => setLoad(Math.max(0, Math.round((d.load - step) * 100) / 100)), onPlus: () => setLoad(Math.round((d.load + step) * 100) / 100) })}
-              {it.kind === 'assisted' && !sw && tune({ label: 'Lest', testId: 'guided-assist', value: assistsOf(d)[j] === 0 ? '0' : coachFmt(-assistsOf(d)[j]), unit: assistsOf(d)[j] > 0 ? 'kg · aide élastique' : assistsOf(d)[j] < 0 ? 'kg · lest' : 'poids du corps',
+              {(() => {
+                // sauts mesurés (4.52) : hauteur de la caisse / de chute, ou saut mesuré (cm), à la place du lest
+                const pf = perfOf(it);
+                if (!pf || sw || !Array.isArray(d.perfs)) return null;
+                const cur = Number(d.perfs[j]) || 0;
+                const setPerf = v => patch(it.questId, { perfs: d.perfs.map((x, k) => (k === j || (pf.kind === 'setting' && k > j && !d.done[k] && !(plan && plan[k] && plan[k].perf)) ? Math.max(0, v) : x)) });
+                return tune({ label: pf.short, testId: 'set-perf', value: cur ? cur : '—', unit: `cm · ${pf.kind === 'setting' ? pf.label.toLowerCase() : `${pf.short} de ce saut (facultatif)`}`,
+                  onMinus: () => setPerf((cur || pf.start || pf.min) - pf.step), onPlus: () => setPerf(cur ? cur + pf.step : pf.start || pf.min) });
+              })()}
+              {it.kind === 'assisted' && !perfOf(it) && !sw && tune({ label: 'Lest', testId: 'guided-assist', value: assistsOf(d)[j] === 0 ? '0' : coachFmt(-assistsOf(d)[j]), unit: assistsOf(d)[j] > 0 ? 'kg · aide élastique' : assistsOf(d)[j] < 0 ? 'kg · lest' : 'poids du corps',
                 onMinus: () => setAssist(d.assist + 2.5), onPlus: () => setAssist(d.assist - 2.5) })}
               {it.kind === 'load' && !sw && isBarbell(it.name) && platesText(loadsOf(d)[j]) && (
                 <PlatesDiagram total={loadsOf(d)[j]} testId="set-plates" className="-mt-1" />

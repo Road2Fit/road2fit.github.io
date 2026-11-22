@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.52',
+    date: '2026-11-22',
+    title: 'Sauts mesurés en hauteur ou en distance',
+    items: [
+      'Box jump : on note la hauteur de la caisse (cm) au lieu d’un lest ou d’une aide. Le coach propose la même hauteur, ou +5 cm après une séance notée facile et complète. Drop jump : la hauteur de chute.',
+      'Saut en longueur, saut sur une jambe : ta meilleure longueur. Saut vertical, saut d’attaque, saut de contre, squat sauté : ta meilleure hauteur (marque au mur). Facultatif.',
+      'Séance guidée : un réglage « caisse » ou « longueur » à la place du lest ; « Mes maxima » montre tes records en cm.',
+      'Test de max : box jump en hauteur max (3 essais, la caisse monte de 5 cm), saut en longueur et saut vertical en meilleur saut, faits en premier.',
+    ],
+  },
+  {
     version: '4.51.4',
     date: '2026-11-22',
     title: '« Mes maxima » revient',

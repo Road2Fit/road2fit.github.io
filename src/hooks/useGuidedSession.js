@@ -13,6 +13,7 @@ import { formatDayFr, getTodayISODate, toLocalISODate } from '../lib/dates';
 import { isTimedQuest } from '../lib/quests';
 import { applyStrengthSession } from '../lib/sessionRecord';
 import { endSessionStatus, pushSessionStatus } from '../lib/sessionNotify';
+import { perfOf } from '../data/perfMeasure';
 import { assistsOf, loadsOf, weightedMean } from '../lib/setLoads';
 import { playGameSound } from '../lib/sound';
 import { useEffect, useRef, useState } from 'react';
@@ -91,6 +92,8 @@ export function useGuidedSession({
         loads: plan ? plan.map(p => p.load || 0) : e.targetReps.map(() => e.load || 0),     // charge de chaque série (modifiable entre deux séries)
         assists: plan ? plan.map(p => p.assist || 0) : e.targetReps.map(() => e.assist || 0), // aide de chaque série
         kinds: plan ? plan.map(p => p.kind) : null,
+        // sauts mesurés (4.52) : hauteur de la caisse / de chute réglée, ou saut mesuré, pour chaque série (cm)
+        perfs: e.perf ? (plan || e.targetReps).map((p, i) => (plan && Number(plan[i].perf) > 0 ? Number(plan[i].perf) : e.perf.cm || null)) : null,
         done: (plan || e.targetReps).map(() => false),
         load: e.load || 0,
         assist: e.assist || 0,
@@ -198,17 +201,20 @@ export function useGuidedSession({
         const top = dd.reps.reduce((m, r, i) => (dd.done[i] && Number(r) >= 1 && (!dd.kinds || dd.kinds[i] === 'max') ? Math.max(m, Number(lds[i]) || 0) : m), 0);
         if (top > 0) records[q.id] = isKg ? { kg: top } : { extraKg: top };
       }
+      // saut mesuré : la plus haute (ou la plus longue) valeur des séries réussies
+      const perfDone = Array.isArray(dd.perfs) ? Math.max(0, ...dd.perfs.filter((v, i) => dd.done[i] && Number(dd.reps[i]) >= 1).map(v => Number(v) || 0)) : 0;
       const r = applyStrengthSession(q, {
         date: today,
         setDetails,
         loads: isKg ? doneLoads : null,
-        assists: !isKg && it.kind === 'assisted' ? doneAssists : null,
+        assists: !isKg && it.kind === 'assisted' && !perfOf(q) ? doneAssists : null,
         rpe: exerciseRpe,
         rpeSet: !!(Number(dd.rpe) || Number(g.rpe)),
         calories,
         guidedLabel: g.templateId || '',
         method: it.method && it.method !== 'straight' ? it.method : null,
         kinds: Array.isArray(dd.kinds) ? dd.reps.map((_, i) => dd.kinds[i] || 'work').filter((_, i) => dd.done[i]) : null,
+        perf: perfDone || null,
       });
       xpEarned += r.xp;
       r.unlocked.forEach(u => newUnlocked.add(u));

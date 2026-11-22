@@ -20,6 +20,7 @@ import { repSchemeOf } from './repScheme';
 import { painFor } from './pains';
 import { estimateQuestMax } from '../lib/maxima';
 import { entryAssists, entryLoads } from '../lib/setLoads';
+import { fmtCm, perfBest, perfOf, perfTarget } from '../data/perfMeasure';
 import { arenaOf, isLegArena, pushPullSide } from '../data/muscles';
 import { isTimedQuest } from '../lib/quests';
 
@@ -68,7 +69,8 @@ export const READINESS_TEXT = {
  */
 function testable(state, q, legsOk) {
   if (!q || q.type !== 'strength' || q.paused || q.goalMode === 'free_mode') return false;
-  if (/^ply_/.test(String(q.catalogId || '')) || repSchemeOf(q)) return false;
+  // sauts : seulement ceux qui se mesurent (box jump en hauteur, saut en longueur, saut vertical : 4.52)
+  if (/^ply_/.test(String(q.catalogId || ''))) { const pf = perfOf(q); if (!pf || !pf.test) return false; } else if (repSchemeOf(q)) return false;
   if (!coachRealEntries(q).length) return false;
   if (!legsOk && isLegArena(arenaOf(q))) return false;
   return !painFor({ catalogId: q.catalogId, name: q.name }, state.coach);
@@ -76,6 +78,7 @@ function testable(state, q, legsOk) {
 
 /** Type de test d'un exercice : charge (1 rep), lest (1 rep lestée), répétitions au maximum, ou temps au maximum. */
 export function testKindOf(q) {
+  if (perfOf(q)) return 'perf';
   if (isTimedQuest(q)) return 'time';
   const k = coachKind(q);
   if (k === 'load') return 'load';
@@ -99,7 +102,8 @@ export function pickMaxLifts(state, { legsOk = true, allowedArenas = null, quest
   if (goalQ) out.push(goalQ);
   for (const q of sorted) if (out.length < MAX_TEST_LIFTS && !out.includes(q) && !out.some(o => arenaOf(o) === arenaOf(q))) out.push(q);
   for (const q of sorted) if (out.length < MAX_TEST_LIFTS && !out.includes(q)) out.push(q);
-  const heavy = q => (['load', 'lest'].includes(testKindOf(q)) ? 0 : testKindOf(q) === 'reps' ? 10 : 20);
+  // les sauts d'abord (frais, explosifs), puis les tests lourds, les répétitions, le gainage
+  const heavy = q => ({ perf: -10, load: 0, lest: 0, reps: 10, time: 20 }[testKindOf(q)] || 0);
   const rank = { legs: 0, push: 1, other: 2, pull: 3, hinge: 4 };
   return out.sort((a, b) => heavy(a) + rank[region(a)] - (heavy(b) + rank[region(b)]));
 }
@@ -224,6 +228,7 @@ export function adaptAfterAttempt(it, d, j, done) {
   const loads = (d.loads || plan.map(p => p.load)).map(Number);
   const failed = (d.reps || []).slice(0, j).filter((r, k) => plan[k].kind === 'max' && Number(r) < plan[k].reps).length + 1;
   if (failed >= 2) return { stop: true, text: 'Deux essais manqués : ton max du jour est ton dernier essai réussi. Arrête là pour cet exercice.', button: 'Compris' };
+  if (perfOf(it)) return { stop: true, text: 'Essai manqué : refais un essai à la hauteur d’avant, ou arrête là.', button: 'Compris' };
   if (it.kind !== 'load') {
     const extra = -Number((d.assists || plan.map(p => p.assist))[j]) || 0;
     const next = Math.max(0, Math.round((extra * 0.9) / 1.25) * 1.25);
@@ -265,6 +270,22 @@ export function buildMaxTest(state, targets, today) {
     const r = who.ok ? maxTestReadiness(state, today, q) : who;
     const best = bestRecent(q, today);
     const common = { method: 'max_test', manualSets: true, change: 'test' };
+    if (tk === 'perf') {
+      // sauts mesurés : 3 essais à 1 saut, repos complet ; caisse qui monte, ou meilleur saut mesuré
+      const pf = perfOf(q);
+      const pt = perfTarget(q);
+      const best = perfBest(q);
+      const base = pf.kind === 'setting' ? Math.max(pf.min, (best && best.cm) || (pt && pt.cm) || pf.start) : null;
+      const plan = pf.kind === 'setting'
+        ? [0, 1, 2].map(k => ({ reps: 1, load: 0, assist: 0, perf: base + k * pf.step, rest: 120, kind: 'max', label: `Essai ${k + 1} : caisse à ${fmtCm(base + k * pf.step)}${k === 2 ? ' (record), seulement si l’essai 2 était facile' : k === 0 ? ' (doit passer)' : ''}` }))
+        : [1, 2, 3].map(k => ({ reps: 1, load: 0, assist: 0, rest: 120, kind: 'max', label: `Essai ${k} : ${pf.short === 'longueur' ? 'le plus loin' : 'le plus haut'} possible, note la mesure` }));
+      exercises.push({
+        ...t, ...common, assist: 0, maxMode: 'perf', maxRef: best ? best.cm : 0, plan, sets: plan.length, targetReps: plan.map(p => p.reps), restSec: 120,
+        reason: `${pf.test} : 3 essais, 2 min de repos entre chaque.${best ? ` Record : ${fmtCm(best.cm)}.` : ''}${pf.how ? ` ${pf.how}` : ''}`,
+        methodWhy: 'Un saut par essai, au maximum, réception propre ; arrête si la réception devient lourde.',
+      });
+      continue;
+    }
     if (tk === 'load') {
       const E = referenceMax(state, q, today);
       if (!(E > 0)) continue;

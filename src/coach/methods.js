@@ -268,8 +268,8 @@ export function planShort(e) {
   if (e.method === 'iso_hold') return `${n} tenues de ${p.hold} s`;
   if (e.method === 'eccentric') return `${n} × ${p.reps} · descente ${p.ecc} s`;
   if (e.method === 'explosive') return `${n} × ${p.reps} explosives`;
-  if (e.method === 'plyo') return `${n} × ${p.reps} · au max`;
-  if (e.method === 'max_test') return { '5rm': `test de 5 reps max · ${n} essais`, '1rm': `test de 1RM · ${n} essais`, lest: 'test lesté + reps au poids du corps', lest5: 'test lesté (5 reps) + reps au poids du corps', reps: 'max de répétitions', time: 'tenue au maximum' }[e.maxMode] || `test · ${n} essais`;
+  if (e.method === 'plyo') return `${n} × ${p.reps} · au max${e.perf && e.perf.cm ? ` · ${e.perf.kind === 'setting' ? (e.catalogId === 'ply_drop_jump' ? 'chute' : 'caisse') : ''} ${e.perf.cm} cm` : ''}`;
+  if (e.method === 'max_test') return { '5rm': `test de 5 reps max · ${n} essais`, '1rm': `test de 1RM · ${n} essais`, lest: 'test lesté + reps au poids du corps', lest5: 'test lesté (5 reps) + reps au poids du corps', reps: 'max de répétitions', time: 'tenue au maximum', perf: `test de saut · ${n} essais` }[e.maxMode] || `test · ${n} essais`;
   return null;
 }
 
