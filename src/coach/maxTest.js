@@ -43,6 +43,8 @@ export function weeksTracked(state, today) {
  * why : 'weeks' (trop tôt dans la pratique), 'beginner', 'age', 'sessions' (geste pas encore rodé).
  */
 export function maxTestReadiness(state, today, q = null) {
+  // 4.54 (Gabin : « c'est l'utilisateur qui choisit ») : vrai 1RM demandé quand même → accepté, avec un avertissement
+  if (getCoachSettings(state).maxTest1rm) return { ok: true, forced: true, weeks: weeksTracked(state, today) };
   const exp = getExperience(state);
   const trained = !!exp && exp.level !== 'beginner';
   const age = Number((getCoachSettings(state).profile || {}).age) || 0;
@@ -335,6 +337,7 @@ export function buildMaxTest(state, targets, today) {
   }
   const mode = exercises.some(e => e.maxMode === '1rm' || e.maxMode === 'lest') ? '1rm' : exercises.some(e => e.maxMode === '5rm' || e.maxMode === 'lest5') ? '5rm' : 'reps';
   notes.push(`Test de max : ${exercises.length} exercice${exercises.length > 1 ? 's' : ''} sur des muscles différents, rien d’autre aujourd’hui. Échauffement général 5 à 10 min, puis l’échauffement de chaque exercice. Retire ou ajoute des exercices si tu veux : c’est toi qui règles.`);
+  if (who.forced) notes.push('Vrai test à 1 répétition : c’est ton choix. Au début, le geste est encore fragile et un 1RM n’apporte rien de plus qu’un test de 5 reps : échauffe-toi bien, un pareur ou des barres de sécurité, et arrête un essai dès que la technique se dégrade.');
   if (!who.ok && exercises.some(e => ['5rm', 'lest5'].includes(e.maxMode))) notes.push(`Pas de vrai test à 1 répétition pour l’instant : ${READINESS_TEXT[who.why]}. Le coach fait des tests de 5 reps maximum, plus sûrs, d’où il tire ton max. Tester tôt n’apporte rien : tu progresses déjà à chaque séance (Mattocks 2017).`);
   else if (fives.length) notes.push(`Test de 5 reps sur ${fives.join(', ')} : le geste n’est pas encore assez rodé pour un 1RM.`);
   notes.push('Sécurité : barres de sécurité ou pareur au squat et au développé couché ; un essai s’arrête dès que la technique se dégrade ; pas de test si tu as mal, si tu es malade ou très fatigué. Repos complet entre les essais (3 à 4 min).');

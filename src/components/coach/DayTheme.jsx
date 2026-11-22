@@ -50,6 +50,12 @@ export function DayThemePicker({ coach, date, today, updateCoach, gameState = nu
           {DAY_STYLES.map(s => chip(s.id, s.short, sty.includes(s.id), () => toggle(s.id), `${prefix}-style-${s.id}`))}
         </div>
         {!sty.length && <p className="text-[11px] text-slate-400" data-testid={`${prefix}-style-auto-note`}>{AUTO_HELP}</p>}
+        {sty.includes('max') && (
+          <label className="flex items-start gap-2 text-[11px] text-slate-300">
+            <input type="checkbox" checked={!!coach.maxTest1rm} onChange={e => updateCoach({ maxTest1rm: e.target.checked })} data-testid={`${prefix}-max-1rm`} className="mt-0.5" />
+            <span>Toujours un vrai test à 1 rep, même si le coach conseille d’attendre (déconseillé au début : c’est toi qui choisis)</span>
+          </label>
+        )}
         {sty.length > 0 && (
           <ul className="space-y-0.5" data-testid={`${prefix}-style-note`}>
             {DAY_STYLES.filter(s => sty.includes(s.id)).map(s => <li key={s.id} className="text-[11px] text-slate-400"><b className="text-slate-200">{s.label}</b> : {s.help}</li>)}

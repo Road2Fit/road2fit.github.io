@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.54',
+    date: '2026-11-22',
+    title: 'C’est toi qui décides, le coach règle tout',
+    items: [
+      'Le coach intelligent peut maintenant régler tous tes paramètres à ta place : salle ou maison, matériel, douleurs, séance à la maison un jour, semaines allégées, périodisation, créneaux de salle, niveau, son, pseudo, mettre un exercice en pause, noter un record réel, la charge ou l’aide de ton test de max. Jusqu’à 10 changements d’un coup.',
+      'Si tu demandes quelque chose de déconseillé, il te prévient honnêtement, puis il le fait : c’est toi qui choisis.',
+      'Test de max : case « Toujours un vrai test à 1 rep » pour le faire même quand le coach conseille d’attendre (avec un avertissement).',
+    ],
+  },
+  {
     version: '4.53.3',
     date: '2026-11-22',
     title: 'Test de max : les jambes quand tu le choisis',

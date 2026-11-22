@@ -12,6 +12,7 @@ import { METHODS, methodFits } from '../coach/methods';
 import { GOAL_KINDS } from '../coach/goal';
 import { COACH_ARENAS } from '../coach/settings';
 import { fromAiDay } from './context';
+import { applyExercise, applySettings, exerciseLabel, normalizeExercise, normalizeSettings, settingsLabel } from './settingsActions';
 import { CARDIO_GOALS, CARDIO_KINDS, getCardioSettings, vdotFrom } from '../coach/cardio';
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -173,6 +174,12 @@ export function normalizeAction(a, state, today) {
     case 'forget':
       if ((coach.memory || []).some(m => m.id === x.id)) args = { id: x.id };
       break;
+    case 'settings':
+      args = normalizeSettings(x, state, today);
+      break;
+    case 'exercise':
+      args = normalizeExercise(x, state);
+      break;
     case 'muscle_mode':
       if (x.mode === 'simple' || x.mode === 'optimized') args = { mode: x.mode };
       break;
@@ -226,6 +233,8 @@ export function normalizeAction(a, state, today) {
 }
 
 function defaultLabel(type, args, state) {
+  if (type === 'settings') return settingsLabel(args);
+  if (type === 'exercise') return exerciseLabel(args, state);
   if (type === 'sport_dates') return [args.remove.length ? `Pas de sport le ${args.remove.join(', ')}` : '', args.add.length ? `Sport en plus le ${args.add.join(', ')}` : ''].filter(Boolean).join(' ; ');
   if (type === 'duo') return `Inviter ${args.friend} à une séance à deux le ${args.date}`;
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
@@ -242,7 +251,7 @@ export function normalizeActions(list, state, today) {
   const out = [];
   (Array.isArray(list) ? list : []).forEach(a => {
     const n = normalizeAction(a, state, today);
-    if (n && out.length < 6) out.push(n);
+    if (n && out.length < 10) out.push(n); // 4.54 : jusqu'à 10 changements d'un coup
   });
   return out;
 }
@@ -364,6 +373,10 @@ export function applyAction(state, a, today) {
       return withCoach({ memory: [...(coach.memory || []), { id: memId(), text: x.text, at: today }].slice(-30) });
     case 'forget':
       return withCoach({ memory: (coach.memory || []).filter(m => m.id !== x.id) });
+    case 'settings':
+      return applySettings(state, x);
+    case 'exercise':
+      return applyExercise(state, x, today);
     case 'muscle_mode':
       return { ...state, muscleMode: x.mode };
     case 'method':
@@ -386,7 +399,7 @@ export function applyAction(state, a, today) {
 
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
-  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], sport_dates: ['volleySkips', 'volleyExtra'], goal: ['workProfile'],
+  schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], sport_dates: ['volleySkips', 'volleyExtra'], settings: ['place', 'equipment', 'pains', 'homeDays', 'deloadWeeks', 'cycleWeeks', 'cycleStart', 'cycleProfiles', 'gymSlots', 'experience', 'maxTest1rm'], goal: ['workProfile'],
   body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], day_style: ['dayStyles', 'gymExtra', 'gymSkips'], plyo: ['plyo'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 

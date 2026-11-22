@@ -29,7 +29,7 @@ describe('actions du coach intelligent', () => {
     expect(normalizeAction(act('skip', { dates: ['2026-10-01'] }), S, today)).toBeNull();
     expect(normalizeAction({ type: 'goal', args: '{pas du json' }, S, today)).toBeNull();
     expect(normalizeAction(act('body', { heightCm: 900 }), S, today)).toBeNull();
-    expect(normalizeActions(Array(10).fill(act('feeling', { level: 'low' })), S, today)).toHaveLength(6);
+    expect(normalizeActions(Array(14).fill(act('feeling', { level: 'low' })), S, today)).toHaveLength(10);
   });
 
   it('séance, objectif, forme du jour, mémoire, ajout d’exercice', () => {
