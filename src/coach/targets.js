@@ -198,7 +198,7 @@ export function computeExerciseTarget(q, opts = {}) {
 const topExtra = R => Math.max(2, Math.round(R * 0.35));
 
 const restOf = (q, arena, reps, timed, compound, profile) => {
-  const sec = restFor({ name: q.name, reps: Math.min(...reps.map(Number).filter(n => n > 0), 99), timed, compound, arena }).sec;
+  const sec = restFor({ id: q.catalogId, name: q.name, reps: Math.min(...reps.map(Number).filter(n => n > 0), 99), timed, compound, arena }).sec;
   return profile === 'endurance' ? Math.min(90, sec) : sec;
 };
 

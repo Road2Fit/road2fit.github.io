@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.48.5',
+    date: '2026-11-22',
+    title: 'Durée des séances plus juste',
+    items: [
+      'La durée estimée comptait un repos complet après la dernière série de chaque exercice : les séances paraissaient bien plus longues qu’en vrai. Elle compte maintenant le temps de chaque série, les repos entre les séries et 1 min pour passer à l’exercice suivant.',
+      'Sauts (box jump, saut vertical…) : 1 min 30 de repos au lieu de 3 à 4 min. Changer de saut ne rallonge plus ta séance que de 1 ou 2 min.',
+      'Haltérophilie : 2 min 30 à 3 min de repos (avant jusqu’à 4 min) ; épreuves HYROX (traîneau, fermier, sac) : 2 min.',
+      'Exercices faits un côté après l’autre (squat bulgare, pistol…) : la durée compte les deux côtés.',
+    ],
+  },
+  {
     version: '4.48.4',
     date: '2026-11-19',
     title: 'Vidéo : téléphone tenu couché',

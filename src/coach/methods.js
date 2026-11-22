@@ -206,7 +206,7 @@ export function buildPlan(id, e) {
       return Array.from({ length: N }, (_, i) => set(reps, W * 0.9, 'expl', `Série ${i + 1} : ${reps} reps, montée la plus rapide possible`, Math.max(rest, 120)));
     }
     case 'plyo':
-      return (e.targetReps || Array(N).fill(R)).slice(0, N).map((r, i) => set(r, 0, 'plyo', `Série ${i + 1} : ${r} répétitions au maximum, réception propre`, Math.max(rest, 90)));
+      return (e.targetReps || Array(N).fill(R)).slice(0, N).map((r, i) => set(r, 0, 'plyo', `Série ${i + 1} : ${r} répétitions au maximum, réception propre`, rest));
     case 'amrap': {
       const base = straight();
       base[base.length - 1] = { ...base[base.length - 1], kind: 'amrap', label: `${base[base.length - 1].label} : le plus possible (objectif ${R}+)` };
@@ -268,8 +268,45 @@ export function planShort(e) {
 /** Formes « façon de travailler » : leurs séances ne servent pas à régler la charge habituelle de l'exercice. */
 export const CONTRACTION_METHODS = ['iso_pause', 'iso_hold', 'eccentric', 'explosive'];
 
-/** Durée estimée (minutes) d'un plan : environ 40 s par série + le repos qui suit. */
-export const planMinutes = plan => plan.reduce((s, p) => s + 0.65 + (Number(p.hold) || 0) * (p.holdEach ? p.reps : 1) / 60 + (Number(p.rest) || 0) / 60, 0);
+// ---------- durée estimée (4.48.5, retour de Gabin : « des durées délirantes ») ----------
+// Avant : chaque série valait 45 s + le repos qui la suit, y compris APRÈS la dernière série (une séance de 8 exercices
+// comptait 8 repos de trop, jusqu'à 4 min chacun) et sans le temps de passer d'un exercice à l'autre.
+// Maintenant : temps réel de chaque série (installation + répétitions), repos ENTRE les séries seulement, puis
+// CHANGE_MIN pour ranger, aller au poste suivant et le régler.
+export const CHANGE_MIN = 1;
+/** Durée d'une série (secondes) : installation + ≈ 3 s par répétition ; sauts ≈ 2 s ; tenue : sa durée. */
+export function setWorkSec(reps, { plyo = false, timed = false, uni = false } = {}) {
+  const r = Math.max(0, Number(reps) || 0) * (uni ? 2 : 1); // un côté puis l'autre : deux fois plus de répétitions
+  if (timed) return 10 + r;
+  return plyo ? 10 + 2 * r : 15 + 3 * r;
+}
+// exercices faits un côté après l'autre (répétitions comptées par côté)
+const UNI = /bulgare|une jambe|un bras|unilat|pistol|archer|concentr|single.?leg|split squat/i;
+const kindOf = e => ({ plyo: /^ply_/.test(String((e && e.catalogId) || '')), timed: !!(e && e.timed), uni: UNI.test(String((e && e.name) || '')) });
+
+/** Durée estimée (minutes) d'un plan série par série (forme de séries). `e` = l'exercice (sauts, tenue). */
+export const planMinutes = (plan, e = null) => {
+  const k = kindOf(e);
+  const sec = plan.reduce((s, p, i) => s + setWorkSec(p.reps, k)
+    + (Number(p.hold) || 0) * (p.holdEach ? p.reps : 1) + (Number(p.ecc) || 0) * (Number(p.reps) || 0)
+    + (i < plan.length - 1 ? Number(p.rest) || 0 : 0), 0);
+  return sec / 60 + CHANGE_MIN;
+};
+
+/** Durée estimée (minutes) d'un exercice de la séance. Superset : le 1er de la paire enchaîne sur l'autre (15 s). */
+export function exerciseMinutes(e) {
+  if (!e) return 0;
+  if (Array.isArray(e.plan) && e.plan.length) return planMinutes(e.plan, e);
+  const n = Math.max(1, Number(e.sets) || 1);
+  const reps = Array.from({ length: n }, (_, i) => Number((e.targetReps || [])[i] ?? (e.targetReps || [])[0]) || 8);
+  const k = kindOf(e);
+  const work = reps.reduce((s, r) => s + setWorkSec(r, k), 0);
+  if (e.superset && e.superset.first) return (work + 15 * n) / 60;
+  return (work + (n - 1) * (Number(e.restSec) || 0)) / 60 + CHANGE_MIN;
+}
+
+/** Durée estimée d'une séance (minutes) : échauffement général 5 min + chaque exercice. */
+export const sessionMinutes = exercises => Math.round(5 + (exercises || []).reduce((s, e) => s + exerciseMinutes(e), 0));
 
 /** Applique une méthode à un objectif d'exercice : séries, répétitions et charges détaillées. */
 export function withMethod(e, id, why = '') {

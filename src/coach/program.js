@@ -15,6 +15,7 @@ import { assistText } from '../lib/assist';
 import { profileOpts } from './profiles';
 import { coachDaysBetween, coachKind, coachRealEntries, coachRound, coachStep } from './settings';
 import { computeExerciseTarget } from './targets';
+import { sessionMinutes } from './methods';
 
 export const DAY_SHORT = ['', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const fmt = n => String(Math.round(n * 100) / 100).replace('.', ',');
@@ -328,7 +329,7 @@ export function programSession(state, next) {
       manual: false,
     };
   }).filter(Boolean);
-  const estMin = Math.round(5 + exercises.reduce((s, e) => s + e.sets * (0.75 + e.restSec / 60), 0));
+  const estMin = sessionMinutes(exercises);
   const label = `${next.session.name || `Séance ${next.sessionIdx + 1}`}${next.suite ? ' (suite proposée)' : ''}`;
   return {
     templateIdx: -1, templateId: label, date: next.date, exercises, estMin, estKcal: Math.round(estMin * 4.5), warmup: '',

@@ -10,7 +10,7 @@ import { composeTemplates, computeExerciseTarget } from './targets';
 import { profileOpts } from './profiles';
 import { applyMethods } from './methodChoice';
 import { restFor } from './rest';
-import { planMinutes } from './methods';
+import { sessionMinutes } from './methods';
 import { calculateStrengthCalories } from '../lib/calories';
 import { getAllEntries } from '../lib/quests';
 import { arenaOf, arenaTier, isAbsArena, isLegArena, isOptimized, pushPullSide, typeArenas } from '../data/muscles';
@@ -20,7 +20,7 @@ const sideOk = (side, q) => { if (!side) return true; const s = pushPullSide(are
 // Durée estimée d'une séance (échauffement 5 min + séries et repos)
 function coachEstimateMin(exercises) {
   // avec une forme de séries (pyramide, dégressive…), le détail série par série donne la durée ; superset : un seul repos pour la paire
-  return Math.round(5 + exercises.reduce((s, e) => s + (e.plan ? planMinutes(e.plan) : e.sets * (0.75 + (e.superset && e.superset.first ? 15 : e.restSec) / 60)), 0));
+  return sessionMinutes(exercises);
 }
 
 // Complète (ou allège) la séance proposée pour tenir la durée voulue par l'utilisateur.
@@ -287,7 +287,7 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
       e.targetReps = Array.from({ length: sets }, (_, i) => (reps[i] !== undefined ? reps[i] : reps[reps.length - 1]));
       if (e.kind === 'load' && Number(t.load) > 0) e.load = Number(t.load);
       if (e.kind === 'assisted' && t.assist !== undefined && t.assist !== null) e.assist = Number(t.assist) || 0;
-      e.restSec = restFor({ name: e.name, reps: Math.min(...e.targetReps), timed: e.timed, compound: e.compound, arena: e.arena }).sec;
+      e.restSec = restFor({ id: e.catalogId, name: e.name, reps: Math.min(...e.targetReps), timed: e.timed, compound: e.compound, arena: e.arena }).sec;
       e.change = 'dictated';
       e.dictated = true;
       e.manualSets = true;

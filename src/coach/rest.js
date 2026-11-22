@@ -14,21 +14,29 @@
 // légers et les petits muscles récupèrent plus vite. Jamais moins de 60 s pour une série de travail.
 
 import { stripAccents } from '../lib/text';
+import { repSchemeOf } from './repScheme';
 
 const BIG_LOWER = /squat|souleve|terre|presse|hack|fente|hip thrust|good morning|romanian|rdl/;
 const BIG = /squat|souleve|terre|presse|hack|fente|hip thrust|good morning|developpe|rowing|tirage|traction|dips|pompes|muscle.?up|chin|pull/;
 const SMALL = /mollet|biceps|curl|triceps|elevation|oiseau|face pull|rotation|avant.?bras|poignet|shrug|haussement|crunch|abdo|gainage|planche|releve|obliques/;
 
 const round15 = s => Math.round(s / 15) * 15;
+const r1oly = reps => (Number(reps) <= 3 ? 180 : 150);
 
 /**
  * Repos conseillé (secondes) pour un exercice.
  * @param {{ name: string, reps?: number, timed?: boolean, compound?: boolean, arena?: string }} ex
  * @returns {{ sec: number, why: string }}
  */
-export function restFor({ name = '', reps = 10, timed = false, compound, arena = '' } = {}) {
+export function restFor({ name = '', reps = 10, timed = false, compound, arena = '', id = '' } = {}) {
   const n = stripAccents(String(name).toLowerCase());
   if (timed) return { sec: 60, why: 'exercice tenu : 1 min suffit pour refaire une tenue de même durée' };
+  // 4.48.5 (audit des durées demandé par Gabin) : exercices à forme propre (repScheme.js). Avant, ils passaient par la
+  // règle des charges lourdes (peu de reps = 3 à 4 min) : 4 sauts de box jump suivis de 3 min de repos.
+  const scheme = repSchemeOf({ catalogId: id });
+  if (scheme && scheme.id === 'plyo') return { sec: 90, why: 'sauts : une série dure une dizaine de secondes, 1 min 30 suffit pour sauter de nouveau au maximum (repère courant : 5 à 10 fois la durée de l’effort)' };
+  if (scheme && scheme.id === 'distance') return { sec: 120, why: 'trajet chargé : 2 min pour refaire le trajet à la même allure' };
+  if (scheme && scheme.id === 'olympic') return { sec: r1oly(reps), why: 'haltérophilie : séries très courtes, 2 à 3 min pour garder une technique et une vitesse propres' };
   const r = Math.max(1, Number(reps) || 10);
   const big = !SMALL.test(n) && (compound !== undefined ? !!compound : BIG.test(n)); // « mollets à la presse » reste un petit muscle
   const lower = big && (BIG_LOWER.test(n) || /jambe/i.test(arena));

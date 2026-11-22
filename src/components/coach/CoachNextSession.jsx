@@ -242,7 +242,7 @@ export function CoachNextSession({
                           {plan && <button type="button" onClick={() => planRemove(e.questId)} className={`${act} !text-rose-300 !border-rose-500/50`} data-testid="ex-remove"><span aria-hidden="true">✕</span>Retirer</button>}
                         </div>
                         <p className="text-xs text-slate-400"><span className="font-bold text-slate-300">{b[1]} : </span>{e.reason}</p>
-                        {!e.plan && e.restSec > 0 && <p className="text-xs text-slate-400">Repos de {restText(e.restSec)} : {restFor({ name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
+                        {!e.plan && e.restSec > 0 && <p className="text-xs text-slate-400">Repos de {restText(e.restSec)} : {restFor({ id: e.catalogId, name: e.name, reps: Math.min(...(e.targetReps || [10])), timed: e.timed, compound: e.compound, arena: e.arena }).why}.</p>}
                         {e.methodWhy && <p className="text-xs text-violet-200">{e.methodWhy}{e.plan ? ` ${(METHODS[e.method] || {}).how}` : ''}</p>}
                       </div>
                     );
