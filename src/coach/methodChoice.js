@@ -10,7 +10,7 @@
 // Dans tous les cas : forme choisie pour un exercice (quest.coachMethod) d'abord ; semaine allégée, chronométré, geste en
 // apprentissage → séries classiques.
 import { methodFits, withMethod } from './methods';
-import { dayStylesOf, isPlyo, pickMixed, styleInfo, stylesLabel } from './contraction';
+import { dayStylesOf, exStylesOf, isPlyo, pickMixed, styleInfo, stylesLabel } from './contraction';
 import { repSchemeOf } from './repScheme';
 import { profileOpts } from './profiles';
 import { entriesBeforeMethods, knowsExercise, knownMethods, priorityArenas } from './experience';
@@ -67,7 +67,7 @@ function pairSupersets(exs, ok) {
  * @param opts { iso, deload, minutes } minutes = durée visée de la séance (0 = libre)
  * @returns { exercises, notes[] }
  */
-export function applyMethods(state, exercises, { iso, deload = false, minutes = 0, dayStyle } = {}) {
+export function applyMethods(state, exercises, { iso, deload = false, minutes = 0, dayStyle, exStyles } = {}) {
   const coach = getCoachSettings(state);
   const style = ['variety', 'classic'].includes(coach.methodStyle) ? coach.methodStyle : 'evidence';
   const goal = coach.mainGoal && typeof coach.mainGoal === 'object' ? coach.mainGoal : null;
@@ -83,19 +83,30 @@ export function applyMethods(state, exercises, { iso, deload = false, minutes = 
   const styles = dayStyle !== undefined ? (Array.isArray(dayStyle) ? dayStyle : dayStyle ? [dayStyle] : []) : dayStylesOf(coach, iso);
   const styleMethods = styles.map(x => (styleInfo(x) || {}).method).filter(Boolean);
   let mixK = 0;
+  // 4.56 : façon choisie pour UN exercice de cette séance (coach.exStyles) : passe avant tout le reste
+  // (séance faite en avance : celles du jour PRÉVU, passées par exStyles)
+  const exMap = exStyles !== undefined ? exStyles || {} : exStylesOf(coach, iso);
+  const own = id => exMap[id] || null;
 
   let out = exercises.map(e => {
-    if (e.dictated) return e; // séance dictée : forme de séries telle quelle
+    if (e.method === 'max_test') return e; // test de max choisi pour cet exercice : déjà construit (maxTest.js)
+    const mine = own(e.questId);
+    if (e.dictated && !mine) return e; // séance dictée : forme de séries telle quelle
     const q = byId[e.questId] || {};
     let ex = e;
     // objectif « plus de muscle » sur un groupe : une série de plus sur ses exercices (relation dose-réponse, Schoenfeld 2017)
-    if (goal && goal.kind === 'muscle' && goal.arena && e.arena === goal.arena && !deload && ex.sets < 6 && !e.manualSets) {
+    if (e.dictated) { /* séance dictée : séries telles quelles */ } else if (goal && goal.kind === 'muscle' && goal.arena && e.arena === goal.arena && !deload && ex.sets < 6 && !e.manualSets) {
       ex = { ...ex, sets: ex.sets + 1, targetReps: [...ex.targetReps, ex.targetReps[ex.targetReps.length - 1]] };
       goalBoost = true;
     } else if (prio.includes(e.arena) && !deload && ex.sets < 6 && !e.manualSets) {
       // muscle prioritaire déclaré (expert) : une série de plus
       ex = { ...ex, sets: ex.sets + 1, targetReps: [...ex.targetReps, ex.targetReps[ex.targetReps.length - 1]] };
       prioBoost.add(e.arena);
+    }
+    if (mine === 'normal') return withMethod(ex, 'straight', 'Séries normales : la façon que tu as choisie pour cet exercice aujourd’hui.');
+    if (mine && mine !== 'max') {
+      const info = styleInfo(mine) || {};
+      if (info.method && methodFits(info.method, ex)) return withMethod(ex, info.method, `${info.label} : la façon que tu as choisie pour cet exercice aujourd’hui. ${METHOD_WHY[info.method] || ''}`.trim());
     }
     if (q.coachMethod === 'custom') {
       if (Array.isArray(q.coachCustom) && q.coachCustom.length) return withMethod({ ...ex, custom: q.coachCustom }, 'custom', 'Ta forme personnalisée : le coach la reprend à chaque séance, avec des charges qui suivent ta progression.');

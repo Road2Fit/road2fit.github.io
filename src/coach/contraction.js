@@ -140,6 +140,37 @@ export function toggleDayStyle(coach, iso, style, today) {
   return setDayStyle(coach, iso, next, today);
 }
 
+// ---------- Façon de travailler choisie pour UN exercice d'une séance (4.56) ----------
+// Gabin : « exercice par exercice, choisir la façon de travailler (séance normale, sauf un test de max au développé couché) ».
+// coach.exStyles = { 'AAAA-MM-JJ': { questId: 'normal' | 'iso' | 'iso_hold' | 'ecc' | 'expl' | 'max' } } : pour la séance de ce
+// jour seulement ; passe avant la façon du jour et la forme de séries habituelle de l'exercice. Pas de pliométrie (ce sont des
+// exercices de sauts à part, pas une façon de faire un exercice).
+export const EX_STYLE_IDS = STYLE_IDS.filter(id => id !== 'plyo');
+
+/** Façons choisies exercice par exercice pour la séance de ce jour : { questId: style } (valeurs inconnues ignorées). */
+export function exStylesOf(coach, iso) {
+  const m = coach && coach.exStyles && coach.exStyles[iso];
+  const out = {};
+  if (m && typeof m === 'object') Object.keys(m).forEach(k => { if (EX_STYLE_IDS.includes(m[k])) out[k] = m[k]; });
+  return out;
+}
+
+/** Nouveau `coach.exStyles` : façon `style` (null / 'auto' = comme le reste de la séance) pour cet exercice ce jour-là ; jours passés retirés. */
+export function setExStyle(coach, iso, questId, style, today) {
+  const m = {};
+  Object.keys((coach && coach.exStyles) || {}).forEach(d => {
+    if (d < today) return;
+    const cur = exStylesOf(coach, d);
+    if (Object.keys(cur).length) m[d] = cur;
+  });
+  const day = { ...(m[iso] || {}) };
+  if (EX_STYLE_IDS.includes(style)) day[questId] = style;
+  else delete day[questId];
+  if (Object.keys(day).length) m[iso] = day;
+  else delete m[iso];
+  return m;
+}
+
 /**
  * Séance mixte : forme de l'exercice parmi les façons choisies qui lui conviennent. L'explosif va aux gros exercices
  * (pas à l'isolation s'il y a un autre choix) ; sinon on alterne d'un exercice à l'autre (k = rang de l'exercice).

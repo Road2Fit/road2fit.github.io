@@ -1,5 +1,5 @@
 import { coachSlotFor } from './planning';
-import { capPlyoBlock, dayStylesOf, isLegPlyo, plyoContacts, plyoQuests, stylesLabel } from './contraction';
+import { capPlyoBlock, dayStylesOf, exStylesOf, isLegPlyo, plyoContacts, plyoQuests, stylesLabel } from './contraction';
 import { getExperience } from './experience';
 import { dayTypeOf, themeLabel } from './dayTheme';
 import { COACH_ARENAS, COACH_TYPES, coachDaysBetween, coachIsCompound, coachRealEntries, coachRound, coachStep, getCoachSettings } from './settings';
@@ -69,12 +69,15 @@ function coachFitDuration(state, exercises, di, opts, targetMin, notes) {
     } else break;
   }
   // Allègement si la séance dépasse nettement la durée voulue
-  const dropIdx = list => { let best = list.length - 1, bt = 0; list.forEach((e, i) => { const t = arenaTier(e.arena); if (t >= bt) { bt = t; best = i; } }); return best; };
+  // un exercice à qui la personne a donné sa façon de travailler ce jour-là (4.56 : test de max…) n'est jamais retiré
+  const kept = e => !!(opts.exStyles && opts.exStyles[e.questId]);
+  const dropIdx = list => { let best = -1, bt = -1; list.forEach((e, i) => { if (kept(e)) return; const t = arenaTier(e.arena); if (t >= bt) { bt = t; best = i; } }); return best; };
   guard = 0;
   while (coachEstimateMin(ex) > targetMin + 8 && guard++ < 30) {
     const big = ex.filter(e => e.sets > 3).sort((a, b) => b.sets - a.sets)[0];
     if (big) { big.sets -= 1; big.targetReps.pop(); continue; }
-    if (ex.length > 3) { ex.splice(dropIdx(ex), 1); continue; } // d'abord les muscles les moins prioritaires (mode optimisé)
+    const i = ex.length > 3 ? dropIdx(ex) : -1;
+    if (i >= 0) { ex.splice(i, 1); continue; } // d'abord les muscles les moins prioritaires (mode optimisé)
     break;
   }
   ex.sort((a, b) => {
@@ -121,11 +124,39 @@ function restMuscles(state, quests, iso, notes) {
   return kept;
 }
 
+// Minutes d'échauffement propres aux tests de max (montée en charge avant les essais)
+const testWarmMin = exs => exs.filter(e => e.method === 'max_test').reduce((m, e) => m + (maxTestWarmup(e) || []).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
+
+/**
+ * 4.56 (Gabin : « séance normale, sauf le développé couché où je veux un test de max ») : exercices passés en « Test de max »
+ * pour cette séance (coach.exStyles) : construits par buildMaxTest et placés EN PREMIER (on teste frais, juste après
+ * l'échauffement), le reste de la séance suit normalement.
+ */
+function applyExMax(state, exercises, iso, exStyles, notes) {
+  const want = exercises.filter(e => exStyles && exStyles[e.questId] === 'max' && e.method !== 'max_test');
+  if (!want.length) return exercises;
+  const t = buildMaxTest(state, want, iso);
+  const done = new Set(t.exercises.map(e => e.questId));
+  const left = want.filter(e => !done.has(e.questId));
+  const rest = exercises.filter(e => !done.has(e.questId));
+  if (t.exercises.length) {
+    const names = t.exercises.map(e => e.name).join(', ');
+    notes.push(`Test de max sur ${names} : en premier, quand tu es frais (échauffement général 5 à 10 min, puis celui du test), et la suite de la séance normalement${rest.length ? ' : les exercices des mêmes muscles peuvent sembler plus durs après le test, garde de la marge' : ''}.`);
+    notes.push(...t.notes.filter(n => !/^Test de max( prévu)? ?:/.test(n)));
+  }
+  if (left.length) notes.push(`Pas de test de max possible sur ${left.map(e => e.name).join(', ')} (exercice pas encore pratiqué) : séries normales.`);
+  return [...t.exercises, ...rest];
+}
+
 function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
   const coach = getCoachSettings(state);
   const eff = { ...opts, deload: !!opts.deload || !!opts.tired, allowedArenas };
   if (opts.tired && !opts.deload) notes.push('Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.');
   quests = restMuscles(state, quests, di.iso, notes);
+  // 4.56 : exercice à qui la personne (ou le coach IA à sa demande) a donné une façon de travailler ce jour-là : toujours dans la séance
+  const wanted = Object.keys(opts.exStyles || {}).filter(id => !quests.some(q => q.id === id))
+    .map(id => (state.quests || []).find(q => q.id === id && q.type === 'strength' && q.goalMode !== 'free_mode' && !q.paused)).filter(Boolean);
+  if (wanted.length) quests = [...quests, ...wanted];
   let exercises = quests.map(q =>
     computeExerciseTarget(q, {
       ...profileOpts(state, di.iso),
@@ -157,16 +188,17 @@ function coachAssemble(state, quests, di, opts, notes, allowedArenas) {
       notes.push(`Pliométrie : les sauts d’abord, quand tu es frais, après l’échauffement (environ ${block.reduce((n, e) => n + e.sets * e.targetReps[0], 0)} répétitions au total). Chaque saut au maximum, réception propre, repos complet.`);
     } else notes.push('Séance avec pliométrie prévue, mais tu ne suis encore aucun exercice de sauts : ajoute-les depuis Coach → Réglages → Pliométrie.');
   }
-  const meth = applyMethods(state, exercises, { iso: di.iso, deload: eff.deload, minutes: target || 0, dayStyle: opts.dayStyle });
+  exercises = applyExMax(state, exercises, di.iso, opts.exStyles, notes);
+  const meth = applyMethods(state, exercises, { iso: di.iso, deload: eff.deload, minutes: target || 0, dayStyle: opts.dayStyle, exStyles: opts.exStyles || {} });
   exercises = meth.exercises;
   notes.push(...meth.notes);
   const w = Number(state.userWeightKg) || 82;
-  const estMin = coachEstimateMin(exercises);
+  const estMin = Math.round(coachEstimateMin(exercises) + testWarmMin(exercises));
   const estKcal = exercises.reduce(
     (sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
     0
   );
-  const first = exercises.find(e => e.kind === 'load' && e.load >= 20);
+  const first = exercises.find(e => e.kind === 'load' && e.load >= 20 && e.method !== 'max_test'); // le test a son propre échauffement
   const warmup = first
     ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg, avant la première série de travail.`
     : '';
@@ -252,7 +284,9 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
   const styles = dayStylesOf(state.coach, slot.iso || di.iso).filter(x => !(opts.noMax && x === 'max'));
   const style = styles[0] || null;
   const plyoDay = styles.includes('plyo') || !!(slot.week && (slot.week.plyoDays || []).includes(slot.iso || di.iso));
-  opts = { ...opts, dayStyle: styles };
+  // 4.56 : façon choisie exercice par exercice pour ce jour (celles du jour PRÉVU si la séance est faite en avance)
+  const exStyles = exStylesOf(state.coach, slot.iso || di.iso);
+  opts = { ...opts, dayStyle: styles, exStyles };
   // séance à deux acceptée ce jour-là (4.51) : le plan commun passe avant tout le reste
   const duo = state.coach && state.coach.duos && state.coach.duos[slot.iso || di.iso];
   if (duo && duo.plan && !opts.noDuo) {
@@ -270,10 +304,10 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
     }
   }
   if (styles.includes('max') && !opts.noMax) {
-    const t = coachBuildMaxTest(state, di, chosen);
+    const t = coachBuildMaxTest(state, di, chosen, exStyles);
     if (t) return isHomeDay(state.coach, di.iso) && placeOf(state.coach) !== 'home' ? { ...t, home: true } : t;
     const s0 = coachBuildPlanned(state, slot, di, { ...opts, noMax: true });
-    return { ...s0, notes: ['Test de max prévu, mais aucun gros exercice en kg déjà pratiqué (squat, développé, soulevé de terre, rowing…) : séance normale aujourd’hui.', ...(s0.notes || []).filter(n => !/Test de max/.test(n))] };
+    return { ...s0, notes: ['Test de max prévu, mais aucun exercice à tester (pas encore pratiqué, ou tous passés à une autre façon de travailler) : séance normale aujourd’hui.', ...(s0.notes || []).filter(n => !/^Test de max prévu/.test(n))] };
   }
   if (plyoDay) opts = { ...opts, plyo: true };
   let s;
@@ -290,7 +324,7 @@ export function coachBuildPlanned(state, slot, di, opts = {}) {
 
 // Séance « Test de max » (4.50, maxTest.js) : 1 à 3 gros exercices, échauffement en montée puis essais ; null si
 // aucun exercice ne s'y prête (la séance normale est alors construite, avec une note).
-function coachBuildMaxTest(state, di, chosen) {
+function coachBuildMaxTest(state, di, chosen, exStyles = {}) {
   const allowed = chosen ? COACH_TYPES[chosen].arenas : null;
   // 4.53.3 (Gabin : « bas du corps » choisi pour son test de max, mais pas de jambes) : un thème choisi avec des jambes
   // passe avant la règle « jambes au repos » (veille de sport ou de match), comme pour une séance normale
@@ -298,15 +332,19 @@ function coachBuildMaxTest(state, di, chosen) {
   const legsOk = di.legsOk || forced;
   const lifts = pickMaxLifts(state, { legsOk, allowedArenas: allowed, quests: coachableQuests(state, di.iso) });
   const targets = lifts.map(q => computeExerciseTarget(q, { ...profileOpts(state, di.iso), today: di.iso }));
-  const t = buildMaxTest(state, targets, di.iso);
+  // 4.56 : un exercice passé à une autre façon de travailler (crayon) n'est pas testé : il se fait normalement, après les tests
+  const other = e => exStyles[e.questId] && exStyles[e.questId] !== 'max';
+  const t = buildMaxTest(state, targets.filter(e => !other(e)), di.iso);
   if (!t.exercises.length) return null;
+  const rest = applyMethods(state, targets.filter(other), { iso: di.iso, dayStyle: [], exStyles }).exercises;
+  const exercises = [...t.exercises, ...rest];
   const notes = [...(forced ? [`D’habitude le coach évite les jambes ce jour-là (${di.legsWhy}) : tu as choisi de les tester, garde de la marge.`] : di.legsOk ? [] : [`Pas de test des jambes aujourd’hui (${di.legsWhy}). Pour les tester quand même, choisis le thème « Bas du corps » ou « Corps entier ».`]), ...t.notes];
-  const warmMin = t.exercises.reduce((m, e) => m + (maxTestWarmup(e) || []).reduce((x, w) => x + (setWorkSec(w.reps) + w.restSec) / 60, 0), 0);
+  if (rest.length) notes.push(`${rest.map(e => e.name).join(', ')} : pas de test, la façon que tu as choisie, après les tests.`);
   const w = Number(state.userWeightKg) || 82;
-  const estKcal = t.exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: false, weightKg: e.load, assistanceKg: 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);
+  const estKcal = exercises.reduce((sum, e) => sum + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 9, userWeightKg: w }), 0);
   return {
-    templateIdx: -1, templateId: 'Test de max', date: di.iso, exercises: t.exercises, notes,
-    estMin: Math.round(sessionMinutes(t.exercises) + warmMin), estKcal, warmup: '', fillSuggestions: [], slot: coachSlotFor(getCoachSettings(state), di.iso), target: 0,
+    templateIdx: -1, templateId: 'Test de max', date: di.iso, exercises, notes,
+    estMin: Math.round(sessionMinutes(exercises) + testWarmMin(exercises)), estKcal, warmup: '', fillSuggestions: [], slot: coachSlotFor(getCoachSettings(state), di.iso), target: 0,
     style: 'max', styles: ['max'], maxTest: t.mode, ...(chosen ? { chosenType: chosen } : {}),
   };
 }
@@ -320,7 +358,11 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
   // 4.51.3 (retour de Gabin : « personnaliser remet tout à zéro ») : la façon de travailler du jour de la séance reste ;
   // jour « Test de max » : les exercices choisis deviennent des tests (tous types)
   const styles = opts.dayStyle !== undefined ? [].concat(opts.dayStyle || []) : dayStylesOf(state.coach, dateIso);
-  if (styles.includes('max') && quests.length) {
+  // 4.56 : façon choisie exercice par exercice (crayon) : un jour « Test de max », un exercice passé à une autre façon n'est
+  // pas testé ; un autre jour, un exercice passé en « Test de max » est testé en premier, le reste suit normalement
+  const exSt = { ...(opts.exStyles !== undefined ? opts.exStyles || {} : exStylesOf(state.coach, dateIso)) };
+  if (styles.includes('max')) quests.forEach(q => { if (!exSt[q.id]) exSt[q.id] = 'max'; });
+  if (quests.length && quests.every(q => exSt[q.id] === 'max')) {
     const targets = quests.map(q => computeExerciseTarget(q, { ...profileOpts(state, dateIso), today: dateIso }));
     const t = buildMaxTest(state, targets, dateIso);
     if (t.exercises.length) {
@@ -360,17 +402,19 @@ export function coachBuildCustomSession(state, questIds, dateIso, opts = {}) {
     }
     return e;
   });
-  const meth = applyMethods(state, exercises, { iso: dateIso, deload: deloadOn, minutes: 0, dayStyle: styles });
+  const maxNotes = [];
+  const withTests = applyExMax(state, exercises, dateIso, exSt, maxNotes);
+  const meth = applyMethods(state, withTests, { iso: dateIso, deload: deloadOn, minutes: 0, dayStyle: styles.filter(x => x !== 'max'), exStyles: exSt });
   const exercisesM = meth.exercises;
   const w = Number(state.userWeightKg) || 82;
-  const estMin = coachEstimateMin(exercisesM);
+  const estMin = Math.round(coachEstimateMin(exercisesM) + testWarmMin(exercisesM));
   const estKcal = exercisesM.reduce(
     (s, e) => s + calculateStrengthCalories({ unit: e.unit, timed: !!e.timed, weightKg: e.kind === 'load' ? e.load : 0, assistanceKg: e.kind === 'assisted' ? e.assist : 0, setDetails: e.targetReps, rpe: 7, userWeightKg: w }),
     0
   );
-  const first = exercisesM.find(e => e.kind === 'load' && e.load >= 20);
+  const first = exercisesM.find(e => e.kind === 'load' && e.load >= 20 && e.method !== 'max_test'); // le test a son propre échauffement
   const warmup = first
     ? `Échauffement conseillé sur « ${first.name} » : 1 × 8 à ${coachRound(first.load * 0.5, coachStep({ catalogId: '', name: first.name }, first.load))} kg, puis 1 × 4-5 à ${coachRound(first.load * 0.75, coachStep({ catalogId: '', name: first.name }, first.load))} kg, avant la première série de travail.`
     : '';
-  return { templateIdx: -1, templateId: 'Perso', date: dateIso, exercises: exercisesM, notes: [...(opts.tired && !opts.deload ? ['Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.'] : []), ...meth.notes], estMin, estKcal, warmup, custom: true };
+  return { templateIdx: -1, templateId: 'Perso', date: dateIso, exercises: exercisesM, notes: [...(opts.tired && !opts.deload ? ['Séance allégée (−10 % de charge, une série de moins) parce que tu as indiqué être fatigué aujourd’hui.'] : []), ...maxNotes, ...meth.notes], estMin, estKcal, warmup, custom: true };
 }

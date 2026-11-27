@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.56',
+    date: '2026-11-27',
+    title: 'Une façon de travailler par exercice',
+    items: [
+      'Dans la séance, le crayon de chaque exercice a maintenant « Façon de travailler » : normale, pauses iso, tenues iso, excentrique, explosif ou test de max, pour cet exercice et cette séance seulement. Par exemple : une séance normale, sauf un test de max au développé couché.',
+      'Un exercice en test de max passe en premier (on teste frais, après l’échauffement), avec son échauffement en montée et ses essais ; le reste de la séance ne change pas.',
+      'Un jour « Test de max », un exercice remis en « Normale » n’est pas testé : il se fait après les tests. « Comme la séance » revient au choix du jour.',
+      'Le coach intelligent sait le faire aussi : « demain séance normale, mais test de max au développé couché ».',
+    ],
+  },
+  {
     version: '4.55',
     date: '2026-11-27',
     title: 'Sécurité renforcée',

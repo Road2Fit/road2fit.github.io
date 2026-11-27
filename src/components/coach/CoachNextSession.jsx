@@ -16,11 +16,12 @@ import { card } from './ui';
 import { CustomSetsEditor } from './CustomSetsEditor';
 import { HomeOnceToggle } from './CoachPlace';
 import { DayThemePicker } from './DayTheme';
+import { EX_STYLE_IDS, exStylesOf, styleInfo } from '../../coach/contraction';
 import { sportInfo } from '../../data/sports';
 import { hasArena } from '../../data/muscles';
 
 export function CoachNextSession({
-  setMethod, setCustom, addSel, adjustTarget, adjustMaxTest = null, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
+  setMethod, setCustom, addSel, adjustTarget, adjustMaxTest = null, pickExStyle = null, availQuests, coach, doSwap, first, gameState, onAddExercise, onGoTab, onOpenLevelUp,
   onStartGuided, ov, plan, planAdd, planDate, planDayInfo, planMove, planRemove, rating,
   sessionToStart, setAddSel, setShortMode, setSwapFor, shortMode, shownDate, shownSession,
   startCustom, strengthQuests, swapFor, tiredToday, today, todayInfo, updateCoach, preview = false, onTakeOver, setGameState,
@@ -204,8 +205,25 @@ export function CoachNextSession({
                     const act = 'tap-free py-2 rounded-xl bg-slate-800 border border-slate-600 text-xs font-bold text-slate-100 flex flex-col items-center gap-0.5 disabled:opacity-40';
                     const idx = shownSession.exercises.findIndex(x => x.questId === e.questId);
                     const last = shownSession.exercises.length - 1;
+                    // 4.56 (Gabin : « exercice par exercice, choisir la façon de travailler ») : pour cette séance seulement
+                    const exSt = exStylesOf(coach, shownDate)[e.questId] || null;
+                    const exOpts = EX_STYLE_IDS.filter(id => id === 'normal' || id === 'max' || methodFits((styleInfo(id) || {}).method, e));
+                    const exChip = (id, label) => (
+                      <button key={id || 'auto'} type="button" onClick={() => pickExStyle(e.questId, id)} aria-pressed={exSt === id} data-testid={`ex-style-${id || 'auto'}`}
+                        className={`tap-free px-2.5 py-1.5 rounded-lg text-xs font-black border ${exSt === id ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-900 border-slate-700 text-slate-300'}`}>{label}</button>
+                    );
                     return (
                       <div className="mt-2 space-y-2" data-testid="ex-panel">
+                        {pickExStyle && (
+                          <div className="space-y-1" data-testid="ex-style">
+                            <p className="text-xs font-bold text-slate-400">Façon de travailler <span className="font-normal text-slate-500">(cet exercice, cette séance)</span></p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {exChip(null, 'Comme la séance')}
+                              {exOpts.map(id => exChip(id, styleInfo(id).short))}
+                            </div>
+                            {exSt && <p className="text-[11px] text-slate-400" data-testid="ex-style-help">{exSt === 'max' ? 'Test de max sur cet exercice, en premier : échauffement en montée puis quelques essais (test de 5 reps si le coach te le conseille). Le reste de la séance ne change pas.' : `${styleInfo(exSt).help} Le reste de la séance ne change pas.`}</p>}
+                          </div>
+                        )}
                         {/* Tu décides : charge (ou aide), répétitions, séries */}
                         {/* 4.53.2 (Gabin : « on devrait toujours pouvoir modifier ») : test de max : charge, aide ou lest du test */}
                         {e.method === 'max_test' && adjustMaxTest && e.kind === 'load' && stepper(e.maxMode === '5rm' ? 'Charge (5 reps)' : 'Charge (1 rep)', `${coachFmt(e.load)} kg`, () => adjustMaxTest(e, -1), () => adjustMaxTest(e, 1), 'adj-max-load')}
@@ -221,7 +239,7 @@ export function CoachNextSession({
                         {!e.plan && stepper(e.timed ? 'Secondes' : 'Répétitions', uniform ? e.targetReps[0] : e.targetReps.join(' - '), () => adjustTarget(e, 'lessReps'), () => adjustTarget(e, 'moreReps'), 'adj-reps')}
                         {stepper('Séries', e.sets, () => adjustTarget(e, 'lessSets'), () => adjustTarget(e, 'moreSets'), 'adj-sets')}
                         {e.plan && <p className="text-xs text-pink-200 font-bold">{planTxt}</p>}
-                        {setMethod && (
+                        {setMethod && !exSt && (
                           <label className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold">Forme des séries :
                             <select value={customFor === e.questId ? 'custom' : q.coachMethod || 'auto'} onChange={ev => pickMethod(ev.target.value)} data-testid="method-select" className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white">
                               <option value="auto">Le coach choisit</option>

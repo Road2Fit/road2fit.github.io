@@ -44,7 +44,7 @@ export function DayThemePicker({ coach, date, today, updateCoach, gameState = nu
         </div>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-bold text-slate-400">Façon de travailler <span className="font-normal text-slate-500">(plusieurs possibles)</span></p>
+        <p className="text-xs font-bold text-slate-400">Façon de travailler <span className="font-normal text-slate-500">(plusieurs possibles ; pour un seul exercice : son crayon)</span></p>
         <div className="flex flex-wrap gap-1.5">
           {chip('auto', 'Auto', !sty.length, () => updateCoach({ dayStyles: setDayStyle(coach, date, null, today) }), `${prefix}-style-auto`)}
           {DAY_STYLES.map(s => chip(s.id, s.short, sty.includes(s.id), () => toggle(s.id), `${prefix}-style-${s.id}`))}

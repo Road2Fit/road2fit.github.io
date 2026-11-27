@@ -2,7 +2,7 @@
 // seulement quand la personne appuie sur « Appliquer ». Fonctions pures, testées dans actions.test.js.
 import { coachRealEntries, getCoachSettings } from '../coach/settings';
 import { THEME_IDS, setDayType } from '../coach/dayTheme';
-import { STYLE_IDS, missingPlyo, perfSport, setDayStyle, styleInfo } from '../coach/contraction';
+import { EX_STYLE_IDS, STYLE_IDS, missingPlyo, perfSport, setDayStyle, setExStyle, styleInfo } from '../coach/contraction';
 import { coachPlanWeek } from '../coach/planning';
 import { getWeekStart } from '../lib/dates';
 import { EXERCISE_CATALOG } from '../data/catalog';
@@ -141,7 +141,17 @@ export function normalizeAction(a, state, today) {
       const raw = Array.isArray(x.styles) ? x.styles : x.style !== undefined ? [x.style] : [];
       const ok = raw.filter(v => STYLE_IDS.includes(v));
       const style = raw.includes('auto') ? null : ok.length ? (ok.length > 1 ? ok : ok[0]) : undefined;
-      if (dates.length && style !== undefined) args = { dates, style };
+      // 4.56 : façon d'UN exercice pour cette séance : {"exercises":{"<questId>":"max"|"normal"|…|"auto"}} (auto = comme la séance)
+      const exercises = {};
+      if (x.exercises && typeof x.exercises === 'object' && !Array.isArray(x.exercises)) {
+        Object.keys(x.exercises).slice(0, 20).forEach(id => {
+          const v = x.exercises[id];
+          const q = strengthQuest(state, id);
+          if (q && q.goalMode !== 'free_mode' && (v === 'auto' || EX_STYLE_IDS.includes(v))) exercises[q.id] = v === 'auto' ? null : v;
+        });
+      }
+      const hasEx = Object.keys(exercises).length > 0;
+      if (dates.length && (style !== undefined || hasEx)) args = { dates, ...(style !== undefined ? { style } : {}), ...(hasEx ? { exercises } : {}) };
       break;
     }
     case 'plyo': {
@@ -240,7 +250,11 @@ function defaultLabel(type, args, state) {
   if (type === 'add_exercise') return `Ajouter ${(EXERCISE_CATALOG.find(c => c.id === args.catalogId) || {}).name}`;
   if (type === 'remember') return `Retenir : ${args.text}`;
   if (type === 'adjust') return `Changer l’objectif de ${(strengthQuest(state, args.questId) || {}).name}`;
-  if (type === 'day_style') return args.style ? `Séance « ${[].concat(args.style).map(x => (styleInfo(x) || {}).label || x).join(' + ')} » le ${args.dates.join(', ')}` : 'Laisser le coach décider (auto)';
+  if (type === 'day_style') {
+    const ex = Object.keys(args.exercises || {}).map(id => `${(strengthQuest(state, id) || {}).name || id} : ${args.exercises[id] ? (styleInfo(args.exercises[id]) || {}).label : 'comme la séance'}`);
+    const day = args.style ? `Séance « ${[].concat(args.style).map(x => (styleInfo(x) || {}).label || x).join(' + ')} » le ${args.dates.join(', ')}` : args.style === null ? 'Laisser le coach décider (auto)' : `Séance du ${args.dates.join(', ')}`;
+    return ex.length ? `${day} (${ex.join(' ; ')})` : day;
+  }
   if (type === 'plyo') return `Pliométrie : ${args.perWeek !== null ? `${args.perWeek} séance${args.perWeek > 1 ? 's' : ''} avec des sauts par semaine` : 'exercices de sauts'}${args.add.length ? `, ${args.add.length} exercice${args.add.length > 1 ? 's' : ''} ajouté${args.add.length > 1 ? 's' : ''}` : ''}`;
   if (type === 'cardio') return args.on === false ? 'Arrêter le cardio du coach' : 'Régler le cardio du coach';
   return 'Changer un réglage du coach';
@@ -345,15 +359,22 @@ export function applyAction(state, a, today) {
       // jour sans séance prévue : une séance en plus ce jour-là (avec cette façon de travailler)
       let cs = coach;
       const extra = new Set(coach.gymExtra || []);
+      const exIds = Object.keys(x.exercises || {});
+      const exOn = exIds.filter(id => x.exercises[id]);
+      const adds = !!x.style || exOn.length > 0;
       x.dates.forEach(d => {
-        cs = { ...cs, dayStyles: setDayStyle(cs, d, x.style, today) };
-        if (x.style) {
+        if (x.style !== undefined) cs = { ...cs, dayStyles: setDayStyle(cs, d, x.style, today) };
+        exIds.forEach(id => { cs = { ...cs, exStyles: setExStyle(cs, d, id, x.exercises[id], today) }; });
+        // séance perso ce jour-là sans cet exercice : il y est ajouté (sinon la façon choisie ne servirait à rien)
+        const missing = cs.plan && cs.plan.date === d && Array.isArray(cs.plan.questIds) ? exOn.filter(id => !cs.plan.questIds.includes(id)) : [];
+        if (missing.length) cs = { ...cs, plan: { ...cs.plan, questIds: [...cs.plan.questIds, ...missing] } };
+        if (adds) {
           let planned = false;
           try { planned = coachPlanWeek(state, getWeekStart(d), today).planned.includes(d); } catch (e) { /* rien */ }
           if (!planned) extra.add(d);
         }
       });
-      return withCoach({ dayStyles: cs.dayStyles, gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !(x.style && x.dates.includes(d))) });
+      return withCoach({ dayStyles: cs.dayStyles, exStyles: cs.exStyles, plan: cs.plan, gymExtra: [...extra].sort(), gymSkips: (coach.gymSkips || []).filter(d => !(adds && x.dates.includes(d))) });
     }
     case 'plyo': {
       const have = new Set((state.quests || []).map(q => q.catalogId));
@@ -400,7 +421,7 @@ export function applyAction(state, a, today) {
 // Réglages du coach touchés par chaque type d'action (pour pouvoir annuler)
 const COACH_KEYS = {
   schedule: ['sessionsPerWeek', 'sessionMinutes', 'gymSlots', 'splitMode'], sport: ['sport', 'volleyDays'], matches: ['matchDates'], sport_dates: ['volleySkips', 'volleyExtra'], settings: ['place', 'equipment', 'pains', 'homeDays', 'deloadWeeks', 'cycleWeeks', 'cycleStart', 'cycleProfiles', 'gymSlots', 'experience', 'maxTest1rm'], goal: ['workProfile'],
-  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], day_style: ['dayStyles', 'gymExtra', 'gymSkips'], plyo: ['plyo'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
+  body: ['profile'], feeling: ['readiness'], session: ['plan'], skip: ['gymSkips'], extra_session: ['gymExtra', 'gymSkips'], day_theme: ['dayTypes', 'gymExtra', 'gymSkips'], day_style: ['dayStyles', 'exStyles', 'plan', 'gymExtra', 'gymSkips'], plyo: ['plyo'], method_style: ['methodStyle'], main_goal: ['mainGoal'], cardio: ['cardio'], remember: ['memory'], forget: ['memory'],
 };
 
 /** Ce qu'il faut remettre pour annuler ces actions : anciennes valeurs des réglages touchés (à prendre AVANT d'appliquer). */

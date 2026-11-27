@@ -6,7 +6,7 @@ import { sessionFocus } from '../../coach/focus';
 import { coachDayInfo, coachPlanWeek, coachSlotFor } from '../../coach/planning';
 import { coachRateSession } from '../../coach/rating';
 import { coachBuildCustomSession, coachBuildPlanned } from '../../coach/sessions';
-import { dayStylesOf } from '../../coach/contraction';
+import { dayStylesOf, exStylesOf, setExStyle } from '../../coach/contraction';
 import { COACH_ARENAS, coachDow, coachRealEntries, coachRound, coachStep, getCoachSettings } from '../../coach/settings';
 import { profileOpts } from '../../coach/profiles';
 import { computeExerciseTarget } from '../../coach/targets';
@@ -295,7 +295,7 @@ export function CoachPanel({
   const tiredToday = !!(coach.readiness && coach.readiness.date === today && coach.readiness.level === 'low');
   const planWeek = useMemo(() => (plan ? coachPlanWeek(gameState, getWeekStart(plan.date), today) : null), [gameState.quests, gameState.coach]);
   const customSession = useMemo(
-    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { dayStyle: dayStylesOf(coach, plan.date), deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday && plan.date === today }) : null),
+    () => (plan ? coachBuildCustomSession(gameState, plan.questIds, plan.date, { dayStyle: dayStylesOf(coach, plan.date), exStyles: exStylesOf(coach, plan.date), deload: planWeek.deload, matchWeek: planWeek.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday && plan.date === today }) : null),
     [gameState.quests, gameState.coach]
   );
   const shownSession = plan ? customSession : ov.session;
@@ -309,7 +309,7 @@ export function CoachPanel({
   const sessionToStart = coachOff ? null : (() => {
     if (plan) {
       if (!plan.questIds.length) return null;
-      return coachBuildCustomSession(gameState, plan.questIds, today, { dayStyle: dayStylesOf(coach, plan.date), deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday });
+      return coachBuildCustomSession(gameState, plan.questIds, today, { dayStyle: dayStylesOf(coach, plan.date), exStyles: exStylesOf(coach, plan.date), deload: w0.deload, matchWeek: w0.matchInWeek, sets: plan.sets, targets: plan.targets, tired: tiredToday });
     }
     if (!first || !ov.hasExercises) return null;
     if (first.iso === today) return ov.session;
@@ -365,6 +365,11 @@ export function CoachPanel({
       return q;
     }),
   }));
+  // 4.56 : façon de travailler d'UN exercice pour cette séance (test de max sur un seul exercice…) ; null = comme la séance
+  const pickExStyle = (questId, style) => setGameState(prev => {
+    const cs = getCoachSettings(prev);
+    return { ...prev, coach: { ...cs, exStyles: setExStyle(cs, shownDate, questId, style, today) } };
+  });
   // « Tu décides » : on va à l'encontre du coach pour un exercice (plus lourd / plus léger, moins / plus d'aide, ±1 rép)
   const adjustTarget = (e, action) =>
     setGameState(prev => ({
@@ -410,7 +415,7 @@ export function CoachPanel({
       const from = pl.date;
       if (from === d) return prev;
       const move = obj => { const o = { ...(obj || {}) }; if (o[from] !== undefined) { o[d] = o[from]; delete o[from]; } return o; };
-      return { ...prev, coach: { ...cs, plan: { ...pl, date: d }, dayStyles: move(cs.dayStyles), dayTypes: move(cs.dayTypes) } };
+      return { ...prev, coach: { ...cs, plan: { ...pl, date: d }, dayStyles: move(cs.dayStyles), exStyles: move(cs.exStyles), dayTypes: move(cs.dayTypes) } };
     });
   };
   const strengthQuests = (gameState.quests || []).filter(q => q.type === 'strength' && q.goalMode !== 'free_mode');
@@ -587,6 +592,7 @@ export function CoachPanel({
         addSel={addSel}
         adjustTarget={adjustTarget}
         adjustMaxTest={adjustMaxTest}
+        pickExStyle={pickExStyle}
         setCustom={(e, rows) => {
           const custom = customFromSets(rows, { kind: e.kind, load: e.load, assist: e.assist });
           setGameState(prev => ({ ...prev, quests: prev.quests.map(q => (q.id === e.questId ? { ...q, coachMethod: 'custom', coachCustom: custom } : q)) }));
