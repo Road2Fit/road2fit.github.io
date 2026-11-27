@@ -167,3 +167,35 @@ describe('répétitions effectives et k personnel (méthode inspirée de Forge)'
     expect(r.basis.load).toBe(30);
   });
 });
+
+// 4.56.1 (Gabin : « squat 100 kg et gainage 110 s notés, et le max affiché n'est pas ça ; ma meilleure performance est
+// forcément mon maximum »)
+describe('la meilleure performance est le max', () => {
+  const T = '2026-11-27';
+  const squat = (history, extra = {}) => ({ id: 'q_s', name: 'Squat Barre', type: 'strength', unit: 'kg', startValue: 40, currentValue: 52.5, history, ...extra });
+  const old = [entry('a', '2026-11-02', [7, 7, 7], 60, { setLoads: [50, 50, 60], rpe: 8 }), entry('b', '2026-11-08', [8, 8, 8], 52.5, { rpe: 8 })];
+  it('test de max réussi noté avec un ressenti très bas : il compte quand même (un essai réussi est un max)', () => {
+    const test = entry('t', '2026-11-26', [1, 1, 1, 1, 1, 1], 100, { setLoads: [67.5, 70, 72.5, 80, 90, 100], rpe: 1, rpeSet: true, method: 'max_test' });
+    const r = estimateQuestMax(squat([...old, test]), {}, { useRpe: true, today: T });
+    expect(r.estimate).toBe(100);
+    expect(r.basis.test).toBe(true);
+  });
+  it('record réel noté au-dessus des séances : c’est lui le max ; en dessous : les séances gardent la main', () => {
+    const r = estimateQuestMax(squat(old), { maxRecords: { q_s: { kg: 100, date: '2026-11-26' } } }, { useRpe: true, today: T });
+    expect(r.estimate).toBe(100);
+    expect(r.fromRecord).toBe(true);
+    const low = estimateQuestMax(squat(old), { maxRecords: { q_s: { kg: 50, date: '2026-11-26' } } }, { useRpe: true, today: T });
+    expect(low.fromRecord).toBe(false);
+    expect(low.estimate).toBeGreaterThan(60);
+    // record seul, sans séance exploitable : il fait le max
+    const only = estimateQuestMax(squat([]), { maxRecords: { q_s: { kg: 100, date: '2026-11-26' } } }, { useRpe: true, today: T });
+    expect(only.empty).toBeFalsy();
+    expect(only.estimate).toBe(100);
+  });
+  it('gainage : 110 s noté en record réel, séances à 95 s → 110 s', () => {
+    const plank = { id: 'q_p', name: 'Gainage Planche (en secondes)', type: 'strength', unit: 'reps', timed: true, history: [entry('g', '2026-11-26', [95], 95, { method: 'max_test' })] };
+    const r = estimateQuestMax(plank, { maxRecords: { q_p: { seconds: 110, date: '2026-11-26' } } }, { useRpe: true, today: T });
+    expect(r.best).toMatchObject({ seconds: 110, record: true });
+    expect(estimateQuestMax(plank, {}, { useRpe: true, today: T }).best.seconds).toBe(95);
+  });
+});

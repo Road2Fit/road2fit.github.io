@@ -14,7 +14,7 @@ const fmtDate = iso => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '');
 /** Max estimé en une ligne courte, selon le type d'exercice. */
 export function maxLine(r) {
   if (!r || r.empty) return null;
-  if (r.kind === 'load') return `≈ ${fmt(half(r.estimate))} kg`;
+  if (r.kind === 'load') return `${r.fromRecord || (r.basis && r.basis.test && r.basis.reps === 1) ? '' : '≈ '}${fmt(half(r.estimate))} kg`; // record réel ou test : une mesure
   if (r.kind === 'assisted') return r.extraFor1 > 0 ? `≈ +${fmt(half(r.extraFor1))} kg de lest` : r.assistFor1 > 0 ? `≈ ${fmt(half(r.assistFor1))} kg d’aide` : 'sans aide';
   if (r.kind === 'bodyweight') return r.extraFor1 > 0 ? `≈ +${fmt(half(r.extraFor1))} kg de lest` : 'poids du corps';
   if (r.kind === 'timed') return r.best ? `${r.best.seconds} s` : null;

@@ -444,19 +444,23 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
 
   // tenue chronométrée (gainage…) : le chrono s'arrête tout seul au temps prévu de la série, avec un son et une vibration
   const holdTarget = it && it.timed && j >= 0 ? Number(d.reps[j]) || 0 : 0;
+  // 4.56.1 (Gabin : gainage tenu 110 s au test de max, l'appli a noté 95 s) : test de max ou série « au maximum » : le
+  // chrono ne s'arrête PAS au temps prévu (c'est un record à battre), seulement quand on appuie sur Stop
+  const openHold = !!(it && it.timed && j >= 0 && (it.method === 'max_test' || (it.plan && it.plan[j] && it.plan[j].kind === 'amrap')));
+  const holdStop = openHold ? 0 : holdTarget;
   useEffect(() => {
-    if (!sw || !(holdTarget > 0)) return;
-    if (now - sw.start >= holdTarget * 1000) {
+    if (!sw || !(holdStop > 0)) return;
+    if (now - sw.start >= holdStop * 1000) {
       playGameSound('done', soundEnabled);
       try { navigator.vibrate && navigator.vibrate([150, 80, 150, 80, 300]); } catch (e) {}
-      doneSet(holdTarget);
+      doneSet(holdStop);
     }
   });
 
   const onFormDone = (res, extra = {}) => {
     setCamOpen(false);
     // tenue : le temps prévu s'il est atteint, sinon le temps mesuré ; reps : le nombre prévu (la caméra propose de corriger)
-    const secs = it && it.timed ? (extra.reachedTarget && holdTarget ? holdTarget : res.ok && res.holdSec ? res.holdSec : extra.sec) : undefined;
+    const secs = it && it.timed ? (extra.reachedTarget && holdStop ? holdStop : res.ok && res.holdSec ? res.holdSec : extra.sec) : undefined;
     const earlier = (g.formHist && g.formHist[it.questId]) || [];
     doneSet(secs, res, { setLabel: setLabel(j), setText: setText(it, d, j), earlier });
     if (res.ok) {
@@ -657,7 +661,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
             </div>
             <div className="flex-1 flex flex-col justify-center gap-3">
               {it.timed && sw ? (
-                <p className="text-center text-7xl font-black text-white" data-testid="timed-chrono">{Math.min(holdTarget || Infinity, Math.max(0, Math.floor((now - sw.start) / 1000)))} s{holdTarget > 0 && <span className="block text-xl text-slate-400 mt-1">sur {holdTarget} s</span>}</p>
+                <p className="text-center text-7xl font-black text-white" data-testid="timed-chrono">{Math.min(holdStop || Infinity, Math.max(0, Math.floor((now - sw.start) / 1000)))} s{holdTarget > 0 && <span className="block text-xl text-slate-400 mt-1">{openHold ? `record à battre : ${holdTarget} s, tiens tant que tu peux` : `sur ${holdTarget} s`}</span>}</p>
               ) : (
                 tune({ label: 'Répétitions', testId: 'set-reps', value: d.reps[j], unit: it.timed ? 'secondes' : 'répétitions',
                   onMinus: () => setReps(j, (Number(d.reps[j]) || 0) - (it.timed ? 5 : 1)), onPlus: () => setReps(j, (Number(d.reps[j]) || 0) + (it.timed ? 5 : 1)) })
@@ -789,7 +793,7 @@ export function GuidedSession({ g, setG, onFinish, onMinimize, onCancel, soundEn
         <Suspense fallback={null}>
           <FormCam item={it} soundEnabled={soundEnabled} heightCm={heightCm}
             info={`${setLabel(j)} · ${setText(it, d, j)}`}
-            targetReps={it.timed ? 0 : Number(d.reps[j]) || 0} holdTarget={it.timed ? Number(d.reps[j]) || 0 : 0}
+            targetReps={it.timed ? 0 : Number(d.reps[j]) || 0} holdTarget={it.timed ? holdStop : 0}
             onDone={onFormDone} onClose={() => setCamOpen(false)} onStopAuto={g.formAuto === it.questId ? stopFormAuto : null} />
         </Suspense>
       )}

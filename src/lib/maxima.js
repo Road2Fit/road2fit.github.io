@@ -217,13 +217,17 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
     for (const e of realEntries(q)) for (const s of Array.isArray(e.setDetails) && e.setDetails.length ? e.setDetails : [e.reps || 0]) {
       if (Number(s) > (best ? best.seconds : 0)) best = { seconds: Number(s), date: e.date };
     }
+    // 4.56.1 (Gabin : « gainage 110 s noté, et tu me mets moins ») : le record réel noté compte, c'est une performance
+    if (manual && Number(manual.seconds) > (best ? best.seconds : 0)) best = { seconds: Number(manual.seconds), date: manual.date || '', record: true };
     return { kind, best, manual };
   }
 
   const sets = liftedSets(q, state, kind);
   // répétitions effectives de chaque série (faites + en réserve si le ressenti est noté et pris en compte)
   const effective = s => {
-    const rir = useRpe ? rirOf(s.entry) : null;
+    // 4.56.1 (Gabin : squat 100 kg au test de max, noté avec un ressenti de 1/10, et la séance ne comptait plus) : un essai
+    // de test de max réussi EST un max : le ressenti n'y change rien
+    const rir = useRpe && s.entry.method !== 'max_test' ? rirOf(s.entry) : null;
     // 4.52.2 (Gabin : « 31 kg au hip thrust alors que j'ai fait 4 × 8 à 30 aujourd'hui ») : une séance sans ressenti compte
     // aussi, comme faite à l'échec (prudent) ; avant, elle était écartée
     if (rir !== null && rir > MAX_RIR) return null; // trop loin de l'échec : pas utilisée
@@ -245,7 +249,14 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
     }
     return [...bySession.values()];
   };
-  const cands = sessionsWith(k ? k.k : undefined);
+  let cands = sessionsWith(k ? k.k : undefined);
+  // 4.56.1 (Gabin : « ma meilleure performance est forcément mon maximum ») : le record réel noté (« Mon max réel ») compte
+  // comme une séance à 1 répétition : s'il est au-dessus de l'estimation, c'est lui le max
+  const recTotal = manual ? (kind === 'load' ? Number(manual.kg) || 0 : manual.date ? bodyweightAt(state, manual.date) * bodyweightFactor(q.name) - (Number(manual.assistKg) || 0) + (Number(manual.extraKg) || 0) : 0) : 0;
+  const recCand = recTotal > 0 && manual.date
+    ? { entry: { date: manual.date, id: 'record' }, reps: 1, load: recTotal, bw: kind === 'load' ? 0 : bodyweightAt(state, manual.date) * bodyweightFactor(q.name), est: { mean: recTotal, min: recTotal, max: recTotal }, rir: 0, reff: 1, record: true }
+    : null;
+  if (recCand) cands = [...cands, recCand];
   if (!cands.length) {
     // séries trop longues (> 12 répétitions effectives) : pas de max calculé, on montre la meilleure série
     const longest = sets.reduce((b, x) => (!b || x.reps > b.reps ? x : b), null);
@@ -265,9 +276,11 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
   const avg = key => wavg(pool, key);
   // 4.52.2 (demande de Gabin) : la MEILLEURE séance récente fait le max (charge et répétitions de sa meilleure série),
   // plus la moyenne pondérée, que les vieilles séances plus légères tiraient vers le bas
-  const best = pool.reduce((b, c) => (c.est.mean > b.est.mean ? c : b));
+  // à égalité, le record réel passe devant (c'est une mesure, pas une estimation)
+  const best = pool.reduce((b, c) => (c.est.mean > b.est.mean || (c.record && c.est.mean >= b.est.mean) ? c : b));
   void weighted;
   const allTime = cands.reduce((b, c) => (c.est.mean > b.est.mean ? c : b));
+  const fromSessions = pool.filter(c => !c.record);
   const conf = best.reff <= 5 ? 'bonne' : best.reff <= 10 ? 'moyenne' : 'faible';
   const result = {
     kind,
@@ -275,8 +288,11 @@ export function estimateQuestMax(q, state, { useRpe = false, today } = {}) {
     estimate: best.est.mean,
     range: [best.est.min, best.est.max],
     confidence: conf,
-    basis: { reps: best.reps, rir: best.rir, load: best.load, date: best.entry.date, rpe: best.entry.rpe, assistanceKg: best.entry.assistanceKg },
-    sessions: pool.length,
+    basis: { reps: best.reps, rir: best.rir, load: best.load, date: best.entry.date, rpe: best.entry.rpe, assistanceKg: best.entry.assistanceKg, test: best.entry.method === 'max_test' },
+    fromRecord: !!best.record,
+    // meilleure estimation tirée des séances seules (pour la comparer au record réel)
+    sessionEstimate: fromSessions.length ? Math.max(...fromSessions.map(c => c.est.mean)) : null,
+    sessions: fromSessions.length,
     fromRecent: recent.length > 0,
     allTime: allTime.est.mean,
     bodyweight: best.bw || 0,

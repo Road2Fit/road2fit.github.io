@@ -2,6 +2,16 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.56.1',
+    date: '2026-11-27',
+    title: 'Ton record est ton max',
+    items: [
+      'Mes maxima : ta meilleure performance est maintenant toujours ton max. Un record réel noté (« Mon max réel ») ou un essai réussi au test de max compte, même s’il est au-dessus de ce que donnent tes séances.',
+      'Test de max : un essai réussi compte, quel que soit le ressenti noté ensuite. Avant, un ressenti bas écartait toute la séance de test du calcul.',
+      'Gainage et autres tenues au test de max : le chrono ne s’arrête plus tout seul au temps prévu. Il affiche le record à battre et continue jusqu’à ce que tu appuies sur Stop.',
+    ],
+  },
+  {
     version: '4.56',
     date: '2026-11-27',
     title: 'Une façon de travailler par exercice',

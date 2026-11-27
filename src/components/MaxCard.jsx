@@ -110,12 +110,19 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
               <span className="text-xs font-semibold text-slate-400">pour 1 répétition</span>
             </p>
           )}
-          <p className="text-xs text-slate-400" data-testid="max-basis">
-            Fourchette : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
-            {result.sessions > 1 ? ` Ta meilleure séance parmi les ${result.sessions} des 90 derniers jours :` : ' D’après'}{' '}
-            {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
-            {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${fmt(result.basis.rir)} rép en réserve)` : ''}.
-          </p>
+          {/* 4.56.1 (Gabin : « ma meilleure performance est forcément mon max ») : record réel ou test de max = une mesure */}
+          {result.fromRecord || (result.basis.test && result.basis.reps === 1) ? (
+            <p className="text-xs text-emerald-300 font-bold" data-testid="max-basis">
+              {result.fromRecord ? 'Ton record réel' : 'Ton test de max'} du {fmtDate(result.basis.date)} : {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} sur 1 répétition. C’est ta meilleure performance, donc ton max{result.fromRecord && result.sessionEstimate > 0 ? ` (tes séances donnent ${fmt(Math.round(result.sessionEstimate * 2) / 2)} kg)` : ''}.
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400" data-testid="max-basis">
+              Fourchette : {fmt(result.range[0])} à {fmt(result.range[1])} kg{kind !== 'load' ? ' (charge réellement soulevée)' : ''}.
+              {result.sessions > 1 ? ` Ta meilleure séance parmi les ${result.sessions} des 90 derniers jours :` : ' D’après'}{' '}
+              {result.basis.reps} rép à {fmt(result.basis.load)} kg{kind !== 'load' ? ' soulevés' : ''} le {fmtDate(result.basis.date)}
+              {result.basis.rir > 0 ? ` (effort ${result.basis.rpe}/10 : +${fmt(result.basis.rir)} rép en réserve)` : ''}.
+            </p>
+          )}
           {result.k && (
             <p className="text-xs text-violet-200" data-testid="max-k">
               Ton coefficient personnel : k = {fmt(result.k)}, réglé sur ton record du {fmtDate(result.kFrom.date)}.
@@ -130,7 +137,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
       {kind === 'timed' && (
         <p className="text-2xl font-black text-pink-300">
           {result.best ? `${result.best.seconds} s` : '—'}{' '}
-          <span className="text-xs font-semibold text-slate-400">{result.best ? `meilleure tenue observée (le ${fmtDate(result.best.date)})` : 'pas encore de séance'}</span>
+          <span className="text-xs font-semibold text-slate-400">{result.best ? `${result.best.record ? 'ton record réel' : 'meilleure tenue observée'} (le ${fmtDate(result.best.date)})` : 'pas encore de séance'}</span>
         </p>
       )}
 
@@ -169,7 +176,7 @@ export function MaxCard({ onClear, onSave, quest, result, step }) {
         <p className="text-xs text-slate-400">
           {(() => {
             // comparaison avec ce que donnaient les équations seules (le k personnel est justement réglé sur ce record)
-            const est = result.estimateGeneric || result.estimate;
+            const est = result.estimateGeneric || result.sessionEstimate || result.estimate;
             return Math.abs(manual.kg - est) / manual.kg < 0.03
               ? 'Ton record réel confirme l’estimation des équations.'
               : manual.kg > est

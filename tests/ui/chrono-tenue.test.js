@@ -35,4 +35,30 @@ describe('chrono des tenues', () => {
     expect(h.doc.querySelector('[data-testid="guided-rest"]')).toBeTruthy();
     expect(h.errors).toEqual([]);
   }, 120000);
+
+  // 4.56.1 (Gabin : gainage tenu 110 s au test de max, l'appli a noté 95 s, le temps prévu)
+  it('test de max : le chrono ne s’arrête pas au temps prévu, seulement sur Stop', async () => {
+    const h = await launch({ storage: { rondoudou_save_v1: JSON.stringify(SAVE), rondoudou_local_ts: '1' }, openCoach: true });
+    open.push(h);
+    await clickEl(h, h.doc.querySelector('[data-testid="coach-page-seance"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="day-theme-style-max"]'));
+    await clickEl(h, h.doc.querySelector('[data-testid="start-today"], [data-testid="start-early"]'));
+    if (h.doc.querySelector('[data-testid="feel-ok"]')) await clickEl(h, h.doc.querySelector('[data-testid="feel-ok"]'));
+    // échauffement éventuel : passé jusqu'à la série de test
+    for (let i = 0; i < 6 && !/record/.test((h.doc.querySelector('[data-testid="set-reps"]') || {}).textContent || '') && h.doc.querySelector('[data-testid="set-label"]') && /chauffement/i.test(h.doc.querySelector('[data-testid="set-label"]').textContent); i++) {
+      await clickEl(h, h.doc.querySelector('[data-testid="set-done"]'));
+      if (h.doc.querySelector('[data-testid="rest-skip"]')) await clickEl(h, h.doc.querySelector('[data-testid="rest-skip"]'));
+    }
+    const target = Number(h.doc.querySelector('[data-testid="set-reps"]').textContent.match(/\d+/)[0]);
+    const chrono = [...h.doc.querySelectorAll('button')].find(b => b.textContent.includes('Chrono'));
+    await clickEl(h, chrono);
+    expect(h.doc.querySelector('[data-testid="timed-chrono"]').textContent).toMatch(/record à battre/);
+    await advance(h, (target + 15) * 1000);
+    expect(h.doc.querySelector('[data-testid="timed-chrono"]')).toBeTruthy(); // toujours en cours
+    expect(Number(h.doc.querySelector('[data-testid="timed-chrono"]').textContent.match(/\d+/)[0])).toBeGreaterThan(target);
+    await clickEl(h, h.doc.querySelector('[data-testid="set-done"]')); // Stop
+    expect(h.doc.querySelector('[data-testid="timed-chrono"]')).toBeNull();
+    expect(h.doc.body.textContent).toMatch(new RegExp(`${target + 15}\\s*s`));
+    expect(h.errors).toEqual([]);
+  }, 120000);
 });

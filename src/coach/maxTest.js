@@ -270,7 +270,9 @@ export function buildMaxTest(state, targets, today) {
     if (!q) continue;
     const tk = testKindOf(q);
     const r = who.ok ? maxTestReadiness(state, today, q) : who;
-    const best = bestRecent(q, today);
+    // 4.56.1 : tenue (gainage) : le record réel noté compte comme une performance (110 s noté, séances à 90 s)
+    const recSec = tk === 'time' ? Number(((state.maxRecords || {})[q.id] || {}).seconds) || 0 : 0;
+    const best = Math.max(bestRecent(q, today), recSec);
     const common = { method: 'max_test', manualSets: true, change: 'test' };
     if (tk === 'perf') {
       // sauts mesurés : 3 essais à 1 saut, repos complet ; caisse qui monte, ou meilleur saut mesuré
