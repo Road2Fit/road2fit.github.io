@@ -2,6 +2,17 @@
 // ce qui change pour la personne qui utilise l'appli, pas le détail technique. `version` doit être unique.
 export const PATCH_NOTES = [
   {
+    version: '4.55',
+    date: '2026-11-27',
+    title: 'Sécurité renforcée',
+    items: [
+      'Audit complet de l’appli d’après les 14 tests d’un pirate : tes données restent limitées à ton compte, aucune clé secrète dans l’appli, aucune requête modifiable.',
+      'Protection contre les scripts injectés : même si un texte piégé arrivait dans l’appli (pseudo, exercice partagé…), il ne pourrait ni s’exécuter ni envoyer tes données ailleurs.',
+      'Photos de tes amis : seulement de vraies images. Exercices partagés et messages au coach : textes nettoyés, et le coach ignore les ordres cachés dans les données.',
+      'Limites anti-abus (coach intelligent, exercices partagés, signalements, messages, photos) et nouveau mot de passe de 8 caractères minimum.',
+    ],
+  },
+  {
     version: '4.54',
     date: '2026-11-22',
     title: 'C’est toi qui décides, le coach règle tout',

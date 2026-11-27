@@ -46,6 +46,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
   }
 
   const tooShort = password.length < 6;
+  const tooShortNew = password.length < 8; // 4.55 : nouveau mot de passe (inscription, mot de passe oublié) : 8 minimum
   const validEmail = /^\S+@\S+\.\S+$/.test(email.trim());
 
   if (mode === 'reset-new') {
@@ -55,7 +56,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
         <h3 className="text-base font-black text-white">Nouveau mot de passe</h3>
         <div><label className={label} htmlFor="acc-pw">Nouveau mot de passe</label><input id="acc-pw" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} className={field} /></div>
         <div><label className={label} htmlFor="acc-pw2">Encore une fois</label><input id="acc-pw2" type="password" autoComplete="new-password" value={password2} onChange={e => setPassword2(e.target.value)} className={field} /></div>
-        <button type="submit" disabled={busy || tooShort || mismatch} className={`${btn} bg-sky-600 text-white`}>Changer le mot de passe</button>
+        <button type="submit" disabled={busy || tooShortNew || mismatch} className={`${btn} bg-sky-600 text-white`}>Changer le mot de passe</button>
         {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`}>{msg.text}</p>}
       </form>
     );
@@ -93,7 +94,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
         <button type="button" onClick={() => { setMode('signin'); setMsg(null); }} aria-pressed={!signup} data-testid="tab-signin" className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold ${!signup ? 'bg-sky-600 border-sky-400 text-white' : 'bg-slate-950 border-slate-700 text-slate-300'}`}>J’ai déjà un compte</button>
       </div>
       <div><label className={label} htmlFor="acc-email">E-mail</label><input id="acc-email" type="email" autoComplete="email" autoCapitalize="none" value={email} onChange={e => setEmail(e.target.value)} className={field} placeholder="toi@exemple.fr" data-testid="acc-email" /></div>
-      <div><label className={label} htmlFor="acc-pw">Mot de passe {signup && <span className="font-normal text-slate-500">(6 caractères minimum, mieux : une phrase)</span>}</label><input id="acc-pw" type="password" autoComplete={signup ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} className={field} data-testid="acc-password" /></div>
+      <div><label className={label} htmlFor="acc-pw">Mot de passe {signup && <span className="font-normal text-slate-500">(8 caractères minimum, mieux : une phrase)</span>}</label><input id="acc-pw" type="password" autoComplete={signup ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} className={field} data-testid="acc-password" /></div>
       {signup && <div><label className={label} htmlFor="acc-invite">Code d’invitation (donné par Gabin)</label><input id="acc-invite" value={invite} onChange={e => setInvite(e.target.value)} autoCapitalize="none" autoCorrect="off" className={field} data-testid="acc-invite" /></div>}
       {signup && (
         <label className="flex items-start gap-2 text-xs text-slate-300" data-testid="acc-consent-row">
@@ -101,7 +102,7 @@ export function AccountForm({ sync, recovery = null, onDone }) {
           <span>J’ai lu la <button type="button" onClick={openPrivacy} className="underline font-bold text-sky-300" data-testid="acc-privacy-link">politique de confidentialité</button> et j’accepte que mes données, y compris de santé (poids, douleurs, photos), soient enregistrées pour faire fonctionner l’appli. Je sais que ce n’est pas un avis médical.</span>
         </label>
       )}
-      <button type="submit" disabled={busy || !validEmail || tooShort || (signup && (!invite.trim() || !consent))} data-testid="acc-submit" className={`${btn} bg-sky-600 text-white w-full`}>{busy ? '…' : signup ? 'Créer mon compte' : 'Me connecter'}</button>
+      <button type="submit" disabled={busy || !validEmail || (signup ? tooShortNew : tooShort) || (signup && (!invite.trim() || !consent))} data-testid="acc-submit" className={`${btn} bg-sky-600 text-white w-full`}>{busy ? '…' : signup ? 'Créer mon compte' : 'Me connecter'}</button>
       {!signup && <button type="button" onClick={() => { setMode('forgot'); setMsg(null); }} className="text-xs font-bold text-sky-300 underline">Mot de passe oublié ?</button>}
       {msg && <p className={`text-sm font-bold ${msg.ok ? 'text-emerald-300' : 'text-rose-300'}`} data-testid="acc-msg">{msg.text}</p>}
       {sync.needsLogin && <p className="text-sm font-bold text-amber-300">Ta session a expiré : reconnecte-toi.</p>}

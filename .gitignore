@@ -4,3 +4,11 @@ dist
 *.log
 .claude/
 tests/ui/.sortie.js
+# 4.55 (sécurité) : secrets et fichiers locaux, jamais dans git
+.env
+.env.*
+*.pem
+*.key
+supabase/.temp/
+supabase/.env
+RAPPORT-ANALYSE.md

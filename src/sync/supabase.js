@@ -25,15 +25,21 @@ function baseHeaders(cfg, token) {
   return h;
 }
 
+/** 4.55 (sécurité) : une photo venue d'un autre compte n'est affichée que si c'est vraiment une image (data:image/…;base64). */
+export const isImageData = d => typeof d === 'string' && d.length < 700000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(d);
+
 /** Message simple en français pour une réponse d'erreur de Supabase. */
 function friendly(status, body) {
   const raw = String((body && (body.error_description || body.msg || body.message || body.error)) || '').toLowerCase();
   if (/invalid login credentials|invalid_grant/.test(raw)) return 'E-mail ou mot de passe incorrect.';
   if (/already registered|already been registered|user_already_exists/.test(raw)) return 'Un compte existe déjà avec cet e-mail : connecte-toi.';
   if (/database error saving new user|invitation invalide/.test(raw)) return 'Inscription refusée : code d’invitation incorrect (ou inscriptions fermées).';
-  if (/password should be at least|weak_password|at least 6/.test(raw)) return 'Mot de passe trop court (6 caractères minimum, mieux : 10).';
+  if (/password should be at least|weak_password|at least 6/.test(raw)) return 'Mot de passe trop court (8 caractères minimum, mieux : une phrase).';
   if (/email not confirmed/.test(raw)) return 'Adresse e-mail pas encore confirmée : ouvre le message reçu.';
   if (/rate limit|too many|over_email_send_rate_limit|429/.test(raw) || status === 429) return 'Trop de tentatives, réessaie dans quelques minutes.';
+  if (/limit_flags/.test(raw)) return 'Limite du jour atteinte (40 séries envoyées) : réessaie demain.';
+  if (/limit_feedback/.test(raw)) return 'Limite du jour atteinte (20 messages) : réessaie demain.';
+  if (/limit_photos/.test(raw)) return 'Limite de photos atteinte : supprime d’anciennes photos pour en ajouter.';
   if (/valid email|invalid format|email_address_invalid/.test(raw)) return 'Adresse e-mail invalide.';
   if (status === 401 || status === 403) return 'Session expirée : reconnecte-toi.';
   if (status >= 500) return 'Le service de sauvegarde ne répond pas pour le moment (réessaie plus tard).';
@@ -357,7 +363,7 @@ export const sharedPhotos = {
   async friendLast(cfg, userId) {
     const s = await freshSession(cfg);
     const rows = await call(cfg, 'POST', '/rest/v1/rpc/friend_last_photo', { token: s.access_token, body: { p_user: userId } });
-    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+    return Array.isArray(rows) && rows[0] && isImageData(rows[0].data) ? rows[0] : null;
   },
   async putTag(cfg, { photoId, date, note = '', data, tagged }) {
     const s = await freshSession(cfg);
@@ -382,7 +388,7 @@ export const sharedPhotos = {
   async taggedMe(cfg) {
     const s = await freshSession(cfg);
     const rows = await call(cfg, 'POST', '/rest/v1/rpc/photos_tagged_me', { token: s.access_token, body: {} });
-    return Array.isArray(rows) ? rows : [];
+    return Array.isArray(rows) ? rows.filter(r => r && isImageData(r.data)) : [];
   },
   /** Mes amis mutuels (ids) */
   async mutual(cfg) {

@@ -8,32 +8,35 @@ import { EXERCISE_CATALOG } from './catalog';
 const KEY = 'rondoufit:sharedEx';
 const CATEGORIES = ['Dos', 'Pectoraux', 'Jambes', 'Épaules & Bras', 'Abdominaux'];
 
+// 4.55 (sécurité) : ces textes viennent d'autres comptes : caractères de mise en page et balises retirés, longueur bornée
+const txt = (v, n) => String(v == null ? '' : v).normalize('NFC').replace(/[\u0000-\u001f\u007f<>{}[\]`\\]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+
 /** Fiche partagée → entrée du catalogue (mêmes champs que les exercices d'origine). */
 export function sharedToCatalog(id, d) {
-  if (!id || !d || !String(d.name || '').trim()) return null;
+  if (!id || !d || typeof d !== 'object' || !txt(d.name, 60) || !/^[a-z0-9_]{1,80}$/i.test(String(id))) return null;
   const unit = d.unit === 'kg' ? 'kg' : 'reps';
-  const n = (v, def) => (Number(v) > 0 ? Number(v) : def);
+  const n = (v, def, max = 500) => (Number(v) > 0 ? Math.min(max, Number(v)) : def); // nombres venus d'autres comptes : bornés
   return {
     id: String(id),
-    name: String(d.name).trim().slice(0, 60),
+    name: txt(d.name, 60),
     category: CATEGORIES.includes(d.category) ? d.category : 'Épaules & Bras',
     type: 'strength',
     unit,
-    equip: String(d.equip || ''),
+    equip: txt(d.equip, 40),
     defaultGoalMode: 'sets_reps',
     defaultStart: n(d.start, unit === 'kg' ? 20 : 5),
     defaultGoal: n(d.goal, unit === 'kg' ? 30 : 10),
-    defaultGoalSets: n(d.sets, 3),
-    defaultGoalReps: n(d.reps, 8),
+    defaultGoalSets: Math.round(n(d.sets, 3, 8)),
+    defaultGoalReps: Math.round(n(d.reps, 8, 100)),
     defaultStartAssistance: 0,
     defaultGoalAssistance: 0,
-    icon: d.icon || '💪',
+    icon: txt(d.icon, 8) || '💪',
     timed: !!d.timed || undefined,
-    muscle: d.muscle || '',
-    muscle2: d.muscle2 || '',
-    like: String(d.like || ''),
-    how: String(d.how || ''),
-    caution: String(d.caution || ''),
+    muscle: txt(d.muscle, 30),
+    muscle2: txt(d.muscle2, 30),
+    like: txt(d.like, 40),
+    how: txt(d.how, 300),
+    caution: txt(d.caution, 200),
     brands: '',
     shared: true,
     raw: d, // fiche d'origine, gardée pour la copie locale
